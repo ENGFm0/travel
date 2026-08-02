@@ -449,6 +449,14 @@ textarea.input { resize: vertical; min-height: 72px; }
 .ac-txt { display: flex; flex-direction: column; min-width: 0; }
 .ac-txt b { font-weight: 700; font-size: .92rem; }
 .ac-txt small { color: var(--ink-500); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ac-flag { font-size: 1.5rem; flex-shrink: 0; line-height: 1; }
+
+/* صندوق سعر الصرف التلقائي */
+.rate-box { background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.rate-box small { color: var(--green); font-weight: 700; background: var(--green-bg); padding: 2px 8px; border-radius: 999px; }
+.rate-ok { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--ink-900); }
+.rate-ok svg { width: 16px; height: 16px; color: var(--green); }
+.rate-ok b { color: var(--teal-800); }
 
 /* ---------- التقييم بالنجوم ---------- */
 .stars { display: inline-flex; gap: 1px; vertical-align: middle; }

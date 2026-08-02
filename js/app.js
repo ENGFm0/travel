@@ -4,6 +4,7 @@
 import * as db from './store.js';
 import { poolStats, memberBudget, sharedNet, settleShared } from './settle.js';
 import { icons, catList, catIcon } from './icons.js';
+import { COUNTRIES, flagOf } from './countries.js';
 
 /* ---------------- أدوات ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -81,6 +82,39 @@ const mapsSearchUrl = (q) => 'https://www.google.com/maps/search/?api=1&query=' 
 const mapsPlaceUrl = (q, placeId) => placeId
   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}&query_place_id=${encodeURIComponent(placeId)}`
   : mapsSearchUrl(q);
+
+/* ---------------- سعر الصرف التلقائي ---------------- */
+// 1 عملة الديار = rate عملة الوجهة
+async function fetchRate(home, dest) {
+  if (!home || !dest || home === dest) return 1;
+  const res = await fetch(`https://open.er-api.com/v6/latest/${encodeURIComponent(home)}`, { cache: 'no-store' });
+  const data = await res.json();
+  const r = data?.rates?.[dest];
+  if (!r) throw new Error('no-rate');
+  return Math.round(r * 10000) / 10000;
+}
+
+/* ---------------- منتقي الدول (بحث) ---------------- */
+function wireCountryPicker(input, list, onPick) {
+  const render = () => {
+    const q = input.value.trim();
+    const ql = q.toLowerCase();
+    const items = (q ? COUNTRIES.filter(([code, ar]) => ar.includes(q) || code.toLowerCase().includes(ql)) : COUNTRIES).slice(0, 8);
+    if (!items.length) { list.innerHTML = ''; list.classList.remove('open'); return; }
+    list.innerHTML = items.map(([code, ar, cur]) => `
+      <button type="button" class="ac-item" data-code="${code}" data-ar="${esc(ar)}" data-cur="${cur}">
+        <span class="ac-flag">${flagOf(code)}</span>
+        <span class="ac-txt"><b>${esc(ar)}</b><small>${cur}</small></span></button>`).join('');
+    list.classList.add('open');
+    list.querySelectorAll('.ac-item').forEach(b => b.onclick = () => {
+      input.value = b.dataset.ar; list.innerHTML = ''; list.classList.remove('open');
+      onPick({ code: b.dataset.code, ar: b.dataset.ar, cur: b.dataset.cur });
+    });
+  };
+  input.oninput = render;
+  input.onfocus = render;
+  input.onblur = () => setTimeout(() => list.classList.remove('open'), 180);
+}
 
 /* ---------------- التنقّل ---------------- */
 const R = { tripId: null, tab: 'budget' };
@@ -487,6 +521,8 @@ const curOptions = (sel) => Object.keys(CUR).map(k => `<option value="${k}" ${k 
 
 /* رحلة جديدة */
 function openNewTrip() {
+  const st = { homeCode: 'SA', homeAr: 'السعودية', homeCur: 'SAR', destCode: '', destAr: '', destCur: '', rate: null };
+
   openModal({
     title: 'رحلة جديدة',
     body: `
@@ -495,45 +531,53 @@ function openNewTrip() {
         <input class="input" id="f-amir" placeholder="اسمك" autocomplete="off"></div>
       <div class="field"><label>جوالك <span class="hint">اختياري — لطلبات القطة</span></label>
         <input class="input" id="f-amir-phone" placeholder="مثال: 9665xxxxxxxx" dir="ltr" inputmode="tel" autocomplete="off"></div>
-      <div class="field"><label>الوجهة</label>
+      <div class="field"><label>بلد الوجهة <span class="hint">ابحث</span></label>
+        <div class="ac-wrap"><span class="ac-icon">${icons.search}</span>
+          <input class="input ac-input" id="f-destc" placeholder="اكتب اسم الدولة" autocomplete="off">
+          <div class="ac-list" id="f-destc-list"></div></div></div>
+      <div class="field"><label>المدينة / الوجهة <span class="hint">اختياري</span></label>
         <input class="input" id="f-dest" placeholder="مثال: طرابزون" autocomplete="off"></div>
-      <div class="field"><label>الدولة</label>
-        <input class="input" id="f-country" placeholder="مثال: تركيا" autocomplete="off"></div>
-      <div class="field"><label>العلم</label>
-        <div class="picker" id="f-flags">${FLAGS.map((f, i) => `<button type="button" class="pick ${i === 0 ? 'sel' : ''}" data-flag="${f}" style="font-size:1.2rem;padding:6px 10px">${f}</button>`).join('')}</div></div>
-      <div class="two-col">
-        <div class="field"><label>عملة الديار <span class="hint">عملتكم</span></label>
-          <select class="select" id="f-home">${curOptions('SAR')}</select></div>
-        <div class="field"><label>عملة الوجهة</label>
-          <select class="select" id="f-dest-cur">${curOptions('TRY')}</select></div>
-      </div>
-      <div class="field"><label>سعر الصرف</label>
-        <div class="rate-row">1 <b id="rl-home">ر.س</b> =
-          <input class="input" id="f-rate" type="number" inputmode="decimal" step="0.0001" min="0" placeholder="0" dir="ltr" style="max-width:130px">
-          <b id="rl-dest">₺</b></div>
-        <span class="hint">اكتب كم تساوي عملة الديار بعملة الوجهة (تقدر تعدّله لاحقًا).</span></div>`,
+      <div class="field"><label>بلدكم <span class="hint">لتحديد عملتكم</span></label>
+        <div class="ac-wrap"><span class="ac-icon">${icons.search}</span>
+          <input class="input ac-input" id="f-homec" value="السعودية" autocomplete="off">
+          <div class="ac-list" id="f-homec-list"></div></div></div>
+      <div class="rate-box" id="f-rate-box"><span class="muted-text">اختر بلد الوجهة ليظهر سعر الصرف تلقائيًا.</span></div>`,
     footer: `<button class="btn btn-primary btn-block" id="f-save">${icons.check} إنشاء الرحلة</button>`,
   });
 
-  let flag = FLAGS[0];
-  modalRoot.querySelectorAll('[data-flag]').forEach(b => b.onclick = () => {
-    modalRoot.querySelectorAll('[data-flag]').forEach(x => x.classList.remove('sel'));
-    b.classList.add('sel'); flag = b.dataset.flag;
+  const rateBox = $('#f-rate-box');
+  async function refreshRate() {
+    if (!st.destCur || !st.homeCur) return;
+    if (st.destCur === st.homeCur) { st.rate = 1; rateBox.innerHTML = `<span>نفس العملة (${curLabel(st.homeCur)})</span>`; return; }
+    rateBox.innerHTML = `<span class="muted-text">جارٍ جلب سعر الصرف…</span>`;
+    try {
+      st.rate = await fetchRate(st.homeCur, st.destCur);
+      rateBox.innerHTML = `<span class="rate-ok">${icons.check} 1 ${curLabel(st.homeCur)} = <b>${st.rate}</b> ${curLabel(st.destCur)}</span><small>تلقائي</small>`;
+    } catch {
+      st.rate = null;
+      rateBox.innerHTML = `<span class="muted-text">تعذّر جلب السعر تلقائيًا — اكتبه:</span>
+        <div class="rate-row" style="margin-top:6px">1 ${curLabel(st.homeCur)} = <input class="input" id="f-rate-manual" type="number" step="0.0001" min="0" dir="ltr" style="max-width:120px"> ${curLabel(st.destCur)}</div>`;
+    }
+  }
+
+  wireCountryPicker($('#f-destc'), $('#f-destc-list'), (c) => {
+    st.destCode = c.code; st.destAr = c.ar; st.destCur = c.cur; refreshRate();
   });
-  const home = $('#f-home'), dcur = $('#f-dest-cur');
-  const syncLabels = () => { $('#rl-home').textContent = curLabel(home.value); $('#rl-dest').textContent = curLabel(dcur.value); };
-  home.onchange = syncLabels; dcur.onchange = syncLabels; syncLabels();
+  wireCountryPicker($('#f-homec'), $('#f-homec-list'), (c) => {
+    st.homeCode = c.code; st.homeAr = c.ar; st.homeCur = c.cur; refreshRate();
+  });
   $('#f-amir').focus();
 
   $('#f-save').onclick = () => {
     const amirName = $('#f-amir').value.trim();
-    const dest = $('#f-dest').value.trim();
     if (!amirName) { toast('اكتب اسمك'); return; }
-    if (!dest) { toast('اكتب الوجهة'); return; }
+    if (!st.destCode) { toast('اختر بلد الوجهة'); return; }
+    const city = $('#f-dest').value.trim();
+    let rate = st.rate;
+    if (rate == null) { rate = parseFloat($('#f-rate-manual')?.value) || 1; }
     const trip = db.createTrip({
-      destination: dest, country: $('#f-country').value, flag,
-      destCurrency: dcur.value, homeCurrency: home.value,
-      rate: parseFloat($('#f-rate').value) || 1,
+      destination: city || st.destAr, country: st.destAr, flag: flagOf(st.destCode),
+      destCurrency: st.destCur, homeCurrency: st.homeCur, rate,
       amirName, amirPhone: $('#f-amir-phone').value,
     });
     closeModal(); go(trip.id, 'pool'); toast('تم إنشاء الرحلة ✓');
@@ -542,37 +586,54 @@ function openNewTrip() {
 
 /* إعدادات الرحلة */
 function openSettings(t) {
+  const st = { homeCur: t.homeCurrency, destCur: t.destCurrency, rate: t.rate };
   openModal({
     title: 'إعدادات الرحلة',
     body: `
-      <div class="field"><label>الوجهة</label><input class="input" id="s-dest" value="${esc(t.destination)}"></div>
-      <div class="field"><label>الدولة</label><input class="input" id="s-country" value="${esc(t.country)}"></div>
-      <div class="two-col">
-        <div class="field"><label>عملة الديار</label><select class="select" id="s-home">${curOptions(t.homeCurrency)}</select></div>
-        <div class="field"><label>عملة الوجهة</label><select class="select" id="s-dest-cur">${curOptions(t.destCurrency)}</select></div>
-      </div>
-      <div class="field"><label>سعر الصرف</label>
-        <div class="rate-row">1 <b id="sl-home">${curLabel(t.homeCurrency)}</b> =
-          <input class="input" id="s-rate" type="number" step="0.0001" min="0" value="${t.rate}" dir="ltr" style="max-width:130px">
-          <b id="sl-dest">${curLabel(t.destCurrency)}</b></div></div>
+      <div class="field"><label>المدينة / الوجهة</label><input class="input" id="s-dest" value="${esc(t.destination)}"></div>
+      <div class="field"><label>بلد الوجهة <span class="hint">لتغيير العملة</span></label>
+        <div class="ac-wrap"><span class="ac-icon">${icons.search}</span>
+          <input class="input ac-input" id="s-destc" value="${esc(t.country)}" placeholder="ابحث عن الدولة" autocomplete="off">
+          <div class="ac-list" id="s-destc-list"></div></div></div>
+      <div class="rate-box" id="s-rate-box"></div>
       <div class="divider"></div>
       <div class="field"><label>مفتاح خرائط قوقل <span class="hint">للبحث السريع داخل التطبيق</span></label>
         <input class="input" id="s-mapskey" value="${esc(getMapsKey())}" placeholder="AIza..." dir="ltr" autocomplete="off">
-        <span class="hint">فعّل Maps JavaScript API + Places API في Google Cloud، وقيّد المفتاح بنطاق موقعك. يُحفظ على جهازك فقط.</span></div>
+        <span class="hint">مدمج مفتاح افتراضي. قيّده بنطاق موقعك من Google Cloud. يُحفظ على جهازك فقط.</span></div>
       <div class="divider"></div>
       <button class="btn btn-danger-ghost btn-block" id="s-del">${icons.trash} حذف الرحلة</button>`,
     footer: `<button class="btn btn-primary btn-block" id="s-save">${icons.check} حفظ</button>`,
   });
-  const home = $('#s-home'), dcur = $('#s-dest-cur');
-  const sync = () => { $('#sl-home').textContent = curLabel(home.value); $('#sl-dest').textContent = curLabel(dcur.value); };
-  home.onchange = sync; dcur.onchange = sync;
+
+  const rateBox = $('#s-rate-box');
+  function showRate() {
+    if (st.destCur === st.homeCur) { rateBox.innerHTML = `<span>نفس العملة (${curLabel(st.homeCur)})</span>`; return; }
+    rateBox.innerHTML = `<span class="rate-ok">1 ${curLabel(st.homeCur)} = <b>${st.rate}</b> ${curLabel(st.destCur)}</span>
+      <button type="button" class="btn btn-ghost btn-sm" id="s-rate-refresh">${icons.search} تحديث السعر</button>`;
+    $('#s-rate-refresh').onclick = async () => {
+      rateBox.querySelector('.rate-ok').textContent = 'جارٍ التحديث…';
+      try { st.rate = await fetchRate(st.homeCur, st.destCur); toast('تم تحديث السعر ✓'); }
+      catch { toast('تعذّر جلب السعر'); }
+      showRate();
+    };
+  }
+  showRate();
+
+  wireCountryPicker($('#s-destc'), $('#s-destc-list'), async (c) => {
+    st.destCur = c.cur;
+    db.updateTrip(t.id, { country: c.ar, flag: flagOf(c.code) });
+    rateBox.innerHTML = `<span class="muted-text">جارٍ جلب سعر الصرف…</span>`;
+    try { st.rate = await fetchRate(st.homeCur, st.destCur); } catch {}
+    showRate();
+  });
+
   $('#s-save').onclick = () => {
     setMapsKey($('#s-mapskey').value);
     db.updateTrip(t.id, {
       destination: $('#s-dest').value.trim() || t.destination,
-      country: $('#s-country').value.trim(),
-      homeCurrency: home.value, destCurrency: dcur.value,
-      rate: parseFloat($('#s-rate').value) || 1,
+      country: $('#s-destc').value.trim() || t.country,
+      destCurrency: st.destCur, homeCurrency: st.homeCur,
+      rate: Number(st.rate) || t.rate,
     });
     closeModal(); render(); toast('تم الحفظ ✓');
   };
@@ -820,7 +881,14 @@ function openExpense(t, kind) {
   };
 }
 
-/* مكان — بحث حي عبر خرائط قوقل (مع تراجع لبحث خارجي) */
+/* بحث الأماكن داخل التطبيق: قوقل Places (إن توفّر) ← OpenStreetMap ← قوقل ماب فقط لو ما لقى */
+async function osmSearch(q) {
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=ar&q=${encodeURIComponent(q)}`;
+  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error('osm');
+  return res.json();
+}
+
 function openPlace(t) {
   openModal({
     title: 'إضافة مكان',
@@ -831,52 +899,42 @@ function openPlace(t) {
           <input class="input ac-input" id="p-name" placeholder="مثال: بحيرة أوزنجول" autocomplete="off">
           <div class="ac-list" id="p-ac"></div>
         </div>
-        <span class="hint" id="p-hint"></span></div>
+        <span class="hint" id="p-hint">اكتب اسم المكان وتظهر النتائج هنا داخل التطبيق.</span></div>
       <div class="field"><label>ملاحظة <span class="hint">اختياري</span></label>
         <input class="input" id="p-note" placeholder="مثال: أفضل وقت الزيارة الصباح" autocomplete="off"></div>
-      <a class="btn btn-ghost btn-block" id="p-open" target="_blank" rel="noopener" href="#" style="display:none">${icons.map} افتح البحث في قوقل ماب</a>`,
+      <a class="btn btn-ghost btn-block" id="p-open" target="_blank" rel="noopener" href="#" style="display:none">${icons.map} ما لقيته؟ ابحث في قوقل ماب</a>`,
     footer: `<button class="btn btn-primary btn-block" id="p-save">${icons.plus} إضافة</button>`,
   });
 
   const name = $('#p-name'), acList = $('#p-ac'), hint = $('#p-hint'), openBtn = $('#p-open');
   const picked = { placeId: '', mapUrl: '', lat: null, lng: null, address: '' };
   const clearPick = () => { picked.placeId = ''; picked.mapUrl = ''; picked.lat = picked.lng = null; picked.address = ''; };
+  let gsvc = null, placesSvc = null, debounce, reqId = 0;
 
-  const hasKey = !!getMapsKey();
-  let svc = null, placesSvc = null, debounce;
+  // حمّل خرائط قوقل بصمت (إن توفّر مفتاح صالح)
+  loadMaps().then(() => {
+    gsvc = new google.maps.places.AutocompleteService();
+    placesSvc = new google.maps.places.PlacesService(document.createElement('div'));
+  }).catch(() => {});
 
-  function fallbackLink() {
-    const q = ((name.value || '').trim() + ' ' + (t.destination || '')).trim();
-    openBtn.href = mapsSearchUrl(q);
-    openBtn.style.display = name.value.trim() ? 'flex' : 'none';
-  }
+  const showOpenBtn = (show) => {
+    openBtn.style.display = show && name.value.trim() ? 'flex' : 'none';
+    if (show) openBtn.href = mapsSearchUrl((name.value.trim() + ' ' + (t.destination || '')).trim());
+  };
+  const clearList = () => { acList.innerHTML = ''; acList.classList.remove('open'); };
 
-  if (hasKey) {
-    hint.textContent = 'اكتب واختر من نتائج قوقل ماب.';
-    loadMaps().then(() => {
-      svc = new google.maps.places.AutocompleteService();
-      placesSvc = new google.maps.places.PlacesService(document.createElement('div'));
-    }).catch(() => { hint.textContent = 'تعذّر تحميل خرائط قوقل — تأكد من المفتاح. سيُفتح البحث خارجيًا.'; fallbackLink(); });
-  } else {
-    hint.textContent = 'فعّل مفتاح خرائط قوقل من الإعدادات للبحث داخل التطبيق. حاليًا يفتح البحث خارجيًا.';
-    fallbackLink();
-  }
-
-  function renderPreds(preds) {
-    if (!preds || !preds.length) { acList.innerHTML = ''; acList.classList.remove('open'); return; }
+  // نتائج قوقل
+  function renderGoogle(preds) {
     acList.innerHTML = preds.slice(0, 6).map(pr => `
       <button type="button" class="ac-item" data-pid="${esc(pr.place_id)}" data-main="${esc(pr.structured_formatting?.main_text || pr.description)}">
         <span class="ac-pin">${icons.pin}</span>
         <span class="ac-txt"><b>${esc(pr.structured_formatting?.main_text || pr.description)}</b>
-          <small>${esc(pr.structured_formatting?.secondary_text || '')}</small></span>
-      </button>`).join('');
-    acList.classList.add('open');
-    acList.querySelectorAll('.ac-item').forEach(b => b.onclick = () => choose(b.dataset.pid, b.dataset.main));
+          <small>${esc(pr.structured_formatting?.secondary_text || '')}</small></span></button>`).join('');
+    acList.classList.add('open'); showOpenBtn(false);
+    acList.querySelectorAll('.ac-item').forEach(b => b.onclick = () => chooseGoogle(b.dataset.pid, b.dataset.main));
   }
-
-  function choose(placeId, mainText) {
-    acList.innerHTML = ''; acList.classList.remove('open');
-    name.value = mainText;
+  function chooseGoogle(placeId, mainText) {
+    clearList(); name.value = mainText; showOpenBtn(false);
     if (!placesSvc) return;
     placesSvc.getDetails({ placeId, fields: ['name', 'geometry', 'formatted_address', 'url'] }, (d, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK && d) {
@@ -891,14 +949,49 @@ function openPlace(t) {
     });
   }
 
+  // نتائج OpenStreetMap
+  function renderOSM(results) {
+    acList.innerHTML = results.slice(0, 6).map((r, i) => {
+      const main = (r.name && r.name.trim()) || r.display_name.split('،')[0].split(',')[0];
+      return `<button type="button" class="ac-item" data-i="${i}">
+        <span class="ac-pin">${icons.pin}</span>
+        <span class="ac-txt"><b>${esc(main)}</b><small>${esc(r.display_name)}</small></span></button>`;
+    }).join('');
+    acList.classList.add('open'); showOpenBtn(false);
+    acList.querySelectorAll('.ac-item').forEach(b => b.onclick = () => {
+      const r = results[+b.dataset.i];
+      const main = (r.name && r.name.trim()) || r.display_name.split('،')[0].split(',')[0];
+      clearList(); name.value = main;
+      picked.lat = parseFloat(r.lat); picked.lng = parseFloat(r.lon);
+      picked.address = r.display_name;
+      picked.mapUrl = `https://www.google.com/maps/search/?api=1&query=${picked.lat},${picked.lng}`;
+      hint.textContent = r.display_name;
+    });
+  }
+
   name.oninput = () => {
-    clearPick(); fallbackLink();
+    clearPick();
     const q = name.value.trim();
-    if (!svc || q.length < 2) { acList.innerHTML = ''; acList.classList.remove('open'); return; }
+    if (q.length < 2) { clearList(); showOpenBtn(false); return; }
+    const my = ++reqId;
     clearTimeout(debounce);
+    hint.textContent = 'جارٍ البحث…';
     debounce = setTimeout(() => {
-      svc.getPlacePredictions({ input: q }, renderPreds);
-    }, 220);
+      const query = q;
+      const goOSM = () => osmSearch(query + ' ' + (t.destination || '')).then(rs => {
+        if (my !== reqId) return;
+        if (rs && rs.length) { renderOSM(rs); hint.textContent = 'اختر من النتائج.'; }
+        else { clearList(); hint.textContent = 'ما فيه نتائج داخل التطبيق.'; showOpenBtn(true); }
+      }).catch(() => { if (my !== reqId) return; clearList(); hint.textContent = 'تعذّر البحث.'; showOpenBtn(true); });
+
+      if (gsvc) {
+        gsvc.getPlacePredictions({ input: query }, (preds, status) => {
+          if (my !== reqId) return;
+          if (status === google.maps.places.PlacesServiceStatus.OK && preds?.length) { renderGoogle(preds); hint.textContent = 'اختر من النتائج.'; }
+          else goOSM();
+        });
+      } else { goOSM(); }
+    }, 300);
   };
   name.focus();
 
