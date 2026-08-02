@@ -7,9 +7,10 @@
 const URL_LS = 'boarding.sbUrl';
 const KEY_LS = 'boarding.sbKey';
 
-// افتراضيات مدمجة (رابط مشروعك). المفتاح العام يُضاف لاحقًا ليعمل للجميع.
+// افتراضيات مدمجة ليعمل التشارك للقروب كله مباشرة.
+// المفتاح العام (publishable) آمن للنشر مع تفعيل Row Level Security.
 const DEFAULT_URL = 'https://qujjhxfubspmeprtgjew.supabase.co';
-const DEFAULT_KEY = ''; // ← يُملأ بالمفتاح العام (anon) لتفعيل المزامنة افتراضيًا
+const DEFAULT_KEY = 'sb_publishable_Ul4ReYqY6HhbILPjJ9iQkg_JpMuhQ2e';
 
 export function sbUrl() { try { return localStorage.getItem(URL_LS) || DEFAULT_URL; } catch { return DEFAULT_URL; } }
 export function sbKey() { try { return localStorage.getItem(KEY_LS) || DEFAULT_KEY; } catch { return DEFAULT_KEY; } }
