@@ -1,5 +1,5 @@
 /* رِفقة — Service Worker (تخزين مؤقت للعمل دون اتصال) */
-const CACHE = 'rifqa-v1';
+const CACHE = 'rifqa-v2';
 const ASSETS = [
   './',
   './index.html',

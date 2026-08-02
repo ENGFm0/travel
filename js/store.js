@@ -1,22 +1,21 @@
 /* =========================================================
    store.js — طبقة البيانات + الحفظ المحلي (localStorage)
+   نموذج: قطة القروب (صندوق مشترك) + ميزانية شخصية + قطة بين شخصين
    ========================================================= */
 
-const KEY = 'rifqa.data.v1';
+const KEY = 'rifqa.data.v2';
 
 const AVATAR_COLORS = [
   '#0e4d54', '#c8873f', '#2f8f5b', '#5b6ec8', '#b0568f',
   '#3f8fc8', '#c0453b', '#7a8f2f', '#8f5b3f', '#4a6572'
 ];
 
-/* توليد معرّف بسيط بدون تكرار */
 function uid(prefix = 'id') {
   return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-/* الحالة الافتراضية */
 function emptyState() {
-  return { trips: [], activeTripId: null };
+  return { trips: [], version: 2 };
 }
 
 let state = load();
@@ -34,11 +33,8 @@ function load() {
 }
 
 function persist() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch (e) {
-    console.warn('تعذّر الحفظ المحلي', e);
-  }
+  try { localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch (e) { console.warn('تعذّر الحفظ المحلي', e); }
 }
 
 /* ---------------- الرحلات ---------------- */
@@ -46,23 +42,28 @@ function persist() {
 export function getTrips() {
   return state.trips.slice().sort((a, b) => b.createdAt - a.createdAt);
 }
-
 export function getTrip(id) {
   return state.trips.find(t => t.id === id) || null;
 }
 
-export function createTrip({ destination, country, flag, currency }) {
+export function createTrip({ destination, country, flag, destCurrency, homeCurrency, rate, amirName, amirPhone }) {
+  const amir = { id: uid('m'), name: amirName.trim(), phone: (amirPhone || '').trim(), username: '', color: AVATAR_COLORS[0], budget: null, qattahPaid: true };
   const trip = {
     id: uid('trip'),
     destination: destination.trim(),
     country: (country || '').trim(),
     flag: flag || '🧳',
-    currency: currency || 'SAR',
-    members: [],
-    amirId: null,
+    destCurrency: destCurrency || 'TRY',
+    homeCurrency: homeCurrency || 'SAR',
+    rate: Number(rate) || 1,            // 1 عملة ديار = rate عملة وجهة
+    amirId: amir.id,
+    currentMemberId: amir.id,           // «أنا» محليًا
+    members: [amir],
+    pool: { total: 0, participantIds: [], covers: '' },
+    groupExpenses: [],                  // يصرفها الأمير من القطة
+    pairExpenses: [],                   // بين شخصين
+    personalExpenses: {},               // { memberId: [ ... ] }
     places: [],
-    expenses: [],
-    stageState: {},         // { stageKey: true } للمراحل المكتملة يدويًا
     createdAt: Date.now(),
   };
   state.trips.push(trip);
@@ -82,29 +83,48 @@ export function deleteTrip(id) {
   persist();
 }
 
+export function setCurrentMember(tripId, memberId) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.currentMemberId = memberId;
+  persist();
+}
+
 /* ---------------- الأعضاء ---------------- */
 
-export function addMember(tripId, name) {
+export function addMember(tripId, { name, phone, username }) {
   const t = getTrip(tripId);
   if (!t) return null;
   const idx = t.members.length % AVATAR_COLORS.length;
-  const m = { id: uid('m'), name: name.trim(), color: AVATAR_COLORS[idx] };
+  const m = {
+    id: uid('m'), name: name.trim(), phone: (phone || '').trim(),
+    username: (username || '').trim(), color: AVATAR_COLORS[idx], budget: null, qattahPaid: false,
+  };
   t.members.push(m);
-  if (!t.amirId) t.amirId = m.id; // أول عضو يصير أمير مؤقتًا
+  // إذا القطة «على الكل» أضِفه للمشاركين تلقائيًا
+  if (t.pool.participantIds.length && t._poolAll) t.pool.participantIds.push(m.id);
   persist();
   return m;
+}
+
+export function updateMember(tripId, memberId, patch) {
+  const t = getTrip(tripId);
+  const m = t?.members.find(x => x.id === memberId);
+  if (!m) return;
+  Object.assign(m, patch);
+  persist();
 }
 
 export function removeMember(tripId, memberId) {
   const t = getTrip(tripId);
   if (!t) return;
-  // لا نحذف عضوًا مرتبطًا بمصروف كدافع
-  const usedAsPayer = t.expenses.some(e => e.paidBy === memberId);
-  if (usedAsPayer) throw new Error('لا يمكن حذف عضو دفع قطّة. احذف قطّاته أولًا.');
+  if (memberId === t.amirId) throw new Error('لا يمكن حذف أمير الرحلة.');
+  const usedInPair = t.pairExpenses.some(e => e.paidBy === memberId || e.withId === memberId);
+  if (usedInPair) throw new Error('لا يمكن حذف عضو مرتبط بقطة بين شخصين. احذفها أولًا.');
   t.members = t.members.filter(m => m.id !== memberId);
-  // نظّف المشاركين
-  t.expenses.forEach(e => { e.sharedAmong = e.sharedAmong.filter(id => id !== memberId); });
-  if (t.amirId === memberId) t.amirId = t.members[0]?.id || null;
+  t.pool.participantIds = t.pool.participantIds.filter(id => id !== memberId);
+  delete t.personalExpenses[memberId];
+  if (t.currentMemberId === memberId) t.currentMemberId = t.amirId;
   persist();
 }
 
@@ -115,8 +135,99 @@ export function setAmir(tripId, memberId) {
   persist();
 }
 
-export function memberName(trip, id) {
-  return trip.members.find(m => m.id === id)?.name || 'غير معروف';
+export function memberById(trip, id) {
+  return trip.members.find(m => m.id === id) || null;
+}
+
+/* ---------------- القطة (الصندوق المشترك) ---------------- */
+
+export function setPool(tripId, { total, participantIds, covers, poolAll }) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.pool = {
+    total: Number(total) || 0,
+    participantIds: participantIds.slice(),
+    covers: (covers || '').trim(),
+  };
+  t._poolAll = !!poolAll;
+  persist();
+}
+
+export function toggleQattahPaid(tripId, memberId) {
+  const t = getTrip(tripId);
+  const m = memberById(t, memberId);
+  if (!m) return;
+  m.qattahPaid = !m.qattahPaid;
+  persist();
+}
+
+/* ---------------- الميزانية الشخصية ---------------- */
+
+export function setMemberBudget(tripId, memberId, budget) {
+  const t = getTrip(tripId);
+  const m = memberById(t, memberId);
+  if (!m) return;
+  m.budget = budget === null || budget === '' ? null : Number(budget);
+  persist();
+}
+
+/* ---------------- المصاريف (ثلاثة أنواع) ----------------
+   كل المبالغ تُخزَّن بعملة الديار (home).
+--------------------------------------------------------- */
+
+function toHome(trip, amount, enteredCur) {
+  const a = Number(amount);
+  if (enteredCur === trip.destCurrency && trip.rate) return a / trip.rate;
+  return a; // مُدخل بعملة الديار
+}
+
+export function addGroupExpense(tripId, { title, amount, category, enteredCur }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const e = { id: uid('g'), title: title.trim(), amount: toHome(t, amount, enteredCur), category: category || 'other', createdAt: Date.now() };
+  t.groupExpenses.push(e);
+  persist();
+  return e;
+}
+export function removeGroupExpense(tripId, id) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.groupExpenses = t.groupExpenses.filter(e => e.id !== id);
+  persist();
+}
+
+export function addPersonalExpense(tripId, memberId, { title, amount, category, enteredCur }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  if (!t.personalExpenses[memberId]) t.personalExpenses[memberId] = [];
+  const e = { id: uid('p'), title: title.trim(), amount: toHome(t, amount, enteredCur), category: category || 'other', createdAt: Date.now() };
+  t.personalExpenses[memberId].push(e);
+  persist();
+  return e;
+}
+export function removePersonalExpense(tripId, memberId, id) {
+  const t = getTrip(tripId);
+  if (!t || !t.personalExpenses[memberId]) return;
+  t.personalExpenses[memberId] = t.personalExpenses[memberId].filter(e => e.id !== id);
+  persist();
+}
+
+export function addPairExpense(tripId, { title, amount, category, paidBy, withId, enteredCur }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const e = {
+    id: uid('pr'), title: title.trim(), amount: toHome(t, amount, enteredCur),
+    category: category || 'other', paidBy, withId, createdAt: Date.now(),
+  };
+  t.pairExpenses.push(e);
+  persist();
+  return e;
+}
+export function removePairExpense(tripId, id) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.pairExpenses = t.pairExpenses.filter(e => e.id !== id);
+  persist();
 }
 
 /* ---------------- الأماكن ---------------- */
@@ -129,7 +240,6 @@ export function addPlace(tripId, { name, note, mapUrl }) {
   persist();
   return p;
 }
-
 export function togglePlaceVisited(tripId, placeId) {
   const t = getTrip(tripId);
   const p = t?.places.find(x => x.id === placeId);
@@ -137,7 +247,6 @@ export function togglePlaceVisited(tripId, placeId) {
   p.visited = !p.visited;
   persist();
 }
-
 export function removePlace(tripId, placeId) {
   const t = getTrip(tripId);
   if (!t) return;
@@ -145,40 +254,4 @@ export function removePlace(tripId, placeId) {
   persist();
 }
 
-/* ---------------- القطّات / المصاريف ----------------
-   type: 'group'    -> على القروب كله
-         'some'     -> بين أشخاص محددين
-         'personal' -> شخصي خارج القطة (شخص واحد)
------------------------------------------------------- */
-
-export function addExpense(tripId, data) {
-  const t = getTrip(tripId);
-  if (!t) return null;
-  const e = {
-    id: uid('exp'),
-    title: data.title.trim(),
-    amount: Number(data.amount),
-    category: data.category || 'other',
-    type: data.type,                    // group | some | personal
-    paidBy: data.paidBy,                // memberId
-    sharedAmong: data.sharedAmong || [],// memberIds
-    stage: data.stage || 'trip',        // مرحلة الرحلة المرتبطة
-    createdAt: Date.now(),
-  };
-  t.expenses.push(e);
-  persist();
-  return e;
-}
-
-export function removeExpense(tripId, expId) {
-  const t = getTrip(tripId);
-  if (!t) return;
-  t.expenses = t.expenses.filter(e => e.id !== expId);
-  persist();
-}
-
-/* ---------------- إعادة الضبط (للتجربة) ---------------- */
-export function _resetAll() {
-  state = emptyState();
-  persist();
-}
+export function _resetAll() { state = emptyState(); persist(); }

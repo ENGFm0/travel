@@ -367,6 +367,70 @@ textarea.input { resize: vertical; min-height: 72px; }
 }
 .pay-note svg { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
 
+/* ---------- عملة مزدوجة ---------- */
+.dual { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
+.dual-h { font-weight: 800; }
+.dual-d { font-size: .74rem; color: var(--ink-300); font-weight: 700; }
+
+/* ---------- badges: سداد ---------- */
+.badge.paid { background: var(--green-bg); color: var(--green); }
+.badge.pending { background: var(--sand-100); color: var(--sand-600); }
+
+/* ---------- من أنت ---------- */
+.whoami { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.whoami > label { font-weight: 700; color: var(--ink-500); }
+.select-wrap { position: relative; flex: 1; min-width: 140px; }
+.select-wrap svg { position: absolute; inset-inline-start: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--ink-500); pointer-events: none; }
+.select-wrap .select { padding-inline-start: 34px; }
+.select { width: 100%; padding: 11px 14px; border-radius: 12px; background: var(--paper); border: 1.5px solid var(--line); color: var(--ink-900); appearance: none; font-weight: 700; }
+
+/* ---------- بطاقة الميزانية ---------- */
+.budget-card { display: grid; gap: 2px; }
+.bk-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 2px; border-bottom: 1px solid var(--line); gap: 10px; }
+.bk-row span { color: var(--ink-700); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bk-row b { font-weight: 800; white-space: nowrap; }
+.bk-row b.neg { color: var(--red); }
+.bk-total { display: flex; align-items: center; justify-content: space-between; padding: 14px 2px 4px; }
+.bk-total span:first-child { font-weight: 800; font-size: 1.05rem; }
+.bk-amt .dual-h { font-size: 1.35rem; color: var(--teal-800); }
+.bk-amt.over .dual-h { color: var(--red); }
+.bk-note { margin-top: 10px; padding: 10px 12px; background: var(--teal-050); border-radius: 10px; font-size: .86rem; color: var(--teal-800); }
+
+/* ---------- بطاقة القطة (الصندوق) ---------- */
+.pool-hero { background: linear-gradient(140deg, var(--teal-800), var(--teal-700)); color: #fff; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+.pool-hero-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.pool-hero-top .btn-ghost { background: rgba(255,255,255,.16); color: #fff; box-shadow: none; }
+.pool-label { font-size: .82rem; opacity: .8; }
+.pool-share .dual-h { font-size: 1.6rem; font-weight: 800; }
+.pool-share .dual-d { color: rgba(255,255,255,.7); }
+.pool-share { display: flex; flex-direction: column; }
+.pool-bar { height: 8px; background: rgba(255,255,255,.18); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
+.pool-bar span { display: block; height: 100%; background: var(--sand-500); border-radius: 999px; transition: width .3s ease; }
+.pool-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+.pool-stats > div { background: rgba(255,255,255,.1); border-radius: 10px; padding: 8px 4px; }
+.pool-stats b { display: block; font-size: .95rem; font-weight: 800; }
+.pool-stats b.over { color: #ffcabf; }
+.pool-stats small { font-size: .68rem; opacity: .75; }
+.pool-covers { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; font-size: .84rem; background: rgba(255,255,255,.1); padding: 9px 11px; border-radius: 10px; }
+.pool-covers svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+@media (max-width: 440px) { .pool-stats b { font-size: .82rem; } .pool-stats { gap: 6px; } }
+
+/* ---------- صفوف حالة السداد ---------- */
+.status-row { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+.status-row:last-child { border-bottom: none; }
+.status-row .badge { flex-shrink: 0; }
+
+/* ---------- إدخال المبلغ + العملة ---------- */
+.amount-row { display: flex; gap: 8px; align-items: stretch; }
+.amount-row .input { flex: 1; }
+.cur-seg { flex: 0 0 auto; }
+.cur-seg .seg-opt { padding: 8px 12px; font-size: .82rem; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rate-row { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.rate-row b { color: var(--teal-800); }
+.share-preview { background: var(--teal-050); color: var(--teal-800); padding: 12px 14px; border-radius: 12px; font-size: .9rem; min-height: 4px; }
+.share-preview:empty { display: none; }
+
 </style>
 </head>
 <body>
@@ -376,11 +440,9 @@ textarea.input { resize: vertical; min-height: 72px; }
       <button class="brand" id="brandBtn" aria-label="الرئيسية">
         <span class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
+            <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle>
           </svg>
-        </span>
-        <span class="brand-name">رِفقة</span>
+        </span><span class="brand-name">رِفقة</span>
       </button>
       <div class="header-actions" id="headerActions"></div>
     </div>
@@ -389,7 +451,7 @@ textarea.input { resize: vertical; min-height: 72px; }
   <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
-/* ===== icons ===== */
+/* icons */
 /* =========================================================
    icons.js — أيقونات SVG بسيطة (خطوط نظيفة، أسلوب سفر واقعي)
    ========================================================= */
@@ -414,6 +476,12 @@ const icons = {
   info: svg('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>'),
   luggage: svg('<rect x="6" y="7" width="12" height="14" rx="2"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M10 11v6M14 11v6"/>'),
   edit: svg('<path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+  phone: svg('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/>'),
+  gear: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>', { w: 1.7 }),
+  send: svg('<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'),
+  userplus: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'),
+  coins: svg('<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82"/>', { w: 1.7 }),
+  chevron: svg('<path d="M6 9l6 6 6-6"/>'),
 
   // فئات المصاريف
   cat_flight: svg('<path d="M17.8 19.2 16 11l3.5-3.5a2 2 0 1 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7l4.4 3.9-2 2.3-2.6-.4-.9 1.1 3 1.4 1.4 3 1.1-.9-.4-2.6 2.3-2 3.9 4.4a1 1 0 0 0 1.7-.9Z"/>'),
@@ -442,26 +510,25 @@ function catLabel(key) {
   return (catList.find(c => c.key === key) || catList[catList.length - 1]).label;
 }
 
-/* ===== store ===== */
+/* store */
 /* =========================================================
    store.js — طبقة البيانات + الحفظ المحلي (localStorage)
+   نموذج: قطة القروب (صندوق مشترك) + ميزانية شخصية + قطة بين شخصين
    ========================================================= */
 
-const KEY = 'rifqa.data.v1';
+const KEY = 'rifqa.data.v2';
 
 const AVATAR_COLORS = [
   '#0e4d54', '#c8873f', '#2f8f5b', '#5b6ec8', '#b0568f',
   '#3f8fc8', '#c0453b', '#7a8f2f', '#8f5b3f', '#4a6572'
 ];
 
-/* توليد معرّف بسيط بدون تكرار */
 function uid(prefix = 'id') {
   return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-/* الحالة الافتراضية */
 function emptyState() {
-  return { trips: [], activeTripId: null };
+  return { trips: [], version: 2 };
 }
 
 let state = load();
@@ -479,11 +546,8 @@ function load() {
 }
 
 function persist() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch (e) {
-    console.warn('تعذّر الحفظ المحلي', e);
-  }
+  try { localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch (e) { console.warn('تعذّر الحفظ المحلي', e); }
 }
 
 /* ---------------- الرحلات ---------------- */
@@ -493,18 +557,24 @@ function getTrips() {
 function getTrip(id) {
   return state.trips.find(t => t.id === id) || null;
 }
-function createTrip({ destination, country, flag, currency }) {
+function createTrip({ destination, country, flag, destCurrency, homeCurrency, rate, amirName, amirPhone }) {
+  const amir = { id: uid('m'), name: amirName.trim(), phone: (amirPhone || '').trim(), username: '', color: AVATAR_COLORS[0], budget: null, qattahPaid: true };
   const trip = {
     id: uid('trip'),
     destination: destination.trim(),
     country: (country || '').trim(),
     flag: flag || '🧳',
-    currency: currency || 'SAR',
-    members: [],
-    amirId: null,
+    destCurrency: destCurrency || 'TRY',
+    homeCurrency: homeCurrency || 'SAR',
+    rate: Number(rate) || 1,            // 1 عملة ديار = rate عملة وجهة
+    amirId: amir.id,
+    currentMemberId: amir.id,           // «أنا» محليًا
+    members: [amir],
+    pool: { total: 0, participantIds: [], covers: '' },
+    groupExpenses: [],                  // يصرفها الأمير من القطة
+    pairExpenses: [],                   // بين شخصين
+    personalExpenses: {},               // { memberId: [ ... ] }
     places: [],
-    expenses: [],
-    stageState: {},         // { stageKey: true } للمراحل المكتملة يدويًا
     createdAt: Date.now(),
   };
   state.trips.push(trip);
@@ -521,28 +591,45 @@ function deleteTrip(id) {
   state.trips = state.trips.filter(t => t.id !== id);
   persist();
 }
+function setCurrentMember(tripId, memberId) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.currentMemberId = memberId;
+  persist();
+}
 
 /* ---------------- الأعضاء ---------------- */
-function addMember(tripId, name) {
+function addMember(tripId, { name, phone, username }) {
   const t = getTrip(tripId);
   if (!t) return null;
   const idx = t.members.length % AVATAR_COLORS.length;
-  const m = { id: uid('m'), name: name.trim(), color: AVATAR_COLORS[idx] };
+  const m = {
+    id: uid('m'), name: name.trim(), phone: (phone || '').trim(),
+    username: (username || '').trim(), color: AVATAR_COLORS[idx], budget: null, qattahPaid: false,
+  };
   t.members.push(m);
-  if (!t.amirId) t.amirId = m.id; // أول عضو يصير أمير مؤقتًا
+  // إذا القطة «على الكل» أضِفه للمشاركين تلقائيًا
+  if (t.pool.participantIds.length && t._poolAll) t.pool.participantIds.push(m.id);
   persist();
   return m;
+}
+function updateMember(tripId, memberId, patch) {
+  const t = getTrip(tripId);
+  const m = t?.members.find(x => x.id === memberId);
+  if (!m) return;
+  Object.assign(m, patch);
+  persist();
 }
 function removeMember(tripId, memberId) {
   const t = getTrip(tripId);
   if (!t) return;
-  // لا نحذف عضوًا مرتبطًا بمصروف كدافع
-  const usedAsPayer = t.expenses.some(e => e.paidBy === memberId);
-  if (usedAsPayer) throw new Error('لا يمكن حذف عضو دفع قطّة. احذف قطّاته أولًا.');
+  if (memberId === t.amirId) throw new Error('لا يمكن حذف أمير الرحلة.');
+  const usedInPair = t.pairExpenses.some(e => e.paidBy === memberId || e.withId === memberId);
+  if (usedInPair) throw new Error('لا يمكن حذف عضو مرتبط بقطة بين شخصين. احذفها أولًا.');
   t.members = t.members.filter(m => m.id !== memberId);
-  // نظّف المشاركين
-  t.expenses.forEach(e => { e.sharedAmong = e.sharedAmong.filter(id => id !== memberId); });
-  if (t.amirId === memberId) t.amirId = t.members[0]?.id || null;
+  t.pool.participantIds = t.pool.participantIds.filter(id => id !== memberId);
+  delete t.personalExpenses[memberId];
+  if (t.currentMemberId === memberId) t.currentMemberId = t.amirId;
   persist();
 }
 function setAmir(tripId, memberId) {
@@ -551,8 +638,93 @@ function setAmir(tripId, memberId) {
   t.amirId = memberId;
   persist();
 }
-function memberName(trip, id) {
-  return trip.members.find(m => m.id === id)?.name || 'غير معروف';
+function memberById(trip, id) {
+  return trip.members.find(m => m.id === id) || null;
+}
+
+/* ---------------- القطة (الصندوق المشترك) ---------------- */
+function setPool(tripId, { total, participantIds, covers, poolAll }) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.pool = {
+    total: Number(total) || 0,
+    participantIds: participantIds.slice(),
+    covers: (covers || '').trim(),
+  };
+  t._poolAll = !!poolAll;
+  persist();
+}
+function toggleQattahPaid(tripId, memberId) {
+  const t = getTrip(tripId);
+  const m = memberById(t, memberId);
+  if (!m) return;
+  m.qattahPaid = !m.qattahPaid;
+  persist();
+}
+
+/* ---------------- الميزانية الشخصية ---------------- */
+function setMemberBudget(tripId, memberId, budget) {
+  const t = getTrip(tripId);
+  const m = memberById(t, memberId);
+  if (!m) return;
+  m.budget = budget === null || budget === '' ? null : Number(budget);
+  persist();
+}
+
+/* ---------------- المصاريف (ثلاثة أنواع) ----------------
+   كل المبالغ تُخزَّن بعملة الديار (home).
+--------------------------------------------------------- */
+
+function toHome(trip, amount, enteredCur) {
+  const a = Number(amount);
+  if (enteredCur === trip.destCurrency && trip.rate) return a / trip.rate;
+  return a; // مُدخل بعملة الديار
+}
+function addGroupExpense(tripId, { title, amount, category, enteredCur }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const e = { id: uid('g'), title: title.trim(), amount: toHome(t, amount, enteredCur), category: category || 'other', createdAt: Date.now() };
+  t.groupExpenses.push(e);
+  persist();
+  return e;
+}
+function removeGroupExpense(tripId, id) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.groupExpenses = t.groupExpenses.filter(e => e.id !== id);
+  persist();
+}
+function addPersonalExpense(tripId, memberId, { title, amount, category, enteredCur }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  if (!t.personalExpenses[memberId]) t.personalExpenses[memberId] = [];
+  const e = { id: uid('p'), title: title.trim(), amount: toHome(t, amount, enteredCur), category: category || 'other', createdAt: Date.now() };
+  t.personalExpenses[memberId].push(e);
+  persist();
+  return e;
+}
+function removePersonalExpense(tripId, memberId, id) {
+  const t = getTrip(tripId);
+  if (!t || !t.personalExpenses[memberId]) return;
+  t.personalExpenses[memberId] = t.personalExpenses[memberId].filter(e => e.id !== id);
+  persist();
+}
+function addPairExpense(tripId, { title, amount, category, paidBy, withId, enteredCur }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const e = {
+    id: uid('pr'), title: title.trim(), amount: toHome(t, amount, enteredCur),
+    category: category || 'other', paidBy, withId, createdAt: Date.now(),
+  };
+  t.pairExpenses.push(e);
+  persist();
+  return e;
+}
+function removePairExpense(tripId, id) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.pairExpenses = t.pairExpenses.filter(e => e.id !== id);
+  persist();
 }
 
 /* ---------------- الأماكن ---------------- */
@@ -577,167 +749,143 @@ function removePlace(tripId, placeId) {
   t.places = t.places.filter(p => p.id !== placeId);
   persist();
 }
-
-/* ---------------- القطّات / المصاريف ----------------
-   type: 'group'    -> على القروب كله
-         'some'     -> بين أشخاص محددين
-         'personal' -> شخصي خارج القطة (شخص واحد)
------------------------------------------------------- */
-function addExpense(tripId, data) {
-  const t = getTrip(tripId);
-  if (!t) return null;
-  const e = {
-    id: uid('exp'),
-    title: data.title.trim(),
-    amount: Number(data.amount),
-    category: data.category || 'other',
-    type: data.type,                    // group | some | personal
-    paidBy: data.paidBy,                // memberId
-    sharedAmong: data.sharedAmong || [],// memberIds
-    stage: data.stage || 'trip',        // مرحلة الرحلة المرتبطة
-    createdAt: Date.now(),
-  };
-  t.expenses.push(e);
-  persist();
-  return e;
-}
-function removeExpense(tripId, expId) {
-  const t = getTrip(tripId);
-  if (!t) return;
-  t.expenses = t.expenses.filter(e => e.id !== expId);
-  persist();
-}
-
-/* ---------------- إعادة الضبط (للتجربة) ---------------- */
-function _resetAll() {
-  state = emptyState();
-  persist();
-}
+function _resetAll() { state = emptyState(); persist(); }
 
 
-const db = { getTrips, getTrip, createTrip, updateTrip, deleteTrip, addMember, removeMember, setAmir, memberName, addPlace, togglePlaceVisited, removePlace, addExpense, removeExpense, _resetAll };
+const db = { getTrips, getTrip, createTrip, updateTrip, deleteTrip, setCurrentMember, addMember, updateMember, removeMember, setAmir, memberById, setPool, toggleQattahPaid, setMemberBudget, addGroupExpense, removeGroupExpense, addPersonalExpense, removePersonalExpense, addPairExpense, removePairExpense, addPlace, togglePlaceVisited, removePlace, _resetAll };
 
-/* ===== settle ===== */
+/* settle */
 /* =========================================================
-   settle.js — حساب الأرصدة والتسوية بأقل عدد تحويلات
+   settle.js — حسابات القطة والميزانية والتسوية بين الأشخاص
+   كل المبالغ بعملة الديار (home).
    ========================================================= */
 
-/* يقرّب لأقرب هللتين */
 const r2 = (n) => Math.round(n * 100) / 100;
 
-/**
- * يحسب رصيد كل عضو:
- *   موجب  = له (دفع أكثر من نصيبه)
- *   سالب  = عليه (نصيبه أكثر مما دفع)
- * القطّة الشخصية (personal) لا تدخل التسوية — تخص صاحبها فقط.
- */
-function computeBalances(trip) {
-  const bal = {};
-  trip.members.forEach(m => { bal[m.id] = 0; });
+/* ---------------- القطة (الصندوق) ---------------- */
+function poolStats(trip) {
+  const parts = trip.pool.participantIds.filter(id => trip.members.some(m => m.id === id));
+  const count = parts.length;
+  const total = trip.pool.total || 0;
+  const share = count ? total / count : 0;
 
-  trip.expenses.forEach(e => {
-    if (e.type === 'personal') return; // خارج القطة، لا تُقسّم
+  const paidIds = parts.filter(id => trip.members.find(m => m.id === id)?.qattahPaid);
+  const collected = r2(share * paidIds.length);
+  const spent = r2(trip.groupExpenses.reduce((s, e) => s + e.amount, 0));
+  const remaining = r2(collected - spent);
 
-    // من يشارك في هذه القطّة
-    let shareIds;
-    if (e.type === 'group') {
-      shareIds = trip.members.map(m => m.id);
-    } else { // some
-      shareIds = e.sharedAmong.length ? e.sharedAmong : [e.paidBy];
-    }
-    if (shareIds.length === 0) return;
-
-    const per = e.amount / shareIds.length;
-
-    // الدافع دفع كامل المبلغ
-    if (bal[e.paidBy] !== undefined) bal[e.paidBy] += e.amount;
-    // كل مشارك عليه نصيبه
-    shareIds.forEach(id => { if (bal[id] !== undefined) bal[id] -= per; });
-  });
-
-  Object.keys(bal).forEach(k => { bal[k] = r2(bal[k]); });
-  return bal;
+  return {
+    participants: parts,
+    count,
+    total: r2(total),
+    share: r2(share),
+    paidIds,
+    pendingIds: parts.filter(id => !paidIds.includes(id)),
+    collected,
+    spent,
+    remaining,
+    fundedPct: total ? Math.min(100, Math.round((collected / total) * 100)) : 0,
+  };
 }
 
-/**
- * يحوّل الأرصدة إلى أقل عدد تحويلات (greedy debt settlement).
- * يُرجع: [{ from, to, amount }]
- */
-function settle(trip) {
-  const bal = computeBalances(trip);
+/* ---------------- ميزانية عضو ---------------- */
+function memberBudget(trip, memberId) {
+  const m = trip.members.find(x => x.id === memberId);
+  const budget = m && m.budget != null ? m.budget : null;
+  const isParticipant = trip.pool.participantIds.includes(memberId);
+  const ps = poolStats(trip);
+  const qattahShare = isParticipant ? ps.share : 0;
+  const personal = (trip.personalExpenses[memberId] || []);
+  const personalSpent = r2(personal.reduce((s, e) => s + e.amount, 0));
 
-  const creditors = []; // له
-  const debtors = [];   // عليه
-  Object.entries(bal).forEach(([id, v]) => {
+  // صافي بين شخصين لهذا العضو (+ له / - عليه)
+  const pair = pairNet(trip)[memberId] || 0;
+
+  const remaining = budget == null ? null : r2(budget - qattahShare - personalSpent);
+  return {
+    budget, qattahShare, personalSpent, remaining,
+    personalCount: personal.length,
+    isParticipant,
+    qattahPaid: !!m?.qattahPaid,
+    pairNet: r2(pair),
+  };
+}
+
+/* ---------------- قطة بين شخصين ---------------- */
+// كل قطة تُقسّم 50/50: الطرف الآخر عليه نصفها للدافع
+function pairNet(trip) {
+  const net = {};
+  trip.members.forEach(m => { net[m.id] = 0; });
+  trip.pairExpenses.forEach(e => {
+    const half = e.amount / 2;
+    if (net[e.paidBy] !== undefined) net[e.paidBy] += half;   // له
+    if (net[e.withId] !== undefined) net[e.withId] -= half;   // عليه
+  });
+  Object.keys(net).forEach(k => net[k] = r2(net[k]));
+  return net;
+}
+function settlePairs(trip) {
+  const net = pairNet(trip);
+  const creditors = [], debtors = [];
+  Object.entries(net).forEach(([id, v]) => {
     if (v > 0.009) creditors.push({ id, amt: v });
     else if (v < -0.009) debtors.push({ id, amt: -v });
   });
-
   creditors.sort((a, b) => b.amt - a.amt);
   debtors.sort((a, b) => b.amt - a.amt);
-
   const txns = [];
   let i = 0, j = 0;
   while (i < debtors.length && j < creditors.length) {
     const d = debtors[i], c = creditors[j];
     const pay = r2(Math.min(d.amt, c.amt));
     if (pay > 0) txns.push({ from: d.id, to: c.id, amount: pay });
-    d.amt = r2(d.amt - pay);
-    c.amt = r2(c.amt - pay);
+    d.amt = r2(d.amt - pay); c.amt = r2(c.amt - pay);
     if (d.amt <= 0.009) i++;
     if (c.amt <= 0.009) j++;
   }
   return txns;
 }
+{ r2 };
 
-/* إجماليات مفيدة للواجهة */
-function tripTotals(trip) {
-  let group = 0, some = 0, personal = 0;
-  trip.expenses.forEach(e => {
-    if (e.type === 'personal') personal += e.amount;
-    else if (e.type === 'group') group += e.amount;
-    else some += e.amount;
-  });
-  return {
-    shared: r2(group + some),   // ضمن القطة (تُقسّم)
-    group: r2(group),
-    some: r2(some),
-    personal: r2(personal),     // خارج القطة
-    all: r2(group + some + personal),
-  };
-}
-
-/* ===== app ===== */
+/* app */
 /* =========================================================
-   app.js — الواجهة والتنقّل والمنطق
+   app.js — رِفقة: قطة القروب + الميزانية الشخصية + قطة بين شخصين
    ========================================================= */
 
-/* ---------------- أدوات مساعدة ---------------- */
-const $ = (sel, root = document) => root.querySelector(sel);
+/* ---------------- أدوات ---------------- */
+const $ = (s, r = document) => r.querySelector(s);
 const view = $('#view');
 const headerActions = $('#headerActions');
 const modalRoot = $('#modalRoot');
 
-const CURRENCIES = {
-  SAR: 'ر.س', AED: 'د.إ', KWD: 'د.ك', BHD: 'د.ب', QAR: 'ر.ق',
-  OMR: 'ر.ع', USD: '$', EUR: '€', GBP: '£', TRY: '₺', EGP: 'ج.م',
+const CUR = {
+  SAR: 'ر.س', AED: 'د.إ', KWD: 'د.ك', BHD: 'د.ب', QAR: 'ر.ق', OMR: 'ر.ع',
+  TRY: '₺', USD: '$', EUR: '€', GBP: '£', EGP: 'ج.م', MYR: 'RM', THB: '฿',
+  IDR: 'Rp', JPY: '¥', GEL: '₾', AZN: '₼', MVR: '.ރ', MAD: 'د.م', CHF: 'Fr',
 };
+const curLabel = (c) => CUR[c] || c;
 
 const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
-const money = (n, cur = 'SAR') => `${nf.format(Math.round(n * 100) / 100)} ${CURRENCIES[cur] || cur}`;
+const round2 = (n) => Math.round(n * 100) / 100;
 
-const esc = (s) => String(s).replace(/[&<>"']/g, c => (
-  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-));
+const money = (nHome, t) => `${nf.format(round2(nHome))} ${curLabel(t.homeCurrency)}`;
+const inDest = (nHome, t) => `${nf.format(round2(nHome * (t.rate || 1)))} ${curLabel(t.destCurrency)}`;
+const dual = (nHome, t) =>
+  `<span class="dual"><span class="dual-h">${money(nHome, t)}</span><span class="dual-d">≈ ${inDest(nHome, t)}</span></span>`;
+
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function initials(name) {
-  const parts = name.trim().split(/\s+/);
-  return (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
+  const p = name.trim().split(/\s+/);
+  return (p[0]?.[0] || '') + (p[1]?.[0] || '');
 }
-
 function avatar(m, size) {
   const s = size ? `width:${size}px;height:${size}px;font-size:${size * 0.4}px` : '';
   return `<span class="avatar" style="background:${m.color};${s}">${esc(initials(m.name))}</span>`;
+}
+function waLink(phone, text) {
+  const p = (phone || '').replace(/[^\d]/g, '');
+  return `https://wa.me/${p}?text=${encodeURIComponent(text)}`;
 }
 
 let toastTimer;
@@ -746,385 +894,351 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }
+function copyText(text) { navigator.clipboard?.writeText?.(text).catch(() => {}); }
 
 /* ---------------- التنقّل ---------------- */
-const routeState = { tripId: null, tab: 'overview' };
-
-function go(tripId, tab = 'overview') {
-  routeState.tripId = tripId;
-  routeState.tab = tab;
-  render();
-  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-}
-
-function goHome() {
-  routeState.tripId = null;
-  render();
-}
-
+const R = { tripId: null, tab: 'budget' };
+function go(tripId, tab = 'budget') { R.tripId = tripId; R.tab = tab; render(); window.scrollTo(0, 0); }
+function goHome() { R.tripId = null; render(); }
 $('#brandBtn').addEventListener('click', goHome);
 
 function render() {
-  if (routeState.tripId && db.getTrip(routeState.tripId)) {
-    renderTrip(db.getTrip(routeState.tripId), routeState.tab);
-  } else {
-    routeState.tripId = null;
-    renderHome();
-  }
+  const t = R.tripId && db.getTrip(R.tripId);
+  if (t) renderTrip(t, R.tab);
+  else { R.tripId = null; renderHome(); }
 }
 
 /* =========================================================
-   الشاشة الرئيسية — قائمة الرحلات
+   الرئيسية — قائمة الرحلات
    ========================================================= */
 function renderHome() {
   headerActions.innerHTML = '';
   const trips = db.getTrips();
-
   let body;
-  if (trips.length === 0) {
-    body = `
-      <div class="empty">
-        ${icons.luggage}
-        <h3>ما عندك رحلات بعد</h3>
-        <p>ابدأ رحلة جديدة، ضِف القروب، وعيّن أمير الرحلة.</p>
-        <button class="btn btn-primary mt" data-act="new-trip">${icons.plus} ابدأ رحلة</button>
-      </div>`;
+  if (!trips.length) {
+    body = `<div class="empty">${icons.luggage}<h3>ما عندك رحلات بعد</h3>
+      <p>أنشئ رحلة، ضِف القروب، وحدّد قطة الرحلة.</p>
+      <button class="btn btn-primary mt" data-act="new">${icons.plus} ابدأ رحلة</button></div>`;
   } else {
     body = `<div class="trip-grid">${trips.map(tripCard).join('')}</div>`;
   }
-
   view.innerHTML = `
     <div class="flex-between" style="margin-bottom:18px">
-      <div>
-        <h1 class="page-title">رحلاتي</h1>
-        <p class="muted-text">نظّم مصاريف السفر مع القروب في مكان واحد</p>
-      </div>
-      ${trips.length ? `<button class="btn btn-primary btn-sm" data-act="new-trip">${icons.plus} رحلة</button>` : ''}
-    </div>
-    ${body}`;
-
-  view.querySelectorAll('[data-act="new-trip"]').forEach(b => b.onclick = openNewTrip);
+      <div><h1 class="page-title">رحلاتي</h1>
+        <p class="muted-text">القطة والميزانية الشخصية في مكان واحد</p></div>
+      ${trips.length ? `<button class="btn btn-primary btn-sm" data-act="new">${icons.plus} رحلة</button>` : ''}
+    </div>${body}`;
+  view.querySelectorAll('[data-act="new"]').forEach(b => b.onclick = openNewTrip);
   view.querySelectorAll('[data-trip]').forEach(c => c.onclick = () => go(c.dataset.trip));
 }
 
 function tripCard(t) {
-  const totals = tripTotals(t);
+  const ps = poolStats(t);
+  const amir = db.memberById(t, t.amirId);
   return `
     <button class="trip-card" data-trip="${t.id}">
       <div class="trip-cover">
         <span class="flag">${t.flag}</span>
-        <div>
-          <div class="dest">${esc(t.destination)}</div>
-          ${t.country ? `<div style="opacity:.85;font-size:.85rem">${esc(t.country)}</div>` : ''}
-        </div>
+        <div><div class="dest">${esc(t.destination)}</div>
+          ${t.country ? `<div style="opacity:.85;font-size:.85rem">${esc(t.country)}</div>` : ''}</div>
       </div>
       <div class="trip-card-body">
         <div class="trip-meta">
-          <span>${icons.users} <b>${t.members.length}</b> أفراد</span>
-          <span>${icons.receipt} <b>${t.expenses.length}</b> قطّة</span>
+          <span>${icons.users} <b>${t.members.length}</b></span>
+          ${amir ? `<span class="chip amir" style="padding:2px 8px">${icons.crown} ${esc(amir.name)}</span>` : ''}
         </div>
-        <div style="font-weight:800;color:var(--teal-800)">${money(totals.all, t.currency)}</div>
+        <div style="font-weight:800;color:var(--teal-800)">${t.pool.total ? money(t.pool.total, t) : '—'}</div>
       </div>
     </button>`;
 }
 
 /* =========================================================
-   شاشة الرحلة — تبويبات
+   شاشة الرحلة
    ========================================================= */
 const TABS = [
-  { key: 'overview', label: 'نظرة عامة', icon: icons.overview },
+  { key: 'budget', label: 'مصاريفي', icon: icons.coins },
+  { key: 'pool', label: 'القطة', icon: icons.wallet },
+  { key: 'pairs', label: 'بين شخصين', icon: icons.users },
   { key: 'places', label: 'الأماكن', icon: icons.pin },
-  { key: 'expenses', label: 'القطّات', icon: icons.receipt },
-  { key: 'settle', label: 'التسوية', icon: icons.wallet },
 ];
 
 function renderTrip(t, tab) {
+  const amir = db.memberById(t, t.amirId);
   headerActions.innerHTML = `
-    <button class="btn btn-ghost btn-icon" data-act="del-trip" title="حذف الرحلة">${icons.trash}</button>
+    <button class="btn btn-ghost btn-icon" data-act="settings" title="إعدادات الرحلة">${icons.gear}</button>
     <button class="btn btn-ghost btn-sm" data-act="home">${icons.back} رحلاتي</button>`;
   headerActions.querySelector('[data-act="home"]').onclick = goHome;
-  headerActions.querySelector('[data-act="del-trip"]').onclick = () => confirmDeleteTrip(t);
+  headerActions.querySelector('[data-act="settings"]').onclick = () => openSettings(t);
 
   const tabsHtml = `<nav class="tabs">${TABS.map(x => `
-    <button class="tab ${x.key === tab ? 'active' : ''}" data-tab="${x.key}">${x.icon}<span>${x.label}</span></button>
-  `).join('')}</nav>`;
+    <button class="tab ${x.key === tab ? 'active' : ''}" data-tab="${x.key}">${x.icon}<span>${x.label}</span></button>`).join('')}</nav>`;
 
   let content = '';
-  if (tab === 'overview') content = tabOverview(t);
+  if (tab === 'budget') content = tabBudget(t);
+  else if (tab === 'pool') content = tabPool(t);
+  else if (tab === 'pairs') content = tabPairs(t);
   else if (tab === 'places') content = tabPlaces(t);
-  else if (tab === 'expenses') content = tabExpenses(t);
-  else if (tab === 'settle') content = tabSettle(t);
 
   view.innerHTML = `
     <div class="flex-between" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px">
         <span style="font-size:2.2rem">${t.flag}</span>
-        <div>
-          <h1 class="page-title" style="margin:0">${esc(t.destination)}</h1>
-          ${t.country ? `<p class="muted-text">${esc(t.country)}</p>` : ''}
-        </div>
+        <div><h1 class="page-title" style="margin:0">${esc(t.destination)}</h1>
+          <p class="muted-text">${esc(t.country || '')}${t.country ? ' · ' : ''}${curLabel(t.homeCurrency)} / ${curLabel(t.destCurrency)}</p></div>
       </div>
-    </div>
-    ${tabsHtml}
-    <div id="tabContent">${content}</div>`;
+    </div>${tabsHtml}<div id="tc">${content}</div>`;
 
   view.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(t.id, b.dataset.tab));
-  wireTab(t, tab);
+  wire(t, tab);
 }
 
-/* ---------------- تبويب: نظرة عامة ---------------- */
-const STAGES = [
-  { key: 'tickets', title: 'شراء التذاكر والحجز', note: 'تذاكر الطيران وحجز الفنادق' },
-  { key: 'depart', title: 'الإقلاع والوصول', note: 'انطلاق الرحلة' },
-  { key: 'places', title: 'تحديد الأماكن', note: 'أمير الرحلة يحدّد الوجهات' },
-  { key: 'daily', title: 'القطّات اليومية', note: 'أكل، مواصلات، تسوّق' },
-  { key: 'settle', title: 'التسوية والدفع', note: 'كل واحد يسدّد نصيبه عبر برق' },
-];
+/* ---------------- تبويب: مصاريفي ---------------- */
+function tabBudget(t) {
+  const me = db.memberById(t, t.currentMemberId) || db.memberById(t, t.amirId);
+  if (!me) return `<div class="empty">${icons.users}<h3>أضِف أعضاء القروب</h3>
+    <button class="btn btn-primary mt" data-act="go-pool">إدارة القطة والأعضاء</button></div>`;
 
-function stageDone(t, key) {
-  if (t.stageState[key] !== undefined) return t.stageState[key];
-  // اشتقاق تلقائي مبدئي
-  if (key === 'tickets') return t.expenses.some(e => ['flight', 'hotel', 'ticket'].includes(e.category));
-  if (key === 'places') return t.places.length > 0;
-  if (key === 'daily') return t.expenses.some(e => ['food', 'car', 'shop'].includes(e.category));
-  if (key === 'settle') return false;
-  return false;
-}
+  const b = memberBudget(t, me.id);
+  const memberOpts = t.members.map(m =>
+    `<option value="${m.id}" ${m.id === me.id ? 'selected' : ''}>${esc(m.name)}${m.id === t.amirId ? ' (الأمير)' : ''}</option>`).join('');
 
-function tabOverview(t) {
-  const totals = tripTotals(t);
-  const amir = t.members.find(m => m.id === t.amirId);
+  const personal = (t.personalExpenses[me.id] || []).slice().sort((a, c) => c.createdAt - a.createdAt);
 
-  let firstUndone = STAGES.find(s => !stageDone(t, s.key));
-
-  const stagesHtml = STAGES.map((s, i) => {
-    const done = stageDone(t, s.key);
-    const active = firstUndone && s.key === firstUndone.key;
-    return `
-      <button class="stage ${done ? 'done' : ''} ${active ? 'active' : ''}" data-stage="${s.key}">
-        <span class="stage-dot">${done ? icons.check : (i + 1)}</span>
-        <span class="stage-body">
-          <span class="stage-title">${s.title}</span>
-          <span class="stage-note">${s.note}</span>
-        </span>
-        ${done ? `<span class="stage-check">${icons.check}</span>` : ''}
-      </button>`;
-  }).join('');
-
-  return `
-    <div class="tiles">
-      <div class="tile"><div class="v">${money(totals.shared, t.currency)}</div><div class="l">ضمن القطة</div></div>
-      <div class="tile"><div class="v">${money(totals.personal, t.currency)}</div><div class="l">خارج القطة</div></div>
-      <div class="tile"><div class="v">${t.members.length}</div><div class="l">أفراد القروب</div></div>
-    </div>
-
-    <div class="section-head"><h2>القروب</h2>
-      <span class="hint">أمير الرحلة يحدّد الأماكن</span></div>
-    <div class="card card-pad">
-      ${amir ? `<div class="flex-between" style="margin-bottom:6px">
-        <div style="display:flex;align-items:center;gap:10px">${avatar(amir, 40)}
-          <div><div class="member-name">${esc(amir.name)}</div>
-          <span class="chip amir">${icons.crown} أمير الرحلة</span></div></div>
-      </div><div class="divider" style="margin:12px 0"></div>` : ''}
-      <div class="stack">
-        ${t.members.filter(m => m.id !== t.amirId).map(m => `
-          <div class="member-row">
-            ${avatar(m, 40)}
-            <div class="member-grow"><div class="member-name">${esc(m.name)}</div></div>
-            <div class="row-actions">
-              <button class="icon-btn" data-make-amir="${m.id}" title="عيّنه أميرًا">${icons.crown}</button>
-              <button class="icon-btn danger" data-del-member="${m.id}" title="حذف">${icons.trash}</button>
-            </div>
-          </div>`).join('') || (amir ? '' : '<p class="muted-text center">أضِف أعضاء القروب</p>')}
-      </div>
-      <button class="btn btn-ghost btn-block mt" data-act="add-member">${icons.plus} إضافة عضو</button>
-    </div>
-
-    <div class="section-head"><h2>مراحل الرحلة</h2>
-      <span class="hint">اضغط لتعليم المرحلة</span></div>
-    <div class="stages">${stagesHtml}</div>`;
-}
-
-/* ---------------- تبويب: الأماكن ---------------- */
-function tabPlaces(t) {
-  const amir = t.members.find(m => m.id === t.amirId);
-  const list = t.places.length
-    ? t.places.map((p, i) => `
-      <div class="place">
-        <span class="place-idx">${i + 1}</span>
-        <div class="place-body">
-          <div class="place-name">${esc(p.name)}</div>
-          ${p.note ? `<div class="place-note">${esc(p.note)}</div>` : ''}
-          <div class="place-links">
-            ${p.mapUrl
-              ? `<a class="map-link" href="${esc(p.mapUrl)}" target="_blank" rel="noopener">${icons.map} فتح في الخريطة</a>`
-              : `<a class="map-link" href="https://www.google.com/maps/search/${encodeURIComponent(p.name + ' ' + (t.destination || ''))}" target="_blank" rel="noopener">${icons.map} بحث في قوقل ماب</a>`}
-            <button class="map-link" style="background:${p.visited ? 'var(--green-bg)' : '#eef1f0'};color:${p.visited ? 'var(--green)' : 'var(--ink-500)'}" data-visited="${p.id}">
-              ${icons.check} ${p.visited ? 'تمّت الزيارة' : 'لم تُزَر بعد'}
-            </button>
-          </div>
-        </div>
-        <button class="icon-btn danger" data-del-place="${p.id}">${icons.trash}</button>
-      </div>`).join('')
-    : `<div class="empty">${icons.pin}<h3>لا توجد أماكن</h3><p>${amir ? esc(amir.name) + ' (أمير الرحلة) يضيف الأماكن من قوقل ماب.' : 'عيّن أمير الرحلة ثم أضِف الأماكن.'}</p></div>`;
-
-  return `
-    <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">
-      ${icons.crown}
-      <span>${amir ? `<b>${esc(amir.name)}</b> أمير الرحلة — هو من يحدّد الأماكن اللي بتُزار.` : 'عيّن أمير الرحلة من تبويب «نظرة عامة».'}</span>
-    </div>
-    <div class="section-head"><h2>الوجهات (${t.places.length})</h2></div>
-    ${list}
-    <button class="btn btn-primary btn-block mt" data-act="add-place">${icons.plus} إضافة مكان</button>`;
-}
-
-/* ---------------- تبويب: القطّات ---------------- */
-const TYPE_LABEL = { group: 'على القروب', some: 'بين أشخاص', personal: 'خارج القطة' };
-const TYPE_CLASS = { group: 'group', some: 'some', personal: 'personal' };
-
-function tabExpenses(t) {
-  if (t.members.length === 0) {
-    return `<div class="empty">${icons.users}<h3>أضِف القروب أولًا</h3><p>لا يمكن تسجيل قطّة قبل إضافة الأعضاء.</p>
-      <button class="btn btn-primary mt" data-act="go-overview">الذهاب لنظرة عامة</button></div>`;
-  }
-  const totals = tripTotals(t);
-  const sorted = t.expenses.slice().sort((a, b) => b.createdAt - a.createdAt);
-
-  const list = sorted.length ? sorted.map(e => {
-    const payer = t.members.find(m => m.id === e.paidBy);
-    let sub;
-    if (e.type === 'group') sub = `دفعها ${payer ? esc(payer.name) : '؟'} · تنقسم على الكل`;
-    else if (e.type === 'some') sub = `دفعها ${payer ? esc(payer.name) : '؟'} · بين ${e.sharedAmong.length} أشخاص`;
-    else sub = `${payer ? esc(payer.name) : '؟'} · مصروف شخصي`;
-    return `
-      <div class="exp">
-        <span class="exp-cat">${catIcon(e.category)}</span>
-        <div class="exp-body">
-          <div class="exp-title">${esc(e.title)}
-            <span class="badge ${TYPE_CLASS[e.type]}">${TYPE_LABEL[e.type]}</span></div>
-          <div class="exp-sub">${sub}</div>
-        </div>
-        <div class="exp-amount">${money(e.amount, t.currency)}</div>
-        <button class="icon-btn danger" data-del-exp="${e.id}">${icons.trash}</button>
+  let breakdown;
+  if (b.budget == null) {
+    breakdown = `<div class="empty" style="padding:28px">${icons.coins}
+      <h3>حدّد ميزانيتك الكاملة</h3>
+      <p>مبلغك الكامل للرحلة — تنخصم منه قطة القروب، والباقي مصاريفك الشخصية.</p>
+      <button class="btn btn-primary mt" data-act="set-budget">تحديد الميزانية</button></div>`;
+  } else {
+    const paidChip = b.isParticipant
+      ? (b.qattahPaid ? `<span class="badge paid">سدّدت ✓</span>` : `<span class="badge pending">بانتظار السداد</span>`)
+      : `<span class="badge personal">خارج القطة</span>`;
+    breakdown = `
+      <div class="card card-pad budget-card">
+        <div class="bk-row"><span>ميزانيتي الكاملة</span><b>${money(b.budget, t)}</b></div>
+        <div class="bk-row"><span>قطة الرحلة (للقروب) ${paidChip}</span><b class="neg">− ${money(b.qattahShare, t)}</b></div>
+        <div class="bk-row"><span>مصاريف شخصية (${b.personalCount})</span><b class="neg">− ${money(b.personalSpent, t)}</b></div>
+        <div class="bk-total"><span>المتبقي معي</span><span class="bk-amt ${b.remaining < 0 ? 'over' : ''}">${dual(b.remaining, t)}</span></div>
+        ${b.pairNet !== 0 ? `<div class="bk-note">${b.pairNet > 0 ? 'لك' : 'عليك'} في «بين شخصين»: <b>${money(Math.abs(b.pairNet), t)}</b></div>` : ''}
       </div>`;
-  }).join('') : `<div class="empty">${icons.receipt}<h3>ما فيه قطّات</h3><p>سجّل أول مصروف: تذاكر، فندق، أكل...</p></div>`;
+  }
+
+  const list = personal.length ? personal.map(e => `
+    <div class="exp">
+      <span class="exp-cat">${catIcon(e.category)}</span>
+      <div class="exp-body"><div class="exp-title">${esc(e.title)}</div>
+        <div class="exp-sub">${new Date(e.createdAt).toLocaleDateString('ar')}</div></div>
+      <div class="exp-amount">${dual(e.amount, t)}</div>
+      <button class="icon-btn danger" data-del-personal="${e.id}">${icons.trash}</button>
+    </div>`).join('') : `<p class="muted-text center" style="padding:16px">ما سجّلت مصاريف شخصية بعد.</p>`;
 
   return `
-    <div class="tiles">
-      <div class="tile"><div class="v">${money(totals.shared, t.currency)}</div><div class="l">ضمن القطة</div></div>
-      <div class="tile"><div class="v">${money(totals.personal, t.currency)}</div><div class="l">خارج القطة</div></div>
-      <div class="tile"><div class="v">${money(totals.all, t.currency)}</div><div class="l">الإجمالي</div></div>
+    <div class="whoami">
+      <label>أنت:</label>
+      <div class="select-wrap">${icons.chevron}
+        <select class="select" id="whoami-sel">${memberOpts}</select></div>
+      ${b.budget != null ? `<button class="btn btn-ghost btn-sm" data-act="set-budget">${icons.edit} تعديل الميزانية</button>` : ''}
     </div>
-    <div class="section-head"><h2>القطّات (${t.expenses.length})</h2></div>
-    ${list}
-    <button class="btn btn-primary btn-block mt" data-act="add-exp">${icons.plus} تسجيل قطّة</button>`;
+    ${breakdown}
+    ${b.budget != null ? `
+      <div class="section-head"><h2>مصاريفي الشخصية</h2></div>
+      ${list}
+      <button class="btn btn-primary btn-block mt" data-act="add-personal">${icons.plus} تسجيل مصروف شخصي</button>` : ''}`;
 }
 
-/* ---------------- تبويب: التسوية ---------------- */
-function tabSettle(t) {
-  if (t.members.length < 2) {
-    return `<div class="empty">${icons.wallet}<h3>التسوية تحتاج شخصين على الأقل</h3><p>أضِف أعضاء القروب وسجّل القطّات.</p></div>`;
+/* ---------------- تبويب: القطة ---------------- */
+function tabPool(t) {
+  const ps = poolStats(t);
+  const isAmir = t.currentMemberId === t.amirId;
+
+  // الأعضاء
+  const membersHtml = t.members.map(m => `
+    <div class="member-row">
+      ${avatar(m, 40)}
+      <div class="member-grow">
+        <div class="member-name">${esc(m.name)} ${m.id === t.amirId ? `<span class="chip amir" style="padding:1px 7px;font-size:.72rem">${icons.crown} أمير</span>` : ''}</div>
+        ${m.phone ? `<div class="muted-text" style="font-size:.8rem" dir="ltr">${esc(m.phone)}</div>` : ''}
+      </div>
+      <div class="row-actions">
+        ${m.id !== t.amirId ? `<button class="icon-btn" data-make-amir="${m.id}" title="عيّنه أميرًا">${icons.crown}</button>` : ''}
+        <button class="icon-btn" data-edit-member="${m.id}" title="تعديل">${icons.edit}</button>
+        ${m.id !== t.amirId ? `<button class="icon-btn danger" data-del-member="${m.id}">${icons.trash}</button>` : ''}
+      </div>
+    </div>`).join('');
+
+  // إعداد القطة + الحالة
+  let poolBody;
+  if (!t.pool.total || ps.count === 0) {
+    poolBody = `<div class="empty" style="padding:26px">${icons.wallet}
+      <h3>حدّد قطة الرحلة</h3>
+      <p>الأمير يحدّد إجمالي القطة، على مين، وإيش تشمل — وتتقسّم على المشاركين.</p>
+      <button class="btn btn-primary mt" data-act="setup-pool">تحديد القطة</button></div>`;
+  } else {
+    const statusRows = ps.participants.map(id => {
+      const m = db.memberById(t, id);
+      const paid = m.qattahPaid;
+      const reqText = `مرحبا ${m.name} 👋\nقطة رحلة ${t.destination}: نصيبك ${money(ps.share, t)} (≈ ${inDest(ps.share, t)}).\n${t.pool.covers ? 'تشمل: ' + t.pool.covers + '\n' : ''}الرجاء التحويل عبر برق. شكراً 🌿`;
+      return `<div class="status-row">
+        ${avatar(m, 36)}
+        <div class="member-grow"><div class="member-name">${esc(m.name)}</div>
+          <div class="muted-text" style="font-size:.8rem">${money(ps.share, t)}</div></div>
+        ${paid ? `<span class="badge paid">سدّد ✓</span>`
+               : `<span class="badge pending">بانتظار</span>`}
+        <button class="icon-btn" data-toggle-paid="${id}" title="${paid ? 'إلغاء' : 'تعليم كمسدّد'}">${icons.check}</button>
+        ${m.phone && !paid ? `<a class="icon-btn" style="color:var(--green)" href="${waLink(m.phone, reqText)}" target="_blank" rel="noopener" title="اطلب عبر واتساب">${icons.send}</a>` : ''}
+      </div>`;
+    }).join('');
+
+    poolBody = `
+      <div class="pool-hero">
+        <div class="pool-hero-top">
+          <div><div class="pool-label">نصيب الفرد</div><div class="pool-share">${dual(ps.share, t)}</div></div>
+          <button class="btn btn-ghost btn-sm" data-act="setup-pool">${icons.edit} تعديل</button>
+        </div>
+        <div class="pool-bar"><span style="width:${ps.fundedPct}%"></span></div>
+        <div class="pool-stats">
+          <div><b>${money(ps.collected, t)}</b><small>مُحصّل</small></div>
+          <div><b>${money(ps.total, t)}</b><small>إجمالي القطة</small></div>
+          <div><b>${money(ps.spent, t)}</b><small>مصروف</small></div>
+          <div><b class="${ps.remaining < 0 ? 'over' : ''}">${money(ps.remaining, t)}</b><small>متبقٍ بالصندوق</small></div>
+        </div>
+        ${t.pool.covers ? `<div class="pool-covers">${icons.info}<span>تشمل: ${esc(t.pool.covers)}</span></div>` : ''}
+      </div>
+
+      <div class="section-head"><h2>سداد القطة</h2><span class="hint">${ps.paidIds.length}/${ps.count} سدّدوا</span></div>
+      <div class="card card-pad"><div class="stack">${statusRows}</div></div>
+
+      <div class="section-head"><h2>الصرف من القطة</h2><span class="hint">${t.groupExpenses.length}</span></div>
+      ${t.groupExpenses.length ? t.groupExpenses.slice().sort((a, c) => c.createdAt - a.createdAt).map(e => `
+        <div class="exp">
+          <span class="exp-cat">${catIcon(e.category)}</span>
+          <div class="exp-body"><div class="exp-title">${esc(e.title)}</div>
+            <div class="exp-sub">من صندوق القطة</div></div>
+          <div class="exp-amount">${dual(e.amount, t)}</div>
+          <button class="icon-btn danger" data-del-group="${e.id}">${icons.trash}</button>
+        </div>`).join('') : `<p class="muted-text center" style="padding:12px">ما صُرف من القطة بعد.</p>`}
+      <button class="btn btn-ghost btn-block mt" data-act="add-group">${icons.plus} صرف من القطة</button>`;
   }
-  const balances = computeBalances(t);
-  const txns = settle(t);
-  const totals = tripTotals(t);
 
-  const balancesHtml = t.members.map(m => {
-    const v = balances[m.id] || 0;
-    const cls = v > 0.009 ? 'pos' : v < -0.009 ? 'neg' : '';
-    const label = v > 0.009 ? 'له' : v < -0.009 ? 'عليه' : 'متساوٍ';
-    return `<div class="balance-row">
-      ${avatar(m, 36)}
-      <div class="member-grow"><div class="member-name">${esc(m.name)}</div>
-        <div class="muted-text" style="font-size:.8rem">${label}</div></div>
-      <div class="balance-val ${cls}">${money(Math.abs(v), t.currency)}</div>
+  return `
+    <div class="section-head"><h2>القروب (${t.members.length})</h2></div>
+    <div class="card card-pad"><div class="stack">${membersHtml}</div>
+      <button class="btn btn-ghost btn-block mt" data-act="add-member">${icons.userplus} إضافة عضو</button></div>
+
+    <div class="section-head"><h2>قطة الرحلة</h2></div>
+    ${poolBody}`;
+}
+
+/* ---------------- تبويب: بين شخصين ---------------- */
+function tabPairs(t) {
+  if (t.members.length < 2) {
+    return `<div class="empty">${icons.users}<h3>تحتاج شخصين على الأقل</h3>
+      <p>أضِف أعضاء القروب من تبويب «القطة».</p></div>`;
+  }
+  const list = t.pairExpenses.slice().sort((a, c) => c.createdAt - a.createdAt);
+  const listHtml = list.length ? list.map(e => {
+    const payer = db.memberById(t, e.paidBy), other = db.memberById(t, e.withId);
+    return `<div class="exp">
+      <span class="exp-cat">${catIcon(e.category)}</span>
+      <div class="exp-body"><div class="exp-title">${esc(e.title)}</div>
+        <div class="exp-sub">دفعها ${payer ? esc(payer.name) : '؟'} · مع ${other ? esc(other.name) : '؟'} · مناصفة</div></div>
+      <div class="exp-amount">${dual(e.amount, t)}</div>
+      <button class="icon-btn danger" data-del-pair="${e.id}">${icons.trash}</button>
     </div>`;
-  }).join('');
+  }).join('') : `<div class="empty">${icons.users}<h3>ما فيه قطّات بين شخصين</h3><p>مصاريف تخص شخصين وتتسوّى بينهم مباشرة.</p></div>`;
 
+  const txns = settlePairs(t);
   const txHtml = txns.length ? txns.map(x => {
-    const from = t.members.find(m => m.id === x.from);
-    const to = t.members.find(m => m.id === x.to);
+    const from = db.memberById(t, x.from), to = db.memberById(t, x.to);
+    const payText = `تحويل عبر برق:\nمن: ${from.name}\nإلى: ${to.name}\nالمبلغ: ${money(x.amount, t)}`;
     return `<div class="settle">
       <div class="settle-flow">
         <span class="who">${avatar(from, 30)} ${esc(from.name)}</span>
         <span class="settle-arrow">${icons.arrow}</span>
         <span class="who">${avatar(to, 30)} ${esc(to.name)}</span>
       </div>
-      <div style="text-align:end">
-        <div class="settle-amount">${money(x.amount, t.currency)}</div>
-        <button class="btn btn-sand btn-sm" style="margin-top:6px" data-pay='${esc(JSON.stringify({ from: from.name, to: to.name, amount: x.amount, cur: t.currency }))}'>
-          ${icons.wallet} ادفع عبر برق
-        </button>
-      </div>
+      <div style="text-align:end"><div class="settle-amount">${money(x.amount, t)}</div>
+        <button class="btn btn-sand btn-sm" style="margin-top:6px" data-pay='${esc(JSON.stringify(payText))}'>${icons.wallet} برق</button></div>
     </div>`;
-  }).join('') : `<div class="empty">${icons.check}<h3>كل الحسابات مسوّاة</h3><p>ما فيه أحد يستحق على أحد ضمن القطة.</p></div>`;
+  }).join('') : '';
 
   return `
-    <div class="pay-note">
-      ${icons.info}
-      <span>القطّة <b>الشخصية (خارج القطة)</b> ما تدخل التسوية — تخص صاحبها فقط. التسوية تحسب القطّات المشتركة بأقل عدد تحويلات.</span>
-    </div>
+    <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.info}
+      <span>قطّات <b>خارج صندوق القروب</b> — مصروف يخص شخصين، يُقسّم مناصفة ويتسوّى بينهما.</span></div>
+    ${txns.length ? `<div class="section-head"><h2>التسوية</h2></div>${txHtml}` : ''}
+    <div class="section-head"><h2>القطّات (${t.pairExpenses.length})</h2></div>
+    ${listHtml}
+    <button class="btn btn-primary btn-block mt" data-act="add-pair">${icons.plus} قطة بين شخصين</button>`;
+}
 
-    <div class="section-head"><h2>التحويلات المطلوبة</h2>
-      <span class="hint">${txns.length} تحويل</span></div>
-    ${txHtml}
+/* ---------------- تبويب: الأماكن ---------------- */
+function tabPlaces(t) {
+  const amir = db.memberById(t, t.amirId);
+  const list = t.places.length ? t.places.map((p, i) => `
+    <div class="place">
+      <span class="place-idx">${i + 1}</span>
+      <div class="place-body"><div class="place-name">${esc(p.name)}</div>
+        ${p.note ? `<div class="place-note">${esc(p.note)}</div>` : ''}
+        <div class="place-links">
+          ${p.mapUrl
+            ? `<a class="map-link" href="${esc(p.mapUrl)}" target="_blank" rel="noopener">${icons.map} فتح في الخريطة</a>`
+            : `<a class="map-link" href="https://www.google.com/maps/search/${encodeURIComponent(p.name + ' ' + (t.destination || ''))}" target="_blank" rel="noopener">${icons.map} قوقل ماب</a>`}
+          <button class="map-link" style="background:${p.visited ? 'var(--green-bg)' : '#eef1f0'};color:${p.visited ? 'var(--green)' : 'var(--ink-500)'}" data-visited="${p.id}">
+            ${icons.check} ${p.visited ? 'تمّت الزيارة' : 'لم تُزَر'}</button>
+        </div></div>
+      <button class="icon-btn danger" data-del-place="${p.id}">${icons.trash}</button>
+    </div>`).join('') : `<div class="empty">${icons.pin}<h3>لا توجد أماكن</h3>
+      <p>${amir ? esc(amir.name) + ' (أمير الرحلة) يحدّد الأماكن من قوقل ماب.' : 'حدّد أمير الرحلة أولًا.'}</p></div>`;
 
-    <div class="section-head"><h2>أرصدة الأفراد</h2></div>
-    <div class="card card-pad"><div class="stack">${balancesHtml}</div></div>
-
-    <div class="section-head"><h2>الدفع عبر برق</h2></div>
-    <div class="card card-pad">
-      <p class="muted-text">افتح تطبيق <b>برق</b> (أو أي تطبيق دفع فوري) وحوّل المبلغ لرقم جوال المستلم. اضغط «ادفع عبر برق» في أي تحويل لنسخ التفاصيل جاهزة.</p>
-    </div>`;
+  return `
+    <div class="pay-note" style="background:var(--sand-100);color:var(--sand-600)">${icons.crown}
+      <span>${amir ? `<b>${esc(amir.name)}</b> أمير الرحلة — هو من يحدّد الأماكن.` : 'حدّد أمير الرحلة من تبويب «القطة».'}</span></div>
+    <div class="section-head"><h2>الوجهات (${t.places.length})</h2></div>
+    ${list}
+    <button class="btn btn-primary btn-block mt" data-act="add-place">${icons.plus} إضافة مكان</button>`;
 }
 
 /* =========================================================
-   ربط أحداث كل تبويب
+   ربط الأحداث
    ========================================================= */
-function wireTab(t, tab) {
-  const c = $('#tabContent');
+function wire(t, tab) {
+  const c = $('#tc');
+  const on = (sel, fn) => c.querySelectorAll(sel).forEach(el => el.onclick = fn);
 
-  // نظرة عامة
-  c.querySelectorAll('[data-act="add-member"]').forEach(b => b.onclick = () => openAddMember(t));
-  c.querySelectorAll('[data-make-amir]').forEach(b => b.onclick = () => { db.setAmir(t.id, b.dataset.makeAmir); toast('تم تعيين أمير الرحلة'); render(); });
-  c.querySelectorAll('[data-del-member]').forEach(b => b.onclick = () => {
-    try { db.removeMember(t.id, b.dataset.delMember); render(); }
-    catch (e) { toast(e.message); }
-  });
-  c.querySelectorAll('[data-stage]').forEach(b => b.onclick = () => {
-    const key = b.dataset.stage;
-    t.stageState[key] = !stageDone(t, key);
-    db.updateTrip(t.id, { stageState: t.stageState });
-    render();
-  });
+  // مصاريفي
+  const sel = c.querySelector('#whoami-sel');
+  if (sel) sel.onchange = () => { db.setCurrentMember(t.id, sel.value); render(); };
+  on('[data-act="set-budget"]', () => openSetBudget(t));
+  on('[data-act="add-personal"]', () => openExpense(t, 'personal'));
+  on('[data-del-personal]', e => { db.removePersonalExpense(t.id, t.currentMemberId, e.currentTarget.dataset.delPersonal); render(); });
+  on('[data-act="go-pool"]', () => go(t.id, 'pool'));
+
+  // القطة / الأعضاء
+  on('[data-act="add-member"]', () => openMember(t));
+  on('[data-edit-member]', e => openMember(t, e.currentTarget.dataset.editMember));
+  on('[data-del-member]', e => { try { db.removeMember(t.id, e.currentTarget.dataset.delMember); render(); } catch (err) { toast(err.message); } });
+  on('[data-make-amir]', e => { db.setAmir(t.id, e.currentTarget.dataset.makeAmir); toast('تم تعيين أمير الرحلة'); render(); });
+  on('[data-act="setup-pool"]', () => openPool(t));
+  on('[data-toggle-paid]', e => { db.toggleQattahPaid(t.id, e.currentTarget.dataset.togglePaid); render(); });
+  on('[data-act="add-group"]', () => openExpense(t, 'group'));
+  on('[data-del-group]', e => { db.removeGroupExpense(t.id, e.currentTarget.dataset.delGroup); render(); });
+
+  // بين شخصين
+  on('[data-act="add-pair"]', () => openExpense(t, 'pair'));
+  on('[data-del-pair]', e => { db.removePairExpense(t.id, e.currentTarget.dataset.delPair); render(); });
+  on('[data-pay]', e => { copyText(JSON.parse(e.currentTarget.dataset.pay)); toast('تم نسخ تفاصيل التحويل ✓'); });
 
   // الأماكن
-  c.querySelectorAll('[data-act="add-place"]').forEach(b => b.onclick = () => openAddPlace(t));
-  c.querySelectorAll('[data-visited]').forEach(b => b.onclick = () => { db.togglePlaceVisited(t.id, b.dataset.visited); render(); });
-  c.querySelectorAll('[data-del-place]').forEach(b => b.onclick = () => { db.removePlace(t.id, b.dataset.delPlace); render(); });
-
-  // القطّات
-  c.querySelectorAll('[data-act="add-exp"]').forEach(b => b.onclick = () => openAddExpense(t));
-  c.querySelectorAll('[data-act="go-overview"]').forEach(b => b.onclick = () => go(t.id, 'overview'));
-  c.querySelectorAll('[data-del-exp]').forEach(b => b.onclick = () => { db.removeExpense(t.id, b.dataset.delExp); toast('تم حذف القطّة'); render(); });
-
-  // التسوية
-  c.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => {
-    const d = JSON.parse(b.dataset.pay);
-    const msg = `تحويل عبر برق:\nمن: ${d.from}\nإلى: ${d.to}\nالمبلغ: ${money(d.amount, d.cur)}`;
-    copyText(msg);
-    toast('تم نسخ تفاصيل التحويل ✓');
-  });
-}
-
-function copyText(text) {
-  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(() => {});
+  on('[data-act="add-place"]', () => openPlace(t));
+  on('[data-visited]', e => { db.togglePlaceVisited(t.id, e.currentTarget.dataset.visited); render(); });
+  on('[data-del-place]', e => { db.removePlace(t.id, e.currentTarget.dataset.delPlace); render(); });
 }
 
 /* =========================================================
-   النوافذ (Modals)
+   النوافذ
    ========================================================= */
 function openModal({ title, body, footer }) {
   modalRoot.innerHTML = `
@@ -1133,46 +1247,43 @@ function openModal({ title, body, footer }) {
       <div class="modal-head"><h3>${title}</h3>
         <button class="icon-btn" data-close aria-label="إغلاق">${icons.close}</button></div>
       <div class="modal-body">${body}</div>
-      ${footer ? `<div class="modal-foot">${footer}</div>` : ''}
-    </div>`;
+      ${footer ? `<div class="modal-foot">${footer}</div>` : ''}</div>`;
   modalRoot.classList.add('open');
   modalRoot.setAttribute('aria-hidden', 'false');
   modalRoot.querySelectorAll('[data-close]').forEach(el => el.onclick = closeModal);
-  return modalRoot;
 }
-function closeModal() {
-  modalRoot.classList.remove('open');
-  modalRoot.setAttribute('aria-hidden', 'true');
-  modalRoot.innerHTML = '';
-}
+function closeModal() { modalRoot.classList.remove('open'); modalRoot.setAttribute('aria-hidden', 'true'); modalRoot.innerHTML = ''; }
 
-/* ---------------- نافذة: رحلة جديدة ---------------- */
 const FLAGS = ['🧳','🇸🇦','🇦🇪','🇹🇷','🇬🇧','🇫🇷','🇮🇹','🇪🇸','🇯🇵','🇹🇭','🇲🇾','🇮🇩','🇪🇬','🇲🇦','🇨🇭','🇬🇪','🇦🇿','🇲🇻','🇬🇷','🇺🇸'];
+const curOptions = (sel) => Object.keys(CUR).map(k => `<option value="${k}" ${k === sel ? 'selected' : ''}>${k} — ${CUR[k]}</option>`).join('');
 
+/* رحلة جديدة */
 function openNewTrip() {
   openModal({
     title: 'رحلة جديدة',
     body: `
-      <div class="field">
-        <label>الوجهة <span class="hint">المدينة أو المكان</span></label>
-        <input class="input" id="f-dest" placeholder="مثال: طرابزون" autocomplete="off" />
+      <p class="muted-text" style="margin-bottom:14px">أنت أمير الرحلة — تنشئها وتضيف القروب وتحدّد القطة.</p>
+      <div class="field"><label>اسمك (أمير الرحلة)</label>
+        <input class="input" id="f-amir" placeholder="اسمك" autocomplete="off"></div>
+      <div class="field"><label>جوالك <span class="hint">اختياري — لطلبات القطة</span></label>
+        <input class="input" id="f-amir-phone" placeholder="مثال: 9665xxxxxxxx" dir="ltr" inputmode="tel" autocomplete="off"></div>
+      <div class="field"><label>الوجهة</label>
+        <input class="input" id="f-dest" placeholder="مثال: طرابزون" autocomplete="off"></div>
+      <div class="field"><label>الدولة</label>
+        <input class="input" id="f-country" placeholder="مثال: تركيا" autocomplete="off"></div>
+      <div class="field"><label>العلم</label>
+        <div class="picker" id="f-flags">${FLAGS.map((f, i) => `<button type="button" class="pick ${i === 0 ? 'sel' : ''}" data-flag="${f}" style="font-size:1.2rem;padding:6px 10px">${f}</button>`).join('')}</div></div>
+      <div class="two-col">
+        <div class="field"><label>عملة الديار <span class="hint">عملتكم</span></label>
+          <select class="select" id="f-home">${curOptions('SAR')}</select></div>
+        <div class="field"><label>عملة الوجهة</label>
+          <select class="select" id="f-dest-cur">${curOptions('TRY')}</select></div>
       </div>
-      <div class="field">
-        <label>الدولة</label>
-        <input class="input" id="f-country" placeholder="مثال: تركيا" autocomplete="off" />
-      </div>
-      <div class="field">
-        <label>العلم / الأيقونة</label>
-        <div class="picker" id="f-flags">
-          ${FLAGS.map((f, i) => `<button type="button" class="pick ${i === 0 ? 'sel' : ''}" data-flag="${f}" style="font-size:1.2rem;padding:6px 10px">${f}</button>`).join('')}
-        </div>
-      </div>
-      <div class="field">
-        <label>العملة</label>
-        <select class="select" id="f-cur">
-          ${Object.entries(CURRENCIES).map(([k, v]) => `<option value="${k}" ${k === 'SAR' ? 'selected' : ''}>${k} — ${v}</option>`).join('')}
-        </select>
-      </div>`,
+      <div class="field"><label>سعر الصرف</label>
+        <div class="rate-row">1 <b id="rl-home">ر.س</b> =
+          <input class="input" id="f-rate" type="number" inputmode="decimal" step="0.0001" min="0" placeholder="0" dir="ltr" style="max-width:130px">
+          <b id="rl-dest">₺</b></div>
+        <span class="hint">اكتب كم تساوي عملة الديار بعملة الوجهة (تقدر تعدّله لاحقًا).</span></div>`,
     footer: `<button class="btn btn-primary btn-block" id="f-save">${icons.check} إنشاء الرحلة</button>`,
   });
 
@@ -1181,190 +1292,64 @@ function openNewTrip() {
     modalRoot.querySelectorAll('[data-flag]').forEach(x => x.classList.remove('sel'));
     b.classList.add('sel'); flag = b.dataset.flag;
   });
-  $('#f-dest').focus();
+  const home = $('#f-home'), dcur = $('#f-dest-cur');
+  const syncLabels = () => { $('#rl-home').textContent = curLabel(home.value); $('#rl-dest').textContent = curLabel(dcur.value); };
+  home.onchange = syncLabels; dcur.onchange = syncLabels; syncLabels();
+  $('#f-amir').focus();
+
   $('#f-save').onclick = () => {
+    const amirName = $('#f-amir').value.trim();
     const dest = $('#f-dest').value.trim();
-    if (!dest) { toast('اكتب الوجهة'); $('#f-dest').focus(); return; }
+    if (!amirName) { toast('اكتب اسمك'); return; }
+    if (!dest) { toast('اكتب الوجهة'); return; }
     const trip = db.createTrip({
-      destination: dest,
-      country: $('#f-country').value,
-      flag,
-      currency: $('#f-cur').value,
+      destination: dest, country: $('#f-country').value, flag,
+      destCurrency: dcur.value, homeCurrency: home.value,
+      rate: parseFloat($('#f-rate').value) || 1,
+      amirName, amirPhone: $('#f-amir-phone').value,
     });
-    closeModal();
-    go(trip.id, 'overview');
-    toast('تم إنشاء الرحلة ✓');
+    closeModal(); go(trip.id, 'pool'); toast('تم إنشاء الرحلة ✓');
   };
 }
 
-/* ---------------- نافذة: إضافة عضو ---------------- */
-function openAddMember(t) {
+/* إعدادات الرحلة */
+function openSettings(t) {
   openModal({
-    title: 'إضافة عضو للقروب',
-    body: `<div class="field"><label>الاسم</label>
-      <input class="input" id="m-name" placeholder="اسم العضو" autocomplete="off" /></div>
-      <p class="muted-text">أول عضو يُعيَّن أميرًا للرحلة تلقائيًا، وتقدر تغيّره لاحقًا.</p>`,
-    footer: `<button class="btn btn-primary btn-block" id="m-save">${icons.plus} إضافة</button>`,
-  });
-  const input = $('#m-name');
-  input.focus();
-  const save = () => {
-    const name = input.value.trim();
-    if (!name) { toast('اكتب الاسم'); return; }
-    db.addMember(t.id, name);
-    closeModal();
-    render();
-    toast('تمت الإضافة ✓');
-  };
-  $('#m-save').onclick = save;
-  input.onkeydown = (e) => { if (e.key === 'Enter') save(); };
-}
-
-/* ---------------- نافذة: إضافة مكان ---------------- */
-function openAddPlace(t) {
-  openModal({
-    title: 'إضافة مكان',
+    title: 'إعدادات الرحلة',
     body: `
-      <div class="field"><label>اسم المكان</label>
-        <input class="input" id="p-name" placeholder="مثال: بحيرة أوزنجول" autocomplete="off" /></div>
-      <div class="field"><label>ملاحظة <span class="hint">اختياري</span></label>
-        <input class="input" id="p-note" placeholder="مثال: أفضل وقت للزيارة الصباح" autocomplete="off" /></div>
-      <div class="field"><label>رابط قوقل ماب <span class="hint">اختياري</span></label>
-        <input class="input" id="p-map" placeholder="الصق رابط الموقع من قوقل ماب" dir="ltr" autocomplete="off" /></div>
-      <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">
-        ${icons.map}<span>إذا ما لصقت رابط، بيظهر زر بحث تلقائي في قوقل ماب باسم المكان.</span></div>`,
-    footer: `<button class="btn btn-primary btn-block" id="p-save">${icons.plus} إضافة المكان</button>`,
+      <div class="field"><label>الوجهة</label><input class="input" id="s-dest" value="${esc(t.destination)}"></div>
+      <div class="field"><label>الدولة</label><input class="input" id="s-country" value="${esc(t.country)}"></div>
+      <div class="two-col">
+        <div class="field"><label>عملة الديار</label><select class="select" id="s-home">${curOptions(t.homeCurrency)}</select></div>
+        <div class="field"><label>عملة الوجهة</label><select class="select" id="s-dest-cur">${curOptions(t.destCurrency)}</select></div>
+      </div>
+      <div class="field"><label>سعر الصرف</label>
+        <div class="rate-row">1 <b id="sl-home">${curLabel(t.homeCurrency)}</b> =
+          <input class="input" id="s-rate" type="number" step="0.0001" min="0" value="${t.rate}" dir="ltr" style="max-width:130px">
+          <b id="sl-dest">${curLabel(t.destCurrency)}</b></div></div>
+      <div class="divider"></div>
+      <button class="btn btn-danger-ghost btn-block" id="s-del">${icons.trash} حذف الرحلة</button>`,
+    footer: `<button class="btn btn-primary btn-block" id="s-save">${icons.check} حفظ</button>`,
   });
-  $('#p-name').focus();
-  $('#p-save').onclick = () => {
-    const name = $('#p-name').value.trim();
-    if (!name) { toast('اكتب اسم المكان'); return; }
-    db.addPlace(t.id, { name, note: $('#p-note').value, mapUrl: $('#p-map').value });
-    closeModal();
-    render();
-    toast('تمت إضافة المكان ✓');
+  const home = $('#s-home'), dcur = $('#s-dest-cur');
+  const sync = () => { $('#sl-home').textContent = curLabel(home.value); $('#sl-dest').textContent = curLabel(dcur.value); };
+  home.onchange = sync; dcur.onchange = sync;
+  $('#s-save').onclick = () => {
+    db.updateTrip(t.id, {
+      destination: $('#s-dest').value.trim() || t.destination,
+      country: $('#s-country').value.trim(),
+      homeCurrency: home.value, destCurrency: dcur.value,
+      rate: parseFloat($('#s-rate').value) || 1,
+    });
+    closeModal(); render(); toast('تم الحفظ ✓');
   };
+  $('#s-del').onclick = () => { closeModal(); confirmDeleteTrip(t); };
 }
 
-/* ---------------- نافذة: تسجيل قطّة ---------------- */
-function openAddExpense(t) {
-  const state = {
-    type: 'group',
-    category: 'food',
-    paidBy: t.amirId || t.members[0]?.id,
-    shared: new Set(t.members.map(m => m.id)),
-  };
-
-  openModal({
-    title: 'تسجيل قطّة',
-    body: `
-      <div class="field"><label>الوصف</label>
-        <input class="input" id="e-title" placeholder="مثال: عشاء المطعم" autocomplete="off" /></div>
-
-      <div class="field"><label>المبلغ (${CURRENCIES[t.currency] || t.currency})</label>
-        <input class="input" id="e-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" dir="ltr" /></div>
-
-      <div class="field"><label>الفئة</label>
-        <div class="cat-grid" id="e-cats">
-          ${catList.map(c => `<button type="button" class="cat-opt ${c.key === 'food' ? 'sel' : ''}" data-cat="${c.key}">${c.icon}<span>${c.label}</span></button>`).join('')}
-        </div>
-      </div>
-
-      <div class="field"><label>نوع القطّة</label>
-        <div class="seg" id="e-types">
-          <button type="button" class="seg-opt sel" data-type="group">على القروب<small>تنقسم على الكل</small></button>
-          <button type="button" class="seg-opt" data-type="some">بين أشخاص<small>تختار المشاركين</small></button>
-          <button type="button" class="seg-opt" data-type="personal">خارج القطة<small>شخصي — هدايا/تذاكر</small></button>
-        </div>
-      </div>
-
-      <div class="field"><label id="payer-label">مين دفع؟</label>
-        <div class="picker" id="e-payer">
-          ${t.members.map(m => `<button type="button" class="pick ${m.id === state.paidBy ? 'sel' : ''}" data-payer="${m.id}">
-            <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}
-        </div>
-      </div>
-
-      <div class="field" id="shared-field">
-        <label>المشاركون في القطّة <span class="hint">مين يتقاسمها</span></label>
-        <div class="picker" id="e-shared">
-          ${t.members.map(m => `<button type="button" class="pick ${state.shared.has(m.id) ? 'sel' : ''}" data-share="${m.id}">
-            <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}
-        </div>
-      </div>`,
-    footer: `<button class="btn btn-primary btn-block" id="e-save">${icons.check} حفظ القطّة</button>`,
-  });
-
-  const sharedField = $('#shared-field');
-  const payerLabel = $('#payer-label');
-
-  function refreshTypeUI() {
-    // خارج القطة => لا مشاركين (شخص واحد)، القروب => الكل، أشخاص => اختيار
-    if (state.type === 'personal') {
-      sharedField.style.display = 'none';
-      payerLabel.textContent = 'صاحب المصروف';
-    } else if (state.type === 'group') {
-      sharedField.style.display = 'none';
-      payerLabel.textContent = 'مين دفع؟';
-    } else {
-      sharedField.style.display = 'block';
-      payerLabel.textContent = 'مين دفع؟';
-    }
-  }
-  refreshTypeUI();
-
-  // فئات
-  modalRoot.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
-    modalRoot.querySelectorAll('[data-cat]').forEach(x => x.classList.remove('sel'));
-    b.classList.add('sel'); state.category = b.dataset.cat;
-  });
-  // نوع
-  modalRoot.querySelectorAll('[data-type]').forEach(b => b.onclick = () => {
-    modalRoot.querySelectorAll('[data-type]').forEach(x => x.classList.remove('sel'));
-    b.classList.add('sel'); state.type = b.dataset.type; refreshTypeUI();
-  });
-  // الدافع
-  modalRoot.querySelectorAll('[data-payer]').forEach(b => b.onclick = () => {
-    modalRoot.querySelectorAll('[data-payer]').forEach(x => x.classList.remove('sel'));
-    b.classList.add('sel'); state.paidBy = b.dataset.payer;
-  });
-  // المشاركون
-  modalRoot.querySelectorAll('[data-share]').forEach(b => b.onclick = () => {
-    const id = b.dataset.share;
-    if (state.shared.has(id)) { state.shared.delete(id); b.classList.remove('sel'); }
-    else { state.shared.add(id); b.classList.add('sel'); }
-  });
-
-  $('#e-title').focus();
-  $('#e-save').onclick = () => {
-    const title = $('#e-title').value.trim();
-    const amount = parseFloat($('#e-amount').value);
-    if (!title) { toast('اكتب وصف القطّة'); return; }
-    if (!(amount > 0)) { toast('اكتب مبلغًا صحيحًا'); $('#e-amount').focus(); return; }
-    if (!state.paidBy) { toast('اختر مين دفع'); return; }
-
-    let sharedAmong = [];
-    if (state.type === 'some') {
-      sharedAmong = [...state.shared];
-      if (sharedAmong.length === 0) { toast('اختر المشاركين'); return; }
-    } else if (state.type === 'group') {
-      sharedAmong = t.members.map(m => m.id);
-    } else {
-      sharedAmong = [state.paidBy];
-    }
-
-    db.addExpense(t.id, { title, amount, category: state.category, type: state.type, paidBy: state.paidBy, sharedAmong });
-    closeModal();
-    render();
-    toast('تم حفظ القطّة ✓');
-  };
-}
-
-/* ---------------- حذف رحلة ---------------- */
 function confirmDeleteTrip(t) {
   openModal({
     title: 'حذف الرحلة',
-    body: `<p class="muted-text">بتحذف رحلة <b>${esc(t.destination)}</b> بكل قطّاتها وأماكنها. ما تقدر تتراجع.</p>`,
+    body: `<p class="muted-text">بتحذف رحلة <b>${esc(t.destination)}</b> بكل بياناتها. ما تقدر تتراجع.</p>`,
     footer: `<div style="display:flex;gap:10px">
       <button class="btn btn-ghost btn-block" data-close>إلغاء</button>
       <button class="btn btn-danger-ghost btn-block" id="del-yes">${icons.trash} حذف</button></div>`,
@@ -1373,11 +1358,210 @@ function confirmDeleteTrip(t) {
   $('#del-yes').onclick = () => { db.deleteTrip(t.id); closeModal(); goHome(); toast('تم حذف الرحلة'); };
 }
 
-/* =========================================================
-   إقلاع التطبيق
-   ========================================================= */
-render();
+/* إضافة/تعديل عضو */
+function openMember(t, memberId) {
+  const m = memberId ? db.memberById(t, memberId) : null;
+  openModal({
+    title: m ? 'تعديل عضو' : 'إضافة عضو',
+    body: `
+      <div class="field"><label>الاسم</label>
+        <input class="input" id="m-name" value="${m ? esc(m.name) : ''}" placeholder="اسم العضو" autocomplete="off"></div>
+      <div class="field"><label>رقم الجوال <span class="hint">لطلب القطة عبر واتساب</span></label>
+        <input class="input" id="m-phone" value="${m ? esc(m.phone) : ''}" placeholder="9665xxxxxxxx" dir="ltr" inputmode="tel" autocomplete="off"></div>
+      <div class="field"><label>المعرّف (يوزر) <span class="hint">اختياري</span></label>
+        <input class="input" id="m-user" value="${m ? esc(m.username) : ''}" placeholder="@username" dir="ltr" autocomplete="off"></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="m-save">${m ? icons.check : icons.plus} ${m ? 'حفظ' : 'إضافة'}</button>`,
+  });
+  $('#m-name').focus();
+  $('#m-save').onclick = () => {
+    const name = $('#m-name').value.trim();
+    if (!name) { toast('اكتب الاسم'); return; }
+    const data = { name, phone: $('#m-phone').value, username: $('#m-user').value };
+    if (m) db.updateMember(t.id, m.id, data);
+    else db.addMember(t.id, data);
+    closeModal(); render(); toast(m ? 'تم الحفظ ✓' : 'تمت الإضافة ✓');
+  };
+}
 
+/* تحديد القطة */
+function openPool(t) {
+  const selected = new Set(t.pool.participantIds.length ? t.pool.participantIds : t.members.map(m => m.id));
+  openModal({
+    title: 'قطة الرحلة',
+    body: `
+      <div class="field"><label>إجمالي القطة (${curLabel(t.homeCurrency)})</label>
+        <input class="input" id="q-total" type="number" inputmode="decimal" min="0" step="0.01" value="${t.pool.total || ''}" placeholder="0" dir="ltr"></div>
+      <div class="field"><label>على مين؟</label>
+        <div class="seg" id="q-scope">
+          <button type="button" class="seg-opt ${t.pool.participantIds.length === 0 || t._poolAll ? 'sel' : ''}" data-scope="all">على الكل<small>كل أعضاء القروب</small></button>
+          <button type="button" class="seg-opt ${t.pool.participantIds.length && !t._poolAll ? 'sel' : ''}" data-scope="some">أشخاص معيّنين<small>تختارهم</small></button>
+        </div></div>
+      <div class="field" id="q-parts-field">
+        <label>المشاركون</label>
+        <div class="picker" id="q-parts">${t.members.map(m => `
+          <button type="button" class="pick ${selected.has(m.id) ? 'sel' : ''}" data-part="${m.id}">
+            <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}</div></div>
+      <div class="field"><label>القطة تشمل <span class="hint">اختياري</span></label>
+        <textarea class="input" id="q-covers" placeholder="مثال: الفندق، المواصلات المشتركة، الأكل الجماعي">${esc(t.pool.covers)}</textarea></div>
+      <div class="share-preview" id="q-preview"></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="q-save">${icons.check} حفظ القطة</button>`,
+  });
+
+  let scope = (t.pool.participantIds.length && !t._poolAll) ? 'some' : 'all';
+  const partsField = $('#q-parts-field');
+  const preview = $('#q-preview');
+
+  function currentParts() {
+    if (scope === 'all') return t.members.map(m => m.id);
+    return [...selected];
+  }
+  function refresh() {
+    partsField.style.display = scope === 'some' ? 'block' : 'none';
+    const total = parseFloat($('#q-total').value) || 0;
+    const n = currentParts().length;
+    preview.innerHTML = n && total
+      ? `نصيب الفرد: <b>${money(total / n, t)}</b> ≈ ${inDest(total / n, t)} <span class="muted-text">(${n} مشاركين)</span>`
+      : '';
+  }
+  modalRoot.querySelectorAll('[data-scope]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-scope]').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); scope = b.dataset.scope; refresh();
+  });
+  modalRoot.querySelectorAll('[data-part]').forEach(b => b.onclick = () => {
+    const id = b.dataset.part;
+    if (selected.has(id)) { selected.delete(id); b.classList.remove('sel'); }
+    else { selected.add(id); b.classList.add('sel'); }
+    refresh();
+  });
+  $('#q-total').oninput = refresh;
+  refresh();
+
+  $('#q-save').onclick = () => {
+    const total = parseFloat($('#q-total').value);
+    if (!(total > 0)) { toast('اكتب إجمالي القطة'); return; }
+    const parts = currentParts();
+    if (!parts.length) { toast('اختر المشاركين'); return; }
+    db.setPool(t.id, { total, participantIds: parts, covers: $('#q-covers').value, poolAll: scope === 'all' });
+    closeModal(); render(); toast('تم حفظ القطة ✓');
+  };
+}
+
+/* تحديد الميزانية */
+function openSetBudget(t) {
+  const me = db.memberById(t, t.currentMemberId);
+  const b = memberBudget(t, me.id);
+  openModal({
+    title: `ميزانية ${esc(me.name)}`,
+    body: `
+      <div class="field"><label>ميزانيتك الكاملة (${curLabel(t.homeCurrency)})</label>
+        <input class="input" id="bd" type="number" inputmode="decimal" min="0" step="0.01" value="${me.budget ?? ''}" placeholder="0" dir="ltr"></div>
+      ${b.isParticipant ? `<div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.info}
+        <span>قطة الرحلة <b>${money(b.qattahShare, t)}</b> بتنخصم تلقائيًا من ميزانيتك، والباقي مصاريفك الشخصية.</span></div>` : ''}`,
+    footer: `<button class="btn btn-primary btn-block" id="bd-save">${icons.check} حفظ</button>`,
+  });
+  $('#bd').focus();
+  $('#bd-save').onclick = () => {
+    const v = parseFloat($('#bd').value);
+    if (!(v >= 0)) { toast('اكتب مبلغًا صحيحًا'); return; }
+    db.setMemberBudget(t.id, me.id, v);
+    closeModal(); render(); toast('تم حفظ الميزانية ✓');
+  };
+}
+
+/* مصروف (group | personal | pair) */
+function openExpense(t, kind) {
+  const state = { category: 'food', enteredCur: t.destCurrency, paidBy: t.currentMemberId, withId: null };
+  const titles = { group: 'صرف من القطة', personal: 'مصروف شخصي', pair: 'قطة بين شخصين' };
+
+  const pairFields = kind === 'pair' ? `
+    <div class="field"><label>مين دفع؟</label>
+      <div class="picker" id="e-payer">${t.members.map(m => `
+        <button type="button" class="pick ${m.id === state.paidBy ? 'sel' : ''}" data-payer="${m.id}">
+          <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}</div></div>
+    <div class="field"><label>مع مين؟ <span class="hint">الطرف الآخر</span></label>
+      <div class="picker" id="e-with">${t.members.map(m => `
+        <button type="button" class="pick" data-with="${m.id}">
+          <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}</div></div>` : '';
+
+  openModal({
+    title: titles[kind],
+    body: `
+      <div class="field"><label>الوصف</label>
+        <input class="input" id="e-title" placeholder="مثال: ${kind === 'group' ? 'عشاء القروب' : kind === 'pair' ? 'تكسي مع صاحبي' : 'قهوة'}" autocomplete="off"></div>
+      <div class="field"><label>المبلغ</label>
+        <div class="amount-row">
+          <input class="input" id="e-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" dir="ltr">
+          <div class="seg cur-seg" id="e-cur">
+            <button type="button" class="seg-opt sel" data-cur="${t.destCurrency}">${curLabel(t.destCurrency)}<small>الوجهة</small></button>
+            <button type="button" class="seg-opt" data-cur="${t.homeCurrency}">${curLabel(t.homeCurrency)}<small>الديار</small></button>
+          </div>
+        </div></div>
+      <div class="field"><label>الفئة</label>
+        <div class="cat-grid" id="e-cats">${catList.map(cc => `
+          <button type="button" class="cat-opt ${cc.key === 'food' ? 'sel' : ''}" data-cat="${cc.key}">${cc.icon}<span>${cc.label}</span></button>`).join('')}</div></div>
+      ${pairFields}`,
+    footer: `<button class="btn btn-primary btn-block" id="e-save">${icons.check} حفظ</button>`,
+  });
+
+  modalRoot.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-cat]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.category = b.dataset.cat;
+  });
+  modalRoot.querySelectorAll('[data-cur]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-cur]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.enteredCur = b.dataset.cur;
+  });
+  if (kind === 'pair') {
+    modalRoot.querySelectorAll('[data-payer]').forEach(b => b.onclick = () => {
+      modalRoot.querySelectorAll('[data-payer]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.paidBy = b.dataset.payer;
+    });
+    modalRoot.querySelectorAll('[data-with]').forEach(b => b.onclick = () => {
+      modalRoot.querySelectorAll('[data-with]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.withId = b.dataset.with;
+    });
+  }
+  $('#e-title').focus();
+
+  $('#e-save').onclick = () => {
+    const title = $('#e-title').value.trim();
+    const amount = parseFloat($('#e-amount').value);
+    if (!title) { toast('اكتب الوصف'); return; }
+    if (!(amount > 0)) { toast('اكتب مبلغًا صحيحًا'); return; }
+    const payload = { title, amount, category: state.category, enteredCur: state.enteredCur };
+    if (kind === 'group') db.addGroupExpense(t.id, payload);
+    else if (kind === 'personal') db.addPersonalExpense(t.id, t.currentMemberId, payload);
+    else {
+      if (!state.withId) { toast('اختر الطرف الآخر'); return; }
+      if (state.withId === state.paidBy) { toast('لازم شخصين مختلفين'); return; }
+      db.addPairExpense(t.id, { ...payload, paidBy: state.paidBy, withId: state.withId });
+    }
+    closeModal(); render(); toast('تم الحفظ ✓');
+  };
+}
+
+/* مكان */
+function openPlace(t) {
+  openModal({
+    title: 'إضافة مكان',
+    body: `
+      <div class="field"><label>اسم المكان</label>
+        <input class="input" id="p-name" placeholder="مثال: بحيرة أوزنجول" autocomplete="off"></div>
+      <div class="field"><label>ملاحظة <span class="hint">اختياري</span></label>
+        <input class="input" id="p-note" placeholder="مثال: زيارتها صباحًا" autocomplete="off"></div>
+      <div class="field"><label>رابط قوقل ماب <span class="hint">اختياري</span></label>
+        <input class="input" id="p-map" placeholder="الصق رابط الموقع" dir="ltr" autocomplete="off"></div>
+      <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.map}
+        <span>بدون رابط، يظهر زر بحث تلقائي في قوقل ماب باسم المكان.</span></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="p-save">${icons.plus} إضافة</button>`,
+  });
+  $('#p-name').focus();
+  $('#p-save').onclick = () => {
+    const name = $('#p-name').value.trim();
+    if (!name) { toast('اكتب اسم المكان'); return; }
+    db.addPlace(t.id, { name, note: $('#p-note').value, mapUrl: $('#p-map').value });
+    closeModal(); render(); toast('تمت إضافة المكان ✓');
+  };
+}
+
+/* ---------------- إقلاع ---------------- */
+render();
 
 </script>
 </body>
