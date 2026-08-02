@@ -5,6 +5,7 @@ import * as db from './store.js';
 import { poolStats, memberBudget, sharedNet, settleShared } from './settle.js';
 import { icons, catList, catIcon } from './icons.js';
 import { COUNTRIES, flagOf } from './countries.js';
+import { AIRPORTS, airlineName } from './airports.js';
 import * as sync from './sync.js';
 
 /* ---------------- أدوات ---------------- */
@@ -85,14 +86,34 @@ const mapsPlaceUrl = (q, placeId) => placeId
   : mapsSearchUrl(q);
 
 /* ---------------- سعر الصرف التلقائي ---------------- */
-// 1 عملة الديار = rate عملة الوجهة
+// 1 عملة الديار = rate عملة الوجهة — عدة مصادر لضمان النجاح
 async function fetchRate(home, dest) {
   if (!home || !dest || home === dest) return 1;
-  const res = await fetch(`https://open.er-api.com/v6/latest/${encodeURIComponent(home)}`, { cache: 'no-store' });
-  const data = await res.json();
-  const r = data?.rates?.[dest];
-  if (!r) throw new Error('no-rate');
-  return Math.round(r * 10000) / 10000;
+  const h = home.toLowerCase(), d = dest.toLowerCase();
+  const round = (v) => Math.round(v * 10000) / 10000;
+
+  // مصدر أساسي: fawazahmed0 عبر jsDelivr (موثوق وسريع، بدون مفتاح)
+  const cdns = [
+    `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${h}.json`,
+    `https://latest.currency-api.pages.dev/v1/currencies/${h}.json`,
+  ];
+  for (const url of cdns) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const v = data?.[h]?.[d];
+      if (v) return round(v);
+    } catch { /* جرّب التالي */ }
+  }
+  // احتياطي: open.er-api
+  try {
+    const res = await fetch(`https://open.er-api.com/v6/latest/${encodeURIComponent(home)}`);
+    const data = await res.json();
+    const v = data?.rates?.[dest];
+    if (v) return round(v);
+  } catch { /* لا شيء */ }
+  throw new Error('no-rate');
 }
 
 /* ---------------- منتقي الدول (بحث) ---------------- */
@@ -117,6 +138,27 @@ function wireCountryPicker(input, list, onPick) {
   input.onblur = () => setTimeout(() => list.classList.remove('open'), 180);
 }
 
+/* منتقي المطارات (بحث بالرمز أو المدينة) */
+function wireAirportPicker(input, list) {
+  const render = () => {
+    const q = input.value.trim();
+    const ql = q.toLowerCase();
+    const items = (q ? AIRPORTS.filter(([code, name]) => code.toLowerCase().includes(ql) || name.includes(q)) : AIRPORTS).slice(0, 8);
+    if (!items.length) { list.innerHTML = ''; list.classList.remove('open'); return; }
+    list.innerHTML = items.map(([code, name, cc]) => `
+      <button type="button" class="ac-item" data-val="${esc(code + ' — ' + name)}">
+        <span class="ac-flag">${flagOf(cc)}</span>
+        <span class="ac-txt"><b>${esc(code)}</b><small>${esc(name)}</small></span></button>`).join('');
+    list.classList.add('open');
+    list.querySelectorAll('.ac-item').forEach(b => b.onclick = () => {
+      input.value = b.dataset.val; list.innerHTML = ''; list.classList.remove('open');
+    });
+  };
+  input.oninput = render;
+  input.onfocus = render;
+  input.onblur = () => setTimeout(() => list.classList.remove('open'), 180);
+}
+
 /* ---------------- التنقّل ---------------- */
 const R = { tripId: null, tab: 'budget' };
 function go(tripId, tab = 'budget') { R.tripId = tripId; R.tab = tab; render(); window.scrollTo(0, 0); }
@@ -125,6 +167,24 @@ $('#brandBtn').addEventListener('click', goHome);
 
 const safeLS = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const authState = { user: null, guest: !!safeLS('boarding.guest'), checked: false };
+let pendingJoin = null; // معرّف رحلة مشتركة بانتظار تسجيل الدخول
+
+/* هويتي في الرحلة — محلية لكل جهاز (لا تُزامَن)، وتُقفل على الحساب إن طابق عضوًا */
+function identityLocked(t) {
+  if (!authState.user) return false;
+  const nm = (authState.user.user_metadata?.name || '').trim();
+  return !!(nm && t.members.find(x => x.name.trim() === nm));
+}
+function getMyId(t) {
+  if (authState.user) {
+    const nm = (authState.user.user_metadata?.name || '').trim();
+    if (nm) { const m = t.members.find(x => x.name.trim() === nm); if (m) return m.id; }
+  }
+  const saved = safeLS('boarding.me.' + t.id);
+  if (saved && t.members.find(x => x.id === saved)) return saved;
+  return t.amirId;
+}
+function setMyId(t, id) { try { localStorage.setItem('boarding.me.' + t.id, id); } catch {} }
 
 function render() {
   if (!authState.checked && !authState.guest && !authState.user) { renderSplash(); return; }
@@ -158,7 +218,7 @@ function renderAuth() {
       <div class="auth-hero">
         <div class="auth-logo">${icons.pin}</div>
         <h1>بوردنق</h1>
-        <p>نظّم رحلة القروب: القطة، المصاريف، الأماكن — بمكان واحد.</p>
+        <p>${pendingJoin ? 'انضم لرحلة القروب — سجّل دخولك أو أنشئ حساباً أولاً.' : 'نظّم رحلة القروب: القطة، المصاريف، الأماكن — بمكان واحد.'}</p>
       </div>
 
       <div class="auth-card">
@@ -187,7 +247,7 @@ function renderAuth() {
           المتابعة عبر Google
         </button>
         <button class="btn btn-ghost btn-block" id="au-magic">${icons.wand} رابط دخول عبر البريد</button>
-        <button class="btn btn-ghost btn-block auth-guest" id="au-guest">${icons.guest} استمر كضيف</button>
+        ${pendingJoin ? '' : `<button class="btn btn-ghost btn-block auth-guest" id="au-guest">${icons.guest} استمر كضيف</button>`}
 
         <p class="auth-note" id="au-note"></p>
       </div>
@@ -228,7 +288,8 @@ function renderAuth() {
     try { const { error } = await sync.signInMagic(email()); if (error) throw error; setNote('أرسلنا رابط الدخول إلى بريدك ✉️', true); }
     catch (err) { setNote(authErr(err)); }
   };
-  $('#au-guest').onclick = () => {
+  const guestBtn = $('#au-guest');
+  if (guestBtn) guestBtn.onclick = () => {
     try { localStorage.setItem('boarding.guest', '1'); } catch {}
     authState.guest = true; render();
   };
@@ -249,6 +310,8 @@ function finishAuth(user) {
   authState.guest = false;
   toast('أهلًا ' + (user?.user_metadata?.name || user?.email || '') + ' ✓');
   render();
+  ensureSubscriptions();
+  if (pendingJoin) checkJoin();
 }
 
 /* =========================================================
@@ -367,13 +430,12 @@ function renderTrip(t, tab) {
 
 /* ---------------- تبويب: مصاريفي ---------------- */
 function tabBudget(t) {
-  const me = db.memberById(t, t.currentMemberId) || db.memberById(t, t.amirId);
+  const me = db.memberById(t, getMyId(t)) || db.memberById(t, t.amirId);
   if (!me) return `<div class="empty">${icons.users}<h3>أضِف أعضاء القروب</h3>
     <button class="btn btn-primary mt" data-act="go-pool">إدارة القطة والأعضاء</button></div>`;
 
   const b = memberBudget(t, me.id);
-  const memberOpts = t.members.map(m =>
-    `<option value="${m.id}" ${m.id === me.id ? 'selected' : ''}>${esc(m.name)}${m.id === t.amirId ? ' (الأمير)' : ''}</option>`).join('');
+  const locked = identityLocked(t);
 
   const personal = (t.personalExpenses[me.id] || []).slice().sort((a, c) => c.createdAt - a.createdAt);
 
@@ -408,11 +470,11 @@ function tabBudget(t) {
 
   return `
     <div class="whoami">
-      <label>أنت:</label>
-      <div class="select-wrap">${icons.chevron}
-        <select class="select" id="whoami-sel">${memberOpts}</select></div>
-      ${b.budget != null ? `<button class="btn btn-ghost btn-sm" data-act="set-budget">${icons.edit} تعديل الميزانية</button>` : ''}
+      <span class="me-chip">${avatar(me, 30)} <b>${esc(me.name)}</b>${me.id === t.amirId ? ' <span class="chip amir" style="padding:1px 7px;font-size:.7rem">أمير</span>' : ''}</span>
+      ${locked ? '' : `<button class="btn btn-ghost btn-sm" data-act="who-am-i">${icons.edit} لست أنا؟</button>`}
+      ${b.budget != null ? `<button class="btn btn-ghost btn-sm" data-act="set-budget">${icons.edit} الميزانية</button>` : ''}
     </div>
+    <p class="muted-text" style="font-size:.82rem;margin:-6px 0 14px">مصاريفك الشخصية خاصة بك — تعدّلها أنت فقط.</p>
     ${breakdown}
     ${b.budget != null ? `
       <div class="section-head"><h2>مصاريفي الشخصية</h2></div>
@@ -423,7 +485,7 @@ function tabBudget(t) {
 /* ---------------- تبويب: القطة ---------------- */
 function tabPool(t) {
   const ps = poolStats(t);
-  const isAmir = t.currentMemberId === t.amirId;
+  const isAmir = getMyId(t) === t.amirId;
 
   // الأعضاء
   const membersHtml = t.members.map(m => `
@@ -458,8 +520,8 @@ function tabPool(t) {
           <div class="muted-text" style="font-size:.8rem">${money(ps.share, t)}</div></div>
         ${paid ? `<span class="badge paid">سدّد ✓</span>`
                : `<span class="badge pending">بانتظار</span>`}
-        <button class="icon-btn" data-toggle-paid="${id}" title="${paid ? 'إلغاء' : 'تعليم كمسدّد'}">${icons.check}</button>
-        ${m.phone && !paid ? `<a class="icon-btn" style="color:var(--green)" href="${waLink(m.phone, reqText)}" target="_blank" rel="noopener" title="اطلب عبر واتساب">${icons.send}</a>` : ''}
+        ${isAmir ? `<button class="icon-btn" data-toggle-paid="${id}" title="${paid ? 'إلغاء' : 'تأكيد السداد'}">${icons.check}</button>` : ''}
+        ${isAmir && m.phone && !paid ? `<a class="icon-btn" style="color:var(--green)" href="${waLink(m.phone, reqText)}" target="_blank" rel="noopener" title="اطلب عبر واتساب">${icons.send}</a>` : ''}
       </div>`;
     }).join('');
 
@@ -480,6 +542,7 @@ function tabPool(t) {
       </div>
 
       <div class="section-head"><h2>سداد القطة</h2><span class="hint">${ps.paidIds.length}/${ps.count} سدّدوا</span></div>
+      ${!isAmir ? `<div class="pay-note" style="background:var(--sand-100);color:var(--sand-600)">${icons.crown}<span>تأكيد السداد يكون من <b>أمير الرحلة</b> فقط.</span></div>` : ''}
       <div class="card card-pad"><div class="stack">${statusRows}</div></div>
 
       <div class="section-head"><h2>الصرف من القطة</h2><span class="hint">${t.groupExpenses.length}</span></div>
@@ -632,21 +695,27 @@ function tabItinerary(t) {
         <p>ضِف موعد المغادرة والعودة ليظهر العدّاد التنازلي.</p>
         <button class="btn btn-primary mt" data-act="edit-itin">تحديد المواعيد</button></div>`;
 
-  const flightRow = (label, iconv, at, flight) => `
+  const apCode = (s) => (s || '').split(' — ')[0];
+  const flightRow = (label, at, flight, from, to) => {
+    const air = airlineName(flight);
+    const route = from || to ? `${esc(apCode(from) || '—')} ← ${esc(apCode(to) || '—')}` : '';
+    return `
     <div class="flight-row">
-      <span class="flight-ic">${iconv}</span>
-      <div class="flight-body"><div class="flight-label">${label}</div>
-        <div class="flight-when">${at ? esc(fmtDT(at)) : '—'}</div></div>
+      <span class="flight-ic">${icons.plane}</span>
+      <div class="flight-body"><div class="flight-label">${label} ${route ? `<span class="flight-route">${route}</span>` : ''}</div>
+        <div class="flight-when">${at ? esc(fmtDT(at)) : '—'}${air ? ' · ' + esc(air) : ''}</div></div>
       ${flight ? `<span class="flight-no">${esc(flight)}</span>` : ''}
     </div>`;
+  };
 
-  const flights = dep || ret || it.departFlight || it.returnFlight ? `
+  const hasFlights = dep || ret || it.departFlight || it.returnFlight || it.depAirport || it.arrAirport;
+  const flights = hasFlights ? `
     <div class="section-head"><h2>الطيران</h2>
       <button class="btn btn-ghost btn-sm" data-act="edit-itin">${icons.edit} تعديل</button></div>
     <div class="card card-pad flights">
-      ${flightRow('المغادرة', icons.plane, it.departAt, it.departFlight)}
+      ${flightRow('المغادرة', it.departAt, it.departFlight, it.depAirport, it.arrAirport)}
       <div class="flight-divider"></div>
-      ${flightRow('العودة', icons.plane, it.returnAt, it.returnFlight)}
+      ${flightRow('العودة', it.returnAt, it.returnFlight, it.arrAirport, it.depAirport)}
     </div>` : '';
 
   // التذكيرات
@@ -716,11 +785,10 @@ function wire(t, tab) {
   const on = (sel, fn) => c.querySelectorAll(sel).forEach(el => el.onclick = fn);
 
   // مصاريفي
-  const sel = c.querySelector('#whoami-sel');
-  if (sel) sel.onchange = () => { db.setCurrentMember(t.id, sel.value); render(); };
+  on('[data-act="who-am-i"]', () => openWhoAmI(t));
   on('[data-act="set-budget"]', () => openSetBudget(t));
   on('[data-act="add-personal"]', () => openExpense(t, 'personal'));
-  on('[data-del-personal]', e => { db.removePersonalExpense(t.id, t.currentMemberId, e.currentTarget.dataset.delPersonal); render(); });
+  on('[data-del-personal]', e => { db.removePersonalExpense(t.id, getMyId(t), e.currentTarget.dataset.delPersonal); render(); });
   on('[data-act="go-pool"]', () => go(t.id, 'pool'));
 
   // القطة / الأعضاء
@@ -1022,7 +1090,7 @@ function openPool(t) {
 
 /* تحديد الميزانية */
 function openSetBudget(t) {
-  const me = db.memberById(t, t.currentMemberId);
+  const me = db.memberById(t, getMyId(t));
   const b = memberBudget(t, me.id);
   openModal({
     title: `ميزانية ${esc(me.name)}`,
@@ -1055,12 +1123,25 @@ function openSetBudget(t) {
   };
 }
 
+/* مين أنت؟ (هوية محلية) */
+function openWhoAmI(t) {
+  openModal({
+    title: 'مين أنت؟',
+    body: `<p class="muted-text" style="margin-bottom:12px">اختر اسمك في القروب — يُحفظ على جهازك فقط، ويُظهر مصاريفك الشخصية.</p>
+      <div class="picker" id="wai">${t.members.map(m => `
+        <button type="button" class="pick ${m.id === getMyId(t) ? 'sel' : ''}" data-me="${m.id}">
+          <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}</div>`,
+  });
+  modalRoot.querySelectorAll('[data-me]').forEach(b => b.onclick = () => { setMyId(t, b.dataset.me); closeModal(); render(); toast('حدّثنا هويتك ✓'); });
+}
+
 /* مصروف (group | personal | shared) */
 function openExpense(t, kind) {
+  const meId = getMyId(t);
   const state = {
     category: 'food', enteredCur: t.destCurrency,
-    paidBy: t.currentMemberId,
-    parts: new Set([t.currentMemberId]),   // للقطة المشتركة
+    paidBy: meId,
+    parts: new Set([meId]),   // للقطة المشتركة
   };
   const titles = { group: 'صرف من القطة', personal: 'مصروف شخصي', shared: 'قطة مشتركة' };
 
@@ -1136,7 +1217,7 @@ function openExpense(t, kind) {
     if (!(amount > 0)) { toast('اكتب مبلغًا صحيحًا'); return; }
     const payload = { title, amount, category: state.category, enteredCur: state.enteredCur };
     if (kind === 'group') db.addGroupExpense(t.id, payload);
-    else if (kind === 'personal') db.addPersonalExpense(t.id, t.currentMemberId, payload);
+    else if (kind === 'personal') db.addPersonalExpense(t.id, getMyId(t), payload);
     else {
       const parts = new Set([state.paidBy, ...state.parts]);
       if (parts.size < 2) { toast('اختر شخصين على الأقل'); return; }
@@ -1277,7 +1358,7 @@ function openPlace(t, cityId) {
 function openReview(t, placeId) {
   const place = t.places.find(p => p.id === placeId);
   if (!place) return;
-  const me = db.memberById(t, t.currentMemberId) || db.memberById(t, t.amirId);
+  const me = db.memberById(t, getMyId(t)) || db.memberById(t, t.amirId);
   const memberOpts = t.members.map(m => `<option value="${m.id}" ${m.id === me?.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
   let rating = 5;
   openModal({
@@ -1307,21 +1388,42 @@ function openItinEdit(t) {
   openModal({
     title: 'مواعيد الرحلة',
     body: `
-      <div class="field"><label>موعد المغادرة ✈️</label>
+      <div class="seg-label">✈️ المغادرة</div>
+      <div class="two-col">
+        <div class="field"><label>من مطار</label>
+          <div class="ac-wrap"><span class="ac-icon">${icons.plane}</span>
+            <input class="input ac-input" id="it-dep-ap" value="${esc(it.depAirport || '')}" placeholder="ابحث (رمز/مدينة)" autocomplete="off">
+            <div class="ac-list" id="it-dep-ap-list"></div></div></div>
+        <div class="field"><label>إلى مطار</label>
+          <div class="ac-wrap"><span class="ac-icon">${icons.plane}</span>
+            <input class="input ac-input" id="it-arr-ap" value="${esc(it.arrAirport || '')}" placeholder="ابحث (رمز/مدينة)" autocomplete="off">
+            <div class="ac-list" id="it-arr-ap-list"></div></div></div>
+      </div>
+      <div class="field"><label>موعد المغادرة</label>
         <input class="input" id="it-dep" type="datetime-local" value="${esc(it.departAt || '')}" dir="ltr"></div>
       <div class="field"><label>رقم رحلة المغادرة <span class="hint">اختياري</span></label>
-        <input class="input" id="it-depf" value="${esc(it.departFlight || '')}" placeholder="مثال: SV 254" dir="ltr"></div>
+        <input class="input" id="it-depf" value="${esc(it.departFlight || '')}" placeholder="مثال: SV 254" dir="ltr">
+        <div class="conv-preview" id="it-depf-air"></div></div>
       <div class="divider"></div>
-      <div class="field"><label>موعد العودة 🛬</label>
+      <div class="seg-label">🛬 العودة</div>
+      <div class="field"><label>موعد العودة</label>
         <input class="input" id="it-ret" type="datetime-local" value="${esc(it.returnAt || '')}" dir="ltr"></div>
       <div class="field"><label>رقم رحلة العودة <span class="hint">اختياري</span></label>
-        <input class="input" id="it-retf" value="${esc(it.returnFlight || '')}" placeholder="مثال: SV 255" dir="ltr"></div>`,
+        <input class="input" id="it-retf" value="${esc(it.returnFlight || '')}" placeholder="مثال: SV 255" dir="ltr">
+        <div class="conv-preview" id="it-retf-air"></div></div>`,
     footer: `<button class="btn btn-primary btn-block" id="it-save">${icons.check} حفظ</button>`,
   });
+  wireAirportPicker($('#it-dep-ap'), $('#it-dep-ap-list'));
+  wireAirportPicker($('#it-arr-ap'), $('#it-arr-ap-list'));
+  const showAir = (inp, box) => { const n = airlineName($(inp).value); $(box).innerHTML = n ? '✈️ ' + n : ''; };
+  $('#it-depf').oninput = () => showAir('#it-depf', '#it-depf-air');
+  $('#it-retf').oninput = () => showAir('#it-retf', '#it-retf-air');
+  showAir('#it-depf', '#it-depf-air'); showAir('#it-retf', '#it-retf-air');
   $('#it-save').onclick = () => {
     db.setItinerary(t.id, {
       departAt: $('#it-dep').value, departFlight: $('#it-depf').value.trim(),
       returnAt: $('#it-ret').value, returnFlight: $('#it-retf').value.trim(),
+      depAirport: $('#it-dep-ap').value.trim(), arrAirport: $('#it-arr-ap').value.trim(),
     });
     closeModal(); render(); toast('تم حفظ المواعيد ✓');
   };
@@ -1484,8 +1586,8 @@ db.onChange(scheduleSync);
 
 /* ---------------- إقلاع ---------------- */
 async function boot() {
-  // روابط المشاركة تُفتح مباشرة (كضيف إن لزم)
-  const joinId = new URLSearchParams(location.search).get('t');
+  pendingJoin = new URLSearchParams(location.search).get('t') || null;
+  if (pendingJoin) authState.guest = false; // رابط مشترك يتطلب تسجيل الدخول
   render(); // شاشة انتظار
 
   if (sync.syncEnabled()) {
@@ -1495,11 +1597,10 @@ async function boot() {
     } catch { /* المزامنة غير متاحة الآن */ }
   }
   authState.checked = true;
-  if (joinId && !authState.user) authState.guest = true; // افتح الرابط المشترك بلا حاجز
   render();
 
   ensureSubscriptions();
-  checkJoin();
+  if (authState.user || (authState.guest && !pendingJoin)) checkJoin();
 }
 boot();
 

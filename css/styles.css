@@ -372,8 +372,11 @@ textarea.input { resize: vertical; min-height: 72px; }
 .badge.pending { background: var(--sand-100); color: var(--sand-600); }
 
 /* ---------- من أنت ---------- */
-.whoami { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.whoami { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
 .whoami > label { font-weight: 700; color: var(--ink-500); }
+.me-chip { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; background: var(--teal-050); color: var(--teal-800); padding: 5px 12px 5px 6px; border-radius: 999px; }
+.seg-label { font-weight: 800; color: var(--ink-700); margin: 4px 0 10px; }
+.flight-route { font-weight: 700; color: var(--teal-700); font-size: .82rem; margin-inline-start: 6px; }
 .select-wrap { position: relative; flex: 1; min-width: 140px; }
 .select-wrap svg { position: absolute; inset-inline-start: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--ink-500); pointer-events: none; }
 .select-wrap .select { padding-inline-start: 34px; }

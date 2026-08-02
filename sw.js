@@ -1,5 +1,5 @@
 /* بوردنق — Service Worker (تخزين مؤقت للعمل دون اتصال) */
-const CACHE = 'boarding-v5';
+const CACHE = 'boarding-v6';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './js/settle.js',
   './js/icons.js',
   './js/countries.js',
+  './js/airports.js',
   './js/sync.js',
   './manifest.json',
   './icons/icon.svg',

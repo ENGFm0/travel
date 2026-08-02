@@ -5,6 +5,7 @@ const rd = (p) => fs.readFileSync(p, 'utf8');
 
 const css = rd('css/styles.css');
 let icons = rd('js/icons.js'), countries = rd('js/countries.js'),
+    airports = rd('js/airports.js'),
     store = rd('js/store.js'), settle = rd('js/settle.js'),
     syncMod = rd('js/sync.js'), app = rd('js/app.js');
 
@@ -18,13 +19,14 @@ const storeExports = collect(store);
 const syncExports = collect(syncMod);
 
 const strip = (s) => s.replace(/^\s*export\s+/gm, '');
-icons = strip(icons); countries = strip(countries); settle = strip(settle);
-store = strip(store); syncMod = strip(syncMod);
+icons = strip(icons); countries = strip(countries); airports = strip(airports);
+settle = strip(settle); store = strip(store); syncMod = strip(syncMod);
 app = app.replace(/^import[^\n]*\n/gm, '').replace(/if \('serviceWorker'[\s\S]*$/m, '');
 
 const combined = [
   '/* icons */', icons,
   '/* countries */', countries,
+  '/* airports */', airports,
   '/* store */', store, `\nconst db = { ${storeExports.join(', ')} };\n`,
   '/* settle */', settle,
   '/* sync */', syncMod, `\nconst sync = { ${syncExports.join(', ')} };\n`,
