@@ -123,17 +123,139 @@ function go(tripId, tab = 'budget') { R.tripId = tripId; R.tab = tab; render(); 
 function goHome() { R.tripId = null; render(); }
 $('#brandBtn').addEventListener('click', goHome);
 
+const safeLS = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const authState = { user: null, guest: !!safeLS('boarding.guest'), checked: false };
+
 function render() {
+  if (!authState.checked && !authState.guest && !authState.user) { renderSplash(); return; }
+  if (!authState.user && !authState.guest) { renderAuth(); return; }
   const t = R.tripId && db.getTrip(R.tripId);
   if (t) renderTrip(t, R.tab);
   else { R.tripId = null; renderHome(); }
 }
 
 /* =========================================================
+   شاشة الانتظار
+   ========================================================= */
+function renderSplash() {
+  headerActions.innerHTML = '';
+  view.innerHTML = `<div class="splash">
+    <div class="splash-mark">${icons.pin}</div>
+    <div class="splash-name">بوردنق</div>
+    <div class="splash-dots"><span></span><span></span><span></span></div>
+  </div>`;
+}
+
+/* =========================================================
+   صفحة الدخول / التسجيل
+   ========================================================= */
+let authMode = 'login'; // login | signup
+function renderAuth() {
+  headerActions.innerHTML = '';
+  const isSignup = authMode === 'signup';
+  view.innerHTML = `
+    <div class="auth">
+      <div class="auth-hero">
+        <div class="auth-logo">${icons.pin}</div>
+        <h1>بوردنق</h1>
+        <p>نظّم رحلة القروب: القطة، المصاريف، الأماكن — بمكان واحد.</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab ${!isSignup ? 'active' : ''}" data-mode="login">دخول</button>
+          <button class="auth-tab ${isSignup ? 'active' : ''}" data-mode="signup">حساب جديد</button>
+        </div>
+
+        <form id="auth-form" class="auth-form">
+          ${isSignup ? `<div class="field"><label>الاسم</label>
+            <div class="ac-wrap"><span class="ac-icon">${icons.guest}</span>
+              <input class="input ac-input" id="au-name" placeholder="اسمك" autocomplete="name"></div></div>` : ''}
+          <div class="field"><label>البريد الإلكتروني</label>
+            <div class="ac-wrap"><span class="ac-icon">${icons.mail}</span>
+              <input class="input ac-input" id="au-email" type="email" placeholder="you@example.com" dir="ltr" autocomplete="email"></div></div>
+          <div class="field"><label>كلمة المرور</label>
+            <div class="ac-wrap"><span class="ac-icon">${icons.lock}</span>
+              <input class="input ac-input" id="au-pass" type="password" placeholder="••••••••" dir="ltr" autocomplete="${isSignup ? 'new-password' : 'current-password'}"></div></div>
+          <button type="submit" class="btn btn-primary btn-block" id="au-submit">${isSignup ? icons.check + ' إنشاء الحساب' : icons.lock + ' تسجيل الدخول'}</button>
+        </form>
+
+        <div class="auth-or"><span>أو</span></div>
+
+        <button class="btn btn-ghost btn-block auth-google" id="au-google">
+          <svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.7 30.1 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.8 6.1C12.2 13.3 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.3-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.5z"/><path fill="#FBBC05" d="M10.3 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.8-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.1 0 11.3-2 15-5.5l-7.1-5.5c-2 1.3-4.6 2.1-7.9 2.1-6.4 0-11.8-3.8-13.7-9.4l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
+          المتابعة عبر Google
+        </button>
+        <button class="btn btn-ghost btn-block" id="au-magic">${icons.wand} رابط دخول عبر البريد</button>
+        <button class="btn btn-ghost btn-block auth-guest" id="au-guest">${icons.guest} استمر كضيف</button>
+
+        <p class="auth-note" id="au-note"></p>
+      </div>
+    </div>`;
+
+  view.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { authMode = b.dataset.mode; renderAuth(); });
+  const note = $('#au-note');
+  const setNote = (msg, ok) => { note.textContent = msg; note.className = 'auth-note ' + (ok ? 'ok' : 'err'); };
+  const email = () => $('#au-email').value.trim();
+  const pass = () => $('#au-pass').value;
+
+  $('#auth-form').onsubmit = async (e) => {
+    e.preventDefault();
+    if (!email()) return setNote('اكتب بريدك الإلكتروني');
+    if (pass().length < 6) return setNote('كلمة المرور ٦ أحرف على الأقل');
+    const btn = $('#au-submit'); btn.disabled = true;
+    try {
+      if (isSignup) {
+        const { data, error } = await sync.signUpEmail(email(), pass(), $('#au-name')?.value.trim());
+        if (error) throw error;
+        if (data.session) finishAuth(data.user);
+        else setNote('تم الإنشاء ✓ راجع بريدك لتأكيد الحساب ثم سجّل الدخول', true);
+      } else {
+        const { data, error } = await sync.signInEmail(email(), pass());
+        if (error) throw error;
+        finishAuth(data.user);
+      }
+    } catch (err) { setNote(authErr(err)); }
+    finally { btn.disabled = false; }
+  };
+
+  $('#au-google').onclick = async () => {
+    try { const { error } = await sync.signInOAuth('google'); if (error) throw error; }
+    catch (err) { setNote(authErr(err) + ' (فعّل مزوّد Google في Supabase)'); }
+  };
+  $('#au-magic').onclick = async () => {
+    if (!email()) return setNote('اكتب بريدك أولًا للرابط السحري');
+    try { const { error } = await sync.signInMagic(email()); if (error) throw error; setNote('أرسلنا رابط الدخول إلى بريدك ✉️', true); }
+    catch (err) { setNote(authErr(err)); }
+  };
+  $('#au-guest').onclick = () => {
+    try { localStorage.setItem('boarding.guest', '1'); } catch {}
+    authState.guest = true; render();
+  };
+}
+
+function authErr(err) {
+  const m = (err && (err.message || err.error_description)) || '';
+  if (/Invalid login/i.test(m)) return 'بريد أو كلمة مرور غير صحيحة';
+  if (/already registered/i.test(m)) return 'هذا البريد مسجّل — سجّل الدخول';
+  if (/not configured|provider/i.test(m)) return 'الطريقة غير مفعّلة في Supabase';
+  if (/Failed to fetch|NetworkError|import/i.test(m)) return 'تعذّر الاتصال بالمزامنة';
+  return m || 'صار خطأ، حاول مرة ثانية';
+}
+
+function finishAuth(user) {
+  authState.user = user;
+  try { localStorage.removeItem('boarding.guest'); } catch {}
+  authState.guest = false;
+  toast('أهلًا ' + (user?.user_metadata?.name || user?.email || '') + ' ✓');
+  render();
+}
+
+/* =========================================================
    الرئيسية — قائمة الرحلات
    ========================================================= */
 function renderHome() {
-  headerActions.innerHTML = '';
+  headerActions.innerHTML = accountChip();
   const trips = db.getTrips();
   let body;
   if (!trips.length) {
@@ -151,6 +273,35 @@ function renderHome() {
     </div>${body}`;
   view.querySelectorAll('[data-act="new"]').forEach(b => b.onclick = openNewTrip);
   view.querySelectorAll('[data-trip]').forEach(c => c.onclick = () => go(c.dataset.trip));
+  wireAccount();
+}
+
+function accountChip() {
+  if (authState.user) {
+    const nm = authState.user.user_metadata?.name || authState.user.email || 'حسابي';
+    return `<button class="btn btn-ghost btn-sm" data-act="account" title="${esc(nm)}">${icons.guest} <span class="acc-name">${esc(nm)}</span></button>`;
+  }
+  return `<button class="btn btn-ghost btn-sm" data-act="login">${icons.logout} تسجيل الدخول</button>`;
+}
+function wireAccount() {
+  const a = headerActions.querySelector('[data-act="account"]');
+  if (a) a.onclick = () => openAccount();
+  const l = headerActions.querySelector('[data-act="login"]');
+  if (l) l.onclick = () => { try { localStorage.removeItem('boarding.guest'); } catch {} authState.guest = false; render(); };
+}
+function openAccount() {
+  const u = authState.user;
+  openModal({
+    title: 'حسابي',
+    body: `<div class="member-row"><span class="avatar" style="background:var(--teal-800)">${esc((u.user_metadata?.name || u.email || '؟')[0])}</span>
+      <div class="member-grow"><div class="member-name">${esc(u.user_metadata?.name || 'مستخدم')}</div>
+      <div class="muted-text" style="font-size:.82rem" dir="ltr">${esc(u.email || '')}</div></div></div>`,
+    footer: `<button class="btn btn-danger-ghost btn-block" id="ac-out">${icons.logout} تسجيل الخروج</button>`,
+  });
+  $('#ac-out').onclick = async () => {
+    try { await sync.signOut(); } catch {}
+    authState.user = null; closeModal(); render(); toast('تم تسجيل الخروج');
+  };
 }
 
 function tripCard(t) {
@@ -532,7 +683,7 @@ function openNewTrip() {
     body: `
       <p class="muted-text" style="margin-bottom:14px">أنت أمير الرحلة — تنشئها وتضيف القروب وتحدّد القطة.</p>
       <div class="field"><label>اسمك (أمير الرحلة)</label>
-        <input class="input" id="f-amir" placeholder="اسمك" autocomplete="off"></div>
+        <input class="input" id="f-amir" placeholder="اسمك" autocomplete="off" value="${esc(authState.user?.user_metadata?.name || (authState.user?.email ? authState.user.email.split('@')[0] : ''))}"></div>
       <div class="field"><label>جوالك <span class="hint">اختياري — لطلبات القطة</span></label>
         <input class="input" id="f-amir-phone" placeholder="مثال: 9665xxxxxxxx" dir="ltr" inputmode="tel" autocomplete="off"></div>
       <div class="field"><label>بلد الوجهة <span class="hint">ابحث</span></label>
@@ -1134,9 +1285,26 @@ async function checkJoin() {
 db.onChange(scheduleSync);
 
 /* ---------------- إقلاع ---------------- */
-render();
-ensureSubscriptions();
-checkJoin();
+async function boot() {
+  // روابط المشاركة تُفتح مباشرة (كضيف إن لزم)
+  const joinId = new URLSearchParams(location.search).get('t');
+  render(); // شاشة انتظار
+
+  if (sync.syncEnabled()) {
+    try {
+      authState.user = await sync.currentUser();
+      sync.onAuth((u) => { const was = !!authState.user; authState.user = u; if (!!u !== was) render(); }).catch(() => {});
+    } catch { /* المزامنة غير متاحة الآن */ }
+  }
+  authState.checked = true;
+  if (joinId && !authState.user) authState.guest = true; // افتح الرابط المشترك بلا حاجز
+  render();
+
+  ensureSubscriptions();
+  checkJoin();
+}
+boot();
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }

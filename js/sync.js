@@ -29,8 +29,44 @@ async function client() {
   if (!syncEnabled()) throw new Error('sync-not-configured');
   if (!_loading) _loading = import('https://esm.sh/@supabase/supabase-js@2');
   const { createClient } = await _loading;
-  _client = createClient(sbUrl(), sbKey(), { auth: { persistSession: false } });
+  _client = createClient(sbUrl(), sbKey(), {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  });
   return _client;
+}
+export const getClient = client;
+
+/* ---------------- المصادقة (Supabase Auth) ---------------- */
+const redirectTo = () => location.origin + location.pathname;
+
+export async function currentUser() {
+  const sb = await client();
+  const { data } = await sb.auth.getSession();
+  return data.session ? data.session.user : null;
+}
+export async function onAuth(cb) {
+  const sb = await client();
+  return sb.auth.onAuthStateChange((_e, session) => cb(session ? session.user : null));
+}
+export async function signUpEmail(email, password, name) {
+  const sb = await client();
+  return sb.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: redirectTo() } });
+}
+export async function signInEmail(email, password) {
+  const sb = await client();
+  return sb.auth.signInWithPassword({ email, password });
+}
+export async function signInMagic(email) {
+  const sb = await client();
+  return sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo() } });
+}
+export async function signInOAuth(provider) {
+  const sb = await client();
+  return sb.auth.signInWithOAuth({ provider, options: { redirectTo: redirectTo() } });
+}
+export async function signOut() {
+  const sb = await client();
+  return sb.auth.signOut();
 }
 
 /* رفع رحلة (upsert) */

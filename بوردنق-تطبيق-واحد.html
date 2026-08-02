@@ -462,6 +462,41 @@ textarea.input { resize: vertical; min-height: 72px; }
 .ac-txt small { color: var(--ink-500); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ac-flag { font-size: 1.5rem; flex-shrink: 0; line-height: 1; }
 
+/* ---------- شاشة الانتظار ---------- */
+.splash { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.splash-mark { width: 64px; height: 64px; border-radius: 20px; background: var(--teal-800); color: var(--sand-500); display: grid; place-items: center; }
+.splash-mark svg { width: 34px; height: 34px; }
+.splash-name { font-size: 1.6rem; font-weight: 800; color: var(--teal-800); }
+.splash-dots { display: flex; gap: 6px; }
+.splash-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-700); opacity: .4; animation: bounce 1s infinite; }
+.splash-dots span:nth-child(2) { animation-delay: .15s; }
+.splash-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%,100% { opacity: .3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .splash-dots span { animation: none; } }
+
+/* ---------- صفحة الدخول / التسجيل ---------- */
+.auth { max-width: 420px; margin: 0 auto; padding-top: 18px; }
+.auth-hero { text-align: center; margin-bottom: 22px; }
+.auth-logo { width: 68px; height: 68px; border-radius: 22px; background: linear-gradient(140deg, var(--teal-800), var(--teal-700)); color: var(--sand-500); display: grid; place-items: center; margin: 0 auto 14px; box-shadow: var(--shadow); }
+.auth-logo svg { width: 36px; height: 36px; }
+.auth-hero h1 { font-size: 1.9rem; font-weight: 800; color: var(--teal-800); }
+.auth-hero p { color: var(--ink-500); margin-top: 4px; font-size: .95rem; }
+.auth-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 18px; }
+.auth-tabs { display: flex; gap: 6px; background: var(--bg); padding: 5px; border-radius: 12px; margin-bottom: 18px; }
+.auth-tab { flex: 1; padding: 10px; border-radius: 9px; font-weight: 700; color: var(--ink-500); }
+.auth-tab.active { background: var(--paper); color: var(--teal-800); box-shadow: var(--shadow-sm); }
+.auth-form { display: grid; gap: 14px; margin-bottom: 4px; }
+.auth-form .field { margin-bottom: 0; }
+.auth-or { display: flex; align-items: center; gap: 12px; color: var(--ink-300); font-size: .82rem; margin: 16px 0; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth-card .btn-ghost { margin-bottom: 10px; }
+.auth-google { font-weight: 700; }
+.auth-guest { color: var(--ink-500); }
+.auth-note { text-align: center; font-size: .88rem; font-weight: 600; margin-top: 6px; min-height: 4px; }
+.auth-note.err { color: var(--red); }
+.auth-note.ok { color: var(--green); }
+.acc-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* صندوق سعر الصرف التلقائي */
 .rate-box { background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .rate-box small { color: var(--green); font-weight: 700; background: var(--green-bg); padding: 2px 8px; border-radius: 999px; }
@@ -546,6 +581,11 @@ const icons = {
   search: svg('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'),
   cloud: svg('<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.98A6 6 0 0 0 6.3 9.5 4 4 0 0 0 7 17.9"/><path d="M8 13h8"/>'),
   share: svg('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>'),
+  mail: svg('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>'),
+  lock: svg('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
+  logout: svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'),
+  wand: svg('<path d="M15 4V2M15 10V8M11 6H9M21 6h-2M18.7 9.7 17 8M18.7 2.3 17 4M4 20l9-9M12.3 6.3 14 8"/>'),
+  guest: svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'),
 
   // فئات المصاريف
   cat_flight: svg('<path d="M17.8 19.2 16 11l3.5-3.5a2 2 0 1 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7l4.4 3.9-2 2.3-2.6-.4-.9 1.1 3 1.4 1.4 3 1.1-.9-.4-2.6 2.3-2 3.9 4.4a1 1 0 0 0 1.7-.9Z"/>'),
@@ -1078,8 +1118,43 @@ async function client() {
   if (!syncEnabled()) throw new Error('sync-not-configured');
   if (!_loading) _loading = import('https://esm.sh/@supabase/supabase-js@2');
   const { createClient } = await _loading;
-  _client = createClient(sbUrl(), sbKey(), { auth: { persistSession: false } });
+  _client = createClient(sbUrl(), sbKey(), {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  });
   return _client;
+}
+const getClient = client;
+
+/* ---------------- المصادقة (Supabase Auth) ---------------- */
+const redirectTo = () => location.origin + location.pathname;
+async function currentUser() {
+  const sb = await client();
+  const { data } = await sb.auth.getSession();
+  return data.session ? data.session.user : null;
+}
+async function onAuth(cb) {
+  const sb = await client();
+  return sb.auth.onAuthStateChange((_e, session) => cb(session ? session.user : null));
+}
+async function signUpEmail(email, password, name) {
+  const sb = await client();
+  return sb.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: redirectTo() } });
+}
+async function signInEmail(email, password) {
+  const sb = await client();
+  return sb.auth.signInWithPassword({ email, password });
+}
+async function signInMagic(email) {
+  const sb = await client();
+  return sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo() } });
+}
+async function signInOAuth(provider) {
+  const sb = await client();
+  return sb.auth.signInWithOAuth({ provider, options: { redirectTo: redirectTo() } });
+}
+async function signOut() {
+  const sb = await client();
+  return sb.auth.signOut();
 }
 
 /* رفع رحلة (upsert) */
@@ -1112,7 +1187,7 @@ async function subscribeTrip(id, onRemote) {
 }
 
 
-const sync = { sbUrl, sbKey, setSb, syncEnabled, pushTrip, fetchTrip, subscribeTrip };
+const sync = { sbUrl, sbKey, setSb, syncEnabled, currentUser, onAuth, signUpEmail, signInEmail, signInMagic, signInOAuth, signOut, pushTrip, fetchTrip, subscribeTrip, getClient };
 
 /* app */
 /* =========================================================
@@ -1235,17 +1310,139 @@ function go(tripId, tab = 'budget') { R.tripId = tripId; R.tab = tab; render(); 
 function goHome() { R.tripId = null; render(); }
 $('#brandBtn').addEventListener('click', goHome);
 
+const safeLS = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const authState = { user: null, guest: !!safeLS('boarding.guest'), checked: false };
+
 function render() {
+  if (!authState.checked && !authState.guest && !authState.user) { renderSplash(); return; }
+  if (!authState.user && !authState.guest) { renderAuth(); return; }
   const t = R.tripId && db.getTrip(R.tripId);
   if (t) renderTrip(t, R.tab);
   else { R.tripId = null; renderHome(); }
 }
 
 /* =========================================================
+   شاشة الانتظار
+   ========================================================= */
+function renderSplash() {
+  headerActions.innerHTML = '';
+  view.innerHTML = `<div class="splash">
+    <div class="splash-mark">${icons.pin}</div>
+    <div class="splash-name">بوردنق</div>
+    <div class="splash-dots"><span></span><span></span><span></span></div>
+  </div>`;
+}
+
+/* =========================================================
+   صفحة الدخول / التسجيل
+   ========================================================= */
+let authMode = 'login'; // login | signup
+function renderAuth() {
+  headerActions.innerHTML = '';
+  const isSignup = authMode === 'signup';
+  view.innerHTML = `
+    <div class="auth">
+      <div class="auth-hero">
+        <div class="auth-logo">${icons.pin}</div>
+        <h1>بوردنق</h1>
+        <p>نظّم رحلة القروب: القطة، المصاريف، الأماكن — بمكان واحد.</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab ${!isSignup ? 'active' : ''}" data-mode="login">دخول</button>
+          <button class="auth-tab ${isSignup ? 'active' : ''}" data-mode="signup">حساب جديد</button>
+        </div>
+
+        <form id="auth-form" class="auth-form">
+          ${isSignup ? `<div class="field"><label>الاسم</label>
+            <div class="ac-wrap"><span class="ac-icon">${icons.guest}</span>
+              <input class="input ac-input" id="au-name" placeholder="اسمك" autocomplete="name"></div></div>` : ''}
+          <div class="field"><label>البريد الإلكتروني</label>
+            <div class="ac-wrap"><span class="ac-icon">${icons.mail}</span>
+              <input class="input ac-input" id="au-email" type="email" placeholder="you@example.com" dir="ltr" autocomplete="email"></div></div>
+          <div class="field"><label>كلمة المرور</label>
+            <div class="ac-wrap"><span class="ac-icon">${icons.lock}</span>
+              <input class="input ac-input" id="au-pass" type="password" placeholder="••••••••" dir="ltr" autocomplete="${isSignup ? 'new-password' : 'current-password'}"></div></div>
+          <button type="submit" class="btn btn-primary btn-block" id="au-submit">${isSignup ? icons.check + ' إنشاء الحساب' : icons.lock + ' تسجيل الدخول'}</button>
+        </form>
+
+        <div class="auth-or"><span>أو</span></div>
+
+        <button class="btn btn-ghost btn-block auth-google" id="au-google">
+          <svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.7 30.1 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.8 6.1C12.2 13.3 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.3-4.6 7l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.5z"/><path fill="#FBBC05" d="M10.3 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.8-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.1 0 11.3-2 15-5.5l-7.1-5.5c-2 1.3-4.6 2.1-7.9 2.1-6.4 0-11.8-3.8-13.7-9.4l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
+          المتابعة عبر Google
+        </button>
+        <button class="btn btn-ghost btn-block" id="au-magic">${icons.wand} رابط دخول عبر البريد</button>
+        <button class="btn btn-ghost btn-block auth-guest" id="au-guest">${icons.guest} استمر كضيف</button>
+
+        <p class="auth-note" id="au-note"></p>
+      </div>
+    </div>`;
+
+  view.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { authMode = b.dataset.mode; renderAuth(); });
+  const note = $('#au-note');
+  const setNote = (msg, ok) => { note.textContent = msg; note.className = 'auth-note ' + (ok ? 'ok' : 'err'); };
+  const email = () => $('#au-email').value.trim();
+  const pass = () => $('#au-pass').value;
+
+  $('#auth-form').onsubmit = async (e) => {
+    e.preventDefault();
+    if (!email()) return setNote('اكتب بريدك الإلكتروني');
+    if (pass().length < 6) return setNote('كلمة المرور ٦ أحرف على الأقل');
+    const btn = $('#au-submit'); btn.disabled = true;
+    try {
+      if (isSignup) {
+        const { data, error } = await sync.signUpEmail(email(), pass(), $('#au-name')?.value.trim());
+        if (error) throw error;
+        if (data.session) finishAuth(data.user);
+        else setNote('تم الإنشاء ✓ راجع بريدك لتأكيد الحساب ثم سجّل الدخول', true);
+      } else {
+        const { data, error } = await sync.signInEmail(email(), pass());
+        if (error) throw error;
+        finishAuth(data.user);
+      }
+    } catch (err) { setNote(authErr(err)); }
+    finally { btn.disabled = false; }
+  };
+
+  $('#au-google').onclick = async () => {
+    try { const { error } = await sync.signInOAuth('google'); if (error) throw error; }
+    catch (err) { setNote(authErr(err) + ' (فعّل مزوّد Google في Supabase)'); }
+  };
+  $('#au-magic').onclick = async () => {
+    if (!email()) return setNote('اكتب بريدك أولًا للرابط السحري');
+    try { const { error } = await sync.signInMagic(email()); if (error) throw error; setNote('أرسلنا رابط الدخول إلى بريدك ✉️', true); }
+    catch (err) { setNote(authErr(err)); }
+  };
+  $('#au-guest').onclick = () => {
+    try { localStorage.setItem('boarding.guest', '1'); } catch {}
+    authState.guest = true; render();
+  };
+}
+
+function authErr(err) {
+  const m = (err && (err.message || err.error_description)) || '';
+  if (/Invalid login/i.test(m)) return 'بريد أو كلمة مرور غير صحيحة';
+  if (/already registered/i.test(m)) return 'هذا البريد مسجّل — سجّل الدخول';
+  if (/not configured|provider/i.test(m)) return 'الطريقة غير مفعّلة في Supabase';
+  if (/Failed to fetch|NetworkError|import/i.test(m)) return 'تعذّر الاتصال بالمزامنة';
+  return m || 'صار خطأ، حاول مرة ثانية';
+}
+
+function finishAuth(user) {
+  authState.user = user;
+  try { localStorage.removeItem('boarding.guest'); } catch {}
+  authState.guest = false;
+  toast('أهلًا ' + (user?.user_metadata?.name || user?.email || '') + ' ✓');
+  render();
+}
+
+/* =========================================================
    الرئيسية — قائمة الرحلات
    ========================================================= */
 function renderHome() {
-  headerActions.innerHTML = '';
+  headerActions.innerHTML = accountChip();
   const trips = db.getTrips();
   let body;
   if (!trips.length) {
@@ -1263,6 +1460,35 @@ function renderHome() {
     </div>${body}`;
   view.querySelectorAll('[data-act="new"]').forEach(b => b.onclick = openNewTrip);
   view.querySelectorAll('[data-trip]').forEach(c => c.onclick = () => go(c.dataset.trip));
+  wireAccount();
+}
+
+function accountChip() {
+  if (authState.user) {
+    const nm = authState.user.user_metadata?.name || authState.user.email || 'حسابي';
+    return `<button class="btn btn-ghost btn-sm" data-act="account" title="${esc(nm)}">${icons.guest} <span class="acc-name">${esc(nm)}</span></button>`;
+  }
+  return `<button class="btn btn-ghost btn-sm" data-act="login">${icons.logout} تسجيل الدخول</button>`;
+}
+function wireAccount() {
+  const a = headerActions.querySelector('[data-act="account"]');
+  if (a) a.onclick = () => openAccount();
+  const l = headerActions.querySelector('[data-act="login"]');
+  if (l) l.onclick = () => { try { localStorage.removeItem('boarding.guest'); } catch {} authState.guest = false; render(); };
+}
+function openAccount() {
+  const u = authState.user;
+  openModal({
+    title: 'حسابي',
+    body: `<div class="member-row"><span class="avatar" style="background:var(--teal-800)">${esc((u.user_metadata?.name || u.email || '؟')[0])}</span>
+      <div class="member-grow"><div class="member-name">${esc(u.user_metadata?.name || 'مستخدم')}</div>
+      <div class="muted-text" style="font-size:.82rem" dir="ltr">${esc(u.email || '')}</div></div></div>`,
+    footer: `<button class="btn btn-danger-ghost btn-block" id="ac-out">${icons.logout} تسجيل الخروج</button>`,
+  });
+  $('#ac-out').onclick = async () => {
+    try { await sync.signOut(); } catch {}
+    authState.user = null; closeModal(); render(); toast('تم تسجيل الخروج');
+  };
 }
 
 function tripCard(t) {
@@ -1644,7 +1870,7 @@ function openNewTrip() {
     body: `
       <p class="muted-text" style="margin-bottom:14px">أنت أمير الرحلة — تنشئها وتضيف القروب وتحدّد القطة.</p>
       <div class="field"><label>اسمك (أمير الرحلة)</label>
-        <input class="input" id="f-amir" placeholder="اسمك" autocomplete="off"></div>
+        <input class="input" id="f-amir" placeholder="اسمك" autocomplete="off" value="${esc(authState.user?.user_metadata?.name || (authState.user?.email ? authState.user.email.split('@')[0] : ''))}"></div>
       <div class="field"><label>جوالك <span class="hint">اختياري — لطلبات القطة</span></label>
         <input class="input" id="f-amir-phone" placeholder="مثال: 9665xxxxxxxx" dir="ltr" inputmode="tel" autocomplete="off"></div>
       <div class="field"><label>بلد الوجهة <span class="hint">ابحث</span></label>
@@ -2246,9 +2472,26 @@ async function checkJoin() {
 db.onChange(scheduleSync);
 
 /* ---------------- إقلاع ---------------- */
-render();
-ensureSubscriptions();
-checkJoin();
+async function boot() {
+  // روابط المشاركة تُفتح مباشرة (كضيف إن لزم)
+  const joinId = new URLSearchParams(location.search).get('t');
+  render(); // شاشة انتظار
+
+  if (sync.syncEnabled()) {
+    try {
+      authState.user = await sync.currentUser();
+      sync.onAuth((u) => { const was = !!authState.user; authState.user = u; if (!!u !== was) render(); }).catch(() => {});
+    } catch { /* المزامنة غير متاحة الآن */ }
+  }
+  authState.checked = true;
+  if (joinId && !authState.user) authState.guest = true; // افتح الرابط المشترك بلا حاجز
+  render();
+
+  ensureSubscriptions();
+  checkJoin();
+}
+boot();
+
 
 </script>
 </body>

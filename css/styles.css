@@ -454,6 +454,41 @@ textarea.input { resize: vertical; min-height: 72px; }
 .ac-txt small { color: var(--ink-500); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ac-flag { font-size: 1.5rem; flex-shrink: 0; line-height: 1; }
 
+/* ---------- شاشة الانتظار ---------- */
+.splash { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.splash-mark { width: 64px; height: 64px; border-radius: 20px; background: var(--teal-800); color: var(--sand-500); display: grid; place-items: center; }
+.splash-mark svg { width: 34px; height: 34px; }
+.splash-name { font-size: 1.6rem; font-weight: 800; color: var(--teal-800); }
+.splash-dots { display: flex; gap: 6px; }
+.splash-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-700); opacity: .4; animation: bounce 1s infinite; }
+.splash-dots span:nth-child(2) { animation-delay: .15s; }
+.splash-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%,100% { opacity: .3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .splash-dots span { animation: none; } }
+
+/* ---------- صفحة الدخول / التسجيل ---------- */
+.auth { max-width: 420px; margin: 0 auto; padding-top: 18px; }
+.auth-hero { text-align: center; margin-bottom: 22px; }
+.auth-logo { width: 68px; height: 68px; border-radius: 22px; background: linear-gradient(140deg, var(--teal-800), var(--teal-700)); color: var(--sand-500); display: grid; place-items: center; margin: 0 auto 14px; box-shadow: var(--shadow); }
+.auth-logo svg { width: 36px; height: 36px; }
+.auth-hero h1 { font-size: 1.9rem; font-weight: 800; color: var(--teal-800); }
+.auth-hero p { color: var(--ink-500); margin-top: 4px; font-size: .95rem; }
+.auth-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 18px; }
+.auth-tabs { display: flex; gap: 6px; background: var(--bg); padding: 5px; border-radius: 12px; margin-bottom: 18px; }
+.auth-tab { flex: 1; padding: 10px; border-radius: 9px; font-weight: 700; color: var(--ink-500); }
+.auth-tab.active { background: var(--paper); color: var(--teal-800); box-shadow: var(--shadow-sm); }
+.auth-form { display: grid; gap: 14px; margin-bottom: 4px; }
+.auth-form .field { margin-bottom: 0; }
+.auth-or { display: flex; align-items: center; gap: 12px; color: var(--ink-300); font-size: .82rem; margin: 16px 0; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth-card .btn-ghost { margin-bottom: 10px; }
+.auth-google { font-weight: 700; }
+.auth-guest { color: var(--ink-500); }
+.auth-note { text-align: center; font-size: .88rem; font-weight: 600; margin-top: 6px; min-height: 4px; }
+.auth-note.err { color: var(--red); }
+.auth-note.ok { color: var(--green); }
+.acc-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* صندوق سعر الصرف التلقائي */
 .rate-box { background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .rate-box small { color: var(--green); font-weight: 700; background: var(--green-bg); padding: 2px 8px; border-radius: 999px; }
