@@ -51,6 +51,25 @@ manifest.json, sw.js  إعدادات PWA
 بوردنق-تطبيق-واحد.html  نسخة كل شيء في ملف واحد
 ```
 
-## ملاحظة
+## المزامنة السحابية (Supabase)
 
-البيانات محلية لكل جهاز (بدون سيرفر). للمزامنة اللحظية بين أجهزة القروب نحتاج خلفية (مثل Firebase).
+لمشاركة الرحلة مع القروب ومزامنتها لحظيًا بين الأجهزة:
+
+1. أنشئ مشروع [Supabase](https://supabase.com) مجاني.
+2. في **SQL Editor** نفّذ:
+   ```sql
+   create table if not exists public.trips (
+     id text primary key,
+     data jsonb not null,
+     updated_at timestamptz not null default now()
+   );
+   alter table public.trips enable row level security;
+   create policy "read"   on public.trips for select using (true);
+   create policy "insert" on public.trips for insert with check (true);
+   create policy "update" on public.trips for update using (true);
+   alter publication supabase_realtime add table public.trips;
+   ```
+3. من **Project Settings → API** انسخ **Project URL** و**anon public key**.
+4. في التطبيق: ⚙️ الإعدادات → الصق الرابط والمفتاح. ثم من زر المشاركة فعّل المزامنة لأي رحلة وشارك رابطها.
+
+> المعرّفات عشوائية غير قابلة للتخمين. النموذج «آخر كتابة تفوز». المفتاح العام (anon) آمن للنشر مع تفعيل RLS.

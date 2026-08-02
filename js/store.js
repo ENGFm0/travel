@@ -49,9 +49,21 @@ function migrate(st) {
   return st;
 }
 
-function persist() {
+let changeCb = null;
+export function onChange(fn) { changeCb = fn; }
+
+function persist(opts) {
   try { localStorage.setItem(KEY, JSON.stringify(state)); }
   catch (e) { console.warn('تعذّر الحفظ المحلي', e); }
+  // إشعار طبقة المزامنة (ما لم يكن التغيير قادمًا من السحابة)
+  if (changeCb && !(opts && opts.fromCloud)) changeCb();
+}
+
+/* استبدال/إدراج رحلة قادمة من السحابة (بدون إعادة رفعها) */
+export function upsertTripFromCloud(trip) {
+  const i = state.trips.findIndex(t => t.id === trip.id);
+  if (i >= 0) state.trips[i] = trip; else state.trips.push(trip);
+  persist({ fromCloud: true });
 }
 
 /* ---------------- الرحلات ---------------- */
@@ -81,6 +93,7 @@ export function createTrip({ destination, country, flag, destCurrency, homeCurre
     sharedExpenses: [],                 // قطة مشتركة بين أشخاص محددين
     personalExpenses: {},               // { memberId: [ ... ] }
     places: [],
+    cloud: false,               // مزامنة سحابية مفعّلة لهذه الرحلة؟
     createdAt: Date.now(),
   };
   state.trips.push(trip);

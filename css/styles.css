@@ -98,6 +98,7 @@ a { color: var(--teal-700); }
 .btn-icon { padding: 9px; width: 40px; height: 40px; border-radius: 11px; }
 .header-actions .btn-ghost { background: rgba(255,255,255,.12); color: #fff; box-shadow: none; }
 .header-actions .btn-ghost:hover { background: rgba(255,255,255,.22); }
+.header-actions .btn-icon.synced { background: rgba(120,220,160,.28); color: #bff0d0; }
 
 /* ---------- Cards ---------- */
 .card {
@@ -136,6 +137,8 @@ a { color: var(--teal-700); }
   position: relative; display: flex; align-items: flex-end; padding: 12px 16px; color: #fff;
 }
 .trip-cover .flag { font-size: 2.4rem; position: absolute; top: 12px; inset-inline-end: 16px; }
+.cloud-tag { position: absolute; top: 14px; inset-inline-start: 16px; display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 700; background: rgba(255,255,255,.2); color: #fff; padding: 3px 9px; border-radius: 999px; }
+.cloud-tag svg { width: 13px; height: 13px; }
 .trip-cover .dest { font-weight: 800; font-size: 1.2rem; }
 .trip-card-body { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .trip-meta { display: flex; gap: 16px; color: var(--ink-500); font-size: .9rem; flex-wrap: wrap; }

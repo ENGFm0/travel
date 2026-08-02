@@ -5,6 +5,7 @@ import * as db from './store.js';
 import { poolStats, memberBudget, sharedNet, settleShared } from './settle.js';
 import { icons, catList, catIcon } from './icons.js';
 import { COUNTRIES, flagOf } from './countries.js';
+import * as sync from './sync.js';
 
 /* ---------------- أدوات ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -159,6 +160,7 @@ function tripCard(t) {
     <button class="trip-card" data-trip="${t.id}">
       <div class="trip-cover">
         <span class="flag">${t.flag}</span>
+        ${t.cloud ? `<span class="cloud-tag">${icons.cloud} مزامنة</span>` : ''}
         <div><div class="dest">${esc(t.destination)}</div>
           ${t.country ? `<div style="opacity:.85;font-size:.85rem">${esc(t.country)}</div>` : ''}</div>
       </div>
@@ -184,10 +186,12 @@ const TABS = [
 function renderTrip(t, tab) {
   const amir = db.memberById(t, t.amirId);
   headerActions.innerHTML = `
+    <button class="btn btn-ghost btn-icon ${t.cloud ? 'synced' : ''}" data-act="share" title="مشاركة ومزامنة">${t.cloud ? icons.cloud : icons.share}</button>
     <button class="btn btn-ghost btn-icon" data-act="settings" title="إعدادات الرحلة">${icons.gear}</button>
     <button class="btn btn-ghost btn-sm" data-act="home">${icons.back} رحلاتي</button>`;
   headerActions.querySelector('[data-act="home"]').onclick = goHome;
   headerActions.querySelector('[data-act="settings"]').onclick = () => openSettings(t);
+  headerActions.querySelector('[data-act="share"]').onclick = () => openShare(t);
 
   const tabsHtml = `<nav class="tabs">${TABS.map(x => `
     <button class="tab ${x.key === tab ? 'active' : ''}" data-tab="${x.key}">${x.icon}<span>${x.label}</span></button>`).join('')}</nav>`;
@@ -601,6 +605,11 @@ function openSettings(t) {
         <input class="input" id="s-mapskey" value="${esc(getMapsKey())}" placeholder="AIza..." dir="ltr" autocomplete="off">
         <span class="hint">مدمج مفتاح افتراضي. قيّده بنطاق موقعك من Google Cloud. يُحفظ على جهازك فقط.</span></div>
       <div class="divider"></div>
+      <div class="field"><label>المزامنة السحابية (Supabase) <span class="hint">لمشاركة الرحلة مع القروب</span></label>
+        <input class="input" id="s-sburl" value="${esc(sync.sbUrl())}" placeholder="https://xxx.supabase.co" dir="ltr" autocomplete="off" style="margin-bottom:8px">
+        <input class="input" id="s-sbkey" value="${esc(sync.sbKey())}" placeholder="المفتاح العام (anon key)" dir="ltr" autocomplete="off">
+        <span class="hint">${sync.syncEnabled() ? '✓ المزامنة مفعّلة' : 'الصق المفتاح العام لتفعيل المزامنة.'}</span></div>
+      <div class="divider"></div>
       <button class="btn btn-danger-ghost btn-block" id="s-del">${icons.trash} حذف الرحلة</button>`,
     footer: `<button class="btn btn-primary btn-block" id="s-save">${icons.check} حفظ</button>`,
   });
@@ -629,6 +638,7 @@ function openSettings(t) {
 
   $('#s-save').onclick = () => {
     setMapsKey($('#s-mapskey').value);
+    sync.setSb($('#s-sburl').value, $('#s-sbkey').value);
     db.updateTrip(t.id, {
       destination: $('#s-dest').value.trim() || t.destination,
       country: $('#s-destc').value.trim() || t.country,
@@ -636,6 +646,7 @@ function openSettings(t) {
       rate: Number(st.rate) || t.rate,
     });
     closeModal(); render(); toast('تم الحفظ ✓');
+    ensureSubscriptions();
   };
   $('#s-del').onclick = () => { closeModal(); confirmDeleteTrip(t); };
 }
@@ -1035,8 +1046,97 @@ function openReview(t, placeId) {
   };
 }
 
+/* =========================================================
+   المزامنة السحابية
+   ========================================================= */
+const shareUrl = (id) => `${location.origin}${location.pathname}?t=${id}`;
+
+function openShare(t) {
+  if (!sync.syncEnabled()) {
+    openModal({
+      title: 'مشاركة ومزامنة',
+      body: `<div class="pay-note">${icons.info}<span>لتفعيل مشاركة الرحلة مع القروب والمزامنة اللحظية، أضِف إعدادات <b>Supabase</b> (الرابط + المفتاح العام) من إعدادات الرحلة.</span></div>`,
+      footer: `<button class="btn btn-primary btn-block" id="sh-go">${icons.gear} فتح الإعدادات</button>`,
+    });
+    $('#sh-go').onclick = () => { closeModal(); openSettings(t); };
+    return;
+  }
+  const link = shareUrl(t.id);
+  const waText = `انضم لرحلة ${t.destination} على بوردنق:\n${link}`;
+  openModal({
+    title: 'مشاركة ومزامنة',
+    body: t.cloud
+      ? `<div class="pay-note" style="background:var(--green-bg);color:var(--green)">${icons.cloud}<span>هذه الرحلة <b>مُزامَنة</b> — أي تعديل يظهر لكل من عنده الرابط لحظيًا.</span></div>
+         <div class="field" style="margin-top:14px"><label>رابط الرحلة</label>
+           <input class="input" id="sh-link" value="${esc(link)}" readonly dir="ltr"></div>`
+      : `<div class="pay-note">${icons.info}<span>فعّل المزامنة لهذه الرحلة، ويصير لها رابط تشاركه مع القروب فيدخلونها ويتحدّثون لحظيًا.</span></div>`,
+    footer: t.cloud
+      ? `<div style="display:flex;gap:10px">
+           <button class="btn btn-ghost btn-block" id="sh-copy">${icons.receipt} نسخ الرابط</button>
+           <a class="btn btn-sand btn-block" href="${waLink('', waText)}" target="_blank" rel="noopener">${icons.send} واتساب</a></div>`
+      : `<button class="btn btn-primary btn-block" id="sh-enable">${icons.cloud} تفعيل المزامنة والمشاركة</button>`,
+  });
+  if (t.cloud) {
+    $('#sh-copy').onclick = () => { copyText(link); toast('تم نسخ الرابط ✓'); };
+  } else {
+    $('#sh-enable').onclick = async () => {
+      db.updateTrip(t.id, { cloud: true });
+      try {
+        await sync.pushTrip(db.getTrip(t.id));
+        ensureSubscriptions();
+        toast('تم تفعيل المزامنة ✓');
+        closeModal(); render(); openShare(db.getTrip(t.id));
+      } catch (e) {
+        db.updateTrip(t.id, { cloud: false });
+        toast('تعذّرت المزامنة — تأكد من الإعدادات وجدول قاعدة البيانات');
+        console.warn(e);
+      }
+    };
+  }
+}
+
+let syncTimer;
+const subs = {};
+function scheduleSync() {
+  if (!sync.syncEnabled()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    for (const t of db.getTrips()) {
+      if (t.cloud) { try { await sync.pushTrip(t); } catch (e) { console.warn('push', e); } }
+    }
+  }, 700);
+}
+function ensureSubscriptions() {
+  if (!sync.syncEnabled()) return;
+  db.getTrips().forEach(t => {
+    if (t.cloud && !subs[t.id]) {
+      subs[t.id] = true;
+      sync.subscribeTrip(t.id, (data) => {
+        db.upsertTripFromCloud({ ...data, cloud: true });
+        if (!R.tripId || R.tripId === t.id) render();
+      }).then(unsub => { subs[t.id] = unsub; }).catch(() => { subs[t.id] = null; });
+    }
+  });
+}
+async function checkJoin() {
+  const id = new URLSearchParams(location.search).get('t');
+  if (!id) return;
+  if (db.getTrip(id)) { go(id); return; }
+  if (!sync.syncEnabled()) { toast('أضِف إعدادات Supabase لفتح الرحلة المشتركة'); return; }
+  toast('جارٍ فتح الرحلة المشتركة…');
+  try {
+    const data = await sync.fetchTrip(id);
+    if (data) { db.upsertTripFromCloud({ ...data, cloud: true }); ensureSubscriptions(); go(id); toast('انضممت للرحلة ✓'); }
+    else toast('الرحلة غير موجودة');
+  } catch (e) { toast('تعذّر فتح الرحلة'); console.warn(e); }
+}
+
+db.onChange(scheduleSync);
+
 /* ---------------- إقلاع ---------------- */
 render();
+ensureSubscriptions();
+checkJoin();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
