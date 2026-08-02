@@ -41,8 +41,8 @@ export function memberBudget(trip, memberId) {
   const personal = (trip.personalExpenses[memberId] || []);
   const personalSpent = r2(personal.reduce((s, e) => s + e.amount, 0));
 
-  // صافي بين شخصين لهذا العضو (+ له / - عليه)
-  const pair = pairNet(trip)[memberId] || 0;
+  // صافي القطّات المشتركة لهذا العضو (+ له / - عليه)
+  const shared = sharedNet(trip)[memberId] || 0;
 
   const remaining = budget == null ? null : r2(budget - qattahShare - personalSpent);
   return {
@@ -50,26 +50,28 @@ export function memberBudget(trip, memberId) {
     personalCount: personal.length,
     isParticipant,
     qattahPaid: !!m?.qattahPaid,
-    pairNet: r2(pair),
+    sharedNet: r2(shared),
   };
 }
 
-/* ---------------- قطة بين شخصين ---------------- */
-// كل قطة تُقسّم 50/50: الطرف الآخر عليه نصفها للدافع
-export function pairNet(trip) {
+/* ---------------- قطة مشتركة بين أشخاص ---------------- */
+// تُقسّم بالتساوي على المشاركين؛ الدافع دفع الكل وكل مشارك عليه نصيبه
+export function sharedNet(trip) {
   const net = {};
   trip.members.forEach(m => { net[m.id] = 0; });
-  trip.pairExpenses.forEach(e => {
-    const half = e.amount / 2;
-    if (net[e.paidBy] !== undefined) net[e.paidBy] += half;   // له
-    if (net[e.withId] !== undefined) net[e.withId] -= half;   // عليه
+  trip.sharedExpenses.forEach(e => {
+    const parts = (e.participants || []).filter(id => net[id] !== undefined);
+    if (!parts.length) return;
+    const share = e.amount / parts.length;
+    if (net[e.paidBy] !== undefined) net[e.paidBy] += e.amount;   // دفع الكل
+    parts.forEach(id => { net[id] -= share; });                  // كل مشارك عليه نصيبه
   });
   Object.keys(net).forEach(k => net[k] = r2(net[k]));
   return net;
 }
 
-export function settlePairs(trip) {
-  const net = pairNet(trip);
+export function settleShared(trip) {
+  const net = sharedNet(trip);
   const creditors = [], debtors = [];
   Object.entries(net).forEach(([id, v]) => {
     if (v > 0.009) creditors.push({ id, amt: v });

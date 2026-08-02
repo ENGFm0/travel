@@ -26,10 +26,26 @@ function load() {
     if (!raw) return emptyState();
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.trips)) return emptyState();
-    return parsed;
+    return migrate(parsed);
   } catch {
     return emptyState();
   }
+}
+
+/* ترحيل: «قطة بين شخصين» (paidBy+withId) → مشاركة بين أشخاص (participants[]) */
+function migrate(st) {
+  st.trips.forEach(t => {
+    if (!t.sharedExpenses) {
+      t.sharedExpenses = (t.pairExpenses || []).map(e => ({
+        id: e.id, title: e.title, amount: e.amount, category: e.category,
+        paidBy: e.paidBy,
+        participants: [e.paidBy, e.withId].filter(Boolean),
+        createdAt: e.createdAt,
+      }));
+      delete t.pairExpenses;
+    }
+  });
+  return st;
 }
 
 function persist() {
@@ -61,7 +77,7 @@ export function createTrip({ destination, country, flag, destCurrency, homeCurre
     members: [amir],
     pool: { total: 0, participantIds: [], covers: '' },
     groupExpenses: [],                  // يصرفها الأمير من القطة
-    pairExpenses: [],                   // بين شخصين
+    sharedExpenses: [],                 // قطة مشتركة بين أشخاص محددين
     personalExpenses: {},               // { memberId: [ ... ] }
     places: [],
     createdAt: Date.now(),
@@ -119,8 +135,8 @@ export function removeMember(tripId, memberId) {
   const t = getTrip(tripId);
   if (!t) return;
   if (memberId === t.amirId) throw new Error('لا يمكن حذف أمير الرحلة.');
-  const usedInPair = t.pairExpenses.some(e => e.paidBy === memberId || e.withId === memberId);
-  if (usedInPair) throw new Error('لا يمكن حذف عضو مرتبط بقطة بين شخصين. احذفها أولًا.');
+  const usedInShared = t.sharedExpenses.some(e => e.paidBy === memberId || e.participants.includes(memberId));
+  if (usedInShared) throw new Error('لا يمكن حذف عضو مرتبط بقطة مشتركة. احذفها أولًا.');
   t.members = t.members.filter(m => m.id !== memberId);
   t.pool.participantIds = t.pool.participantIds.filter(id => id !== memberId);
   delete t.personalExpenses[memberId];
@@ -212,21 +228,22 @@ export function removePersonalExpense(tripId, memberId, id) {
   persist();
 }
 
-export function addPairExpense(tripId, { title, amount, category, paidBy, withId, enteredCur }) {
+export function addSharedExpense(tripId, { title, amount, category, paidBy, participants, enteredCur }) {
   const t = getTrip(tripId);
   if (!t) return null;
+  const parts = Array.from(new Set([paidBy, ...(participants || [])])); // الدافع مشارك دائمًا
   const e = {
-    id: uid('pr'), title: title.trim(), amount: toHome(t, amount, enteredCur),
-    category: category || 'other', paidBy, withId, createdAt: Date.now(),
+    id: uid('sh'), title: title.trim(), amount: toHome(t, amount, enteredCur),
+    category: category || 'other', paidBy, participants: parts, createdAt: Date.now(),
   };
-  t.pairExpenses.push(e);
+  t.sharedExpenses.push(e);
   persist();
   return e;
 }
-export function removePairExpense(tripId, id) {
+export function removeSharedExpense(tripId, id) {
   const t = getTrip(tripId);
   if (!t) return;
-  t.pairExpenses = t.pairExpenses.filter(e => e.id !== id);
+  t.sharedExpenses = t.sharedExpenses.filter(e => e.id !== id);
   persist();
 }
 

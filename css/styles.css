@@ -422,3 +422,10 @@ textarea.input { resize: vertical; min-height: 72px; }
 .rate-row b { color: var(--teal-800); }
 .share-preview { background: var(--teal-050); color: var(--teal-800); padding: 12px 14px; border-radius: 12px; font-size: .9rem; min-height: 4px; }
 .share-preview:empty { display: none; }
+.conv-preview { color: var(--ink-500); font-size: .84rem; font-weight: 700; margin-top: 6px; min-height: 2px; }
+.conv-preview:empty { display: none; }
+
+/* قسم القطّات المشتركة تحت القطة */
+.shared-block { margin-top: 30px; padding-top: 22px; border-top: 2px dashed var(--line); }
+.shared-block .section-head:first-child { margin-top: 0; }
+.input-group .btn { flex: 0 0 auto; }

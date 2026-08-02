@@ -2,7 +2,7 @@
    app.js — رِفقة: قطة القروب + الميزانية الشخصية + قطة بين شخصين
    ========================================================= */
 import * as db from './store.js';
-import { poolStats, memberBudget, pairNet, settlePairs } from './settle.js';
+import { poolStats, memberBudget, sharedNet, settleShared } from './settle.js';
 import { icons, catList, catIcon } from './icons.js';
 
 /* ---------------- أدوات ---------------- */
@@ -113,7 +113,6 @@ function tripCard(t) {
 const TABS = [
   { key: 'budget', label: 'مصاريفي', icon: icons.coins },
   { key: 'pool', label: 'القطة', icon: icons.wallet },
-  { key: 'pairs', label: 'بين شخصين', icon: icons.users },
   { key: 'places', label: 'الأماكن', icon: icons.pin },
 ];
 
@@ -131,7 +130,6 @@ function renderTrip(t, tab) {
   let content = '';
   if (tab === 'budget') content = tabBudget(t);
   else if (tab === 'pool') content = tabPool(t);
-  else if (tab === 'pairs') content = tabPairs(t);
   else if (tab === 'places') content = tabPlaces(t);
 
   view.innerHTML = `
@@ -175,7 +173,7 @@ function tabBudget(t) {
         <div class="bk-row"><span>قطة الرحلة (للقروب) ${paidChip}</span><b class="neg">− ${money(b.qattahShare, t)}</b></div>
         <div class="bk-row"><span>مصاريف شخصية (${b.personalCount})</span><b class="neg">− ${money(b.personalSpent, t)}</b></div>
         <div class="bk-total"><span>المتبقي معي</span><span class="bk-amt ${b.remaining < 0 ? 'over' : ''}">${dual(b.remaining, t)}</span></div>
-        ${b.pairNet !== 0 ? `<div class="bk-note">${b.pairNet > 0 ? 'لك' : 'عليك'} في «بين شخصين»: <b>${money(Math.abs(b.pairNet), t)}</b></div>` : ''}
+        ${b.sharedNet !== 0 ? `<div class="bk-note">${b.sharedNet > 0 ? 'لك' : 'عليك'} في القطّات المشتركة: <b>${money(Math.abs(b.sharedNet), t)}</b></div>` : ''}
       </div>`;
   }
 
@@ -282,29 +280,30 @@ function tabPool(t) {
       <button class="btn btn-ghost btn-block mt" data-act="add-member">${icons.userplus} إضافة عضو</button></div>
 
     <div class="section-head"><h2>قطة الرحلة</h2></div>
-    ${poolBody}`;
+    ${poolBody}
+
+    ${sharedSection(t)}`;
 }
 
-/* ---------------- تبويب: بين شخصين ---------------- */
-function tabPairs(t) {
-  if (t.members.length < 2) {
-    return `<div class="empty">${icons.users}<h3>تحتاج شخصين على الأقل</h3>
-      <p>أضِف أعضاء القروب من تبويب «القطة».</p></div>`;
-  }
-  const list = t.pairExpenses.slice().sort((a, c) => c.createdAt - a.createdAt);
+/* ---------------- قسم: قطّات مشتركة بين أشخاص (تحت القطة) ---------------- */
+function sharedSection(t) {
+  const canAdd = t.members.length >= 2;
+  const list = t.sharedExpenses.slice().sort((a, c) => c.createdAt - a.createdAt);
+
   const listHtml = list.length ? list.map(e => {
-    const payer = db.memberById(t, e.paidBy), other = db.memberById(t, e.withId);
+    const payer = db.memberById(t, e.paidBy);
+    const names = e.participants.map(id => db.memberById(t, id)?.name).filter(Boolean).join('، ');
     return `<div class="exp">
       <span class="exp-cat">${catIcon(e.category)}</span>
       <div class="exp-body"><div class="exp-title">${esc(e.title)}</div>
-        <div class="exp-sub">دفعها ${payer ? esc(payer.name) : '؟'} · مع ${other ? esc(other.name) : '؟'} · مناصفة</div></div>
+        <div class="exp-sub">دفعها ${payer ? esc(payer.name) : '؟'} · بين ${e.participants.length} (${esc(names)})</div></div>
       <div class="exp-amount">${dual(e.amount, t)}</div>
-      <button class="icon-btn danger" data-del-pair="${e.id}">${icons.trash}</button>
+      <button class="icon-btn danger" data-del-shared="${e.id}">${icons.trash}</button>
     </div>`;
-  }).join('') : `<div class="empty">${icons.users}<h3>ما فيه قطّات بين شخصين</h3><p>مصاريف تخص شخصين وتتسوّى بينهم مباشرة.</p></div>`;
+  }).join('') : `<p class="muted-text center" style="padding:12px">ما فيه قطّات مشتركة بعد.</p>`;
 
-  const txns = settlePairs(t);
-  const txHtml = txns.length ? txns.map(x => {
+  const txns = settleShared(t);
+  const txHtml = txns.map(x => {
     const from = db.memberById(t, x.from), to = db.memberById(t, x.to);
     const payText = `تحويل عبر برق:\nمن: ${from.name}\nإلى: ${to.name}\nالمبلغ: ${money(x.amount, t)}`;
     return `<div class="settle">
@@ -316,15 +315,19 @@ function tabPairs(t) {
       <div style="text-align:end"><div class="settle-amount">${money(x.amount, t)}</div>
         <button class="btn btn-sand btn-sm" style="margin-top:6px" data-pay='${esc(JSON.stringify(payText))}'>${icons.wallet} برق</button></div>
     </div>`;
-  }).join('') : '';
+  }).join('');
 
   return `
-    <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.info}
-      <span>قطّات <b>خارج صندوق القروب</b> — مصروف يخص شخصين، يُقسّم مناصفة ويتسوّى بينهما.</span></div>
-    ${txns.length ? `<div class="section-head"><h2>التسوية</h2></div>${txHtml}` : ''}
-    <div class="section-head"><h2>القطّات (${t.pairExpenses.length})</h2></div>
-    ${listHtml}
-    <button class="btn btn-primary btn-block mt" data-act="add-pair">${icons.plus} قطة بين شخصين</button>`;
+    <div class="shared-block">
+      <div class="section-head"><h2>قطّات مشتركة</h2><span class="hint">بين أشخاص · خارج الصندوق</span></div>
+      <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.info}
+        <span>مصروف يخص <b>أشخاصًا محددين</b> (٢ أو أكثر)، يُقسّم بالتساوي ويتسوّى بينهم مباشرة — منفصل عن صندوق القطة.</span></div>
+      ${listHtml}
+      ${txns.length ? `<div class="section-head" style="margin-top:16px"><h2 style="font-size:1rem">التسوية بينهم</h2></div>${txHtml}` : ''}
+      ${canAdd
+        ? `<button class="btn btn-ghost btn-block mt" data-act="add-shared">${icons.plus} قطة مشتركة</button>`
+        : `<p class="muted-text center mt">أضِف عضوين على الأقل.</p>`}
+    </div>`;
 }
 
 /* ---------------- تبويب: الأماكن ---------------- */
@@ -336,9 +339,7 @@ function tabPlaces(t) {
       <div class="place-body"><div class="place-name">${esc(p.name)}</div>
         ${p.note ? `<div class="place-note">${esc(p.note)}</div>` : ''}
         <div class="place-links">
-          ${p.mapUrl
-            ? `<a class="map-link" href="${esc(p.mapUrl)}" target="_blank" rel="noopener">${icons.map} فتح في الخريطة</a>`
-            : `<a class="map-link" href="https://www.google.com/maps/search/${encodeURIComponent(p.name + ' ' + (t.destination || ''))}" target="_blank" rel="noopener">${icons.map} قوقل ماب</a>`}
+          <a class="map-link" href="${p.mapUrl ? esc(p.mapUrl) : mapsSearch((p.name + ' ' + (t.destination || '')).trim())}" target="_blank" rel="noopener">${icons.map} افتح في قوقل ماب</a>
           <button class="map-link" style="background:${p.visited ? 'var(--green-bg)' : '#eef1f0'};color:${p.visited ? 'var(--green)' : 'var(--ink-500)'}" data-visited="${p.id}">
             ${icons.check} ${p.visited ? 'تمّت الزيارة' : 'لم تُزَر'}</button>
         </div></div>
@@ -379,9 +380,9 @@ function wire(t, tab) {
   on('[data-act="add-group"]', () => openExpense(t, 'group'));
   on('[data-del-group]', e => { db.removeGroupExpense(t.id, e.currentTarget.dataset.delGroup); render(); });
 
-  // بين شخصين
-  on('[data-act="add-pair"]', () => openExpense(t, 'pair'));
-  on('[data-del-pair]', e => { db.removePairExpense(t.id, e.currentTarget.dataset.delPair); render(); });
+  // قطّات مشتركة (تحت القطة)
+  on('[data-act="add-shared"]', () => openExpense(t, 'shared'));
+  on('[data-del-shared]', e => { db.removeSharedExpense(t.id, e.currentTarget.dataset.delShared); render(); });
   on('[data-pay]', e => { copyText(JSON.parse(e.currentTarget.dataset.pay)); toast('تم نسخ تفاصيل التحويل ✓'); });
 
   // الأماكن
@@ -542,8 +543,14 @@ function openPool(t) {
   openModal({
     title: 'قطة الرحلة',
     body: `
-      <div class="field"><label>إجمالي القطة (${curLabel(t.homeCurrency)})</label>
-        <input class="input" id="q-total" type="number" inputmode="decimal" min="0" step="0.01" value="${t.pool.total || ''}" placeholder="0" dir="ltr"></div>
+      <div class="field"><label>إجمالي القطة <span class="hint">اختر العملة</span></label>
+        <div class="amount-row">
+          <input class="input" id="q-total" type="number" inputmode="decimal" min="0" step="0.01" value="${t.pool.total || ''}" placeholder="0" dir="ltr">
+          <div class="seg cur-seg" id="q-cur">
+            <button type="button" class="seg-opt sel" data-qcur="${t.homeCurrency}">${curLabel(t.homeCurrency)}<small>الديار</small></button>
+            <button type="button" class="seg-opt" data-qcur="${t.destCurrency}">${curLabel(t.destCurrency)}<small>الوجهة</small></button>
+          </div>
+        </div></div>
       <div class="field"><label>على مين؟</label>
         <div class="seg" id="q-scope">
           <button type="button" class="seg-opt ${t.pool.participantIds.length === 0 || t._poolAll ? 'sel' : ''}" data-scope="all">على الكل<small>كل أعضاء القروب</small></button>
@@ -561,21 +568,30 @@ function openPool(t) {
   });
 
   let scope = (t.pool.participantIds.length && !t._poolAll) ? 'some' : 'all';
+  let qCur = t.homeCurrency;
   const partsField = $('#q-parts-field');
   const preview = $('#q-preview');
 
+  const totalHome = () => {
+    const v = parseFloat($('#q-total').value) || 0;
+    return qCur === t.destCurrency && t.rate ? v / t.rate : v;
+  };
   function currentParts() {
     if (scope === 'all') return t.members.map(m => m.id);
     return [...selected];
   }
   function refresh() {
     partsField.style.display = scope === 'some' ? 'block' : 'none';
-    const total = parseFloat($('#q-total').value) || 0;
+    const total = totalHome();
     const n = currentParts().length;
     preview.innerHTML = n && total
-      ? `نصيب الفرد: <b>${money(total / n, t)}</b> ≈ ${inDest(total / n, t)} <span class="muted-text">(${n} مشاركين)</span>`
+      ? `الإجمالي ${money(total, t)} · نصيب الفرد: <b>${money(total / n, t)}</b> ≈ ${inDest(total / n, t)} <span class="muted-text">(${n} مشاركين)</span>`
       : '';
   }
+  modalRoot.querySelectorAll('[data-qcur]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-qcur]').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); qCur = b.dataset.qcur; refresh();
+  });
   modalRoot.querySelectorAll('[data-scope]').forEach(b => b.onclick = () => {
     modalRoot.querySelectorAll('[data-scope]').forEach(x => x.classList.remove('sel'));
     b.classList.add('sel'); scope = b.dataset.scope; refresh();
@@ -590,7 +606,7 @@ function openPool(t) {
   refresh();
 
   $('#q-save').onclick = () => {
-    const total = parseFloat($('#q-total').value);
+    const total = totalHome();
     if (!(total > 0)) { toast('اكتب إجمالي القطة'); return; }
     const parts = currentParts();
     if (!parts.length) { toast('اختر المشاركين'); return; }
@@ -606,70 +622,106 @@ function openSetBudget(t) {
   openModal({
     title: `ميزانية ${esc(me.name)}`,
     body: `
-      <div class="field"><label>ميزانيتك الكاملة (${curLabel(t.homeCurrency)})</label>
-        <input class="input" id="bd" type="number" inputmode="decimal" min="0" step="0.01" value="${me.budget ?? ''}" placeholder="0" dir="ltr"></div>
+      <div class="field"><label>ميزانيتك الكاملة <span class="hint">اختر العملة</span></label>
+        <div class="amount-row">
+          <input class="input" id="bd" type="number" inputmode="decimal" min="0" step="0.01" value="${me.budget ?? ''}" placeholder="0" dir="ltr">
+          <div class="seg cur-seg" id="bd-cur">
+            <button type="button" class="seg-opt sel" data-bcur="${t.homeCurrency}">${curLabel(t.homeCurrency)}<small>الديار</small></button>
+            <button type="button" class="seg-opt" data-bcur="${t.destCurrency}">${curLabel(t.destCurrency)}<small>الوجهة</small></button>
+          </div>
+        </div>
+        <div class="conv-preview" id="bd-conv"></div></div>
       ${b.isParticipant ? `<div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.info}
         <span>قطة الرحلة <b>${money(b.qattahShare, t)}</b> بتنخصم تلقائيًا من ميزانيتك، والباقي مصاريفك الشخصية.</span></div>` : ''}`,
     footer: `<button class="btn btn-primary btn-block" id="bd-save">${icons.check} حفظ</button>`,
   });
-  $('#bd').focus();
+  let bCur = t.homeCurrency;
+  const bdHome = () => { const v = parseFloat($('#bd').value) || 0; return bCur === t.destCurrency && t.rate ? v / t.rate : v; };
+  const bdConv = () => { const v = parseFloat($('#bd').value) || 0; $('#bd-conv').innerHTML = v ? `≈ ${bCur === t.destCurrency ? money(bdHome(), t) : inDest(bdHome(), t)}` : ''; };
+  modalRoot.querySelectorAll('[data-bcur]').forEach(b2 => b2.onclick = () => {
+    modalRoot.querySelectorAll('[data-bcur]').forEach(x => x.classList.remove('sel')); b2.classList.add('sel'); bCur = b2.dataset.bcur; bdConv();
+  });
+  $('#bd').oninput = bdConv; $('#bd').focus(); bdConv();
   $('#bd-save').onclick = () => {
-    const v = parseFloat($('#bd').value);
-    if (!(v >= 0)) { toast('اكتب مبلغًا صحيحًا'); return; }
+    const v = bdHome();
+    if (!(v >= 0) || !($('#bd').value)) { toast('اكتب مبلغًا صحيحًا'); return; }
     db.setMemberBudget(t.id, me.id, v);
     closeModal(); render(); toast('تم حفظ الميزانية ✓');
   };
 }
 
-/* مصروف (group | personal | pair) */
+/* مصروف (group | personal | shared) */
 function openExpense(t, kind) {
-  const state = { category: 'food', enteredCur: t.destCurrency, paidBy: t.currentMemberId, withId: null };
-  const titles = { group: 'صرف من القطة', personal: 'مصروف شخصي', pair: 'قطة بين شخصين' };
+  const state = {
+    category: 'food', enteredCur: t.destCurrency,
+    paidBy: t.currentMemberId,
+    parts: new Set([t.currentMemberId]),   // للقطة المشتركة
+  };
+  const titles = { group: 'صرف من القطة', personal: 'مصروف شخصي', shared: 'قطة مشتركة' };
 
-  const pairFields = kind === 'pair' ? `
+  const sharedFields = kind === 'shared' ? `
     <div class="field"><label>مين دفع؟</label>
       <div class="picker" id="e-payer">${t.members.map(m => `
         <button type="button" class="pick ${m.id === state.paidBy ? 'sel' : ''}" data-payer="${m.id}">
           <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}</div></div>
-    <div class="field"><label>مع مين؟ <span class="hint">الطرف الآخر</span></label>
-      <div class="picker" id="e-with">${t.members.map(m => `
-        <button type="button" class="pick" data-with="${m.id}">
-          <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}</div></div>` : '';
+    <div class="field"><label>المشاركون <span class="hint">مين يتقاسمها (٢ أو أكثر)</span></label>
+      <div class="picker" id="e-parts">${t.members.map(m => `
+        <button type="button" class="pick ${state.parts.has(m.id) ? 'sel' : ''}" data-part="${m.id}">
+          <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}</div>
+      <div class="share-preview" id="e-share" style="margin-top:10px"></div></div>` : '';
 
   openModal({
     title: titles[kind],
     body: `
       <div class="field"><label>الوصف</label>
-        <input class="input" id="e-title" placeholder="مثال: ${kind === 'group' ? 'عشاء القروب' : kind === 'pair' ? 'تكسي مع صاحبي' : 'قهوة'}" autocomplete="off"></div>
-      <div class="field"><label>المبلغ</label>
+        <input class="input" id="e-title" placeholder="مثال: ${kind === 'group' ? 'عشاء القروب' : kind === 'shared' ? 'تكسي مشترك' : 'قهوة'}" autocomplete="off"></div>
+      <div class="field"><label>المبلغ <span class="hint">اختر العملة</span></label>
         <div class="amount-row">
           <input class="input" id="e-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" dir="ltr">
           <div class="seg cur-seg" id="e-cur">
             <button type="button" class="seg-opt sel" data-cur="${t.destCurrency}">${curLabel(t.destCurrency)}<small>الوجهة</small></button>
             <button type="button" class="seg-opt" data-cur="${t.homeCurrency}">${curLabel(t.homeCurrency)}<small>الديار</small></button>
           </div>
-        </div></div>
+        </div>
+        <div class="conv-preview" id="e-conv"></div></div>
       <div class="field"><label>الفئة</label>
         <div class="cat-grid" id="e-cats">${catList.map(cc => `
           <button type="button" class="cat-opt ${cc.key === 'food' ? 'sel' : ''}" data-cat="${cc.key}">${cc.icon}<span>${cc.label}</span></button>`).join('')}</div></div>
-      ${pairFields}`,
+      ${sharedFields}`,
     footer: `<button class="btn btn-primary btn-block" id="e-save">${icons.check} حفظ</button>`,
   });
+
+  const homeOf = (v) => state.enteredCur === t.destCurrency && t.rate ? v / t.rate : v;
+  function refreshConv() {
+    const v = parseFloat($('#e-amount').value) || 0;
+    const other = state.enteredCur === t.destCurrency ? money(homeOf(v), t) : inDest(homeOf(v), t);
+    $('#e-conv').innerHTML = v ? `≈ ${other}` : '';
+    const share = $('#e-share');
+    if (share) {
+      const n = new Set([state.paidBy, ...state.parts]).size;
+      share.innerHTML = v && n ? `نصيب كل شخص: <b>${money(homeOf(v) / n, t)}</b> ≈ ${inDest(homeOf(v) / n, t)} <span class="muted-text">(${n})</span>` : '';
+    }
+  }
 
   modalRoot.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
     modalRoot.querySelectorAll('[data-cat]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.category = b.dataset.cat;
   });
   modalRoot.querySelectorAll('[data-cur]').forEach(b => b.onclick = () => {
-    modalRoot.querySelectorAll('[data-cur]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.enteredCur = b.dataset.cur;
+    modalRoot.querySelectorAll('[data-cur]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.enteredCur = b.dataset.cur; refreshConv();
   });
-  if (kind === 'pair') {
+  if (kind === 'shared') {
     modalRoot.querySelectorAll('[data-payer]').forEach(b => b.onclick = () => {
-      modalRoot.querySelectorAll('[data-payer]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.paidBy = b.dataset.payer;
+      modalRoot.querySelectorAll('[data-payer]').forEach(x => x.classList.remove('sel')); b.classList.add('sel');
+      state.paidBy = b.dataset.payer; refreshConv();
     });
-    modalRoot.querySelectorAll('[data-with]').forEach(b => b.onclick = () => {
-      modalRoot.querySelectorAll('[data-with]').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); state.withId = b.dataset.with;
+    modalRoot.querySelectorAll('[data-part]').forEach(b => b.onclick = () => {
+      const id = b.dataset.part;
+      if (state.parts.has(id)) { state.parts.delete(id); b.classList.remove('sel'); }
+      else { state.parts.add(id); b.classList.add('sel'); }
+      refreshConv();
     });
   }
+  $('#e-amount').oninput = refreshConv;
   $('#e-title').focus();
 
   $('#e-save').onclick = () => {
@@ -681,34 +733,39 @@ function openExpense(t, kind) {
     if (kind === 'group') db.addGroupExpense(t.id, payload);
     else if (kind === 'personal') db.addPersonalExpense(t.id, t.currentMemberId, payload);
     else {
-      if (!state.withId) { toast('اختر الطرف الآخر'); return; }
-      if (state.withId === state.paidBy) { toast('لازم شخصين مختلفين'); return; }
-      db.addPairExpense(t.id, { ...payload, paidBy: state.paidBy, withId: state.withId });
+      const parts = new Set([state.paidBy, ...state.parts]);
+      if (parts.size < 2) { toast('اختر شخصين على الأقل'); return; }
+      db.addSharedExpense(t.id, { ...payload, paidBy: state.paidBy, participants: [...parts] });
     }
     closeModal(); render(); toast('تم الحفظ ✓');
   };
 }
 
-/* مكان */
+/* مكان — بحث في قوقل ماب (بدون لصق روابط) */
+function mapsSearch(query) {
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query);
+}
 function openPlace(t) {
   openModal({
     title: 'إضافة مكان',
     body: `
-      <div class="field"><label>اسم المكان</label>
-        <input class="input" id="p-name" placeholder="مثال: بحيرة أوزنجول" autocomplete="off"></div>
+      <div class="field"><label>ابحث عن المكان</label>
+        <div class="input-group">
+          <input class="input" id="p-name" placeholder="مثال: بحيرة أوزنجول" autocomplete="off">
+          <a class="btn btn-ghost" id="p-search" target="_blank" rel="noopener" href="#">${icons.map} بحث</a>
+        </div>
+        <span class="hint">اكتب الاسم واضغط «بحث» ليفتح في قوقل ماب مباشرة، وبعد الحفظ يصير له زر خريطة.</span></div>
       <div class="field"><label>ملاحظة <span class="hint">اختياري</span></label>
-        <input class="input" id="p-note" placeholder="مثال: زيارتها صباحًا" autocomplete="off"></div>
-      <div class="field"><label>رابط قوقل ماب <span class="hint">اختياري</span></label>
-        <input class="input" id="p-map" placeholder="الصق رابط الموقع" dir="ltr" autocomplete="off"></div>
-      <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.map}
-        <span>بدون رابط، يظهر زر بحث تلقائي في قوقل ماب باسم المكان.</span></div>`,
+        <input class="input" id="p-note" placeholder="مثال: زيارتها صباحًا" autocomplete="off"></div>`,
     footer: `<button class="btn btn-primary btn-block" id="p-save">${icons.plus} إضافة</button>`,
   });
-  $('#p-name').focus();
+  const name = $('#p-name'), search = $('#p-search');
+  const upd = () => { search.href = mapsSearch(((name.value || '').trim() + ' ' + (t.destination || '')).trim()); };
+  name.oninput = upd; upd(); name.focus();
   $('#p-save').onclick = () => {
-    const name = $('#p-name').value.trim();
-    if (!name) { toast('اكتب اسم المكان'); return; }
-    db.addPlace(t.id, { name, note: $('#p-note').value, mapUrl: $('#p-map').value });
+    const nm = name.value.trim();
+    if (!nm) { toast('اكتب اسم المكان'); return; }
+    db.addPlace(t.id, { name: nm, note: $('#p-note').value, mapUrl: '' });
     closeModal(); render(); toast('تمت إضافة المكان ✓');
   };
 }
