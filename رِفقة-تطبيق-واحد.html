@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>رِفقة — مصاريف السفر والقطّات</title>
+<meta name="theme-color" content="#0e4d54">
+<style>
+/* =========================================================
+   رِفقة — Design System
+   نظيف، بأسلوب سفر حقيقي. لا تدرّجات "ذكاء اصطناعي" ولا أيقونات غريبة.
+   ========================================================= */
+
+:root {
+  /* Palette — sea teal + warm sand + ink */
+  --teal-900: #0a3b41;
+  --teal-800: #0e4d54;
+  --teal-700: #12626b;
+  --teal-100: #d9ecee;
+  --teal-050: #eef7f8;
+
+  --sand-600: #c8873f;
+  --sand-500: #e0a24a;
+  --sand-100: #f8ecd8;
+
+  --ink-900: #14201f;
+  --ink-700: #33413f;
+  --ink-500: #5c6a68;
+  --ink-300: #97a3a1;
+
+  --paper: #ffffff;
+  --bg: #f4f6f5;
+  --line: #e3e8e7;
+
+  --green: #2f8f5b;
+  --green-bg: #e5f3ea;
+  --red: #c0453b;
+  --red-bg: #f7e6e4;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(20, 32, 31, .06);
+  --shadow: 0 6px 20px rgba(20, 32, 31, .08);
+  --shadow-lg: 0 18px 48px rgba(20, 32, 31, .16);
+
+  --maxw: 760px;
+  --font: 'Tajawal', 'Segoe UI', Tahoma, system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink-900);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding-inline: 18px; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea { font-family: inherit; font-size: 1rem; }
+a { color: var(--teal-700); }
+
+/* ---------- Header ---------- */
+.app-header {
+  position: sticky; top: 0; z-index: 40;
+  background: var(--teal-800);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+  padding-top: env(safe-area-inset-top);
+}
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.brand { display: flex; align-items: center; gap: 9px; color: #fff; font-weight: 800; font-size: 1.25rem; }
+.brand-mark {
+  display: grid; place-items: center; width: 34px; height: 34px;
+  background: rgba(255,255,255,.14); border-radius: 10px; color: var(--sand-500);
+}
+.header-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ---------- Main ---------- */
+.app-main { padding-block: 20px 90px; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 18px; border-radius: 12px; font-weight: 700; font-size: .98rem;
+  transition: transform .05s ease, background .15s ease, box-shadow .15s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn svg { width: 18px; height: 18px; }
+.btn-primary { background: var(--teal-800); color: #fff; box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--teal-700); }
+.btn-sand { background: var(--sand-500); color: #4a2f0e; }
+.btn-sand:hover { background: var(--sand-600); color: #fff; }
+.btn-ghost { background: var(--paper); color: var(--ink-700); box-shadow: inset 0 0 0 1px var(--line); }
+.btn-ghost:hover { background: var(--teal-050); }
+.btn-danger-ghost { background: var(--red-bg); color: var(--red); }
+.btn-block { width: 100%; }
+.btn-sm { padding: 8px 12px; font-size: .88rem; border-radius: 10px; }
+.btn-icon { padding: 9px; width: 40px; height: 40px; border-radius: 11px; }
+.header-actions .btn-ghost { background: rgba(255,255,255,.12); color: #fff; box-shadow: none; }
+.header-actions .btn-ghost:hover { background: rgba(255,255,255,.22); }
+
+/* ---------- Cards ---------- */
+.card {
+  background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--line);
+}
+.card-pad { padding: 18px; }
+
+/* ---------- Page headings ---------- */
+.page-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+.page-sub { color: var(--ink-500); margin-bottom: 20px; }
+
+.section-head { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 12px; }
+.section-head h2 { font-size: 1.18rem; font-weight: 800; }
+.section-head .hint { color: var(--ink-300); font-size: .85rem; }
+
+/* ---------- Empty state ---------- */
+.empty {
+  text-align: center; padding: 46px 22px; color: var(--ink-500);
+  border: 2px dashed var(--line); border-radius: var(--radius); background: var(--paper);
+}
+.empty svg { width: 44px; height: 44px; color: var(--ink-300); margin-bottom: 12px; }
+.empty h3 { color: var(--ink-700); font-size: 1.1rem; margin-bottom: 6px; }
+
+/* ---------- Trip cards (home) ---------- */
+.trip-grid { display: grid; gap: 14px; }
+.trip-card {
+  display: block; text-align: start; width: 100%;
+  background: var(--paper); border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--line);
+  transition: transform .08s ease, box-shadow .15s ease;
+}
+.trip-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.trip-cover {
+  height: 96px; background: linear-gradient(120deg, var(--teal-800), var(--teal-700));
+  position: relative; display: flex; align-items: flex-end; padding: 12px 16px; color: #fff;
+}
+.trip-cover .flag { font-size: 2.4rem; position: absolute; top: 12px; inset-inline-end: 16px; }
+.trip-cover .dest { font-weight: 800; font-size: 1.2rem; }
+.trip-card-body { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.trip-meta { display: flex; gap: 16px; color: var(--ink-500); font-size: .9rem; flex-wrap: wrap; }
+.trip-meta b { color: var(--ink-900); font-weight: 700; }
+
+/* ---------- Tabs ---------- */
+.tabs {
+  display: flex; gap: 4px; background: var(--paper); padding: 5px; border-radius: 14px;
+  border: 1px solid var(--line); box-shadow: var(--shadow-sm); overflow-x: auto;
+  position: sticky; top: 68px; z-index: 30; margin-bottom: 20px;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: 1 0 auto; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 12px; border-radius: 10px; font-weight: 700; font-size: .92rem; color: var(--ink-500);
+  white-space: nowrap;
+}
+.tab svg { width: 17px; height: 17px; }
+.tab.active { background: var(--teal-050); color: var(--teal-800); }
+
+/* ---------- Chips / badges ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px;
+  font-size: .82rem; font-weight: 700; background: var(--teal-050); color: var(--teal-800);
+}
+.chip.amir { background: var(--sand-100); color: var(--sand-600); }
+.chip.muted { background: #eef1f0; color: var(--ink-500); }
+.badge { font-size: .74rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.badge.group { background: var(--teal-050); color: var(--teal-800); }
+.badge.some { background: var(--sand-100); color: var(--sand-600); }
+.badge.personal { background: #eef1f0; color: var(--ink-500); }
+
+/* ---------- Members ---------- */
+.member-row { display: flex; align-items: center; gap: 10px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+.member-row:last-child { border-bottom: none; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 800; color: #fff; flex-shrink: 0; font-size: 1rem;
+}
+.member-name { font-weight: 700; }
+.member-grow { flex: 1; }
+
+/* ---------- Stages / progress ---------- */
+.stages { display: grid; gap: 10px; }
+.stage {
+  display: flex; align-items: center; gap: 13px; padding: 13px 14px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+}
+.stage-dot {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+  background: #eef1f0; color: var(--ink-300); font-weight: 800;
+}
+.stage.done .stage-dot { background: var(--green); color: #fff; }
+.stage.active { border-color: var(--teal-700); box-shadow: 0 0 0 3px var(--teal-050); }
+.stage.active .stage-dot { background: var(--teal-800); color: #fff; }
+.stage-body { flex: 1; }
+.stage-title { font-weight: 700; }
+.stage-note { font-size: .85rem; color: var(--ink-500); }
+.stage-check { width: 24px; height: 24px; color: var(--green); }
+
+/* ---------- Place cards ---------- */
+.place {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 12px;
+}
+.place-idx {
+  width: 28px; height: 28px; border-radius: 8px; background: var(--teal-050); color: var(--teal-800);
+  display: grid; place-items: center; font-weight: 800; flex-shrink: 0; font-size: .9rem;
+}
+.place-body { flex: 1; min-width: 0; }
+.place-name { font-weight: 700; }
+.place-note { font-size: .88rem; color: var(--ink-500); margin-top: 2px; }
+.place-links { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.map-link {
+  display: inline-flex; align-items: center; gap: 5px; font-size: .84rem; font-weight: 700;
+  color: var(--teal-700); background: var(--teal-050); padding: 5px 10px; border-radius: 9px;
+}
+.map-link svg { width: 14px; height: 14px; }
+
+/* ---------- Expense rows ---------- */
+.exp {
+  display: flex; align-items: center; gap: 12px; padding: 14px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 10px;
+}
+.exp-cat {
+  width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--teal-050); color: var(--teal-800);
+}
+.exp-cat svg { width: 21px; height: 21px; }
+.exp-body { flex: 1; min-width: 0; }
+.exp-title { font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.exp-sub { font-size: .84rem; color: var(--ink-500); margin-top: 2px; }
+.exp-amount { font-weight: 800; font-size: 1.05rem; white-space: nowrap; }
+.exp-amount small { font-weight: 700; font-size: .72rem; color: var(--ink-300); }
+
+/* ---------- Summary tiles ---------- */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px; }
+.tile { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px; text-align: center; }
+.tile .v { font-size: 1.35rem; font-weight: 800; color: var(--teal-800); }
+.tile .l { font-size: .78rem; color: var(--ink-500); margin-top: 2px; }
+@media (max-width: 460px) { .tile .v { font-size: 1.1rem; } }
+
+/* ---------- Settlement ---------- */
+.settle {
+  display: flex; align-items: center; gap: 12px; padding: 15px 14px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 12px;
+}
+.settle-flow { flex: 1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.settle-arrow { color: var(--ink-300); }
+.settle-arrow svg { width: 20px; height: 20px; }
+.settle-amount { font-weight: 800; color: var(--teal-800); }
+.who { display: flex; align-items: center; gap: 7px; font-weight: 700; }
+
+.balance-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+.balance-row:last-child { border-bottom: none; }
+.balance-val { font-weight: 800; }
+.balance-val.pos { color: var(--green); }
+.balance-val.neg { color: var(--red); }
+
+/* ---------- Forms / modal ---------- */
+.modal-root { position: fixed; inset: 0; z-index: 100; display: none; }
+.modal-root.open { display: block; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(10, 32, 31, .5); backdrop-filter: blur(2px); }
+.modal {
+  position: absolute; inset-inline: 0; bottom: 0; max-width: var(--maxw); margin: 0 auto;
+  background: var(--paper); border-radius: 22px 22px 0 0; box-shadow: var(--shadow-lg);
+  max-height: 92vh; display: flex; flex-direction: column;
+  animation: sheet-up .25s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@media (min-width: 560px) {
+  .modal { inset: 0; margin: auto; height: fit-content; max-height: 90vh; border-radius: 22px;
+           animation: pop .2s ease; }
+  @keyframes pop { from { transform: scale(.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 8px;
+  position: relative;
+}
+.modal-head::before {
+  content: ""; position: absolute; top: 8px; inset-inline: 0; margin: auto; width: 40px; height: 4px;
+  background: var(--line); border-radius: 999px;
+}
+.modal-head h3 { font-size: 1.2rem; font-weight: 800; }
+.modal-body { padding: 8px 20px 20px; overflow-y: auto; }
+.modal-foot { padding: 14px 20px calc(18px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+
+.field { margin-bottom: 16px; }
+.field > label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: 7px; color: var(--ink-700); }
+.field .hint { font-weight: 400; color: var(--ink-300); font-size: .82rem; }
+.input, .select, textarea.input {
+  width: 100%; padding: 12px 14px; border-radius: 12px; background: var(--bg);
+  border: 1.5px solid var(--line); color: var(--ink-900); transition: border-color .15s ease, background .15s;
+}
+.input:focus, .select:focus, textarea.input:focus {
+  outline: none; border-color: var(--teal-700); background: #fff;
+}
+textarea.input { resize: vertical; min-height: 72px; }
+.input-group { display: flex; gap: 8px; }
+.input-group .input { flex: 1; }
+
+.seg { display: flex; gap: 8px; flex-wrap: wrap; }
+.seg-opt {
+  flex: 1 1 auto; padding: 12px 10px; border-radius: 12px; border: 1.5px solid var(--line);
+  background: var(--bg); text-align: center; font-weight: 700; font-size: .9rem; color: var(--ink-500);
+  transition: all .12s ease;
+}
+.seg-opt small { display: block; font-weight: 400; font-size: .74rem; color: var(--ink-300); margin-top: 2px; }
+.seg-opt.sel { border-color: var(--teal-700); background: var(--teal-050); color: var(--teal-800); }
+.seg-opt.sel small { color: var(--teal-700); }
+
+/* member picker chips */
+.picker { display: flex; gap: 8px; flex-wrap: wrap; }
+.pick {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px;
+  border: 1.5px solid var(--line); background: var(--bg); font-weight: 700; font-size: .88rem; color: var(--ink-500);
+}
+.pick.sel { border-color: var(--teal-700); background: var(--teal-050); color: var(--teal-800); }
+.pick .dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: .72rem; font-weight: 800; }
+
+/* category grid */
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.cat-opt {
+  display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 12px 4px;
+  border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink-500);
+  font-size: .74rem; font-weight: 700;
+}
+.cat-opt svg { width: 22px; height: 22px; }
+.cat-opt.sel { border-color: var(--teal-700); background: var(--teal-050); color: var(--teal-800); }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; inset-inline: 0; bottom: 24px; margin: auto; z-index: 200;
+  width: fit-content; max-width: 90%; background: var(--ink-900); color: #fff;
+  padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: .92rem;
+  box-shadow: var(--shadow-lg); opacity: 0; transform: translateY(20px); pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ---------- Misc ---------- */
+.row-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+  color: var(--ink-500); background: transparent;
+}
+.icon-btn:hover { background: var(--bg); color: var(--ink-900); }
+.icon-btn.danger:hover { background: var(--red-bg); color: var(--red); }
+.icon-btn svg { width: 18px; height: 18px; }
+
+.divider { height: 1px; background: var(--line); margin: 20px 0; }
+.muted-text { color: var(--ink-500); font-size: .9rem; }
+.center { text-align: center; }
+.mt { margin-top: 14px; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.stack { display: grid; gap: 0; }
+
+.pay-note {
+  background: var(--sand-100); color: var(--sand-600); padding: 12px 14px; border-radius: 12px;
+  font-size: .88rem; font-weight: 500; display: flex; gap: 10px; align-items: flex-start; margin-top: 4px;
+}
+.pay-note svg { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+
+</style>
+</head>
+<body>
+
+  <header class="app-header" id="appHeader">
+    <div class="container header-inner">
+      <button class="brand" id="brandBtn" aria-label="الرئيسية">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </span>
+        <span class="brand-name">رِفقة</span>
+      </button>
+      <div class="header-actions" id="headerActions"></div>
+    </div>
+  </header>
+  <main class="container app-main" id="view"></main>
+  <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/* ===== icons ===== */
+/* =========================================================
+   icons.js — أيقونات SVG بسيطة (خطوط نظيفة، أسلوب سفر واقعي)
+   ========================================================= */
+
+const svg = (paths, opts = {}) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${opts.w || 2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+const icons = {
+  plus: svg('<path d="M12 5v14M5 12h14"/>'),
+  back: svg('<path d="M9 18l6-6-6-6"/>'), // في RTL يظهر كسهم رجوع مناسب
+  trash: svg('<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/>'),
+  check: svg('<path d="M20 6L9 17l-5-5"/>'),
+  pin: svg('<path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/>'),
+  map: svg('<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/>'),
+  users: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>'),
+  crown: svg('<path d="M3 7l4 5 5-7 5 7 4-5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z"/>'),
+  receipt: svg('<path d="M6 2h12a1 1 0 0 1 1 1v18l-3-2-2 2-2-2-2 2-2-2-3 2V3a1 1 0 0 1 1-1Z"/><path d="M9 7h6M9 11h6M9 15h4"/>'),
+  wallet: svg('<path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M16 12h4v-2a2 2 0 0 0-2 0"/><circle cx="17" cy="12" r="1" fill="currentColor" stroke="none"/>'),
+  overview: svg('<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'),
+  arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  external: svg('<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>', { w: 1.8 }),
+  close: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+  info: svg('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>'),
+  luggage: svg('<rect x="6" y="7" width="12" height="14" rx="2"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M10 11v6M14 11v6"/>'),
+  edit: svg('<path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+
+  // فئات المصاريف
+  cat_flight: svg('<path d="M17.8 19.2 16 11l3.5-3.5a2 2 0 1 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7l4.4 3.9-2 2.3-2.6-.4-.9 1.1 3 1.4 1.4 3 1.1-.9-.4-2.6 2.3-2 3.9 4.4a1 1 0 0 0 1.7-.9Z"/>'),
+  cat_hotel: svg('<path d="M3 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M14 9h6a1 1 0 0 1 1 1v11M2 21h20M7 8h.01M7 12h.01M7 16h.01M18 13h.01M18 17h.01"/>'),
+  cat_food: svg('<path d="M4 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M6 3v18M14 3c-1.5 1-2 3-2 5s.5 3 2 3v10"/>'),
+  cat_car: svg('<path d="M5 17h14M5 17a2 2 0 1 1-4 0M23 17a2 2 0 1 1-4 0M3 17v-4l2-5a2 2 0 0 1 1.9-1.3h10.2A2 2 0 0 1 19 8l2 5v4M6 8h12"/>', { w: 1.8 }),
+  cat_shop: svg('<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>'),
+  cat_gift: svg('<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8"/><path d="M12 8S10 3 7.5 3 5 6 7 8M12 8s2-5 4.5-5S19 6 17 8"/>'),
+  cat_ticket: svg('<path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4Z"/><path d="M13 6v2M13 11v2M13 16v2"/>'),
+  cat_other: svg('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.5 1.5c0 1.5-2 2-2 3M12 17h.01"/>'),
+};
+const catList = [
+  { key: 'flight', label: 'طيران', icon: icons.cat_flight },
+  { key: 'hotel', label: 'سكن', icon: icons.cat_hotel },
+  { key: 'food', label: 'أكل', icon: icons.cat_food },
+  { key: 'car', label: 'مواصلات', icon: icons.cat_car },
+  { key: 'ticket', label: 'تذاكر', icon: icons.cat_ticket },
+  { key: 'shop', label: 'تسوّق', icon: icons.cat_shop },
+  { key: 'gift', label: 'هدايا', icon: icons.cat_gift },
+  { key: 'other', label: 'أخرى', icon: icons.cat_other },
+];
+function catIcon(key) {
+  return (catList.find(c => c.key === key) || catList[catList.length - 1]).icon;
+}
+function catLabel(key) {
+  return (catList.find(c => c.key === key) || catList[catList.length - 1]).label;
+}
+
+/* ===== store ===== */
+/* =========================================================
+   store.js — طبقة البيانات + الحفظ المحلي (localStorage)
+   ========================================================= */
+
+const KEY = 'rifqa.data.v1';
+
+const AVATAR_COLORS = [
+  '#0e4d54', '#c8873f', '#2f8f5b', '#5b6ec8', '#b0568f',
+  '#3f8fc8', '#c0453b', '#7a8f2f', '#8f5b3f', '#4a6572'
+];
+
+/* توليد معرّف بسيط بدون تكرار */
+function uid(prefix = 'id') {
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+/* الحالة الافتراضية */
+function emptyState() {
+  return { trips: [], activeTripId: null };
+}
+
+let state = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return emptyState();
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.trips)) return emptyState();
+    return parsed;
+  } catch {
+    return emptyState();
+  }
+}
+
+function persist() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn('تعذّر الحفظ المحلي', e);
+  }
+}
+
+/* ---------------- الرحلات ---------------- */
+function getTrips() {
+  return state.trips.slice().sort((a, b) => b.createdAt - a.createdAt);
+}
+function getTrip(id) {
+  return state.trips.find(t => t.id === id) || null;
+}
+function createTrip({ destination, country, flag, currency }) {
+  const trip = {
+    id: uid('trip'),
+    destination: destination.trim(),
+    country: (country || '').trim(),
+    flag: flag || '🧳',
+    currency: currency || 'SAR',
+    members: [],
+    amirId: null,
+    places: [],
+    expenses: [],
+    stageState: {},         // { stageKey: true } للمراحل المكتملة يدويًا
+    createdAt: Date.now(),
+  };
+  state.trips.push(trip);
+  persist();
+  return trip;
+}
+function updateTrip(id, patch) {
+  const t = getTrip(id);
+  if (!t) return;
+  Object.assign(t, patch);
+  persist();
+}
+function deleteTrip(id) {
+  state.trips = state.trips.filter(t => t.id !== id);
+  persist();
+}
+
+/* ---------------- الأعضاء ---------------- */
+function addMember(tripId, name) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const idx = t.members.length % AVATAR_COLORS.length;
+  const m = { id: uid('m'), name: name.trim(), color: AVATAR_COLORS[idx] };
+  t.members.push(m);
+  if (!t.amirId) t.amirId = m.id; // أول عضو يصير أمير مؤقتًا
+  persist();
+  return m;
+}
+function removeMember(tripId, memberId) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  // لا نحذف عضوًا مرتبطًا بمصروف كدافع
+  const usedAsPayer = t.expenses.some(e => e.paidBy === memberId);
+  if (usedAsPayer) throw new Error('لا يمكن حذف عضو دفع قطّة. احذف قطّاته أولًا.');
+  t.members = t.members.filter(m => m.id !== memberId);
+  // نظّف المشاركين
+  t.expenses.forEach(e => { e.sharedAmong = e.sharedAmong.filter(id => id !== memberId); });
+  if (t.amirId === memberId) t.amirId = t.members[0]?.id || null;
+  persist();
+}
+function setAmir(tripId, memberId) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.amirId = memberId;
+  persist();
+}
+function memberName(trip, id) {
+  return trip.members.find(m => m.id === id)?.name || 'غير معروف';
+}
+
+/* ---------------- الأماكن ---------------- */
+function addPlace(tripId, { name, note, mapUrl }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const p = { id: uid('pl'), name: name.trim(), note: (note || '').trim(), mapUrl: (mapUrl || '').trim(), visited: false };
+  t.places.push(p);
+  persist();
+  return p;
+}
+function togglePlaceVisited(tripId, placeId) {
+  const t = getTrip(tripId);
+  const p = t?.places.find(x => x.id === placeId);
+  if (!p) return;
+  p.visited = !p.visited;
+  persist();
+}
+function removePlace(tripId, placeId) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.places = t.places.filter(p => p.id !== placeId);
+  persist();
+}
+
+/* ---------------- القطّات / المصاريف ----------------
+   type: 'group'    -> على القروب كله
+         'some'     -> بين أشخاص محددين
+         'personal' -> شخصي خارج القطة (شخص واحد)
+------------------------------------------------------ */
+function addExpense(tripId, data) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const e = {
+    id: uid('exp'),
+    title: data.title.trim(),
+    amount: Number(data.amount),
+    category: data.category || 'other',
+    type: data.type,                    // group | some | personal
+    paidBy: data.paidBy,                // memberId
+    sharedAmong: data.sharedAmong || [],// memberIds
+    stage: data.stage || 'trip',        // مرحلة الرحلة المرتبطة
+    createdAt: Date.now(),
+  };
+  t.expenses.push(e);
+  persist();
+  return e;
+}
+function removeExpense(tripId, expId) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.expenses = t.expenses.filter(e => e.id !== expId);
+  persist();
+}
+
+/* ---------------- إعادة الضبط (للتجربة) ---------------- */
+function _resetAll() {
+  state = emptyState();
+  persist();
+}
+
+
+const db = { getTrips, getTrip, createTrip, updateTrip, deleteTrip, addMember, removeMember, setAmir, memberName, addPlace, togglePlaceVisited, removePlace, addExpense, removeExpense, _resetAll };
+
+/* ===== settle ===== */
+/* =========================================================
+   settle.js — حساب الأرصدة والتسوية بأقل عدد تحويلات
+   ========================================================= */
+
+/* يقرّب لأقرب هللتين */
+const r2 = (n) => Math.round(n * 100) / 100;
+
+/**
+ * يحسب رصيد كل عضو:
+ *   موجب  = له (دفع أكثر من نصيبه)
+ *   سالب  = عليه (نصيبه أكثر مما دفع)
+ * القطّة الشخصية (personal) لا تدخل التسوية — تخص صاحبها فقط.
+ */
+function computeBalances(trip) {
+  const bal = {};
+  trip.members.forEach(m => { bal[m.id] = 0; });
+
+  trip.expenses.forEach(e => {
+    if (e.type === 'personal') return; // خارج القطة، لا تُقسّم
+
+    // من يشارك في هذه القطّة
+    let shareIds;
+    if (e.type === 'group') {
+      shareIds = trip.members.map(m => m.id);
+    } else { // some
+      shareIds = e.sharedAmong.length ? e.sharedAmong : [e.paidBy];
+    }
+    if (shareIds.length === 0) return;
+
+    const per = e.amount / shareIds.length;
+
+    // الدافع دفع كامل المبلغ
+    if (bal[e.paidBy] !== undefined) bal[e.paidBy] += e.amount;
+    // كل مشارك عليه نصيبه
+    shareIds.forEach(id => { if (bal[id] !== undefined) bal[id] -= per; });
+  });
+
+  Object.keys(bal).forEach(k => { bal[k] = r2(bal[k]); });
+  return bal;
+}
+
+/**
+ * يحوّل الأرصدة إلى أقل عدد تحويلات (greedy debt settlement).
+ * يُرجع: [{ from, to, amount }]
+ */
+function settle(trip) {
+  const bal = computeBalances(trip);
+
+  const creditors = []; // له
+  const debtors = [];   // عليه
+  Object.entries(bal).forEach(([id, v]) => {
+    if (v > 0.009) creditors.push({ id, amt: v });
+    else if (v < -0.009) debtors.push({ id, amt: -v });
+  });
+
+  creditors.sort((a, b) => b.amt - a.amt);
+  debtors.sort((a, b) => b.amt - a.amt);
+
+  const txns = [];
+  let i = 0, j = 0;
+  while (i < debtors.length && j < creditors.length) {
+    const d = debtors[i], c = creditors[j];
+    const pay = r2(Math.min(d.amt, c.amt));
+    if (pay > 0) txns.push({ from: d.id, to: c.id, amount: pay });
+    d.amt = r2(d.amt - pay);
+    c.amt = r2(c.amt - pay);
+    if (d.amt <= 0.009) i++;
+    if (c.amt <= 0.009) j++;
+  }
+  return txns;
+}
+
+/* إجماليات مفيدة للواجهة */
+function tripTotals(trip) {
+  let group = 0, some = 0, personal = 0;
+  trip.expenses.forEach(e => {
+    if (e.type === 'personal') personal += e.amount;
+    else if (e.type === 'group') group += e.amount;
+    else some += e.amount;
+  });
+  return {
+    shared: r2(group + some),   // ضمن القطة (تُقسّم)
+    group: r2(group),
+    some: r2(some),
+    personal: r2(personal),     // خارج القطة
+    all: r2(group + some + personal),
+  };
+}
+
+/* ===== app ===== */
+/* =========================================================
+   app.js — الواجهة والتنقّل والمنطق
+   ========================================================= */
+
+/* ---------------- أدوات مساعدة ---------------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+const view = $('#view');
+const headerActions = $('#headerActions');
+const modalRoot = $('#modalRoot');
+
+const CURRENCIES = {
+  SAR: 'ر.س', AED: 'د.إ', KWD: 'د.ك', BHD: 'د.ب', QAR: 'ر.ق',
+  OMR: 'ر.ع', USD: '$', EUR: '€', GBP: '£', TRY: '₺', EGP: 'ج.م',
+};
+
+const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+const money = (n, cur = 'SAR') => `${nf.format(Math.round(n * 100) / 100)} ${CURRENCIES[cur] || cur}`;
+
+const esc = (s) => String(s).replace(/[&<>"']/g, c => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+
+function initials(name) {
+  const parts = name.trim().split(/\s+/);
+  return (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
+}
+
+function avatar(m, size) {
+  const s = size ? `width:${size}px;height:${size}px;font-size:${size * 0.4}px` : '';
+  return `<span class="avatar" style="background:${m.color};${s}">${esc(initials(m.name))}</span>`;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ---------------- التنقّل ---------------- */
+const routeState = { tripId: null, tab: 'overview' };
+
+function go(tripId, tab = 'overview') {
+  routeState.tripId = tripId;
+  routeState.tab = tab;
+  render();
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+}
+
+function goHome() {
+  routeState.tripId = null;
+  render();
+}
+
+$('#brandBtn').addEventListener('click', goHome);
+
+function render() {
+  if (routeState.tripId && db.getTrip(routeState.tripId)) {
+    renderTrip(db.getTrip(routeState.tripId), routeState.tab);
+  } else {
+    routeState.tripId = null;
+    renderHome();
+  }
+}
+
+/* =========================================================
+   الشاشة الرئيسية — قائمة الرحلات
+   ========================================================= */
+function renderHome() {
+  headerActions.innerHTML = '';
+  const trips = db.getTrips();
+
+  let body;
+  if (trips.length === 0) {
+    body = `
+      <div class="empty">
+        ${icons.luggage}
+        <h3>ما عندك رحلات بعد</h3>
+        <p>ابدأ رحلة جديدة، ضِف القروب، وعيّن أمير الرحلة.</p>
+        <button class="btn btn-primary mt" data-act="new-trip">${icons.plus} ابدأ رحلة</button>
+      </div>`;
+  } else {
+    body = `<div class="trip-grid">${trips.map(tripCard).join('')}</div>`;
+  }
+
+  view.innerHTML = `
+    <div class="flex-between" style="margin-bottom:18px">
+      <div>
+        <h1 class="page-title">رحلاتي</h1>
+        <p class="muted-text">نظّم مصاريف السفر مع القروب في مكان واحد</p>
+      </div>
+      ${trips.length ? `<button class="btn btn-primary btn-sm" data-act="new-trip">${icons.plus} رحلة</button>` : ''}
+    </div>
+    ${body}`;
+
+  view.querySelectorAll('[data-act="new-trip"]').forEach(b => b.onclick = openNewTrip);
+  view.querySelectorAll('[data-trip]').forEach(c => c.onclick = () => go(c.dataset.trip));
+}
+
+function tripCard(t) {
+  const totals = tripTotals(t);
+  return `
+    <button class="trip-card" data-trip="${t.id}">
+      <div class="trip-cover">
+        <span class="flag">${t.flag}</span>
+        <div>
+          <div class="dest">${esc(t.destination)}</div>
+          ${t.country ? `<div style="opacity:.85;font-size:.85rem">${esc(t.country)}</div>` : ''}
+        </div>
+      </div>
+      <div class="trip-card-body">
+        <div class="trip-meta">
+          <span>${icons.users} <b>${t.members.length}</b> أفراد</span>
+          <span>${icons.receipt} <b>${t.expenses.length}</b> قطّة</span>
+        </div>
+        <div style="font-weight:800;color:var(--teal-800)">${money(totals.all, t.currency)}</div>
+      </div>
+    </button>`;
+}
+
+/* =========================================================
+   شاشة الرحلة — تبويبات
+   ========================================================= */
+const TABS = [
+  { key: 'overview', label: 'نظرة عامة', icon: icons.overview },
+  { key: 'places', label: 'الأماكن', icon: icons.pin },
+  { key: 'expenses', label: 'القطّات', icon: icons.receipt },
+  { key: 'settle', label: 'التسوية', icon: icons.wallet },
+];
+
+function renderTrip(t, tab) {
+  headerActions.innerHTML = `
+    <button class="btn btn-ghost btn-icon" data-act="del-trip" title="حذف الرحلة">${icons.trash}</button>
+    <button class="btn btn-ghost btn-sm" data-act="home">${icons.back} رحلاتي</button>`;
+  headerActions.querySelector('[data-act="home"]').onclick = goHome;
+  headerActions.querySelector('[data-act="del-trip"]').onclick = () => confirmDeleteTrip(t);
+
+  const tabsHtml = `<nav class="tabs">${TABS.map(x => `
+    <button class="tab ${x.key === tab ? 'active' : ''}" data-tab="${x.key}">${x.icon}<span>${x.label}</span></button>
+  `).join('')}</nav>`;
+
+  let content = '';
+  if (tab === 'overview') content = tabOverview(t);
+  else if (tab === 'places') content = tabPlaces(t);
+  else if (tab === 'expenses') content = tabExpenses(t);
+  else if (tab === 'settle') content = tabSettle(t);
+
+  view.innerHTML = `
+    <div class="flex-between" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:2.2rem">${t.flag}</span>
+        <div>
+          <h1 class="page-title" style="margin:0">${esc(t.destination)}</h1>
+          ${t.country ? `<p class="muted-text">${esc(t.country)}</p>` : ''}
+        </div>
+      </div>
+    </div>
+    ${tabsHtml}
+    <div id="tabContent">${content}</div>`;
+
+  view.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(t.id, b.dataset.tab));
+  wireTab(t, tab);
+}
+
+/* ---------------- تبويب: نظرة عامة ---------------- */
+const STAGES = [
+  { key: 'tickets', title: 'شراء التذاكر والحجز', note: 'تذاكر الطيران وحجز الفنادق' },
+  { key: 'depart', title: 'الإقلاع والوصول', note: 'انطلاق الرحلة' },
+  { key: 'places', title: 'تحديد الأماكن', note: 'أمير الرحلة يحدّد الوجهات' },
+  { key: 'daily', title: 'القطّات اليومية', note: 'أكل، مواصلات، تسوّق' },
+  { key: 'settle', title: 'التسوية والدفع', note: 'كل واحد يسدّد نصيبه عبر برق' },
+];
+
+function stageDone(t, key) {
+  if (t.stageState[key] !== undefined) return t.stageState[key];
+  // اشتقاق تلقائي مبدئي
+  if (key === 'tickets') return t.expenses.some(e => ['flight', 'hotel', 'ticket'].includes(e.category));
+  if (key === 'places') return t.places.length > 0;
+  if (key === 'daily') return t.expenses.some(e => ['food', 'car', 'shop'].includes(e.category));
+  if (key === 'settle') return false;
+  return false;
+}
+
+function tabOverview(t) {
+  const totals = tripTotals(t);
+  const amir = t.members.find(m => m.id === t.amirId);
+
+  let firstUndone = STAGES.find(s => !stageDone(t, s.key));
+
+  const stagesHtml = STAGES.map((s, i) => {
+    const done = stageDone(t, s.key);
+    const active = firstUndone && s.key === firstUndone.key;
+    return `
+      <button class="stage ${done ? 'done' : ''} ${active ? 'active' : ''}" data-stage="${s.key}">
+        <span class="stage-dot">${done ? icons.check : (i + 1)}</span>
+        <span class="stage-body">
+          <span class="stage-title">${s.title}</span>
+          <span class="stage-note">${s.note}</span>
+        </span>
+        ${done ? `<span class="stage-check">${icons.check}</span>` : ''}
+      </button>`;
+  }).join('');
+
+  return `
+    <div class="tiles">
+      <div class="tile"><div class="v">${money(totals.shared, t.currency)}</div><div class="l">ضمن القطة</div></div>
+      <div class="tile"><div class="v">${money(totals.personal, t.currency)}</div><div class="l">خارج القطة</div></div>
+      <div class="tile"><div class="v">${t.members.length}</div><div class="l">أفراد القروب</div></div>
+    </div>
+
+    <div class="section-head"><h2>القروب</h2>
+      <span class="hint">أمير الرحلة يحدّد الأماكن</span></div>
+    <div class="card card-pad">
+      ${amir ? `<div class="flex-between" style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px">${avatar(amir, 40)}
+          <div><div class="member-name">${esc(amir.name)}</div>
+          <span class="chip amir">${icons.crown} أمير الرحلة</span></div></div>
+      </div><div class="divider" style="margin:12px 0"></div>` : ''}
+      <div class="stack">
+        ${t.members.filter(m => m.id !== t.amirId).map(m => `
+          <div class="member-row">
+            ${avatar(m, 40)}
+            <div class="member-grow"><div class="member-name">${esc(m.name)}</div></div>
+            <div class="row-actions">
+              <button class="icon-btn" data-make-amir="${m.id}" title="عيّنه أميرًا">${icons.crown}</button>
+              <button class="icon-btn danger" data-del-member="${m.id}" title="حذف">${icons.trash}</button>
+            </div>
+          </div>`).join('') || (amir ? '' : '<p class="muted-text center">أضِف أعضاء القروب</p>')}
+      </div>
+      <button class="btn btn-ghost btn-block mt" data-act="add-member">${icons.plus} إضافة عضو</button>
+    </div>
+
+    <div class="section-head"><h2>مراحل الرحلة</h2>
+      <span class="hint">اضغط لتعليم المرحلة</span></div>
+    <div class="stages">${stagesHtml}</div>`;
+}
+
+/* ---------------- تبويب: الأماكن ---------------- */
+function tabPlaces(t) {
+  const amir = t.members.find(m => m.id === t.amirId);
+  const list = t.places.length
+    ? t.places.map((p, i) => `
+      <div class="place">
+        <span class="place-idx">${i + 1}</span>
+        <div class="place-body">
+          <div class="place-name">${esc(p.name)}</div>
+          ${p.note ? `<div class="place-note">${esc(p.note)}</div>` : ''}
+          <div class="place-links">
+            ${p.mapUrl
+              ? `<a class="map-link" href="${esc(p.mapUrl)}" target="_blank" rel="noopener">${icons.map} فتح في الخريطة</a>`
+              : `<a class="map-link" href="https://www.google.com/maps/search/${encodeURIComponent(p.name + ' ' + (t.destination || ''))}" target="_blank" rel="noopener">${icons.map} بحث في قوقل ماب</a>`}
+            <button class="map-link" style="background:${p.visited ? 'var(--green-bg)' : '#eef1f0'};color:${p.visited ? 'var(--green)' : 'var(--ink-500)'}" data-visited="${p.id}">
+              ${icons.check} ${p.visited ? 'تمّت الزيارة' : 'لم تُزَر بعد'}
+            </button>
+          </div>
+        </div>
+        <button class="icon-btn danger" data-del-place="${p.id}">${icons.trash}</button>
+      </div>`).join('')
+    : `<div class="empty">${icons.pin}<h3>لا توجد أماكن</h3><p>${amir ? esc(amir.name) + ' (أمير الرحلة) يضيف الأماكن من قوقل ماب.' : 'عيّن أمير الرحلة ثم أضِف الأماكن.'}</p></div>`;
+
+  return `
+    <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">
+      ${icons.crown}
+      <span>${amir ? `<b>${esc(amir.name)}</b> أمير الرحلة — هو من يحدّد الأماكن اللي بتُزار.` : 'عيّن أمير الرحلة من تبويب «نظرة عامة».'}</span>
+    </div>
+    <div class="section-head"><h2>الوجهات (${t.places.length})</h2></div>
+    ${list}
+    <button class="btn btn-primary btn-block mt" data-act="add-place">${icons.plus} إضافة مكان</button>`;
+}
+
+/* ---------------- تبويب: القطّات ---------------- */
+const TYPE_LABEL = { group: 'على القروب', some: 'بين أشخاص', personal: 'خارج القطة' };
+const TYPE_CLASS = { group: 'group', some: 'some', personal: 'personal' };
+
+function tabExpenses(t) {
+  if (t.members.length === 0) {
+    return `<div class="empty">${icons.users}<h3>أضِف القروب أولًا</h3><p>لا يمكن تسجيل قطّة قبل إضافة الأعضاء.</p>
+      <button class="btn btn-primary mt" data-act="go-overview">الذهاب لنظرة عامة</button></div>`;
+  }
+  const totals = tripTotals(t);
+  const sorted = t.expenses.slice().sort((a, b) => b.createdAt - a.createdAt);
+
+  const list = sorted.length ? sorted.map(e => {
+    const payer = t.members.find(m => m.id === e.paidBy);
+    let sub;
+    if (e.type === 'group') sub = `دفعها ${payer ? esc(payer.name) : '؟'} · تنقسم على الكل`;
+    else if (e.type === 'some') sub = `دفعها ${payer ? esc(payer.name) : '؟'} · بين ${e.sharedAmong.length} أشخاص`;
+    else sub = `${payer ? esc(payer.name) : '؟'} · مصروف شخصي`;
+    return `
+      <div class="exp">
+        <span class="exp-cat">${catIcon(e.category)}</span>
+        <div class="exp-body">
+          <div class="exp-title">${esc(e.title)}
+            <span class="badge ${TYPE_CLASS[e.type]}">${TYPE_LABEL[e.type]}</span></div>
+          <div class="exp-sub">${sub}</div>
+        </div>
+        <div class="exp-amount">${money(e.amount, t.currency)}</div>
+        <button class="icon-btn danger" data-del-exp="${e.id}">${icons.trash}</button>
+      </div>`;
+  }).join('') : `<div class="empty">${icons.receipt}<h3>ما فيه قطّات</h3><p>سجّل أول مصروف: تذاكر، فندق، أكل...</p></div>`;
+
+  return `
+    <div class="tiles">
+      <div class="tile"><div class="v">${money(totals.shared, t.currency)}</div><div class="l">ضمن القطة</div></div>
+      <div class="tile"><div class="v">${money(totals.personal, t.currency)}</div><div class="l">خارج القطة</div></div>
+      <div class="tile"><div class="v">${money(totals.all, t.currency)}</div><div class="l">الإجمالي</div></div>
+    </div>
+    <div class="section-head"><h2>القطّات (${t.expenses.length})</h2></div>
+    ${list}
+    <button class="btn btn-primary btn-block mt" data-act="add-exp">${icons.plus} تسجيل قطّة</button>`;
+}
+
+/* ---------------- تبويب: التسوية ---------------- */
+function tabSettle(t) {
+  if (t.members.length < 2) {
+    return `<div class="empty">${icons.wallet}<h3>التسوية تحتاج شخصين على الأقل</h3><p>أضِف أعضاء القروب وسجّل القطّات.</p></div>`;
+  }
+  const balances = computeBalances(t);
+  const txns = settle(t);
+  const totals = tripTotals(t);
+
+  const balancesHtml = t.members.map(m => {
+    const v = balances[m.id] || 0;
+    const cls = v > 0.009 ? 'pos' : v < -0.009 ? 'neg' : '';
+    const label = v > 0.009 ? 'له' : v < -0.009 ? 'عليه' : 'متساوٍ';
+    return `<div class="balance-row">
+      ${avatar(m, 36)}
+      <div class="member-grow"><div class="member-name">${esc(m.name)}</div>
+        <div class="muted-text" style="font-size:.8rem">${label}</div></div>
+      <div class="balance-val ${cls}">${money(Math.abs(v), t.currency)}</div>
+    </div>`;
+  }).join('');
+
+  const txHtml = txns.length ? txns.map(x => {
+    const from = t.members.find(m => m.id === x.from);
+    const to = t.members.find(m => m.id === x.to);
+    return `<div class="settle">
+      <div class="settle-flow">
+        <span class="who">${avatar(from, 30)} ${esc(from.name)}</span>
+        <span class="settle-arrow">${icons.arrow}</span>
+        <span class="who">${avatar(to, 30)} ${esc(to.name)}</span>
+      </div>
+      <div style="text-align:end">
+        <div class="settle-amount">${money(x.amount, t.currency)}</div>
+        <button class="btn btn-sand btn-sm" style="margin-top:6px" data-pay='${esc(JSON.stringify({ from: from.name, to: to.name, amount: x.amount, cur: t.currency }))}'>
+          ${icons.wallet} ادفع عبر برق
+        </button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="empty">${icons.check}<h3>كل الحسابات مسوّاة</h3><p>ما فيه أحد يستحق على أحد ضمن القطة.</p></div>`;
+
+  return `
+    <div class="pay-note">
+      ${icons.info}
+      <span>القطّة <b>الشخصية (خارج القطة)</b> ما تدخل التسوية — تخص صاحبها فقط. التسوية تحسب القطّات المشتركة بأقل عدد تحويلات.</span>
+    </div>
+
+    <div class="section-head"><h2>التحويلات المطلوبة</h2>
+      <span class="hint">${txns.length} تحويل</span></div>
+    ${txHtml}
+
+    <div class="section-head"><h2>أرصدة الأفراد</h2></div>
+    <div class="card card-pad"><div class="stack">${balancesHtml}</div></div>
+
+    <div class="section-head"><h2>الدفع عبر برق</h2></div>
+    <div class="card card-pad">
+      <p class="muted-text">افتح تطبيق <b>برق</b> (أو أي تطبيق دفع فوري) وحوّل المبلغ لرقم جوال المستلم. اضغط «ادفع عبر برق» في أي تحويل لنسخ التفاصيل جاهزة.</p>
+    </div>`;
+}
+
+/* =========================================================
+   ربط أحداث كل تبويب
+   ========================================================= */
+function wireTab(t, tab) {
+  const c = $('#tabContent');
+
+  // نظرة عامة
+  c.querySelectorAll('[data-act="add-member"]').forEach(b => b.onclick = () => openAddMember(t));
+  c.querySelectorAll('[data-make-amir]').forEach(b => b.onclick = () => { db.setAmir(t.id, b.dataset.makeAmir); toast('تم تعيين أمير الرحلة'); render(); });
+  c.querySelectorAll('[data-del-member]').forEach(b => b.onclick = () => {
+    try { db.removeMember(t.id, b.dataset.delMember); render(); }
+    catch (e) { toast(e.message); }
+  });
+  c.querySelectorAll('[data-stage]').forEach(b => b.onclick = () => {
+    const key = b.dataset.stage;
+    t.stageState[key] = !stageDone(t, key);
+    db.updateTrip(t.id, { stageState: t.stageState });
+    render();
+  });
+
+  // الأماكن
+  c.querySelectorAll('[data-act="add-place"]').forEach(b => b.onclick = () => openAddPlace(t));
+  c.querySelectorAll('[data-visited]').forEach(b => b.onclick = () => { db.togglePlaceVisited(t.id, b.dataset.visited); render(); });
+  c.querySelectorAll('[data-del-place]').forEach(b => b.onclick = () => { db.removePlace(t.id, b.dataset.delPlace); render(); });
+
+  // القطّات
+  c.querySelectorAll('[data-act="add-exp"]').forEach(b => b.onclick = () => openAddExpense(t));
+  c.querySelectorAll('[data-act="go-overview"]').forEach(b => b.onclick = () => go(t.id, 'overview'));
+  c.querySelectorAll('[data-del-exp]').forEach(b => b.onclick = () => { db.removeExpense(t.id, b.dataset.delExp); toast('تم حذف القطّة'); render(); });
+
+  // التسوية
+  c.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => {
+    const d = JSON.parse(b.dataset.pay);
+    const msg = `تحويل عبر برق:\nمن: ${d.from}\nإلى: ${d.to}\nالمبلغ: ${money(d.amount, d.cur)}`;
+    copyText(msg);
+    toast('تم نسخ تفاصيل التحويل ✓');
+  });
+}
+
+function copyText(text) {
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(() => {});
+}
+
+/* =========================================================
+   النوافذ (Modals)
+   ========================================================= */
+function openModal({ title, body, footer }) {
+  modalRoot.innerHTML = `
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head"><h3>${title}</h3>
+        <button class="icon-btn" data-close aria-label="إغلاق">${icons.close}</button></div>
+      <div class="modal-body">${body}</div>
+      ${footer ? `<div class="modal-foot">${footer}</div>` : ''}
+    </div>`;
+  modalRoot.classList.add('open');
+  modalRoot.setAttribute('aria-hidden', 'false');
+  modalRoot.querySelectorAll('[data-close]').forEach(el => el.onclick = closeModal);
+  return modalRoot;
+}
+function closeModal() {
+  modalRoot.classList.remove('open');
+  modalRoot.setAttribute('aria-hidden', 'true');
+  modalRoot.innerHTML = '';
+}
+
+/* ---------------- نافذة: رحلة جديدة ---------------- */
+const FLAGS = ['🧳','🇸🇦','🇦🇪','🇹🇷','🇬🇧','🇫🇷','🇮🇹','🇪🇸','🇯🇵','🇹🇭','🇲🇾','🇮🇩','🇪🇬','🇲🇦','🇨🇭','🇬🇪','🇦🇿','🇲🇻','🇬🇷','🇺🇸'];
+
+function openNewTrip() {
+  openModal({
+    title: 'رحلة جديدة',
+    body: `
+      <div class="field">
+        <label>الوجهة <span class="hint">المدينة أو المكان</span></label>
+        <input class="input" id="f-dest" placeholder="مثال: طرابزون" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>الدولة</label>
+        <input class="input" id="f-country" placeholder="مثال: تركيا" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>العلم / الأيقونة</label>
+        <div class="picker" id="f-flags">
+          ${FLAGS.map((f, i) => `<button type="button" class="pick ${i === 0 ? 'sel' : ''}" data-flag="${f}" style="font-size:1.2rem;padding:6px 10px">${f}</button>`).join('')}
+        </div>
+      </div>
+      <div class="field">
+        <label>العملة</label>
+        <select class="select" id="f-cur">
+          ${Object.entries(CURRENCIES).map(([k, v]) => `<option value="${k}" ${k === 'SAR' ? 'selected' : ''}>${k} — ${v}</option>`).join('')}
+        </select>
+      </div>`,
+    footer: `<button class="btn btn-primary btn-block" id="f-save">${icons.check} إنشاء الرحلة</button>`,
+  });
+
+  let flag = FLAGS[0];
+  modalRoot.querySelectorAll('[data-flag]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-flag]').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); flag = b.dataset.flag;
+  });
+  $('#f-dest').focus();
+  $('#f-save').onclick = () => {
+    const dest = $('#f-dest').value.trim();
+    if (!dest) { toast('اكتب الوجهة'); $('#f-dest').focus(); return; }
+    const trip = db.createTrip({
+      destination: dest,
+      country: $('#f-country').value,
+      flag,
+      currency: $('#f-cur').value,
+    });
+    closeModal();
+    go(trip.id, 'overview');
+    toast('تم إنشاء الرحلة ✓');
+  };
+}
+
+/* ---------------- نافذة: إضافة عضو ---------------- */
+function openAddMember(t) {
+  openModal({
+    title: 'إضافة عضو للقروب',
+    body: `<div class="field"><label>الاسم</label>
+      <input class="input" id="m-name" placeholder="اسم العضو" autocomplete="off" /></div>
+      <p class="muted-text">أول عضو يُعيَّن أميرًا للرحلة تلقائيًا، وتقدر تغيّره لاحقًا.</p>`,
+    footer: `<button class="btn btn-primary btn-block" id="m-save">${icons.plus} إضافة</button>`,
+  });
+  const input = $('#m-name');
+  input.focus();
+  const save = () => {
+    const name = input.value.trim();
+    if (!name) { toast('اكتب الاسم'); return; }
+    db.addMember(t.id, name);
+    closeModal();
+    render();
+    toast('تمت الإضافة ✓');
+  };
+  $('#m-save').onclick = save;
+  input.onkeydown = (e) => { if (e.key === 'Enter') save(); };
+}
+
+/* ---------------- نافذة: إضافة مكان ---------------- */
+function openAddPlace(t) {
+  openModal({
+    title: 'إضافة مكان',
+    body: `
+      <div class="field"><label>اسم المكان</label>
+        <input class="input" id="p-name" placeholder="مثال: بحيرة أوزنجول" autocomplete="off" /></div>
+      <div class="field"><label>ملاحظة <span class="hint">اختياري</span></label>
+        <input class="input" id="p-note" placeholder="مثال: أفضل وقت للزيارة الصباح" autocomplete="off" /></div>
+      <div class="field"><label>رابط قوقل ماب <span class="hint">اختياري</span></label>
+        <input class="input" id="p-map" placeholder="الصق رابط الموقع من قوقل ماب" dir="ltr" autocomplete="off" /></div>
+      <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">
+        ${icons.map}<span>إذا ما لصقت رابط، بيظهر زر بحث تلقائي في قوقل ماب باسم المكان.</span></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="p-save">${icons.plus} إضافة المكان</button>`,
+  });
+  $('#p-name').focus();
+  $('#p-save').onclick = () => {
+    const name = $('#p-name').value.trim();
+    if (!name) { toast('اكتب اسم المكان'); return; }
+    db.addPlace(t.id, { name, note: $('#p-note').value, mapUrl: $('#p-map').value });
+    closeModal();
+    render();
+    toast('تمت إضافة المكان ✓');
+  };
+}
+
+/* ---------------- نافذة: تسجيل قطّة ---------------- */
+function openAddExpense(t) {
+  const state = {
+    type: 'group',
+    category: 'food',
+    paidBy: t.amirId || t.members[0]?.id,
+    shared: new Set(t.members.map(m => m.id)),
+  };
+
+  openModal({
+    title: 'تسجيل قطّة',
+    body: `
+      <div class="field"><label>الوصف</label>
+        <input class="input" id="e-title" placeholder="مثال: عشاء المطعم" autocomplete="off" /></div>
+
+      <div class="field"><label>المبلغ (${CURRENCIES[t.currency] || t.currency})</label>
+        <input class="input" id="e-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" dir="ltr" /></div>
+
+      <div class="field"><label>الفئة</label>
+        <div class="cat-grid" id="e-cats">
+          ${catList.map(c => `<button type="button" class="cat-opt ${c.key === 'food' ? 'sel' : ''}" data-cat="${c.key}">${c.icon}<span>${c.label}</span></button>`).join('')}
+        </div>
+      </div>
+
+      <div class="field"><label>نوع القطّة</label>
+        <div class="seg" id="e-types">
+          <button type="button" class="seg-opt sel" data-type="group">على القروب<small>تنقسم على الكل</small></button>
+          <button type="button" class="seg-opt" data-type="some">بين أشخاص<small>تختار المشاركين</small></button>
+          <button type="button" class="seg-opt" data-type="personal">خارج القطة<small>شخصي — هدايا/تذاكر</small></button>
+        </div>
+      </div>
+
+      <div class="field"><label id="payer-label">مين دفع؟</label>
+        <div class="picker" id="e-payer">
+          ${t.members.map(m => `<button type="button" class="pick ${m.id === state.paidBy ? 'sel' : ''}" data-payer="${m.id}">
+            <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="field" id="shared-field">
+        <label>المشاركون في القطّة <span class="hint">مين يتقاسمها</span></label>
+        <div class="picker" id="e-shared">
+          ${t.members.map(m => `<button type="button" class="pick ${state.shared.has(m.id) ? 'sel' : ''}" data-share="${m.id}">
+            <span class="dot" style="background:${m.color}">${esc(initials(m.name))}</span>${esc(m.name)}</button>`).join('')}
+        </div>
+      </div>`,
+    footer: `<button class="btn btn-primary btn-block" id="e-save">${icons.check} حفظ القطّة</button>`,
+  });
+
+  const sharedField = $('#shared-field');
+  const payerLabel = $('#payer-label');
+
+  function refreshTypeUI() {
+    // خارج القطة => لا مشاركين (شخص واحد)، القروب => الكل، أشخاص => اختيار
+    if (state.type === 'personal') {
+      sharedField.style.display = 'none';
+      payerLabel.textContent = 'صاحب المصروف';
+    } else if (state.type === 'group') {
+      sharedField.style.display = 'none';
+      payerLabel.textContent = 'مين دفع؟';
+    } else {
+      sharedField.style.display = 'block';
+      payerLabel.textContent = 'مين دفع؟';
+    }
+  }
+  refreshTypeUI();
+
+  // فئات
+  modalRoot.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-cat]').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); state.category = b.dataset.cat;
+  });
+  // نوع
+  modalRoot.querySelectorAll('[data-type]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-type]').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); state.type = b.dataset.type; refreshTypeUI();
+  });
+  // الدافع
+  modalRoot.querySelectorAll('[data-payer]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-payer]').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); state.paidBy = b.dataset.payer;
+  });
+  // المشاركون
+  modalRoot.querySelectorAll('[data-share]').forEach(b => b.onclick = () => {
+    const id = b.dataset.share;
+    if (state.shared.has(id)) { state.shared.delete(id); b.classList.remove('sel'); }
+    else { state.shared.add(id); b.classList.add('sel'); }
+  });
+
+  $('#e-title').focus();
+  $('#e-save').onclick = () => {
+    const title = $('#e-title').value.trim();
+    const amount = parseFloat($('#e-amount').value);
+    if (!title) { toast('اكتب وصف القطّة'); return; }
+    if (!(amount > 0)) { toast('اكتب مبلغًا صحيحًا'); $('#e-amount').focus(); return; }
+    if (!state.paidBy) { toast('اختر مين دفع'); return; }
+
+    let sharedAmong = [];
+    if (state.type === 'some') {
+      sharedAmong = [...state.shared];
+      if (sharedAmong.length === 0) { toast('اختر المشاركين'); return; }
+    } else if (state.type === 'group') {
+      sharedAmong = t.members.map(m => m.id);
+    } else {
+      sharedAmong = [state.paidBy];
+    }
+
+    db.addExpense(t.id, { title, amount, category: state.category, type: state.type, paidBy: state.paidBy, sharedAmong });
+    closeModal();
+    render();
+    toast('تم حفظ القطّة ✓');
+  };
+}
+
+/* ---------------- حذف رحلة ---------------- */
+function confirmDeleteTrip(t) {
+  openModal({
+    title: 'حذف الرحلة',
+    body: `<p class="muted-text">بتحذف رحلة <b>${esc(t.destination)}</b> بكل قطّاتها وأماكنها. ما تقدر تتراجع.</p>`,
+    footer: `<div style="display:flex;gap:10px">
+      <button class="btn btn-ghost btn-block" data-close>إلغاء</button>
+      <button class="btn btn-danger-ghost btn-block" id="del-yes">${icons.trash} حذف</button></div>`,
+  });
+  modalRoot.querySelectorAll('[data-close]').forEach(el => el.onclick = closeModal);
+  $('#del-yes').onclick = () => { db.deleteTrip(t.id); closeModal(); goHome(); toast('تم حذف الرحلة'); };
+}
+
+/* =========================================================
+   إقلاع التطبيق
+   ========================================================= */
+render();
+
+
+</script>
+</body>
+</html>
