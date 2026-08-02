@@ -568,6 +568,36 @@ textarea.input { resize: vertical; min-height: 72px; }
 .city-places { display: grid; gap: 0; }
 .city-places .place { margin-bottom: 10px; }
 
+/* ---------- الذكريات ---------- */
+.mem-count { color: var(--ink-500); font-weight: 700; font-size: .88rem; margin: 4px 0 12px; }
+.mem-day { margin-bottom: 22px; }
+.mem-day-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.mem-day-label { font-weight: 800; color: var(--ink-900); }
+.mem-day-num { font-size: .74rem; font-weight: 800; color: var(--teal-800); background: var(--teal-050); padding: 3px 10px; border-radius: 999px; }
+.mem-day-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.mem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+@media (max-width: 380px) { .mem-grid { grid-template-columns: repeat(2, 1fr); } }
+.mem-tile { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--bg); box-shadow: var(--shadow-sm); }
+.mem-tile img, .mem-tile video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mem-tile:hover img, .mem-tile:hover video { transform: scale(1.04); transition: transform .3s ease; }
+.mem-play { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; background: rgba(0,0,0,.25); }
+.mem-play svg { width: 34px; height: 34px; filter: drop-shadow(0 1px 3px rgba(0,0,0,.4)); }
+.mem-place { position: absolute; bottom: 0; inset-inline: 0; display: flex; align-items: center; gap: 3px; font-size: .68rem; font-weight: 700; color: #fff; background: linear-gradient(to top, rgba(0,0,0,.6), transparent); padding: 12px 6px 5px; }
+.mem-place svg { width: 11px; height: 11px; }
+.place-actions { display: flex; gap: 8px; margin-top: 8px; }
+.place-actions .btn { flex: 1; }
+
+/* عارض ملء الشاشة */
+.lightbox { position: fixed; inset: 0; background: rgba(8,16,16,.94); display: flex; flex-direction: column; z-index: 120; }
+.lb-close { position: absolute; top: calc(14px + env(safe-area-inset-top)); inset-inline-end: 16px; z-index: 2; width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,.15); color: #fff; display: grid; place-items: center; }
+.lb-close svg { width: 22px; height: 22px; }
+.lb-media { flex: 1; display: grid; place-items: center; min-height: 0; padding: 20px; }
+.lb-media img, .lb-media video { max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain; }
+.lb-meta { padding: 16px 20px calc(20px + env(safe-area-inset-bottom)); color: #fff; text-align: center; }
+.lb-cap { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+.lb-sub { color: rgba(255,255,255,.75); font-size: .86rem; display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
+.lb-sub svg { width: 14px; height: 14px; vertical-align: middle; }
+
 /* ---------- تجارب الأعضاء ---------- */
 .reviews { margin-top: 12px; display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
 .review { display: flex; align-items: flex-start; gap: 10px; }
@@ -640,6 +670,9 @@ const icons = {
   plane: svg('<path d="M17.8 19.2 16 11l3.5-3.5a2 2 0 1 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7l4.4 3.9-2 2.3-2.6-.4-.9 1.1 3 1.4 1.4 3 1.1-.9-.4-2.6 2.3-2 3.9 4.4a1 1 0 0 0 1.7-.9Z"/>'),
   route: svg('<circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/>'),
   city: svg('<path d="M3 21V9l6-3v3l6-3v15M3 21h18M9 21v-4M13 21v-4M9 12h.01M9 15h.01M17 12h.01M17 15h.01"/>', { w: 1.8 }),
+  camera: svg('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/>'),
+  images: svg('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L7 20"/>'),
+  play: svg('<circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4Z" fill="currentColor"/>'),
 
   // فئات المصاريف
   cat_flight: svg('<path d="M17.8 19.2 16 11l3.5-3.5a2 2 0 1 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7l4.4 3.9-2 2.3-2.6-.4-.9 1.1 3 1.4 1.4 3 1.1-.9-.4-2.6 2.3-2 3.9 4.4a1 1 0 0 0 1.7-.9Z"/>'),
@@ -902,6 +935,7 @@ function migrate(st) {
       }
     }
     (t.places || []).forEach(p => { if (p.cityId === undefined) p.cityId = ''; });
+    if (!t.memories) t.memories = [];
   });
   return st;
 }
@@ -950,6 +984,7 @@ function createTrip({ destination, country, flag, destCurrency, homeCurrency, ra
     places: [],
     itinerary: { departAt: '', departFlight: '', returnAt: '', returnFlight: '' },
     cities: [],
+    memories: [],
     checklist: defaultChecklist(),
     cloud: false,               // مزامنة سحابية مفعّلة لهذه الرحلة؟
     createdAt: Date.now(),
@@ -1148,6 +1183,28 @@ function removeCity(tripId, cityId) {
   t.places.forEach(p => { if (p.cityId === cityId) p.cityId = ''; }); // لا تُحذف الأماكن
   persist();
 }
+
+/* ---------------- الذكريات (صور/فيديو) ---------------- */
+function addMemory(tripId, { url, path, type, caption, placeId, cityId, memberId }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const m = {
+    id: uid('mem'), url, path: path || '', type: type || 'image',
+    caption: (caption || '').trim(), placeId: placeId || '', cityId: cityId || '',
+    memberId: memberId || '', createdAt: Date.now(),
+  };
+  t.memories.push(m);
+  persist();
+  return m;
+}
+function removeMemory(tripId, id) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const mem = t.memories.find(m => m.id === id);
+  t.memories = t.memories.filter(m => m.id !== id);
+  persist();
+  return mem || null;
+}
 function toggleCheck(tripId, id) {
   const t = getTrip(tripId);
   const c = t?.checklist.find(x => x.id === id);
@@ -1202,7 +1259,7 @@ function removeReview(tripId, placeId, reviewId) {
 function _resetAll() { state = emptyState(); persist(); }
 
 
-const db = { onChange, upsertTripFromCloud, getTrips, getTrip, createTrip, updateTrip, deleteTrip, setCurrentMember, addMember, updateMember, removeMember, setAmir, memberById, setPool, toggleQattahPaid, setMemberBudget, addGroupExpense, removeGroupExpense, addPersonalExpense, removePersonalExpense, addSharedExpense, removeSharedExpense, addPlace, setItinerary, addCity, updateCity, removeCity, toggleCheck, addCheck, removeCheck, togglePlaceVisited, removePlace, addReview, removeReview, _resetAll };
+const db = { onChange, upsertTripFromCloud, getTrips, getTrip, createTrip, updateTrip, deleteTrip, setCurrentMember, addMember, updateMember, removeMember, setAmir, memberById, setPool, toggleQattahPaid, setMemberBudget, addGroupExpense, removeGroupExpense, addPersonalExpense, removePersonalExpense, addSharedExpense, removeSharedExpense, addPlace, setItinerary, addCity, updateCity, removeCity, addMemory, removeMemory, toggleCheck, addCheck, removeCheck, togglePlaceVisited, removePlace, addReview, removeReview, _resetAll };
 
 /* settle */
 /* =========================================================
@@ -1369,6 +1426,24 @@ async function signOut() {
   return sb.auth.signOut();
 }
 
+/* ---------------- التخزين (الذكريات: صور/فيديو) ---------------- */
+const MEM_BUCKET = 'memories';
+async function uploadFile(tripId, file, onProgress) {
+  const sb = await client();
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const path = `${tripId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await sb.storage.from(MEM_BUCKET).upload(path, file, {
+    cacheControl: '3600', upsert: false, contentType: file.type || undefined,
+  });
+  if (error) throw error;
+  const { data } = sb.storage.from(MEM_BUCKET).getPublicUrl(path);
+  return { url: data.publicUrl, path };
+}
+async function deleteFile(path) {
+  if (!path) return;
+  try { const sb = await client(); await sb.storage.from(MEM_BUCKET).remove([path]); } catch {}
+}
+
 /* رفع رحلة (upsert) */
 async function pushTrip(trip) {
   const sb = await client();
@@ -1399,7 +1474,7 @@ async function subscribeTrip(id, onRemote) {
 }
 
 
-const sync = { sbUrl, sbKey, setSb, syncEnabled, currentUser, onAuth, signUpEmail, signInEmail, signInMagic, signInOAuth, signOut, pushTrip, fetchTrip, subscribeTrip, getClient };
+const sync = { sbUrl, sbKey, setSb, syncEnabled, currentUser, onAuth, signUpEmail, signInEmail, signInMagic, signInOAuth, signOut, uploadFile, deleteFile, pushTrip, fetchTrip, subscribeTrip, getClient };
 
 /* app */
 /* =========================================================
@@ -1793,6 +1868,7 @@ const TABS = [
   { key: 'itinerary', label: 'الرحلة', icon: icons.route },
   { key: 'budget', label: 'مصاريفي', icon: icons.coins },
   { key: 'pool', label: 'القطة', icon: icons.wallet },
+  { key: 'memories', label: 'ذكريات', icon: icons.images },
 ];
 
 function renderTrip(t, tab) {
@@ -1812,6 +1888,7 @@ function renderTrip(t, tab) {
   if (tab === 'itinerary') content = tabItinerary(t);
   else if (tab === 'budget') content = tabBudget(t);
   else if (tab === 'pool') content = tabPool(t);
+  else if (tab === 'memories') content = tabMemories(t);
 
   view.innerHTML = `
     <div class="flex-between" style="margin-bottom:16px">
@@ -2048,7 +2125,10 @@ function placeCard(t, p, i) {
             ${icons.check} ${p.visited ? 'تمّت الزيارة' : 'لم تُزَر'}</button>
         </div>
         ${reviews.length ? `<div class="reviews">${reviewsHtml}</div>` : ''}
-        <button class="btn btn-ghost btn-sm mt" data-add-review="${p.id}" style="width:100%">${icons.star} أضف تجربتك</button>
+        <div class="place-actions">
+          <button class="btn btn-ghost btn-sm" data-add-review="${p.id}">${icons.star} تجربتك</button>
+          <button class="btn btn-ghost btn-sm" data-add-mem="${p.id}|${p.cityId || ''}">${icons.camera} ذكرى</button>
+        </div>
       </div>
       <button class="icon-btn danger" data-del-place="${p.id}">${icons.trash}</button>
     </div>`;
@@ -2175,6 +2255,115 @@ function tabItinerary(t) {
     <button class="btn btn-primary btn-block mt" data-act="add-city">${icons.plus} إضافة مدينة</button>`;
 }
 
+/* ---------------- تبويب: ذكريات ---------------- */
+function memTile(t, m) {
+  const place = t.places.find(p => p.id === m.placeId);
+  const media = m.type === 'video'
+    ? `<video src="${esc(m.url)}#t=0.1" preload="metadata" muted playsinline></video><span class="mem-play">${icons.play}</span>`
+    : `<img src="${esc(m.url)}" loading="lazy" alt="">`;
+  return `<button class="mem-tile" data-mem="${m.id}">${media}
+    ${place ? `<span class="mem-place">${icons.pin} ${esc(place.name)}</span>` : ''}</button>`;
+}
+function tabMemories(t) {
+  const mems = t.memories.slice().sort((a, c) => a.createdAt - c.createdAt);
+  const dep = t.itinerary?.departAt ? new Date(t.itinerary.departAt) : null;
+  const depDay = dep ? Date.parse(dep.toISOString().slice(0, 10) + 'T00:00:00') : null;
+
+  const groups = {};
+  mems.forEach(m => { const k = new Date(m.createdAt).toISOString().slice(0, 10); (groups[k] = groups[k] || []).push(m); });
+  const keys = Object.keys(groups).sort();
+
+  const daysHtml = keys.map(k => {
+    const dt = Date.parse(k + 'T00:00:00');
+    const n = depDay != null ? Math.round((dt - depDay) / 86400000) + 1 : null;
+    const label = new Date(k + 'T00:00:00').toLocaleDateString('ar', { calendar: 'gregory', weekday: 'long', day: 'numeric', month: 'long' });
+    return `<div class="mem-day">
+      <div class="mem-day-head"><span class="mem-day-label">${label}</span>
+        ${n && n >= 1 ? `<span class="mem-day-num">اليوم ${n}</span>` : ''}</div>
+      <div class="mem-grid">${groups[k].map(m => memTile(t, m)).join('')}</div></div>`;
+  }).join('');
+
+  return `
+    <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.images}
+      <span>صور وفيديوهات الرحلة — مربوطة بالأماكن ومرتّبة بالأيام، تبقى للأبد ويشوفها القروب.</span></div>
+    ${mems.length ? `<div class="mem-count">${mems.length} ذكرى</div>${daysHtml}`
+      : `<div class="empty">${icons.camera}<h3>ابدأ ألبوم الرحلة</h3><p>أضِف صورك ومقاطعك، واربطها بالأماكن — وارجع لها متى ما تبي.</p></div>`}
+    <button class="btn btn-primary btn-block mt" data-act="add-memory">${icons.camera} أضف صورة / فيديو</button>`;
+}
+
+function memErr(e) {
+  const m = (e && (e.message || e.error)) || '';
+  if (/Bucket not found|bucket/i.test(m)) return 'أنشئ مخزن الصور (bucket باسم memories) في Supabase أولًا';
+  if (/row-level security|policy|permission|denied/i.test(m)) return 'أضِف صلاحيات التخزين (policies) في Supabase';
+  if (/exceeded|maximum|too large|size/i.test(m)) return 'حجم الملف كبير';
+  if (/import|Failed to fetch|network/i.test(m)) return 'تعذّر الاتصال بالمزامنة';
+  return 'تعذّر الرفع: ' + m;
+}
+
+function openAddMemory(t, opts = {}) {
+  const placeOpts = t.places.map(p => {
+    const c = t.cities.find(x => x.id === p.cityId);
+    return `<option value="${p.id}" ${p.id === opts.placeId ? 'selected' : ''}>${esc((c ? c.name + ' · ' : '') + p.name)}</option>`;
+  }).join('');
+  openModal({
+    title: 'أضف ذكرى',
+    body: `
+      <div class="field"><label>صورة أو فيديو</label>
+        <input class="input" id="mm-file" type="file" accept="image/*,video/*"></div>
+      <div class="field"><label>تعليق <span class="hint">اختياري</span></label>
+        <input class="input" id="mm-cap" placeholder="مثال: أجمل غروب بالرحلة" autocomplete="off"></div>
+      <div class="field"><label>المكان <span class="hint">اختياري</span></label>
+        <div class="select-wrap">${icons.chevron}<select class="select" id="mm-place">
+          <option value="">— بدون مكان —</option>${placeOpts}</select></div></div>
+      <div class="conv-preview" id="mm-status"></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="mm-save">${icons.camera} حفظ الذكرى</button>`,
+  });
+  $('#mm-save').onclick = async () => {
+    const f = $('#mm-file').files[0];
+    if (!f) { toast('اختر صورة أو فيديو'); return; }
+    if (f.size > 50 * 1024 * 1024) { toast('الحجم أكبر من 50MB — قصّر الفيديو'); return; }
+    if (!sync.syncEnabled()) { toast('فعّل Supabase من الإعدادات'); return; }
+    const btn = $('#mm-save'); btn.disabled = true;
+    $('#mm-status').innerHTML = 'جارٍ الرفع… قد يأخذ وقتًا حسب الحجم';
+    try {
+      const { url, path } = await sync.uploadFile(t.id, f);
+      const type = (f.type || '').startsWith('video') ? 'video' : 'image';
+      const pid = $('#mm-place').value;
+      const cid = t.places.find(p => p.id === pid)?.cityId || '';
+      db.addMemory(t.id, { url, path, type, caption: $('#mm-cap').value, placeId: pid, cityId: cid, memberId: getMyId(t) });
+      closeModal(); render(); toast('تمت إضافة الذكرى ✓');
+    } catch (e) { $('#mm-status').innerHTML = `<span style="color:var(--red)">${esc(memErr(e))}</span>`; btn.disabled = false; console.warn(e); }
+  };
+}
+
+function openMemory(t, id) {
+  const m = t.memories.find(x => x.id === id);
+  if (!m) return;
+  const place = t.places.find(p => p.id === m.placeId);
+  const who = db.memberById(t, m.memberId);
+  const when = new Date(m.createdAt).toLocaleDateString('ar', { calendar: 'gregory', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  modalRoot.innerHTML = `
+    <div class="lightbox">
+      <button class="lb-close" data-close aria-label="إغلاق">${icons.close}</button>
+      <div class="lb-media">${m.type === 'video'
+        ? `<video src="${esc(m.url)}" controls autoplay playsinline></video>`
+        : `<img src="${esc(m.url)}" alt="">`}</div>
+      <div class="lb-meta">
+        ${m.caption ? `<div class="lb-cap">${esc(m.caption)}</div>` : ''}
+        <div class="lb-sub">${place ? icons.pin + ' ' + esc(place.name) + ' · ' : ''}${who ? esc(who.name) + ' · ' : ''}${esc(when)}</div>
+        <button class="btn btn-danger-ghost btn-sm mt" id="lb-del">${icons.trash} حذف الذكرى</button>
+      </div>
+    </div>`;
+  modalRoot.classList.add('open');
+  modalRoot.setAttribute('aria-hidden', 'false');
+  modalRoot.querySelectorAll('[data-close]').forEach(el => el.onclick = closeModal);
+  $('#lb-del').onclick = () => {
+    const mem = db.removeMemory(t.id, id);
+    if (mem?.path) sync.deleteFile(mem.path);
+    closeModal(); render(); toast('تم حذف الذكرى');
+  };
+}
+
 /* =========================================================
    ربط الأحداث
    ========================================================= */
@@ -2221,6 +2410,11 @@ function wire(t, tab) {
     const [pid, rid] = e.currentTarget.dataset.delReview.split('|');
     db.removeReview(t.id, pid, rid); render();
   });
+  on('[data-add-mem]', e => { const [pid, cid] = e.currentTarget.dataset.addMem.split('|'); openAddMemory(t, { placeId: pid, cityId: cid }); });
+
+  // ذكريات
+  on('[data-act="add-memory"]', () => openAddMemory(t));
+  on('[data-mem]', e => openMemory(t, e.currentTarget.dataset.mem));
 }
 
 /* =========================================================

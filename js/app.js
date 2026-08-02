@@ -395,6 +395,7 @@ const TABS = [
   { key: 'itinerary', label: 'الرحلة', icon: icons.route },
   { key: 'budget', label: 'مصاريفي', icon: icons.coins },
   { key: 'pool', label: 'القطة', icon: icons.wallet },
+  { key: 'memories', label: 'ذكريات', icon: icons.images },
 ];
 
 function renderTrip(t, tab) {
@@ -414,6 +415,7 @@ function renderTrip(t, tab) {
   if (tab === 'itinerary') content = tabItinerary(t);
   else if (tab === 'budget') content = tabBudget(t);
   else if (tab === 'pool') content = tabPool(t);
+  else if (tab === 'memories') content = tabMemories(t);
 
   view.innerHTML = `
     <div class="flex-between" style="margin-bottom:16px">
@@ -650,7 +652,10 @@ function placeCard(t, p, i) {
             ${icons.check} ${p.visited ? 'تمّت الزيارة' : 'لم تُزَر'}</button>
         </div>
         ${reviews.length ? `<div class="reviews">${reviewsHtml}</div>` : ''}
-        <button class="btn btn-ghost btn-sm mt" data-add-review="${p.id}" style="width:100%">${icons.star} أضف تجربتك</button>
+        <div class="place-actions">
+          <button class="btn btn-ghost btn-sm" data-add-review="${p.id}">${icons.star} تجربتك</button>
+          <button class="btn btn-ghost btn-sm" data-add-mem="${p.id}|${p.cityId || ''}">${icons.camera} ذكرى</button>
+        </div>
       </div>
       <button class="icon-btn danger" data-del-place="${p.id}">${icons.trash}</button>
     </div>`;
@@ -777,6 +782,115 @@ function tabItinerary(t) {
     <button class="btn btn-primary btn-block mt" data-act="add-city">${icons.plus} إضافة مدينة</button>`;
 }
 
+/* ---------------- تبويب: ذكريات ---------------- */
+function memTile(t, m) {
+  const place = t.places.find(p => p.id === m.placeId);
+  const media = m.type === 'video'
+    ? `<video src="${esc(m.url)}#t=0.1" preload="metadata" muted playsinline></video><span class="mem-play">${icons.play}</span>`
+    : `<img src="${esc(m.url)}" loading="lazy" alt="">`;
+  return `<button class="mem-tile" data-mem="${m.id}">${media}
+    ${place ? `<span class="mem-place">${icons.pin} ${esc(place.name)}</span>` : ''}</button>`;
+}
+function tabMemories(t) {
+  const mems = t.memories.slice().sort((a, c) => a.createdAt - c.createdAt);
+  const dep = t.itinerary?.departAt ? new Date(t.itinerary.departAt) : null;
+  const depDay = dep ? Date.parse(dep.toISOString().slice(0, 10) + 'T00:00:00') : null;
+
+  const groups = {};
+  mems.forEach(m => { const k = new Date(m.createdAt).toISOString().slice(0, 10); (groups[k] = groups[k] || []).push(m); });
+  const keys = Object.keys(groups).sort();
+
+  const daysHtml = keys.map(k => {
+    const dt = Date.parse(k + 'T00:00:00');
+    const n = depDay != null ? Math.round((dt - depDay) / 86400000) + 1 : null;
+    const label = new Date(k + 'T00:00:00').toLocaleDateString('ar', { calendar: 'gregory', weekday: 'long', day: 'numeric', month: 'long' });
+    return `<div class="mem-day">
+      <div class="mem-day-head"><span class="mem-day-label">${label}</span>
+        ${n && n >= 1 ? `<span class="mem-day-num">اليوم ${n}</span>` : ''}</div>
+      <div class="mem-grid">${groups[k].map(m => memTile(t, m)).join('')}</div></div>`;
+  }).join('');
+
+  return `
+    <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.images}
+      <span>صور وفيديوهات الرحلة — مربوطة بالأماكن ومرتّبة بالأيام، تبقى للأبد ويشوفها القروب.</span></div>
+    ${mems.length ? `<div class="mem-count">${mems.length} ذكرى</div>${daysHtml}`
+      : `<div class="empty">${icons.camera}<h3>ابدأ ألبوم الرحلة</h3><p>أضِف صورك ومقاطعك، واربطها بالأماكن — وارجع لها متى ما تبي.</p></div>`}
+    <button class="btn btn-primary btn-block mt" data-act="add-memory">${icons.camera} أضف صورة / فيديو</button>`;
+}
+
+function memErr(e) {
+  const m = (e && (e.message || e.error)) || '';
+  if (/Bucket not found|bucket/i.test(m)) return 'أنشئ مخزن الصور (bucket باسم memories) في Supabase أولًا';
+  if (/row-level security|policy|permission|denied/i.test(m)) return 'أضِف صلاحيات التخزين (policies) في Supabase';
+  if (/exceeded|maximum|too large|size/i.test(m)) return 'حجم الملف كبير';
+  if (/import|Failed to fetch|network/i.test(m)) return 'تعذّر الاتصال بالمزامنة';
+  return 'تعذّر الرفع: ' + m;
+}
+
+function openAddMemory(t, opts = {}) {
+  const placeOpts = t.places.map(p => {
+    const c = t.cities.find(x => x.id === p.cityId);
+    return `<option value="${p.id}" ${p.id === opts.placeId ? 'selected' : ''}>${esc((c ? c.name + ' · ' : '') + p.name)}</option>`;
+  }).join('');
+  openModal({
+    title: 'أضف ذكرى',
+    body: `
+      <div class="field"><label>صورة أو فيديو</label>
+        <input class="input" id="mm-file" type="file" accept="image/*,video/*"></div>
+      <div class="field"><label>تعليق <span class="hint">اختياري</span></label>
+        <input class="input" id="mm-cap" placeholder="مثال: أجمل غروب بالرحلة" autocomplete="off"></div>
+      <div class="field"><label>المكان <span class="hint">اختياري</span></label>
+        <div class="select-wrap">${icons.chevron}<select class="select" id="mm-place">
+          <option value="">— بدون مكان —</option>${placeOpts}</select></div></div>
+      <div class="conv-preview" id="mm-status"></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="mm-save">${icons.camera} حفظ الذكرى</button>`,
+  });
+  $('#mm-save').onclick = async () => {
+    const f = $('#mm-file').files[0];
+    if (!f) { toast('اختر صورة أو فيديو'); return; }
+    if (f.size > 50 * 1024 * 1024) { toast('الحجم أكبر من 50MB — قصّر الفيديو'); return; }
+    if (!sync.syncEnabled()) { toast('فعّل Supabase من الإعدادات'); return; }
+    const btn = $('#mm-save'); btn.disabled = true;
+    $('#mm-status').innerHTML = 'جارٍ الرفع… قد يأخذ وقتًا حسب الحجم';
+    try {
+      const { url, path } = await sync.uploadFile(t.id, f);
+      const type = (f.type || '').startsWith('video') ? 'video' : 'image';
+      const pid = $('#mm-place').value;
+      const cid = t.places.find(p => p.id === pid)?.cityId || '';
+      db.addMemory(t.id, { url, path, type, caption: $('#mm-cap').value, placeId: pid, cityId: cid, memberId: getMyId(t) });
+      closeModal(); render(); toast('تمت إضافة الذكرى ✓');
+    } catch (e) { $('#mm-status').innerHTML = `<span style="color:var(--red)">${esc(memErr(e))}</span>`; btn.disabled = false; console.warn(e); }
+  };
+}
+
+function openMemory(t, id) {
+  const m = t.memories.find(x => x.id === id);
+  if (!m) return;
+  const place = t.places.find(p => p.id === m.placeId);
+  const who = db.memberById(t, m.memberId);
+  const when = new Date(m.createdAt).toLocaleDateString('ar', { calendar: 'gregory', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  modalRoot.innerHTML = `
+    <div class="lightbox">
+      <button class="lb-close" data-close aria-label="إغلاق">${icons.close}</button>
+      <div class="lb-media">${m.type === 'video'
+        ? `<video src="${esc(m.url)}" controls autoplay playsinline></video>`
+        : `<img src="${esc(m.url)}" alt="">`}</div>
+      <div class="lb-meta">
+        ${m.caption ? `<div class="lb-cap">${esc(m.caption)}</div>` : ''}
+        <div class="lb-sub">${place ? icons.pin + ' ' + esc(place.name) + ' · ' : ''}${who ? esc(who.name) + ' · ' : ''}${esc(when)}</div>
+        <button class="btn btn-danger-ghost btn-sm mt" id="lb-del">${icons.trash} حذف الذكرى</button>
+      </div>
+    </div>`;
+  modalRoot.classList.add('open');
+  modalRoot.setAttribute('aria-hidden', 'false');
+  modalRoot.querySelectorAll('[data-close]').forEach(el => el.onclick = closeModal);
+  $('#lb-del').onclick = () => {
+    const mem = db.removeMemory(t.id, id);
+    if (mem?.path) sync.deleteFile(mem.path);
+    closeModal(); render(); toast('تم حذف الذكرى');
+  };
+}
+
 /* =========================================================
    ربط الأحداث
    ========================================================= */
@@ -823,6 +937,11 @@ function wire(t, tab) {
     const [pid, rid] = e.currentTarget.dataset.delReview.split('|');
     db.removeReview(t.id, pid, rid); render();
   });
+  on('[data-add-mem]', e => { const [pid, cid] = e.currentTarget.dataset.addMem.split('|'); openAddMemory(t, { placeId: pid, cityId: cid }); });
+
+  // ذكريات
+  on('[data-act="add-memory"]', () => openAddMemory(t));
+  on('[data-mem]', e => openMemory(t, e.currentTarget.dataset.mem));
 }
 
 /* =========================================================

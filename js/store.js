@@ -63,6 +63,7 @@ function migrate(st) {
       }
     }
     (t.places || []).forEach(p => { if (p.cityId === undefined) p.cityId = ''; });
+    if (!t.memories) t.memories = [];
   });
   return st;
 }
@@ -113,6 +114,7 @@ export function createTrip({ destination, country, flag, destCurrency, homeCurre
     places: [],
     itinerary: { departAt: '', departFlight: '', returnAt: '', returnFlight: '' },
     cities: [],
+    memories: [],
     checklist: defaultChecklist(),
     cloud: false,               // مزامنة سحابية مفعّلة لهذه الرحلة؟
     createdAt: Date.now(),
@@ -326,6 +328,28 @@ export function removeCity(tripId, cityId) {
   t.cities = t.cities.filter(c => c.id !== cityId);
   t.places.forEach(p => { if (p.cityId === cityId) p.cityId = ''; }); // لا تُحذف الأماكن
   persist();
+}
+
+/* ---------------- الذكريات (صور/فيديو) ---------------- */
+export function addMemory(tripId, { url, path, type, caption, placeId, cityId, memberId }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const m = {
+    id: uid('mem'), url, path: path || '', type: type || 'image',
+    caption: (caption || '').trim(), placeId: placeId || '', cityId: cityId || '',
+    memberId: memberId || '', createdAt: Date.now(),
+  };
+  t.memories.push(m);
+  persist();
+  return m;
+}
+export function removeMemory(tripId, id) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const mem = t.memories.find(m => m.id === id);
+  t.memories = t.memories.filter(m => m.id !== id);
+  persist();
+  return mem || null;
 }
 
 export function toggleCheck(tripId, id) {

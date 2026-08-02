@@ -69,6 +69,24 @@ export async function signOut() {
   return sb.auth.signOut();
 }
 
+/* ---------------- التخزين (الذكريات: صور/فيديو) ---------------- */
+const MEM_BUCKET = 'memories';
+export async function uploadFile(tripId, file, onProgress) {
+  const sb = await client();
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const path = `${tripId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await sb.storage.from(MEM_BUCKET).upload(path, file, {
+    cacheControl: '3600', upsert: false, contentType: file.type || undefined,
+  });
+  if (error) throw error;
+  const { data } = sb.storage.from(MEM_BUCKET).getPublicUrl(path);
+  return { url: data.publicUrl, path };
+}
+export async function deleteFile(path) {
+  if (!path) return;
+  try { const sb = await client(); await sb.storage.from(MEM_BUCKET).remove([path]); } catch {}
+}
+
 /* رفع رحلة (upsert) */
 export async function pushTrip(trip) {
   const sb = await client();
