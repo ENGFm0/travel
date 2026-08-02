@@ -32,6 +32,11 @@ function load() {
   }
 }
 
+function defaultChecklist() {
+  return ['حجز التذاكر', 'الجوازات سارية', 'حجز السكن', 'تأمين السفر', 'تحويل العملة', 'باقة الجوال / الإنترنت']
+    .map(t => ({ id: uid('ck'), text: t, done: false }));
+}
+
 /* ترحيل البيانات القديمة للشكل الجديد */
 function migrate(st) {
   st.trips.forEach(t => {
@@ -45,6 +50,19 @@ function migrate(st) {
       delete t.pairExpenses;
     }
     (t.places || []).forEach(p => { if (!p.reviews) p.reviews = []; });
+
+    // الرحلة (خط الرحلة)
+    if (!t.itinerary) t.itinerary = { departAt: '', departFlight: '', returnAt: '', returnFlight: '' };
+    if (!t.checklist) t.checklist = defaultChecklist();
+    if (!t.cities) {
+      t.cities = [];
+      if ((t.places || []).length) { // ضع الأماكن القديمة داخل مدينة من الوجهة
+        const c = { id: uid('ct'), name: t.destination || t.country || 'المدينة', order: 0, hotel: null, fromDate: '', toDate: '' };
+        t.cities.push(c);
+        t.places.forEach(p => { if (!p.cityId) p.cityId = c.id; });
+      }
+    }
+    (t.places || []).forEach(p => { if (p.cityId === undefined) p.cityId = ''; });
   });
   return st;
 }
@@ -93,6 +111,9 @@ export function createTrip({ destination, country, flag, destCurrency, homeCurre
     sharedExpenses: [],                 // قطة مشتركة بين أشخاص محددين
     personalExpenses: {},               // { memberId: [ ... ] }
     places: [],
+    itinerary: { departAt: '', departFlight: '', returnAt: '', returnFlight: '' },
+    cities: [],
+    checklist: defaultChecklist(),
     cloud: false,               // مزامنة سحابية مفعّلة لهذه الرحلة؟
     createdAt: Date.now(),
   };
@@ -263,17 +284,68 @@ export function removeSharedExpense(tripId, id) {
 
 /* ---------------- الأماكن ---------------- */
 
-export function addPlace(tripId, { name, note, mapUrl, placeId, lat, lng, address }) {
+export function addPlace(tripId, { name, note, mapUrl, placeId, lat, lng, address, cityId }) {
   const t = getTrip(tripId);
   if (!t) return null;
   const p = {
     id: uid('pl'), name: name.trim(), note: (note || '').trim(),
     mapUrl: (mapUrl || '').trim(), placeId: placeId || '', address: (address || '').trim(),
-    lat: lat ?? null, lng: lng ?? null, visited: false, reviews: [],
+    lat: lat ?? null, lng: lng ?? null, cityId: cityId || '', visited: false, reviews: [],
   };
   t.places.push(p);
   persist();
   return p;
+}
+
+/* ---------------- الرحلة: المواعيد والمدن والتذكيرات ---------------- */
+export function setItinerary(tripId, patch) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.itinerary = { ...t.itinerary, ...patch };
+  persist();
+}
+
+export function addCity(tripId, { name, fromDate, toDate }) {
+  const t = getTrip(tripId);
+  if (!t) return null;
+  const c = { id: uid('ct'), name: name.trim(), order: t.cities.length, hotel: null, fromDate: fromDate || '', toDate: toDate || '' };
+  t.cities.push(c);
+  persist();
+  return c;
+}
+export function updateCity(tripId, cityId, patch) {
+  const t = getTrip(tripId);
+  const c = t?.cities.find(x => x.id === cityId);
+  if (!c) return;
+  Object.assign(c, patch);
+  persist();
+}
+export function removeCity(tripId, cityId) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.cities = t.cities.filter(c => c.id !== cityId);
+  t.places.forEach(p => { if (p.cityId === cityId) p.cityId = ''; }); // لا تُحذف الأماكن
+  persist();
+}
+
+export function toggleCheck(tripId, id) {
+  const t = getTrip(tripId);
+  const c = t?.checklist.find(x => x.id === id);
+  if (!c) return;
+  c.done = !c.done;
+  persist();
+}
+export function addCheck(tripId, text) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.checklist.push({ id: uid('ck'), text: text.trim(), done: false });
+  persist();
+}
+export function removeCheck(tripId, id) {
+  const t = getTrip(tripId);
+  if (!t) return;
+  t.checklist = t.checklist.filter(x => x.id !== id);
+  persist();
 }
 export function togglePlaceVisited(tripId, placeId) {
   const t = getTrip(tripId);

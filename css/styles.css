@@ -512,6 +512,51 @@ textarea.input { resize: vertical; min-height: 72px; }
 .star-btn.on { color: var(--sand-500); border-color: var(--sand-500); background: var(--sand-100); }
 .star-btn.on svg { fill: var(--sand-500); }
 
+/* ---------- الرحلة: العدّاد ---------- */
+.cd { background: linear-gradient(140deg, var(--teal-800), var(--teal-700)); color: #fff; border-radius: var(--radius); padding: 24px 18px; text-align: center; box-shadow: var(--shadow); margin-bottom: 8px; }
+.cd.live { background: linear-gradient(140deg, #1c6b3f, var(--green)); }
+.cd.done { background: linear-gradient(140deg, var(--ink-700), var(--ink-500)); }
+.cd-num { font-size: 3.4rem; font-weight: 800; line-height: 1; }
+.cd-sub { font-weight: 700; opacity: .95; margin-top: 4px; }
+.cd-dur { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: .82rem; background: rgba(255,255,255,.15); padding: 5px 12px; border-radius: 999px; }
+.cd-dur svg { width: 14px; height: 14px; }
+
+/* الطيران */
+.flights { display: grid; gap: 2px; }
+.flight-row { display: flex; align-items: center; gap: 12px; padding: 6px 2px; }
+.flight-ic { width: 40px; height: 40px; border-radius: 12px; background: var(--teal-050); color: var(--teal-800); display: grid; place-items: center; flex-shrink: 0; }
+.flight-ic svg { width: 20px; height: 20px; }
+.flight-row:last-child .flight-ic { transform: scaleX(-1); }
+.flight-body { flex: 1; }
+.flight-label { font-weight: 700; }
+.flight-when { color: var(--ink-500); font-size: .88rem; }
+.flight-no { font-weight: 800; color: var(--teal-800); background: var(--teal-050); padding: 4px 10px; border-radius: 8px; font-size: .85rem; }
+.flight-divider { height: 1px; background: var(--line); margin: 4px 0 4px 52px; }
+
+/* التذكيرات */
+.checklist { display: grid; gap: 2px; }
+.check-row { display: flex; align-items: center; gap: 11px; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+.check-row:last-child { border-bottom: none; }
+.check-box { width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--line); display: grid; place-items: center; color: #fff; flex-shrink: 0; }
+.check-box svg { width: 15px; height: 15px; }
+.check-row.done .check-box { background: var(--green); border-color: var(--green); }
+.check-text { flex: 1; font-weight: 500; }
+.check-row.done .check-text { text-decoration: line-through; color: var(--ink-300); }
+
+/* المدن */
+.city { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; }
+.city-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.city-title { display: flex; align-items: center; gap: 10px; }
+.city-idx { width: 28px; height: 28px; border-radius: 9px; background: var(--teal-800); color: #fff; display: grid; place-items: center; font-weight: 800; flex-shrink: 0; }
+.city-name { font-weight: 800; font-size: 1.1rem; }
+.city-dates { font-size: .82rem; color: var(--ink-500); }
+.hotel { display: flex; align-items: center; gap: 10px; background: var(--sand-100); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+.hotel > svg { width: 22px; height: 22px; color: var(--sand-600); flex-shrink: 0; }
+.hotel-body { flex: 1; min-width: 0; }
+.city-add-hotel { width: 100%; margin-bottom: 12px; color: var(--sand-600); }
+.city-places { display: grid; gap: 0; }
+.city-places .place { margin-bottom: 10px; }
+
 /* ---------- تجارب الأعضاء ---------- */
 .reviews { margin-top: 12px; display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
 .review { display: flex; align-items: flex-start; gap: 10px; }

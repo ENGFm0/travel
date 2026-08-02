@@ -329,9 +329,9 @@ function tripCard(t) {
    شاشة الرحلة
    ========================================================= */
 const TABS = [
+  { key: 'itinerary', label: 'الرحلة', icon: icons.route },
   { key: 'budget', label: 'مصاريفي', icon: icons.coins },
   { key: 'pool', label: 'القطة', icon: icons.wallet },
-  { key: 'places', label: 'الأماكن', icon: icons.pin },
 ];
 
 function renderTrip(t, tab) {
@@ -348,9 +348,9 @@ function renderTrip(t, tab) {
     <button class="tab ${x.key === tab ? 'active' : ''}" data-tab="${x.key}">${x.icon}<span>${x.label}</span></button>`).join('')}</nav>`;
 
   let content = '';
-  if (tab === 'budget') content = tabBudget(t);
+  if (tab === 'itinerary') content = tabItinerary(t);
+  else if (tab === 'budget') content = tabBudget(t);
   else if (tab === 'pool') content = tabPool(t);
-  else if (tab === 'places') content = tabPlaces(t);
 
   view.innerHTML = `
     <div class="flex-between" style="margin-bottom:16px">
@@ -563,25 +563,18 @@ function avgRating(p) {
   return Math.round((rs.reduce((s, r) => s + r.rating, 0) / rs.length) * 10) / 10;
 }
 
-function tabPlaces(t) {
-  const amir = db.memberById(t, t.amirId);
-
-  const list = t.places.length ? t.places.map((p, i) => {
-    const avg = avgRating(p);
-    const reviews = (p.reviews || []).slice().sort((a, c) => c.createdAt - a.createdAt);
-    const reviewsHtml = reviews.map(r => {
-      const m = db.memberById(t, r.memberId);
-      return `<div class="review">
-        ${m ? avatar(m, 30) : ''}
-        <div class="review-body">
-          <div class="review-head"><b>${m ? esc(m.name) : 'عضو'}</b> ${r.rating ? stars(r.rating, 12) : ''}</div>
-          ${r.note ? `<div class="review-note">${esc(r.note)}</div>` : ''}
-        </div>
-        <button class="icon-btn danger" data-del-review="${p.id}|${r.id}">${icons.trash}</button>
-      </div>`;
-    }).join('');
-
-    return `
+/* بطاقة مكان (تُستخدم داخل المدن) */
+function placeCard(t, p, i) {
+  const avg = avgRating(p);
+  const reviews = (p.reviews || []).slice().sort((a, c) => c.createdAt - a.createdAt);
+  const reviewsHtml = reviews.map(r => {
+    const m = db.memberById(t, r.memberId);
+    return `<div class="review">${m ? avatar(m, 30) : ''}
+      <div class="review-body"><div class="review-head"><b>${m ? esc(m.name) : 'عضو'}</b> ${r.rating ? stars(r.rating, 12) : ''}</div>
+        ${r.note ? `<div class="review-note">${esc(r.note)}</div>` : ''}</div>
+      <button class="icon-btn danger" data-del-review="${p.id}|${r.id}">${icons.trash}</button></div>`;
+  }).join('');
+  return `
     <div class="place">
       <span class="place-idx">${i + 1}</span>
       <div class="place-body">
@@ -589,7 +582,7 @@ function tabPlaces(t) {
           ${avg ? `<span class="rating-pill">${icons.star} ${avg} <small>(${reviews.length})</small></span>` : ''}</div>
         ${p.address ? `<div class="place-note">${esc(p.address)}</div>` : (p.note ? `<div class="place-note">${esc(p.note)}</div>` : '')}
         <div class="place-links">
-          <a class="map-link" href="${p.mapUrl ? esc(p.mapUrl) : mapsPlaceUrl((p.name + ' ' + (t.destination || '')).trim(), p.placeId)}" target="_blank" rel="noopener">${icons.map} افتح في قوقل ماب</a>
+          <a class="map-link" href="${p.mapUrl ? esc(p.mapUrl) : mapsPlaceUrl((p.name + ' ' + (t.destination || '')).trim(), p.placeId)}" target="_blank" rel="noopener">${icons.map} قوقل ماب</a>
           <button class="map-link" style="background:${p.visited ? 'var(--green-bg)' : '#eef1f0'};color:${p.visited ? 'var(--green)' : 'var(--ink-500)'}" data-visited="${p.id}">
             ${icons.check} ${p.visited ? 'تمّت الزيارة' : 'لم تُزَر'}</button>
         </div>
@@ -598,19 +591,121 @@ function tabPlaces(t) {
       </div>
       <button class="icon-btn danger" data-del-place="${p.id}">${icons.trash}</button>
     </div>`;
-  }).join('') : `<div class="empty">${icons.pin}<h3>لا توجد أماكن</h3>
-      <p>ابحث عن الأماكن وأضِفها، وشارك تجربتك معها.</p></div>`;
+}
 
-  const hasKey = !!getMapsKey();
+function fmtDate(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleDateString('ar', { calendar: 'gregory', weekday: 'long', day: 'numeric', month: 'long' }); }
+  catch { return iso; }
+}
+function fmtDT(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('ar', { calendar: 'gregory', day: 'numeric', month: 'short' }) +
+      ' · ' + d.toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' });
+  } catch { return iso; }
+}
+
+/* ---------------- تبويب: الرحلة (خط الرحلة) ---------------- */
+function tabItinerary(t) {
+  const it = t.itinerary || {};
+  const DAY = 86400000, now = Date.now();
+  const dep = it.departAt ? new Date(it.departAt).getTime() : null;
+  const ret = it.returnAt ? new Date(it.returnAt).getTime() : null;
+
+  let cdBig = '', cdSub = '', cdState = '';
+  if (dep) {
+    if (now < dep) { cdBig = String(Math.ceil((dep - now) / DAY)); cdSub = 'يوم على المغادرة ✈️'; cdState = 'soon'; }
+    else if (ret && now <= ret) { cdBig = String(Math.ceil((ret - now) / DAY)); cdSub = 'يوم على العودة · الرحلة جارية'; cdState = 'live'; }
+    else { cdBig = '🎉'; cdSub = ret ? 'انتهت الرحلة — رحلة سعيدة كانت' : 'الرحلة جارية'; cdState = 'done'; }
+  }
+  const duration = dep && ret ? Math.max(1, Math.round((ret - dep) / DAY)) : null;
+
+  const countdown = dep
+    ? `<div class="cd ${cdState}">
+        <div class="cd-num">${cdBig}</div>
+        <div class="cd-sub">${cdSub}</div>
+        ${duration ? `<div class="cd-dur">${icons.calendar} مدة الرحلة ${duration} ليالٍ</div>` : ''}
+       </div>`
+    : `<div class="empty" style="padding:26px">${icons.plane}<h3>حدّد مواعيد رحلتكم</h3>
+        <p>ضِف موعد المغادرة والعودة ليظهر العدّاد التنازلي.</p>
+        <button class="btn btn-primary mt" data-act="edit-itin">تحديد المواعيد</button></div>`;
+
+  const flightRow = (label, iconv, at, flight) => `
+    <div class="flight-row">
+      <span class="flight-ic">${iconv}</span>
+      <div class="flight-body"><div class="flight-label">${label}</div>
+        <div class="flight-when">${at ? esc(fmtDT(at)) : '—'}</div></div>
+      ${flight ? `<span class="flight-no">${esc(flight)}</span>` : ''}
+    </div>`;
+
+  const flights = dep || ret || it.departFlight || it.returnFlight ? `
+    <div class="section-head"><h2>الطيران</h2>
+      <button class="btn btn-ghost btn-sm" data-act="edit-itin">${icons.edit} تعديل</button></div>
+    <div class="card card-pad flights">
+      ${flightRow('المغادرة', icons.plane, it.departAt, it.departFlight)}
+      <div class="flight-divider"></div>
+      ${flightRow('العودة', icons.plane, it.returnAt, it.returnFlight)}
+    </div>` : '';
+
+  // التذكيرات
+  const doneCount = t.checklist.filter(c => c.done).length;
+  const checkHtml = t.checklist.map(c => `
+    <div class="check-row ${c.done ? 'done' : ''}">
+      <button class="check-box" data-check="${c.id}">${c.done ? icons.check : ''}</button>
+      <span class="check-text">${esc(c.text)}</span>
+      <button class="icon-btn danger" data-del-check="${c.id}">${icons.trash}</button>
+    </div>`).join('');
+
+  // المدن
+  const cities = t.cities.slice().sort((a, b) => a.order - b.order);
+  const citiesHtml = cities.map((c, ci) => {
+    const places = t.places.filter(p => p.cityId === c.id);
+    const placesHtml = places.length
+      ? places.map((p, i) => placeCard(t, p, i)).join('')
+      : `<p class="muted-text center" style="padding:10px">ما فيه أماكن بهالمدينة بعد.</p>`;
+    const dates = c.fromDate || c.toDate ? `${fmtDate(c.fromDate)}${c.toDate ? ' ← ' + fmtDate(c.toDate) : ''}` : '';
+    return `
+      <div class="city">
+        <div class="city-head">
+          <div class="city-title"><span class="city-idx">${ci + 1}</span>
+            <div><div class="city-name">${esc(c.name)}</div>${dates ? `<div class="city-dates">${dates}</div>` : ''}</div></div>
+          <div class="row-actions">
+            <button class="icon-btn" data-edit-city="${c.id}" title="تعديل">${icons.edit}</button>
+            <button class="icon-btn danger" data-del-city="${c.id}" title="حذف">${icons.trash}</button>
+          </div>
+        </div>
+        ${c.hotel && c.hotel.name
+          ? `<div class="hotel">${icons.bed}<div class="hotel-body"><b>${esc(c.hotel.name)}</b>
+              ${c.hotel.note ? `<div class="muted-text" style="font-size:.82rem">${esc(c.hotel.note)}</div>` : ''}</div>
+              <a class="map-link" href="${c.hotel.mapUrl ? esc(c.hotel.mapUrl) : mapsSearchUrl(c.hotel.name + ' ' + c.name)}" target="_blank" rel="noopener">${icons.map} الخريطة</a>
+              <button class="icon-btn" data-city-hotel="${c.id}">${icons.edit}</button></div>`
+          : `<button class="btn btn-ghost btn-sm city-add-hotel" data-city-hotel="${c.id}">${icons.bed} أضف السكن</button>`}
+        <div class="city-places">${placesHtml}</div>
+        <button class="btn btn-ghost btn-sm mt" data-add-place-city="${c.id}" style="width:100%">${icons.plus} أضف مكان في ${esc(c.name)}</button>
+      </div>`;
+  }).join('');
+
+  const orphan = t.places.filter(p => !p.cityId || !cities.find(c => c.id === p.cityId));
+  const orphanHtml = orphan.length ? `
+    <div class="city"><div class="city-head"><div class="city-title"><span class="city-idx">•</span>
+      <div class="city-name">بدون مدينة</div></div></div>
+      <div class="muted-text" style="font-size:.83rem;margin-bottom:8px">انقل هذه الأماكن لمدنها بحذفها وإضافتها داخل مدينة.</div>
+      <div class="city-places">${orphan.map((p, i) => placeCard(t, p, i)).join('')}</div></div>` : '';
 
   return `
-    <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.star}
-      <span>الأماكن + <b>تجارب الأعضاء</b> — كل واحد يضيف المكان وتقييمه وملاحظته، والباقي يستفيد.</span></div>
-    ${!hasKey ? `<div class="pay-note">${icons.info}
-      <span>للبحث السريع داخل التطبيق فعّل <b>مفتاح خرائط قوقل</b> من ${icons.gear} إعدادات الرحلة. بدونه يفتح البحث في قوقل ماب مباشرة.</span></div>` : ''}
-    <div class="section-head"><h2>الأماكن (${t.places.length})</h2></div>
-    ${list}
-    <button class="btn btn-primary btn-block mt" data-act="add-place">${icons.plus} إضافة مكان</button>`;
+    ${countdown}
+    ${flights}
+
+    <div class="section-head"><h2>تذكيرات التجهيز</h2><span class="hint">${doneCount}/${t.checklist.length}</span></div>
+    <div class="card card-pad"><div class="checklist">${checkHtml || '<p class="muted-text center">ما فيه تذكيرات.</p>'}</div>
+      <button class="btn btn-ghost btn-block mt" data-act="add-check">${icons.plus} أضف تذكير</button></div>
+
+    <div class="section-head"><h2>المدن والأماكن</h2><span class="hint">${cities.length} مدن</span></div>
+    ${cities.length ? citiesHtml : `<div class="empty">${icons.city}<h3>أضِف مدن الرحلة</h3><p>ضِف كل مدينة، وأضِف أماكنها داخلها.</p></div>`}
+    ${orphanHtml}
+    <button class="btn btn-primary btn-block mt" data-act="add-city">${icons.plus} إضافة مدينة</button>`;
 }
 
 /* =========================================================
@@ -643,8 +738,16 @@ function wire(t, tab) {
   on('[data-del-shared]', e => { db.removeSharedExpense(t.id, e.currentTarget.dataset.delShared); render(); });
   on('[data-pay]', e => { copyText(JSON.parse(e.currentTarget.dataset.pay)); toast('تم نسخ تفاصيل التحويل ✓'); });
 
-  // الأماكن + التجارب
-  on('[data-act="add-place"]', () => openPlace(t));
+  // الرحلة: المواعيد + التذكيرات + المدن + الأماكن
+  on('[data-act="edit-itin"]', () => openItinEdit(t));
+  on('[data-act="add-check"]', () => openAddCheck(t));
+  on('[data-check]', e => { db.toggleCheck(t.id, e.currentTarget.dataset.check); render(); });
+  on('[data-del-check]', e => { db.removeCheck(t.id, e.currentTarget.dataset.delCheck); render(); });
+  on('[data-act="add-city"]', () => openCity(t));
+  on('[data-edit-city]', e => openCity(t, e.currentTarget.dataset.editCity));
+  on('[data-del-city]', e => { db.removeCity(t.id, e.currentTarget.dataset.delCity); toast('تم حذف المدينة'); render(); });
+  on('[data-city-hotel]', e => openHotel(t, e.currentTarget.dataset.cityHotel));
+  on('[data-add-place-city]', e => openPlace(t, e.currentTarget.dataset.addPlaceCity));
   on('[data-visited]', e => { db.togglePlaceVisited(t.id, e.currentTarget.dataset.visited); render(); });
   on('[data-del-place]', e => { db.removePlace(t.id, e.currentTarget.dataset.delPlace); render(); });
   on('[data-add-review]', e => openReview(t, e.currentTarget.dataset.addReview));
@@ -1051,9 +1154,10 @@ async function osmSearch(q) {
   return res.json();
 }
 
-function openPlace(t) {
+function openPlace(t, cityId) {
+  const cityName = t.cities.find(c => c.id === cityId)?.name || '';
   openModal({
-    title: 'إضافة مكان',
+    title: cityName ? `إضافة مكان · ${cityName}` : 'إضافة مكان',
     body: `
       <div class="field"><label>ابحث عن المكان</label>
         <div class="ac-wrap">
@@ -1163,7 +1267,7 @@ function openPlace(t) {
     db.addPlace(t.id, {
       name: nm, note: $('#p-note').value,
       mapUrl: picked.mapUrl, placeId: picked.placeId,
-      lat: picked.lat, lng: picked.lng, address: picked.address,
+      lat: picked.lat, lng: picked.lng, address: picked.address, cityId: cityId || '',
     });
     closeModal(); render(); toast('تمت إضافة المكان ✓');
   };
@@ -1195,6 +1299,100 @@ function openReview(t, placeId) {
     db.addReview(t.id, placeId, { memberId: $('#rv-who').value, rating, note: $('#rv-note').value });
     closeModal(); render(); toast('تم نشر تجربتك ✓');
   };
+}
+
+/* مواعيد الطيران */
+function openItinEdit(t) {
+  const it = t.itinerary || {};
+  openModal({
+    title: 'مواعيد الرحلة',
+    body: `
+      <div class="field"><label>موعد المغادرة ✈️</label>
+        <input class="input" id="it-dep" type="datetime-local" value="${esc(it.departAt || '')}" dir="ltr"></div>
+      <div class="field"><label>رقم رحلة المغادرة <span class="hint">اختياري</span></label>
+        <input class="input" id="it-depf" value="${esc(it.departFlight || '')}" placeholder="مثال: SV 254" dir="ltr"></div>
+      <div class="divider"></div>
+      <div class="field"><label>موعد العودة 🛬</label>
+        <input class="input" id="it-ret" type="datetime-local" value="${esc(it.returnAt || '')}" dir="ltr"></div>
+      <div class="field"><label>رقم رحلة العودة <span class="hint">اختياري</span></label>
+        <input class="input" id="it-retf" value="${esc(it.returnFlight || '')}" placeholder="مثال: SV 255" dir="ltr"></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="it-save">${icons.check} حفظ</button>`,
+  });
+  $('#it-save').onclick = () => {
+    db.setItinerary(t.id, {
+      departAt: $('#it-dep').value, departFlight: $('#it-depf').value.trim(),
+      returnAt: $('#it-ret').value, returnFlight: $('#it-retf').value.trim(),
+    });
+    closeModal(); render(); toast('تم حفظ المواعيد ✓');
+  };
+}
+
+/* إضافة/تعديل مدينة */
+function openCity(t, cityId) {
+  const c = cityId ? t.cities.find(x => x.id === cityId) : null;
+  openModal({
+    title: c ? 'تعديل المدينة' : 'إضافة مدينة',
+    body: `
+      <div class="field"><label>اسم المدينة</label>
+        <input class="input" id="ct-name" value="${c ? esc(c.name) : ''}" placeholder="مثال: إسطنبول" autocomplete="off"></div>
+      <div class="two-col">
+        <div class="field"><label>من <span class="hint">اختياري</span></label>
+          <input class="input" id="ct-from" type="date" value="${c ? esc(c.fromDate || '') : ''}" dir="ltr"></div>
+        <div class="field"><label>إلى <span class="hint">اختياري</span></label>
+          <input class="input" id="ct-to" type="date" value="${c ? esc(c.toDate || '') : ''}" dir="ltr"></div>
+      </div>`,
+    footer: `<button class="btn btn-primary btn-block" id="ct-save">${c ? icons.check + ' حفظ' : icons.plus + ' إضافة'}</button>`,
+  });
+  $('#ct-name').focus();
+  $('#ct-save').onclick = () => {
+    const name = $('#ct-name').value.trim();
+    if (!name) { toast('اكتب اسم المدينة'); return; }
+    const data = { name, fromDate: $('#ct-from').value, toDate: $('#ct-to').value };
+    if (c) db.updateCity(t.id, c.id, data); else db.addCity(t.id, data);
+    closeModal(); render(); toast(c ? 'تم الحفظ ✓' : 'تمت إضافة المدينة ✓');
+  };
+}
+
+/* السكن لمدينة */
+function openHotel(t, cityId) {
+  const c = t.cities.find(x => x.id === cityId);
+  if (!c) return;
+  const h = c.hotel || {};
+  openModal({
+    title: `السكن · ${esc(c.name)}`,
+    body: `
+      <div class="field"><label>اسم السكن / الفندق</label>
+        <input class="input" id="ho-name" value="${esc(h.name || '')}" placeholder="مثال: فندق تقسيم" autocomplete="off"></div>
+      <div class="field"><label>ملاحظة <span class="hint">اختياري</span></label>
+        <input class="input" id="ho-note" value="${esc(h.note || '')}" placeholder="مثال: تسجيل الدخول ٣ عصرًا" autocomplete="off"></div>
+      <div class="field"><label>رابط الخريطة <span class="hint">اختياري</span></label>
+        <input class="input" id="ho-map" value="${esc(h.mapUrl || '')}" placeholder="الصق رابط الموقع" dir="ltr" autocomplete="off"></div>
+      ${h.name ? `<button class="btn btn-danger-ghost btn-block" id="ho-del">${icons.trash} إزالة السكن</button>` : ''}`,
+    footer: `<button class="btn btn-primary btn-block" id="ho-save">${icons.check} حفظ</button>`,
+  });
+  $('#ho-name').focus();
+  $('#ho-save').onclick = () => {
+    const name = $('#ho-name').value.trim();
+    if (!name) { toast('اكتب اسم السكن'); return; }
+    db.updateCity(t.id, cityId, { hotel: { name, note: $('#ho-note').value.trim(), mapUrl: $('#ho-map').value.trim() } });
+    closeModal(); render(); toast('تم حفظ السكن ✓');
+  };
+  const del = $('#ho-del');
+  if (del) del.onclick = () => { db.updateCity(t.id, cityId, { hotel: null }); closeModal(); render(); toast('تمت الإزالة'); };
+}
+
+/* إضافة تذكير */
+function openAddCheck(t) {
+  openModal({
+    title: 'تذكير جديد',
+    body: `<div class="field"><label>التذكير</label>
+      <input class="input" id="ck-text" placeholder="مثال: شحن باور بانك" autocomplete="off"></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="ck-save">${icons.plus} إضافة</button>`,
+  });
+  const inp = $('#ck-text'); inp.focus();
+  const save = () => { const v = inp.value.trim(); if (!v) { toast('اكتب التذكير'); return; } db.addCheck(t.id, v); closeModal(); render(); };
+  $('#ck-save').onclick = save;
+  inp.onkeydown = (e) => { if (e.key === 'Enter') save(); };
 }
 
 /* =========================================================
