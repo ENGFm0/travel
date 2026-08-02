@@ -1,5 +1,5 @@
-/* رِفقة — Service Worker (تخزين مؤقت للعمل دون اتصال) */
-const CACHE = 'rifqa-v2';
+/* بوردنق — Service Worker (تخزين مؤقت للعمل دون اتصال) */
+const CACHE = 'boarding-v3';
 const ASSETS = [
   './',
   './index.html',

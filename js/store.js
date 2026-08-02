@@ -3,7 +3,7 @@
    نموذج: قطة القروب (صندوق مشترك) + ميزانية شخصية + قطة بين شخصين
    ========================================================= */
 
-const KEY = 'rifqa.data.v2';
+const KEY = 'rifqa.data.v2'; // مفتاح التخزين — يبقى ثابتًا للحفاظ على البيانات المحفوظة
 
 const AVATAR_COLORS = [
   '#0e4d54', '#c8873f', '#2f8f5b', '#5b6ec8', '#b0568f',
@@ -32,7 +32,7 @@ function load() {
   }
 }
 
-/* ترحيل: «قطة بين شخصين» (paidBy+withId) → مشاركة بين أشخاص (participants[]) */
+/* ترحيل البيانات القديمة للشكل الجديد */
 function migrate(st) {
   st.trips.forEach(t => {
     if (!t.sharedExpenses) {
@@ -44,6 +44,7 @@ function migrate(st) {
       }));
       delete t.pairExpenses;
     }
+    (t.places || []).forEach(p => { if (!p.reviews) p.reviews = []; });
   });
   return st;
 }
@@ -249,10 +250,14 @@ export function removeSharedExpense(tripId, id) {
 
 /* ---------------- الأماكن ---------------- */
 
-export function addPlace(tripId, { name, note, mapUrl }) {
+export function addPlace(tripId, { name, note, mapUrl, placeId, lat, lng, address }) {
   const t = getTrip(tripId);
   if (!t) return null;
-  const p = { id: uid('pl'), name: name.trim(), note: (note || '').trim(), mapUrl: (mapUrl || '').trim(), visited: false };
+  const p = {
+    id: uid('pl'), name: name.trim(), note: (note || '').trim(),
+    mapUrl: (mapUrl || '').trim(), placeId: placeId || '', address: (address || '').trim(),
+    lat: lat ?? null, lng: lng ?? null, visited: false, reviews: [],
+  };
   t.places.push(p);
   persist();
   return p;
@@ -268,6 +273,25 @@ export function removePlace(tripId, placeId) {
   const t = getTrip(tripId);
   if (!t) return;
   t.places = t.places.filter(p => p.id !== placeId);
+  persist();
+}
+
+/* تجارب الأعضاء على الأماكن */
+export function addReview(tripId, placeId, { memberId, rating, note }) {
+  const t = getTrip(tripId);
+  const p = t?.places.find(x => x.id === placeId);
+  if (!p) return null;
+  const r = { id: uid('rv'), memberId, rating: Number(rating) || 0, note: (note || '').trim(), createdAt: Date.now() };
+  p.reviews.push(r);
+  if (memberId) p.visited = true; // من كتب تجربة فقد زارها
+  persist();
+  return r;
+}
+export function removeReview(tripId, placeId, reviewId) {
+  const t = getTrip(tripId);
+  const p = t?.places.find(x => x.id === placeId);
+  if (!p) return;
+  p.reviews = p.reviews.filter(r => r.id !== reviewId);
   persist();
 }
 

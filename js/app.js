@@ -1,5 +1,5 @@
 /* =========================================================
-   app.js — رِفقة: قطة القروب + الميزانية الشخصية + قطة بين شخصين
+   app.js — بوردنق: قطة القروب + الميزانية الشخصية + القطّات المشتركة + تجارب الأماكن
    ========================================================= */
 import * as db from './store.js';
 import { poolStats, memberBudget, sharedNet, settleShared } from './settle.js';
@@ -50,6 +50,32 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 function copyText(text) { navigator.clipboard?.writeText?.(text).catch(() => {}); }
+
+/* ---------------- خرائط قوقل (بحث حي عبر Places API) ---------------- */
+const MAPS_KEY_LS = 'boarding.mapsKey';
+function getMapsKey() { try { return localStorage.getItem(MAPS_KEY_LS) || ''; } catch { return ''; } }
+function setMapsKey(k) { try { k && k.trim() ? localStorage.setItem(MAPS_KEY_LS, k.trim()) : localStorage.removeItem(MAPS_KEY_LS); } catch {} }
+
+let _mapsPromise = null;
+function loadMaps() {
+  if (window.google?.maps?.places) return Promise.resolve(true);
+  const key = getMapsKey();
+  if (!key) return Promise.reject(new Error('no-key'));
+  if (_mapsPromise) return _mapsPromise;
+  _mapsPromise = new Promise((resolve, reject) => {
+    window.__boardingMapsReady = () => resolve(true);
+    const s = document.createElement('script');
+    s.async = true;
+    s.onerror = () => { _mapsPromise = null; reject(new Error('load-failed')); };
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&language=ar&loading=async&callback=__boardingMapsReady`;
+    document.head.appendChild(s);
+  });
+  return _mapsPromise;
+}
+const mapsSearchUrl = (q) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+const mapsPlaceUrl = (q, placeId) => placeId
+  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}&query_place_id=${encodeURIComponent(placeId)}`
+  : mapsSearchUrl(q);
 
 /* ---------------- التنقّل ---------------- */
 const R = { tripId: null, tab: 'budget' };
@@ -331,26 +357,64 @@ function sharedSection(t) {
 }
 
 /* ---------------- تبويب: الأماكن ---------------- */
+function stars(n, size) {
+  const s = size || 14;
+  let out = '<span class="stars" style="--sz:' + s + 'px">';
+  for (let i = 1; i <= 5; i++) out += `<span class="star ${i <= n ? 'on' : ''}">${icons.star}</span>`;
+  return out + '</span>';
+}
+function avgRating(p) {
+  const rs = (p.reviews || []).filter(r => r.rating > 0);
+  if (!rs.length) return 0;
+  return Math.round((rs.reduce((s, r) => s + r.rating, 0) / rs.length) * 10) / 10;
+}
+
 function tabPlaces(t) {
   const amir = db.memberById(t, t.amirId);
-  const list = t.places.length ? t.places.map((p, i) => `
+
+  const list = t.places.length ? t.places.map((p, i) => {
+    const avg = avgRating(p);
+    const reviews = (p.reviews || []).slice().sort((a, c) => c.createdAt - a.createdAt);
+    const reviewsHtml = reviews.map(r => {
+      const m = db.memberById(t, r.memberId);
+      return `<div class="review">
+        ${m ? avatar(m, 30) : ''}
+        <div class="review-body">
+          <div class="review-head"><b>${m ? esc(m.name) : 'عضو'}</b> ${r.rating ? stars(r.rating, 12) : ''}</div>
+          ${r.note ? `<div class="review-note">${esc(r.note)}</div>` : ''}
+        </div>
+        <button class="icon-btn danger" data-del-review="${p.id}|${r.id}">${icons.trash}</button>
+      </div>`;
+    }).join('');
+
+    return `
     <div class="place">
       <span class="place-idx">${i + 1}</span>
-      <div class="place-body"><div class="place-name">${esc(p.name)}</div>
-        ${p.note ? `<div class="place-note">${esc(p.note)}</div>` : ''}
+      <div class="place-body">
+        <div class="place-name">${esc(p.name)}
+          ${avg ? `<span class="rating-pill">${icons.star} ${avg} <small>(${reviews.length})</small></span>` : ''}</div>
+        ${p.address ? `<div class="place-note">${esc(p.address)}</div>` : (p.note ? `<div class="place-note">${esc(p.note)}</div>` : '')}
         <div class="place-links">
-          <a class="map-link" href="${p.mapUrl ? esc(p.mapUrl) : mapsSearch((p.name + ' ' + (t.destination || '')).trim())}" target="_blank" rel="noopener">${icons.map} افتح في قوقل ماب</a>
+          <a class="map-link" href="${p.mapUrl ? esc(p.mapUrl) : mapsPlaceUrl((p.name + ' ' + (t.destination || '')).trim(), p.placeId)}" target="_blank" rel="noopener">${icons.map} افتح في قوقل ماب</a>
           <button class="map-link" style="background:${p.visited ? 'var(--green-bg)' : '#eef1f0'};color:${p.visited ? 'var(--green)' : 'var(--ink-500)'}" data-visited="${p.id}">
             ${icons.check} ${p.visited ? 'تمّت الزيارة' : 'لم تُزَر'}</button>
-        </div></div>
+        </div>
+        ${reviews.length ? `<div class="reviews">${reviewsHtml}</div>` : ''}
+        <button class="btn btn-ghost btn-sm mt" data-add-review="${p.id}" style="width:100%">${icons.star} أضف تجربتك</button>
+      </div>
       <button class="icon-btn danger" data-del-place="${p.id}">${icons.trash}</button>
-    </div>`).join('') : `<div class="empty">${icons.pin}<h3>لا توجد أماكن</h3>
-      <p>${amir ? esc(amir.name) + ' (أمير الرحلة) يحدّد الأماكن من قوقل ماب.' : 'حدّد أمير الرحلة أولًا.'}</p></div>`;
+    </div>`;
+  }).join('') : `<div class="empty">${icons.pin}<h3>لا توجد أماكن</h3>
+      <p>ابحث عن الأماكن وأضِفها، وشارك تجربتك معها.</p></div>`;
+
+  const hasKey = !!getMapsKey();
 
   return `
-    <div class="pay-note" style="background:var(--sand-100);color:var(--sand-600)">${icons.crown}
-      <span>${amir ? `<b>${esc(amir.name)}</b> أمير الرحلة — هو من يحدّد الأماكن.` : 'حدّد أمير الرحلة من تبويب «القطة».'}</span></div>
-    <div class="section-head"><h2>الوجهات (${t.places.length})</h2></div>
+    <div class="pay-note" style="background:var(--teal-050);color:var(--teal-800)">${icons.star}
+      <span>الأماكن + <b>تجارب الأعضاء</b> — كل واحد يضيف المكان وتقييمه وملاحظته، والباقي يستفيد.</span></div>
+    ${!hasKey ? `<div class="pay-note">${icons.info}
+      <span>للبحث السريع داخل التطبيق فعّل <b>مفتاح خرائط قوقل</b> من ${icons.gear} إعدادات الرحلة. بدونه يفتح البحث في قوقل ماب مباشرة.</span></div>` : ''}
+    <div class="section-head"><h2>الأماكن (${t.places.length})</h2></div>
     ${list}
     <button class="btn btn-primary btn-block mt" data-act="add-place">${icons.plus} إضافة مكان</button>`;
 }
@@ -385,10 +449,15 @@ function wire(t, tab) {
   on('[data-del-shared]', e => { db.removeSharedExpense(t.id, e.currentTarget.dataset.delShared); render(); });
   on('[data-pay]', e => { copyText(JSON.parse(e.currentTarget.dataset.pay)); toast('تم نسخ تفاصيل التحويل ✓'); });
 
-  // الأماكن
+  // الأماكن + التجارب
   on('[data-act="add-place"]', () => openPlace(t));
   on('[data-visited]', e => { db.togglePlaceVisited(t.id, e.currentTarget.dataset.visited); render(); });
   on('[data-del-place]', e => { db.removePlace(t.id, e.currentTarget.dataset.delPlace); render(); });
+  on('[data-add-review]', e => openReview(t, e.currentTarget.dataset.addReview));
+  on('[data-del-review]', e => {
+    const [pid, rid] = e.currentTarget.dataset.delReview.split('|');
+    db.removeReview(t.id, pid, rid); render();
+  });
 }
 
 /* =========================================================
@@ -482,6 +551,10 @@ function openSettings(t) {
           <input class="input" id="s-rate" type="number" step="0.0001" min="0" value="${t.rate}" dir="ltr" style="max-width:130px">
           <b id="sl-dest">${curLabel(t.destCurrency)}</b></div></div>
       <div class="divider"></div>
+      <div class="field"><label>مفتاح خرائط قوقل <span class="hint">للبحث السريع داخل التطبيق</span></label>
+        <input class="input" id="s-mapskey" value="${esc(getMapsKey())}" placeholder="AIza..." dir="ltr" autocomplete="off">
+        <span class="hint">فعّل Maps JavaScript API + Places API في Google Cloud، وقيّد المفتاح بنطاق موقعك. يُحفظ على جهازك فقط.</span></div>
+      <div class="divider"></div>
       <button class="btn btn-danger-ghost btn-block" id="s-del">${icons.trash} حذف الرحلة</button>`,
     footer: `<button class="btn btn-primary btn-block" id="s-save">${icons.check} حفظ</button>`,
   });
@@ -489,6 +562,7 @@ function openSettings(t) {
   const sync = () => { $('#sl-home').textContent = curLabel(home.value); $('#sl-dest').textContent = curLabel(dcur.value); };
   home.onchange = sync; dcur.onchange = sync;
   $('#s-save').onclick = () => {
+    setMapsKey($('#s-mapskey').value);
     db.updateTrip(t.id, {
       destination: $('#s-dest').value.trim() || t.destination,
       country: $('#s-country').value.trim(),
@@ -741,32 +815,125 @@ function openExpense(t, kind) {
   };
 }
 
-/* مكان — بحث في قوقل ماب (بدون لصق روابط) */
-function mapsSearch(query) {
-  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query);
-}
+/* مكان — بحث حي عبر خرائط قوقل (مع تراجع لبحث خارجي) */
 function openPlace(t) {
   openModal({
     title: 'إضافة مكان',
     body: `
       <div class="field"><label>ابحث عن المكان</label>
-        <div class="input-group">
-          <input class="input" id="p-name" placeholder="مثال: بحيرة أوزنجول" autocomplete="off">
-          <a class="btn btn-ghost" id="p-search" target="_blank" rel="noopener" href="#">${icons.map} بحث</a>
+        <div class="ac-wrap">
+          <span class="ac-icon">${icons.search}</span>
+          <input class="input ac-input" id="p-name" placeholder="مثال: بحيرة أوزنجول" autocomplete="off">
+          <div class="ac-list" id="p-ac"></div>
         </div>
-        <span class="hint">اكتب الاسم واضغط «بحث» ليفتح في قوقل ماب مباشرة، وبعد الحفظ يصير له زر خريطة.</span></div>
+        <span class="hint" id="p-hint"></span></div>
       <div class="field"><label>ملاحظة <span class="hint">اختياري</span></label>
-        <input class="input" id="p-note" placeholder="مثال: زيارتها صباحًا" autocomplete="off"></div>`,
+        <input class="input" id="p-note" placeholder="مثال: أفضل وقت الزيارة الصباح" autocomplete="off"></div>
+      <a class="btn btn-ghost btn-block" id="p-open" target="_blank" rel="noopener" href="#" style="display:none">${icons.map} افتح البحث في قوقل ماب</a>`,
     footer: `<button class="btn btn-primary btn-block" id="p-save">${icons.plus} إضافة</button>`,
   });
-  const name = $('#p-name'), search = $('#p-search');
-  const upd = () => { search.href = mapsSearch(((name.value || '').trim() + ' ' + (t.destination || '')).trim()); };
-  name.oninput = upd; upd(); name.focus();
+
+  const name = $('#p-name'), acList = $('#p-ac'), hint = $('#p-hint'), openBtn = $('#p-open');
+  const picked = { placeId: '', mapUrl: '', lat: null, lng: null, address: '' };
+  const clearPick = () => { picked.placeId = ''; picked.mapUrl = ''; picked.lat = picked.lng = null; picked.address = ''; };
+
+  const hasKey = !!getMapsKey();
+  let svc = null, placesSvc = null, debounce;
+
+  function fallbackLink() {
+    const q = ((name.value || '').trim() + ' ' + (t.destination || '')).trim();
+    openBtn.href = mapsSearchUrl(q);
+    openBtn.style.display = name.value.trim() ? 'flex' : 'none';
+  }
+
+  if (hasKey) {
+    hint.textContent = 'اكتب واختر من نتائج قوقل ماب.';
+    loadMaps().then(() => {
+      svc = new google.maps.places.AutocompleteService();
+      placesSvc = new google.maps.places.PlacesService(document.createElement('div'));
+    }).catch(() => { hint.textContent = 'تعذّر تحميل خرائط قوقل — تأكد من المفتاح. سيُفتح البحث خارجيًا.'; fallbackLink(); });
+  } else {
+    hint.textContent = 'فعّل مفتاح خرائط قوقل من الإعدادات للبحث داخل التطبيق. حاليًا يفتح البحث خارجيًا.';
+    fallbackLink();
+  }
+
+  function renderPreds(preds) {
+    if (!preds || !preds.length) { acList.innerHTML = ''; acList.classList.remove('open'); return; }
+    acList.innerHTML = preds.slice(0, 6).map(pr => `
+      <button type="button" class="ac-item" data-pid="${esc(pr.place_id)}" data-main="${esc(pr.structured_formatting?.main_text || pr.description)}">
+        <span class="ac-pin">${icons.pin}</span>
+        <span class="ac-txt"><b>${esc(pr.structured_formatting?.main_text || pr.description)}</b>
+          <small>${esc(pr.structured_formatting?.secondary_text || '')}</small></span>
+      </button>`).join('');
+    acList.classList.add('open');
+    acList.querySelectorAll('.ac-item').forEach(b => b.onclick = () => choose(b.dataset.pid, b.dataset.main));
+  }
+
+  function choose(placeId, mainText) {
+    acList.innerHTML = ''; acList.classList.remove('open');
+    name.value = mainText;
+    if (!placesSvc) return;
+    placesSvc.getDetails({ placeId, fields: ['name', 'geometry', 'formatted_address', 'url'] }, (d, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && d) {
+        picked.placeId = placeId;
+        picked.address = d.formatted_address || '';
+        picked.mapUrl = d.url || mapsPlaceUrl(d.name || mainText, placeId);
+        picked.lat = d.geometry?.location?.lat?.() ?? null;
+        picked.lng = d.geometry?.location?.lng?.() ?? null;
+        if (d.name) name.value = d.name;
+        hint.textContent = picked.address || 'تم اختيار المكان ✓';
+      }
+    });
+  }
+
+  name.oninput = () => {
+    clearPick(); fallbackLink();
+    const q = name.value.trim();
+    if (!svc || q.length < 2) { acList.innerHTML = ''; acList.classList.remove('open'); return; }
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      svc.getPlacePredictions({ input: q }, renderPreds);
+    }, 220);
+  };
+  name.focus();
+
   $('#p-save').onclick = () => {
     const nm = name.value.trim();
     if (!nm) { toast('اكتب اسم المكان'); return; }
-    db.addPlace(t.id, { name: nm, note: $('#p-note').value, mapUrl: '' });
+    db.addPlace(t.id, {
+      name: nm, note: $('#p-note').value,
+      mapUrl: picked.mapUrl, placeId: picked.placeId,
+      lat: picked.lat, lng: picked.lng, address: picked.address,
+    });
     closeModal(); render(); toast('تمت إضافة المكان ✓');
+  };
+}
+
+/* تجربة عضو على مكان */
+function openReview(t, placeId) {
+  const place = t.places.find(p => p.id === placeId);
+  if (!place) return;
+  const me = db.memberById(t, t.currentMemberId) || db.memberById(t, t.amirId);
+  const memberOpts = t.members.map(m => `<option value="${m.id}" ${m.id === me?.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
+  let rating = 5;
+  openModal({
+    title: `تجربتك · ${esc(place.name)}`,
+    body: `
+      <div class="field"><label>باسم مين؟</label>
+        <div class="select-wrap">${icons.chevron}<select class="select" id="rv-who">${memberOpts}</select></div></div>
+      <div class="field"><label>تقييمك</label>
+        <div class="star-pick" id="rv-stars">${[1, 2, 3, 4, 5].map(i => `<button type="button" class="star-btn ${i <= rating ? 'on' : ''}" data-star="${i}">${icons.star}</button>`).join('')}</div></div>
+      <div class="field"><label>ملاحظتك / تجربتك <span class="hint">اختياري</span></label>
+        <textarea class="input" id="rv-note" placeholder="مثال: المكان يستاهل الزيارة، روحوا الصباح وتجنّبوا الزحمة"></textarea></div>`,
+    footer: `<button class="btn btn-primary btn-block" id="rv-save">${icons.check} نشر التجربة</button>`,
+  });
+  modalRoot.querySelectorAll('[data-star]').forEach(b => b.onclick = () => {
+    rating = +b.dataset.star;
+    modalRoot.querySelectorAll('[data-star]').forEach(x => x.classList.toggle('on', +x.dataset.star <= rating));
+  });
+  $('#rv-save').onclick = () => {
+    db.addReview(t.id, placeId, { memberId: $('#rv-who').value, rating, note: $('#rv-note').value });
+    closeModal(); render(); toast('تم نشر تجربتك ✓');
   };
 }
 

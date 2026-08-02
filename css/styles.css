@@ -1,5 +1,5 @@
 /* =========================================================
-   رِفقة — Design System
+   بوردنق — Design System
    نظيف، بأسلوب سفر حقيقي. لا تدرّجات "ذكاء اصطناعي" ولا أيقونات غريبة.
    ========================================================= */
 
@@ -429,3 +429,46 @@ textarea.input { resize: vertical; min-height: 72px; }
 .shared-block { margin-top: 30px; padding-top: 22px; border-top: 2px dashed var(--line); }
 .shared-block .section-head:first-child { margin-top: 0; }
 .input-group .btn { flex: 0 0 auto; }
+
+/* ---------- بحث الأماكن الحي (Autocomplete) ---------- */
+.ac-wrap { position: relative; }
+.ac-icon { position: absolute; inset-inline-start: 12px; top: 13px; width: 18px; height: 18px; color: var(--ink-300); pointer-events: none; }
+.ac-icon svg { width: 18px; height: 18px; }
+.ac-input { padding-inline-start: 40px; }
+.ac-list {
+  position: absolute; inset-inline: 0; top: calc(100% + 6px); z-index: 20;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  overflow: hidden; display: none;
+}
+.ac-list.open { display: block; }
+.ac-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: start; padding: 11px 12px; border-bottom: 1px solid var(--line); }
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover { background: var(--teal-050); }
+.ac-pin { color: var(--teal-700); flex-shrink: 0; }
+.ac-pin svg { width: 18px; height: 18px; }
+.ac-txt { display: flex; flex-direction: column; min-width: 0; }
+.ac-txt b { font-weight: 700; font-size: .92rem; }
+.ac-txt small { color: var(--ink-500); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- التقييم بالنجوم ---------- */
+.stars { display: inline-flex; gap: 1px; vertical-align: middle; }
+.star { width: var(--sz, 14px); height: var(--sz, 14px); color: var(--line); }
+.star svg { width: 100%; height: 100%; }
+.star.on { color: var(--sand-500); }
+.star.on svg { fill: var(--sand-500); }
+.rating-pill { display: inline-flex; align-items: center; gap: 3px; font-size: .78rem; font-weight: 800; color: var(--sand-600); background: var(--sand-100); padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
+.rating-pill svg { width: 13px; height: 13px; fill: var(--sand-500); }
+.rating-pill small { font-weight: 700; color: var(--ink-300); }
+
+.star-pick { display: flex; gap: 6px; }
+.star-btn { width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); color: var(--line); display: grid; place-items: center; }
+.star-btn svg { width: 24px; height: 24px; }
+.star-btn.on { color: var(--sand-500); border-color: var(--sand-500); background: var(--sand-100); }
+.star-btn.on svg { fill: var(--sand-500); }
+
+/* ---------- تجارب الأعضاء ---------- */
+.reviews { margin-top: 12px; display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.review { display: flex; align-items: flex-start; gap: 10px; }
+.review-body { flex: 1; min-width: 0; }
+.review-head { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+.review-note { font-size: .86rem; color: var(--ink-700); margin-top: 3px; line-height: 1.5; }
