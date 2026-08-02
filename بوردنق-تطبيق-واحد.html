@@ -992,9 +992,14 @@ function toast(msg) {
 }
 function copyText(text) { navigator.clipboard?.writeText?.(text).catch(() => {}); }
 
-/* ---------------- خرائط قوقل (بحث حي عبر Places API) ---------------- */
+/* ---------------- خرائط قوقل (بحث حي عبر Places API) ----------------
+   المفتاح الافتراضي مدمج للعمل مباشرة على الموقع.
+   مفتاح خرائط قوقل client-side علنيّ بطبيعته — حمايته بتقييد النطاق (HTTP referrers)
+   من Google Cloud، وليس بإخفائه. يمكن لكل جهاز تجاوزه من الإعدادات.
+--------------------------------------------------------------------- */
 const MAPS_KEY_LS = 'boarding.mapsKey';
-function getMapsKey() { try { return localStorage.getItem(MAPS_KEY_LS) || ''; } catch { return ''; } }
+const DEFAULT_MAPS_KEY = 'AIzaSyBaJPU21zfuupnhP6HLIApc7fhb_UkbnPs';
+function getMapsKey() { try { return localStorage.getItem(MAPS_KEY_LS) || DEFAULT_MAPS_KEY; } catch { return DEFAULT_MAPS_KEY; } }
 function setMapsKey(k) { try { k && k.trim() ? localStorage.setItem(MAPS_KEY_LS, k.trim()) : localStorage.removeItem(MAPS_KEY_LS); } catch {} }
 
 let _mapsPromise = null;
