@@ -249,7 +249,7 @@ function render() {
 function renderSplash() {
   headerActions.innerHTML = '';
   view.innerHTML = `<div class="splash">
-    <div class="splash-mark">${icons.pin}</div>
+    <div class="splash-mark">${icons.logo}</div>
     <div class="splash-name">بوردنق</div>
     <div class="splash-dots"><span></span><span></span><span></span></div>
   </div>`;
@@ -265,7 +265,7 @@ function renderAuth() {
   view.innerHTML = `
     <div class="auth">
       <div class="auth-hero">
-        <div class="auth-logo">${icons.pin}</div>
+        <div class="auth-logo">${icons.logo}</div>
         <h1>بوردنق</h1>
         <p>${pendingJoin ? 'انضم لرحلة القروب — سجّل دخولك أو أنشئ حساباً أولاً.' : 'نظّم رحلة القروب: القطة، المصاريف، الأماكن — بمكان واحد.'}</p>
       </div>

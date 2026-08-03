@@ -47,6 +47,7 @@ export const icons = {
   camera: svg('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/>'),
   images: svg('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L7 20"/>'),
   play: svg('<circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4Z" fill="currentColor"/>'),
+  logo: svg('<path d="M22 3 2 10.5l7 2.5m13-10-9 18-4-8m13-10-9 8"/>'),
 
   // فئات المصاريف
   cat_flight: svg('<path d="M17.8 19.2 16 11l3.5-3.5a2 2 0 1 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7l4.4 3.9-2 2.3-2.6-.4-.9 1.1 3 1.4 1.4 3 1.1-.9-.4-2.6 2.3-2 3.9 4.4a1 1 0 0 0 1.7-.9Z"/>'),

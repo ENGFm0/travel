@@ -39,7 +39,7 @@ const bodyMarkup = `
       <button class="brand" id="brandBtn" aria-label="الرئيسية">
         <span class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <path d="M22 3 2 10.5l7 2.5m13-10-9 18-4-8m13-10-9 8"></path></svg>
         </span><span class="brand-name">بوردنق</span>
       </button>
       <div class="header-actions" id="headerActions"></div>
