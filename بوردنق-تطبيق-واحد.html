@@ -3021,100 +3021,117 @@ function openPlace(t, cityId) {
   });
 
   const name = $('#p-name'), acList = $('#p-ac'), hint = $('#p-hint'), openBtn = $('#p-open'), preview = $('#p-preview');
-  let googleDenied = '';
   const picked = { placeId: '', mapUrl: '', lat: null, lng: null, address: '', rating: null, ratingsTotal: null, photos: [], priceLevel: null, phone: '', website: '' };
   const clearPick = () => {
     Object.assign(picked, { placeId: '', mapUrl: '', lat: null, lng: null, address: '', rating: null, ratingsTotal: null, photos: [], priceLevel: null, phone: '', website: '' });
     preview.innerHTML = ''; preview.classList.remove('show');
   };
-  let gsvc = null, placesSvc = null, debounce, reqId = 0;
-
-  // حمّل خرائط قوقل بصمت (إن توفّر مفتاح صالح)
-  loadMaps().then(() => {
-    gsvc = new google.maps.places.AutocompleteService();
-    placesSvc = new google.maps.places.PlacesService(document.createElement('div'));
-  }).catch(() => {});
+  let debounce, reqId = 0, googleReady = false;
+  loadMaps().then(() => { googleReady = !!(window.google?.maps?.places); }).catch(() => { googleReady = false; });
 
   const showOpenBtn = (show) => {
     openBtn.style.display = show && name.value.trim() ? 'flex' : 'none';
     if (show) openBtn.href = mapsSearchUrl((name.value.trim() + ' ' + (t.destination || '')).trim());
   };
   const clearList = () => { acList.innerHTML = ''; acList.classList.remove('open'); };
+  const priceStr = (lvl) => lvl == null ? '' : ('$$$$'.slice(0, Math.max(1, lvl)) || '$');
+  const NEW_PRICE = { PRICE_LEVEL_FREE: 0, PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2, PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4, INEXPENSIVE: 1, MODERATE: 2, EXPENSIVE: 3, VERY_EXPENSIVE: 4 };
 
-  // نتائج قوقل
-  function renderGoogle(preds) {
-    acList.innerHTML = preds.slice(0, 6).map(pr => `
-      <button type="button" class="ac-item" data-pid="${esc(pr.place_id)}" data-main="${esc(pr.structured_formatting?.main_text || pr.description)}">
-        <span class="ac-pin">${icons.pin}</span>
-        <span class="ac-txt"><b>${esc(pr.structured_formatting?.main_text || pr.description)}</b>
-          <small>${esc(pr.structured_formatting?.secondary_text || '')}</small></span></button>`).join('');
-    acList.classList.add('open'); showOpenBtn(false);
-    acList.querySelectorAll('.ac-item').forEach(b => b.onclick = () => chooseGoogle(b.dataset.pid, b.dataset.main));
-  }
-  function chooseGoogle(placeId, mainText) {
-    clearList(); name.value = mainText; showOpenBtn(false);
-    hint.textContent = 'جارٍ جلب التقييم والصور…';
-    if (!placesSvc) return;
-    placesSvc.getDetails({
-      placeId,
-      fields: ['name', 'geometry', 'formatted_address', 'url', 'rating', 'user_ratings_total',
-        'photos', 'price_level', 'opening_hours', 'international_phone_number', 'website', 'reviews'],
-    }, (d, status) => {
-      if (status !== google.maps.places.PlacesServiceStatus.OK || !d) { hint.textContent = 'تعذّر جلب التفاصيل.'; return; }
-      picked.placeId = placeId;
-      picked.address = d.formatted_address || '';
-      picked.mapUrl = d.url || mapsPlaceUrl(d.name || mainText, placeId);
-      picked.lat = d.geometry?.location?.lat?.() ?? null;
-      picked.lng = d.geometry?.location?.lng?.() ?? null;
-      picked.rating = typeof d.rating === 'number' ? d.rating : null;
-      picked.ratingsTotal = d.user_ratings_total ?? null;
-      picked.priceLevel = typeof d.price_level === 'number' ? d.price_level : null;
-      picked.phone = d.international_phone_number || '';
-      picked.website = d.website || '';
-      picked.photos = (d.photos || []).slice(0, 8).map(ph => { try { return ph.getUrl({ maxWidth: 640, maxHeight: 640 }); } catch { return ''; } }).filter(Boolean);
-      if (d.name) name.value = d.name;
-      hint.textContent = picked.address || 'تم اختيار المكان ✓';
-      renderPreview(d);
+  function applyDetails(d) {
+    Object.assign(picked, {
+      placeId: d.placeId || '', address: d.address || '', mapUrl: d.mapUrl || '',
+      lat: d.lat ?? null, lng: d.lng ?? null, rating: d.rating ?? null, ratingsTotal: d.ratingsTotal ?? null,
+      photos: d.photos || [], priceLevel: d.priceLevel ?? null, phone: d.phone || '', website: d.website || '',
     });
+    if (d.name) name.value = d.name;
+    hint.textContent = d.address || 'تم اختيار المكان ✓';
+    renderPreview(d);
   }
-
-  function priceStr(lvl) { return lvl == null ? '' : ('$$$$'.slice(0, Math.max(1, lvl)) || '$'); }
   function renderPreview(d) {
-    const openNow = d.opening_hours?.isOpen ? (d.opening_hours.isOpen() ? '<span class="gm-open">مفتوح الآن</span>' : '<span class="gm-closed">مغلق الآن</span>') : '';
-    const rev = (d.reviews || [])[0];
+    const hasG = d.source === 'google';
     preview.innerHTML = `
-      ${picked.photos.length ? `<div class="gm-photos">${picked.photos.map(u => `<img src="${esc(u)}" loading="lazy" alt="">`).join('')}</div>` : ''}
+      ${(d.photos || []).length ? `<div class="gm-photos">${d.photos.map(u => `<img src="${esc(u)}" loading="lazy" alt="">`).join('')}</div>` : ''}
       <div class="gm-info">
         <div class="gm-title">${esc(d.name || name.value)}</div>
         <div class="gm-meta">
-          ${picked.rating != null ? `<span class="gm-rate">${icons.star} ${picked.rating} <small>(${(picked.ratingsTotal || 0).toLocaleString('en')})</small></span>` : '<span class="muted-text">لا يوجد تقييم</span>'}
-          ${picked.priceLevel != null ? `<span class="gm-price">${priceStr(picked.priceLevel)}</span>` : ''}
-          ${openNow}
+          ${d.rating != null ? `<span class="gm-rate">${icons.star} ${d.rating} <small>(${(d.ratingsTotal || 0).toLocaleString('en')})</small></span>` : (hasG ? '<span class="muted-text">لا يوجد تقييم</span>' : '')}
+          ${d.priceLevel != null ? `<span class="gm-price">${priceStr(d.priceLevel)}</span>` : ''}
         </div>
-        ${d.formatted_address ? `<div class="gm-addr">${esc(d.formatted_address)}</div>` : ''}
-        ${rev ? `<div class="gm-review">“${esc((rev.text || '').slice(0, 140))}${(rev.text || '').length > 140 ? '…' : ''}” — ${esc(rev.author_name || '')} ${rev.rating ? stars(rev.rating, 11) : ''}</div>` : ''}
-        <a class="gm-open-link" href="${esc(picked.mapUrl)}" target="_blank" rel="noopener">${icons.external} صفحة المكان في قوقل ماب</a>
+        ${d.address ? `<div class="gm-addr">${esc(d.address)}</div>` : ''}
+        ${d.reviewTop ? `<div class="gm-review">“${esc((d.reviewTop.text || '').slice(0, 140))}${(d.reviewTop.text || '').length > 140 ? '…' : ''}” — ${esc(d.reviewTop.author || '')} ${d.reviewTop.rating ? stars(d.reviewTop.rating, 11) : ''}</div>` : ''}
+        ${d.mapUrl ? `<a class="gm-open-link" href="${esc(d.mapUrl)}" target="_blank" rel="noopener">${icons.external} صفحة المكان في قوقل ماب</a>` : ''}
       </div>`;
     preview.classList.add('show');
   }
-
-  // نتائج OpenStreetMap
-  function renderOSM(results) {
-    acList.innerHTML = results.slice(0, 6).map((r, i) => {
-      const main = (r.name && r.name.trim()) || r.display_name.split('،')[0].split(',')[0];
-      return `<button type="button" class="ac-item" data-i="${i}">
+  function renderList(items) {
+    acList.innerHTML = items.map((it, i) => `
+      <button type="button" class="ac-item" data-i="${i}">
         <span class="ac-pin">${icons.pin}</span>
-        <span class="ac-txt"><b>${esc(main)}</b><small>${esc(r.display_name)}</small></span></button>`;
-    }).join('');
+        <span class="ac-txt"><b>${esc(it.main)}</b><small>${esc(it.secondary || '')}</small></span></button>`).join('');
     acList.classList.add('open'); showOpenBtn(false);
-    acList.querySelectorAll('.ac-item').forEach(b => b.onclick = () => {
-      const r = results[+b.dataset.i];
+    acList.querySelectorAll('.ac-item').forEach(b => b.onclick = async () => {
+      const it = items[+b.dataset.i];
+      clearList(); name.value = it.main; hint.textContent = 'جارٍ جلب التفاصيل…';
+      try { applyDetails(await it.pick()); } catch { hint.textContent = 'تعذّر جلب التفاصيل.'; }
+    });
+  }
+
+  // مزوّد قوقل: الواجهة الجديدة (New) ← الكلاسيكية
+  async function googleProvider(query) {
+    const P = google.maps.places;
+    if (P.AutocompleteSuggestion) {
+      const { suggestions } = await P.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: query });
+      return (suggestions || []).filter(s => s.placePrediction).slice(0, 6).map(s => {
+        const pp = s.placePrediction;
+        return {
+          main: pp.mainText?.text || pp.text?.text || '',
+          secondary: pp.secondaryText?.text || '',
+          pick: async () => {
+            const place = pp.toPlace();
+            await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'rating', 'userRatingCount', 'photos', 'priceLevel', 'internationalPhoneNumber', 'websiteURI', 'reviews', 'googleMapsURI', 'id'] });
+            const rev = (place.reviews || [])[0];
+            return {
+              source: 'google', name: place.displayName || query, address: place.formattedAddress || '',
+              mapUrl: place.googleMapsURI || '', placeId: place.id || '',
+              lat: place.location?.lat?.() ?? null, lng: place.location?.lng?.() ?? null,
+              rating: typeof place.rating === 'number' ? place.rating : null, ratingsTotal: place.userRatingCount ?? null,
+              photos: (place.photos || []).slice(0, 8).map(ph => { try { return ph.getURI({ maxWidthPx: 640 }); } catch { return ''; } }).filter(Boolean),
+              priceLevel: place.priceLevel != null ? (NEW_PRICE[place.priceLevel] ?? null) : null,
+              phone: place.internationalPhoneNumber || '', website: place.websiteURI || '',
+              reviewTop: rev ? { text: (rev.text?.text || rev.text || ''), author: rev.authorAttribution?.displayName || '', rating: rev.rating } : null,
+            };
+          },
+        };
+      });
+    }
+    // الكلاسيكية
+    const svc = new P.AutocompleteService();
+    const preds = await new Promise((res, rej) => svc.getPlacePredictions({ input: query }, (r, st) => st === P.PlacesServiceStatus.OK ? res(r || []) : rej(new Error(st))));
+    const dsvc = new P.PlacesService(document.createElement('div'));
+    return preds.slice(0, 6).map(pr => ({
+      main: pr.structured_formatting?.main_text || pr.description,
+      secondary: pr.structured_formatting?.secondary_text || '',
+      pick: () => new Promise((res, rej) => dsvc.getDetails({ placeId: pr.place_id, fields: ['name', 'geometry', 'formatted_address', 'url', 'rating', 'user_ratings_total', 'photos', 'price_level', 'international_phone_number', 'website', 'reviews'] }, (d, st) => {
+        if (st !== P.PlacesServiceStatus.OK || !d) return rej(new Error(st));
+        const rev = (d.reviews || [])[0];
+        res({
+          source: 'google', name: d.name || query, address: d.formatted_address || '',
+          mapUrl: d.url || mapsPlaceUrl(d.name || query, pr.place_id), placeId: pr.place_id,
+          lat: d.geometry?.location?.lat?.() ?? null, lng: d.geometry?.location?.lng?.() ?? null,
+          rating: typeof d.rating === 'number' ? d.rating : null, ratingsTotal: d.user_ratings_total ?? null,
+          photos: (d.photos || []).slice(0, 8).map(ph => { try { return ph.getUrl({ maxWidth: 640, maxHeight: 640 }); } catch { return ''; } }).filter(Boolean),
+          priceLevel: typeof d.price_level === 'number' ? d.price_level : null,
+          phone: d.international_phone_number || '', website: d.website || '',
+          reviewTop: rev ? { text: rev.text || '', author: rev.author_name || '', rating: rev.rating } : null,
+        });
+      })),
+    }));
+  }
+  async function osmProvider(query) {
+    const rs = await osmSearch(query + ' ' + (t.destination || ''));
+    return (rs || []).slice(0, 6).map(r => {
       const main = (r.name && r.name.trim()) || r.display_name.split('،')[0].split(',')[0];
-      clearList(); name.value = main;
-      picked.lat = parseFloat(r.lat); picked.lng = parseFloat(r.lon);
-      picked.address = r.display_name;
-      picked.mapUrl = `https://www.google.com/maps/search/?api=1&query=${picked.lat},${picked.lng}`;
-      hint.textContent = r.display_name;
+      return { main, secondary: r.display_name, pick: async () => ({ source: 'osm', name: main, address: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon), mapUrl: `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}` }) };
     });
   }
 
@@ -3125,29 +3142,28 @@ function openPlace(t, cityId) {
     const my = ++reqId;
     clearTimeout(debounce);
     hint.textContent = 'جارٍ البحث…';
-    debounce = setTimeout(() => {
-      const query = q;
-      const goOSM = () => osmSearch(query + ' ' + (t.destination || '')).then(rs => {
+    debounce = setTimeout(async () => {
+      let denied = '';
+      if (googleReady && window.google?.maps?.places) {
+        try {
+          const list = await googleProvider(q);
+          if (my !== reqId) return;
+          if (list.length) { renderList(list); hint.textContent = 'نتائج قوقل ماب — اختر مكانًا لعرض تقييمه وصوره.'; return; }
+        } catch (e) {
+          const m = e?.message || '';
+          if (/REQUEST_DENIED|OVER_QUERY|ApiNotActivated|PERMISSION|denied|not been used|disabled/i.test(m)) denied = m;
+        }
+      }
+      try {
+        const list = await osmProvider(q);
         if (my !== reqId) return;
-        if (rs && rs.length) {
-          renderOSM(rs);
-          hint.innerHTML = googleDenied
-            ? `<span style="color:var(--sand-600)">نتائج OpenStreetMap (بدون تقييم/صور). قوقل رفض الطلب — فعّل Places API + الفوترة وقيّد المفتاح بنطاقك.</span>`
+        if (list.length) {
+          renderList(list);
+          hint.innerHTML = denied
+            ? `<span style="color:var(--sand-600)">نتائج OpenStreetMap (بدون تقييم/صور). قوقل رفض الطلب — فعّل «Places API (New)» + الفوترة.</span>`
             : 'نتائج OpenStreetMap — اختر مكانًا.';
         } else { clearList(); hint.textContent = 'ما فيه نتائج.'; showOpenBtn(true); }
-      }).catch(() => { if (my !== reqId) return; clearList(); hint.textContent = 'تعذّر البحث.'; showOpenBtn(true); });
-
-      if (gsvc) {
-        gsvc.getPlacePredictions({ input: query }, (preds, status) => {
-          if (my !== reqId) return;
-          const S = google.maps.places.PlacesServiceStatus;
-          if (status === S.OK && preds?.length) { renderGoogle(preds); hint.textContent = 'نتائج قوقل ماب — اختر مكانًا لعرض تقييمه وصوره.'; }
-          else {
-            if (status === S.REQUEST_DENIED || status === S.OVER_QUERY_LIMIT) googleDenied = status;
-            goOSM();
-          }
-        });
-      } else { googleDenied = googleDenied || 'load'; goOSM(); }
+      } catch { if (my === reqId) { clearList(); hint.textContent = 'تعذّر البحث.'; showOpenBtn(true); } }
     }, 300);
   };
   name.focus();
