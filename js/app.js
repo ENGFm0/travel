@@ -1470,6 +1470,7 @@ function openPlace(t, cityId) {
   });
 
   const name = $('#p-name'), acList = $('#p-ac'), hint = $('#p-hint'), openBtn = $('#p-open'), preview = $('#p-preview');
+  let googleDenied = '';
   const picked = { placeId: '', mapUrl: '', lat: null, lng: null, address: '', rating: null, ratingsTotal: null, photos: [], priceLevel: null, phone: '', website: '' };
   const clearPick = () => {
     Object.assign(picked, { placeId: '', mapUrl: '', lat: null, lng: null, address: '', rating: null, ratingsTotal: null, photos: [], priceLevel: null, phone: '', website: '' });
@@ -1577,17 +1578,25 @@ function openPlace(t, cityId) {
       const query = q;
       const goOSM = () => osmSearch(query + ' ' + (t.destination || '')).then(rs => {
         if (my !== reqId) return;
-        if (rs && rs.length) { renderOSM(rs); hint.textContent = 'اختر من النتائج.'; }
-        else { clearList(); hint.textContent = 'ما فيه نتائج داخل التطبيق.'; showOpenBtn(true); }
+        if (rs && rs.length) {
+          renderOSM(rs);
+          hint.innerHTML = googleDenied
+            ? `<span style="color:var(--sand-600)">نتائج OpenStreetMap (بدون تقييم/صور). قوقل رفض الطلب — فعّل Places API + الفوترة وقيّد المفتاح بنطاقك.</span>`
+            : 'نتائج OpenStreetMap — اختر مكانًا.';
+        } else { clearList(); hint.textContent = 'ما فيه نتائج.'; showOpenBtn(true); }
       }).catch(() => { if (my !== reqId) return; clearList(); hint.textContent = 'تعذّر البحث.'; showOpenBtn(true); });
 
       if (gsvc) {
         gsvc.getPlacePredictions({ input: query }, (preds, status) => {
           if (my !== reqId) return;
-          if (status === google.maps.places.PlacesServiceStatus.OK && preds?.length) { renderGoogle(preds); hint.textContent = 'اختر من النتائج.'; }
-          else goOSM();
+          const S = google.maps.places.PlacesServiceStatus;
+          if (status === S.OK && preds?.length) { renderGoogle(preds); hint.textContent = 'نتائج قوقل ماب — اختر مكانًا لعرض تقييمه وصوره.'; }
+          else {
+            if (status === S.REQUEST_DENIED || status === S.OVER_QUERY_LIMIT) googleDenied = status;
+            goOSM();
+          }
         });
-      } else { goOSM(); }
+      } else { googleDenied = googleDenied || 'load'; goOSM(); }
     }, 300);
   };
   name.focus();
