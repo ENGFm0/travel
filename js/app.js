@@ -835,19 +835,42 @@ function openAddMemory(t, opts = {}) {
   openModal({
     title: 'أضف ذكرى',
     body: `
-      <div class="field"><label>صورة أو فيديو</label>
-        <input class="input" id="mm-file" type="file" accept="image/*,video/*"></div>
+      <div class="mem-pick">
+        <button type="button" class="mem-pick-btn" id="mm-cam-btn">${icons.camera}<span>الكاميرا</span></button>
+        <button type="button" class="mem-pick-btn" id="mm-alb-btn">${icons.images}<span>الألبوم</span></button>
+      </div>
+      <input type="file" id="mm-cam" accept="image/*,video/*" capture="environment" hidden>
+      <input type="file" id="mm-alb" accept="image/*,video/*" hidden>
+      <div class="mem-preview" id="mm-preview"></div>
       <div class="field"><label>تعليق <span class="hint">اختياري</span></label>
         <input class="input" id="mm-cap" placeholder="مثال: أجمل غروب بالرحلة" autocomplete="off"></div>
       <div class="field"><label>المكان <span class="hint">اختياري</span></label>
         <div class="select-wrap">${icons.chevron}<select class="select" id="mm-place">
           <option value="">— بدون مكان —</option>${placeOpts}</select></div></div>
       <div class="conv-preview" id="mm-status"></div>`,
-    footer: `<button class="btn btn-primary btn-block" id="mm-save">${icons.camera} حفظ الذكرى</button>`,
+    footer: `<button class="btn btn-primary btn-block" id="mm-save">${icons.check} حفظ الذكرى</button>`,
   });
+
+  let file = null, objUrl = null;
+  const preview = $('#mm-preview');
+  const setFile = (f) => {
+    file = f;
+    if (objUrl) { URL.revokeObjectURL(objUrl); objUrl = null; }
+    if (!f) { preview.innerHTML = ''; preview.classList.remove('has'); return; }
+    objUrl = URL.createObjectURL(f);
+    preview.innerHTML = (f.type || '').startsWith('video')
+      ? `<video src="${objUrl}" controls playsinline></video>`
+      : `<img src="${objUrl}" alt="">`;
+    preview.classList.add('has');
+  };
+  $('#mm-cam-btn').onclick = () => $('#mm-cam').click();
+  $('#mm-alb-btn').onclick = () => $('#mm-alb').click();
+  $('#mm-cam').onchange = (e) => setFile(e.target.files[0]);
+  $('#mm-alb').onchange = (e) => setFile(e.target.files[0]);
+
   $('#mm-save').onclick = async () => {
-    const f = $('#mm-file').files[0];
-    if (!f) { toast('اختر صورة أو فيديو'); return; }
+    const f = file;
+    if (!f) { toast('التقط صورة أو اختر من الألبوم'); return; }
     if (f.size > 50 * 1024 * 1024) { toast('الحجم أكبر من 50MB — قصّر الفيديو'); return; }
     if (!sync.syncEnabled()) { toast('فعّل Supabase من الإعدادات'); return; }
     const btn = $('#mm-save'); btn.disabled = true;

@@ -587,6 +587,15 @@ textarea.input { resize: vertical; min-height: 72px; }
 .place-actions { display: flex; gap: 8px; margin-top: 8px; }
 .place-actions .btn { flex: 1; }
 
+/* اختيار الكاميرا/الألبوم + المعاينة */
+.mem-pick { display: flex; gap: 10px; margin-bottom: 14px; }
+.mem-pick-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 18px 10px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--bg); font-weight: 700; color: var(--teal-800); transition: all .12s ease; }
+.mem-pick-btn:hover { border-color: var(--teal-700); background: var(--teal-050); }
+.mem-pick-btn svg { width: 28px; height: 28px; }
+.mem-preview { border-radius: 14px; overflow: hidden; margin-bottom: 14px; display: none; }
+.mem-preview.has { display: block; }
+.mem-preview img, .mem-preview video { width: 100%; max-height: 300px; object-fit: contain; background: #000; display: block; }
+
 /* عارض ملء الشاشة */
 .lightbox { position: fixed; inset: 0; background: rgba(8,16,16,.94); display: flex; flex-direction: column; z-index: 120; }
 .lb-close { position: absolute; top: calc(14px + env(safe-area-inset-top)); inset-inline-end: 16px; z-index: 2; width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,.15); color: #fff; display: grid; place-items: center; }
@@ -2308,19 +2317,42 @@ function openAddMemory(t, opts = {}) {
   openModal({
     title: 'أضف ذكرى',
     body: `
-      <div class="field"><label>صورة أو فيديو</label>
-        <input class="input" id="mm-file" type="file" accept="image/*,video/*"></div>
+      <div class="mem-pick">
+        <button type="button" class="mem-pick-btn" id="mm-cam-btn">${icons.camera}<span>الكاميرا</span></button>
+        <button type="button" class="mem-pick-btn" id="mm-alb-btn">${icons.images}<span>الألبوم</span></button>
+      </div>
+      <input type="file" id="mm-cam" accept="image/*,video/*" capture="environment" hidden>
+      <input type="file" id="mm-alb" accept="image/*,video/*" hidden>
+      <div class="mem-preview" id="mm-preview"></div>
       <div class="field"><label>تعليق <span class="hint">اختياري</span></label>
         <input class="input" id="mm-cap" placeholder="مثال: أجمل غروب بالرحلة" autocomplete="off"></div>
       <div class="field"><label>المكان <span class="hint">اختياري</span></label>
         <div class="select-wrap">${icons.chevron}<select class="select" id="mm-place">
           <option value="">— بدون مكان —</option>${placeOpts}</select></div></div>
       <div class="conv-preview" id="mm-status"></div>`,
-    footer: `<button class="btn btn-primary btn-block" id="mm-save">${icons.camera} حفظ الذكرى</button>`,
+    footer: `<button class="btn btn-primary btn-block" id="mm-save">${icons.check} حفظ الذكرى</button>`,
   });
+
+  let file = null, objUrl = null;
+  const preview = $('#mm-preview');
+  const setFile = (f) => {
+    file = f;
+    if (objUrl) { URL.revokeObjectURL(objUrl); objUrl = null; }
+    if (!f) { preview.innerHTML = ''; preview.classList.remove('has'); return; }
+    objUrl = URL.createObjectURL(f);
+    preview.innerHTML = (f.type || '').startsWith('video')
+      ? `<video src="${objUrl}" controls playsinline></video>`
+      : `<img src="${objUrl}" alt="">`;
+    preview.classList.add('has');
+  };
+  $('#mm-cam-btn').onclick = () => $('#mm-cam').click();
+  $('#mm-alb-btn').onclick = () => $('#mm-alb').click();
+  $('#mm-cam').onchange = (e) => setFile(e.target.files[0]);
+  $('#mm-alb').onchange = (e) => setFile(e.target.files[0]);
+
   $('#mm-save').onclick = async () => {
-    const f = $('#mm-file').files[0];
-    if (!f) { toast('اختر صورة أو فيديو'); return; }
+    const f = file;
+    if (!f) { toast('التقط صورة أو اختر من الألبوم'); return; }
     if (f.size > 50 * 1024 * 1024) { toast('الحجم أكبر من 50MB — قصّر الفيديو'); return; }
     if (!sync.syncEnabled()) { toast('فعّل Supabase من الإعدادات'); return; }
     const btn = $('#mm-save'); btn.disabled = true;

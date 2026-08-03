@@ -579,6 +579,15 @@ textarea.input { resize: vertical; min-height: 72px; }
 .place-actions { display: flex; gap: 8px; margin-top: 8px; }
 .place-actions .btn { flex: 1; }
 
+/* اختيار الكاميرا/الألبوم + المعاينة */
+.mem-pick { display: flex; gap: 10px; margin-bottom: 14px; }
+.mem-pick-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 18px 10px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--bg); font-weight: 700; color: var(--teal-800); transition: all .12s ease; }
+.mem-pick-btn:hover { border-color: var(--teal-700); background: var(--teal-050); }
+.mem-pick-btn svg { width: 28px; height: 28px; }
+.mem-preview { border-radius: 14px; overflow: hidden; margin-bottom: 14px; display: none; }
+.mem-preview.has { display: block; }
+.mem-preview img, .mem-preview video { width: 100%; max-height: 300px; object-fit: contain; background: #000; display: block; }
+
 /* عارض ملء الشاشة */
 .lightbox { position: fixed; inset: 0; background: rgba(8,16,16,.94); display: flex; flex-direction: column; z-index: 120; }
 .lb-close { position: absolute; top: calc(14px + env(safe-area-inset-top)); inset-inline-end: 16px; z-index: 2; width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,.15); color: #fff; display: grid; place-items: center; }
