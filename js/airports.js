@@ -80,3 +80,20 @@ export function airlineName(flightNo) {
   const m = flightNo.trim().toUpperCase().match(/^([A-Z0-9]{2})/);
   return m ? (AIRLINES[m[1]] || '') : '';
 }
+
+/* IATA → ICAO لبناء روابط FlightAware */
+export const AIRLINE_ICAO = {
+  SV: 'SVA', XY: 'KNE', F3: 'FAD', EK: 'UAE', EY: 'ETD', FZ: 'FDB', QR: 'QTR',
+  GF: 'GFA', WY: 'OMA', KU: 'KAC', J9: 'JZR', RJ: 'RJA', ME: 'MEA', MS: 'MSR',
+  TK: 'THY', PC: 'PGT', AT: 'RAM', TU: 'TAR', IA: 'IAW', BA: 'BAW', AF: 'AFR',
+  LH: 'DLH', KL: 'KLM', QF: 'QFA', SQ: 'SIA', TG: 'THA', MH: 'MAS', AI: 'AIC',
+  PK: 'PIA', UL: 'ALK', AA: 'AAL', DL: 'DAL', UA: 'UAL', AC: 'ACA', W6: 'WZZ',
+  FR: 'RYR', U2: 'EZY', VS: 'VIR', ET: 'ETH', SU: 'AFL', IB: 'IBE', LX: 'SWR', OS: 'AUA',
+};
+/* حوّل رقم الرحلة إلى معرّف FlightAware (ICAO إن توفّر) */
+export function flightIdent(flightNo) {
+  const s = (flightNo || '').toUpperCase().replace(/\s+/g, '');
+  const m = s.match(/^([A-Z0-9]{2})(\d+)$/);
+  if (m && AIRLINE_ICAO[m[1]]) return AIRLINE_ICAO[m[1]] + m[2];
+  return s;
+}

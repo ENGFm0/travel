@@ -5,7 +5,7 @@ import * as db from './store.js';
 import { poolStats, memberBudget, sharedNet, settleShared } from './settle.js';
 import { icons, catList, catIcon } from './icons.js';
 import { COUNTRIES, flagOf } from './countries.js';
-import { AIRPORTS, airlineName } from './airports.js';
+import { AIRPORTS, airlineName, flightIdent } from './airports.js';
 import * as sync from './sync.js';
 
 /* ---------------- أدوات ---------------- */
@@ -114,6 +114,43 @@ async function fetchRate(home, dest) {
     if (v) return round(v);
   } catch { /* لا شيء */ }
   throw new Error('no-rate');
+}
+
+/* ---------------- جلب تفاصيل الرحلة (AeroDataBox عبر RapidAPI) ---------------- */
+const FLIGHT_KEY_LS = 'boarding.flightKey';
+function getFlightKey() { try { return localStorage.getItem(FLIGHT_KEY_LS) || ''; } catch { return ''; } }
+function setFlightKey(k) { try { k && k.trim() ? localStorage.setItem(FLIGHT_KEY_LS, k.trim()) : localStorage.removeItem(FLIGHT_KEY_LS); } catch {} }
+const flightawareUrl = (no) => 'https://ar.flightaware.com/live/flight/' + encodeURIComponent(flightIdent(no));
+
+// yyyy-mm-ddThh:mm من نص وقت AeroDataBox المحلي ("2026-08-12 02:00+03:00")
+function toLocalInput(s) {
+  if (!s) return '';
+  const m = String(s).match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}` : '';
+}
+async function fetchFlight(flightNo, dateStr) {
+  const key = getFlightKey();
+  if (!key) throw new Error('no-key');
+  const num = flightNo.replace(/\s+/g, '').toUpperCase();
+  const url = `https://aerodatabox.p.rapidapi.com/flights/number/${encodeURIComponent(num)}/${dateStr}?withAircraftImage=false&withLocation=false`;
+  const res = await fetch(url, { headers: { 'X-RapidAPI-Key': key, 'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com' } });
+  if (res.status === 204) throw new Error('not-found');
+  if (!res.ok) throw new Error('http ' + res.status);
+  const data = await res.json();
+  const f = Array.isArray(data) ? data[0] : (data.flights ? data.flights[0] : data);
+  if (!f) throw new Error('not-found');
+  const dep = f.departure || {}, arr = f.arrival || {};
+  return {
+    flightNo: f.number || num,
+    from: (dep.airport?.iata ? dep.airport.iata + ' — ' + (dep.airport.name || '') : ''),
+    to: (arr.airport?.iata ? arr.airport.iata + ' — ' + (arr.airport.name || '') : ''),
+    depAt: toLocalInput(dep.scheduledTime?.local || dep.revisedTime?.local),
+    arrAt: toLocalInput(arr.scheduledTime?.local || arr.revisedTime?.local),
+    terminal: dep.terminal || '',
+    gate: dep.gate || '',
+    aircraft: f.aircraft?.model || '',
+    status: f.status || '',
+  };
 }
 
 /* ---------------- منتقي الدول (بحث) ---------------- */
@@ -678,9 +715,10 @@ function fmtDT(iso) {
 /* ---------------- تبويب: الرحلة (خط الرحلة) ---------------- */
 function tabItinerary(t) {
   const it = t.itinerary || {};
+  const ob = it.outbound || {}, ib = it.inbound || {};
   const DAY = 86400000, now = Date.now();
-  const dep = it.departAt ? new Date(it.departAt).getTime() : null;
-  const ret = it.returnAt ? new Date(it.returnAt).getTime() : null;
+  const dep = ob.depAt ? new Date(ob.depAt).getTime() : null;
+  const ret = ib.depAt ? new Date(ib.depAt).getTime() : null;
 
   let cdBig = '', cdSub = '', cdState = '';
   if (dep) {
@@ -697,30 +735,43 @@ function tabItinerary(t) {
         ${duration ? `<div class="cd-dur">${icons.calendar} مدة الرحلة ${duration} ليالٍ</div>` : ''}
        </div>`
     : `<div class="empty" style="padding:26px">${icons.plane}<h3>حدّد مواعيد رحلتكم</h3>
-        <p>ضِف موعد المغادرة والعودة ليظهر العدّاد التنازلي.</p>
-        <button class="btn btn-primary mt" data-act="edit-itin">تحديد المواعيد</button></div>`;
+        <p>أضِف رحلة المغادرة والعودة ليظهر العدّاد التنازلي.</p>
+        <button class="btn btn-primary mt" data-edit-flight="outbound">إضافة رحلة</button></div>`;
 
   const apCode = (s) => (s || '').split(' — ')[0];
-  const flightRow = (label, at, flight, from, to) => {
-    const air = airlineName(flight);
-    const route = from || to ? `${esc(apCode(from) || '—')} ← ${esc(apCode(to) || '—')}` : '';
+  const flightBlock = (label, leg, f) => {
+    const air = airlineName(f.flightNo);
+    const has = f.flightNo || f.from || f.to || f.depAt;
+    const detail = (ic, txt) => txt ? `<span class="fd">${ic} ${esc(txt)}</span>` : '';
     return `
-    <div class="flight-row">
-      <span class="flight-ic">${icons.plane}</span>
-      <div class="flight-body"><div class="flight-label">${label} ${route ? `<span class="flight-route">${route}</span>` : ''}</div>
-        <div class="flight-when">${at ? esc(fmtDT(at)) : '—'}${air ? ' · ' + esc(air) : ''}</div></div>
-      ${flight ? `<span class="flight-no">${esc(flight)}</span>` : ''}
+    <div class="flight-leg">
+      <div class="flight-leg-head">
+        <span class="flight-ic ${leg === 'inbound' ? 'ret' : ''}">${icons.plane}</span>
+        <div class="flight-body">
+          <div class="flight-label">${label} ${has && (f.from || f.to) ? `<span class="flight-route">${esc(apCode(f.from) || '—')} ← ${esc(apCode(f.to) || '—')}</span>` : ''}</div>
+          <div class="flight-when">${f.depAt ? esc(fmtDT(f.depAt)) : '—'}${f.arrAt ? ' ← ' + esc(fmtDT(f.arrAt)) : ''}</div>
+        </div>
+        ${f.flightNo ? `<span class="flight-no">${esc(f.flightNo)}</span>` : ''}
+        <button class="icon-btn" data-edit-flight="${leg}" title="تعديل">${icons.edit}</button>
+      </div>
+      ${has ? `<div class="flight-details">
+        ${detail('✈️', air)}
+        ${detail(icons.clock, f.status)}
+        ${f.terminal ? `<span class="fd">صالة ${esc(f.terminal)}</span>` : ''}
+        ${f.gate ? `<span class="fd">بوابة ${esc(f.gate)}</span>` : ''}
+        ${detail('🛩️', f.aircraft)}
+        ${f.flightNo ? `<a class="fd link" href="${flightawareUrl(f.flightNo)}" target="_blank" rel="noopener">${icons.external} FlightAware</a>` : ''}
+      </div>` : ''}
     </div>`;
   };
 
-  const hasFlights = dep || ret || it.departFlight || it.returnFlight || it.depAirport || it.arrAirport;
+  const hasFlights = dep || ret || ob.flightNo || ib.flightNo || ob.from || ib.from;
   const flights = hasFlights ? `
-    <div class="section-head"><h2>الطيران</h2>
-      <button class="btn btn-ghost btn-sm" data-act="edit-itin">${icons.edit} تعديل</button></div>
+    <div class="section-head"><h2>الطيران</h2></div>
     <div class="card card-pad flights">
-      ${flightRow('المغادرة', it.departAt, it.departFlight, it.depAirport, it.arrAirport)}
+      ${flightBlock('المغادرة', 'outbound', ob)}
       <div class="flight-divider"></div>
-      ${flightRow('العودة', it.returnAt, it.returnFlight, it.arrAirport, it.depAirport)}
+      ${flightBlock('العودة', 'inbound', ib)}
     </div>` : '';
 
   // التذكيرات
@@ -944,7 +995,7 @@ function wire(t, tab) {
   on('[data-pay]', e => { copyText(JSON.parse(e.currentTarget.dataset.pay)); toast('تم نسخ تفاصيل التحويل ✓'); });
 
   // الرحلة: المواعيد + التذكيرات + المدن + الأماكن
-  on('[data-act="edit-itin"]', () => openItinEdit(t));
+  on('[data-edit-flight]', e => openFlightEdit(t, e.currentTarget.dataset.editFlight));
   on('[data-act="add-check"]', () => openAddCheck(t));
   on('[data-check]', e => { db.toggleCheck(t.id, e.currentTarget.dataset.check); render(); });
   on('[data-del-check]', e => { db.removeCheck(t.id, e.currentTarget.dataset.delCheck); render(); });
@@ -1068,6 +1119,9 @@ function openSettings(t) {
       <div class="field"><label>مفتاح خرائط قوقل <span class="hint">للبحث السريع داخل التطبيق</span></label>
         <input class="input" id="s-mapskey" value="${esc(getMapsKey())}" placeholder="AIza..." dir="ltr" autocomplete="off">
         <span class="hint">مدمج مفتاح افتراضي. قيّده بنطاق موقعك من Google Cloud. يُحفظ على جهازك فقط.</span></div>
+      <div class="field"><label>مفتاح AeroDataBox <span class="hint">لجلب تفاصيل الرحلة برقمها</span></label>
+        <input class="input" id="s-flightkey" value="${esc(getFlightKey())}" placeholder="RapidAPI Key" dir="ltr" autocomplete="off">
+        <span class="hint">اشترك في AeroDataBox عبر RapidAPI (فيه باقة مجانية) والصق المفتاح. بدونه استخدم FlightAware والإدخال اليدوي.</span></div>
       <div class="divider"></div>
       <div class="field"><label>المزامنة السحابية (Supabase) <span class="hint">لمشاركة الرحلة مع القروب</span></label>
         <input class="input" id="s-sburl" value="${esc(sync.sbUrl())}" placeholder="https://xxx.supabase.co" dir="ltr" autocomplete="off" style="margin-bottom:8px">
@@ -1102,6 +1156,7 @@ function openSettings(t) {
 
   $('#s-save').onclick = () => {
     setMapsKey($('#s-mapskey').value);
+    setFlightKey($('#s-flightkey').value);
     sync.setSb($('#s-sburl').value, $('#s-sbkey').value);
     db.updateTrip(t.id, {
       destination: $('#s-dest').value.trim() || t.destination,
@@ -1524,50 +1579,111 @@ function openReview(t, placeId) {
   };
 }
 
-/* مواعيد الطيران */
-function openItinEdit(t) {
-  const it = t.itinerary || {};
+/* تعديل رحلة (المغادرة أو العودة) — نوعان: برقم الرحلة أو يدوي */
+function openFlightEdit(t, leg) {
+  const f = { ...(t.itinerary[leg] || {}) };
+  const title = leg === 'inbound' ? 'رحلة العودة 🛬' : 'رحلة المغادرة ✈️';
+  const hasKey = !!getFlightKey();
+
   openModal({
-    title: 'مواعيد الرحلة',
+    title,
     body: `
-      <div class="seg-label">✈️ المغادرة</div>
-      <div class="two-col">
-        <div class="field"><label>من مطار</label>
-          <div class="ac-wrap"><span class="ac-icon">${icons.plane}</span>
-            <input class="input ac-input" id="it-dep-ap" value="${esc(it.depAirport || '')}" placeholder="ابحث (رمز/مدينة)" autocomplete="off">
-            <div class="ac-list" id="it-dep-ap-list"></div></div></div>
-        <div class="field"><label>إلى مطار</label>
-          <div class="ac-wrap"><span class="ac-icon">${icons.plane}</span>
-            <input class="input ac-input" id="it-arr-ap" value="${esc(it.arrAirport || '')}" placeholder="ابحث (رمز/مدينة)" autocomplete="off">
-            <div class="ac-list" id="it-arr-ap-list"></div></div></div>
+      <div class="seg" id="fl-mode" style="margin-bottom:16px">
+        <button type="button" class="seg-opt sel" data-fmode="auto">برقم الرحلة<small>جلب التفاصيل</small></button>
+        <button type="button" class="seg-opt" data-fmode="manual">يدوي<small>أدخلها بنفسك</small></button>
       </div>
-      <div class="field"><label>موعد المغادرة</label>
-        <input class="input" id="it-dep" type="datetime-local" value="${esc(it.departAt || '')}" dir="ltr"></div>
-      <div class="field"><label>رقم رحلة المغادرة <span class="hint">اختياري</span></label>
-        <input class="input" id="it-depf" value="${esc(it.departFlight || '')}" placeholder="مثال: SV 254" dir="ltr">
-        <div class="conv-preview" id="it-depf-air"></div></div>
-      <div class="divider"></div>
-      <div class="seg-label">🛬 العودة</div>
-      <div class="field"><label>موعد العودة</label>
-        <input class="input" id="it-ret" type="datetime-local" value="${esc(it.returnAt || '')}" dir="ltr"></div>
-      <div class="field"><label>رقم رحلة العودة <span class="hint">اختياري</span></label>
-        <input class="input" id="it-retf" value="${esc(it.returnFlight || '')}" placeholder="مثال: SV 255" dir="ltr">
-        <div class="conv-preview" id="it-retf-air"></div></div>`,
-    footer: `<button class="btn btn-primary btn-block" id="it-save">${icons.check} حفظ</button>`,
+
+      <div id="fl-auto">
+        <div class="field"><label>رقم الرحلة</label>
+          <div class="input-group">
+            <input class="input" id="fl-no" value="${esc(f.flightNo || '')}" placeholder="مثال: MS647" dir="ltr" autocomplete="off">
+            <button type="button" class="btn btn-sand" id="fl-fetch">${icons.search} جلب</button>
+          </div>
+          <div class="conv-preview" id="fl-air"></div></div>
+        <div class="field"><label>تاريخ الرحلة</label>
+          <input class="input" id="fl-date" type="date" value="${esc((f.depAt || '').slice(0, 10))}" dir="ltr"></div>
+        <div class="fl-status" id="fl-status"></div>
+        <a class="btn btn-ghost btn-block" id="fl-fa" href="${flightawareUrl(f.flightNo || '')}" target="_blank" rel="noopener">${icons.external} افتح في FlightAware</a>
+        ${hasKey ? '' : `<p class="hint" style="margin-top:8px">للجلب التلقائي أضِف مفتاح AeroDataBox من ${icons.gear} الإعدادات. أو افتح FlightAware واملأ يدويًا.</p>`}
+      </div>
+
+      <div id="fl-manual" style="display:none">
+        <div class="two-col">
+          <div class="field"><label>من مطار</label>
+            <div class="ac-wrap"><span class="ac-icon">${icons.plane}</span>
+              <input class="input ac-input" id="fl-from" value="${esc(f.from || '')}" placeholder="رمز/مدينة" autocomplete="off">
+              <div class="ac-list" id="fl-from-list"></div></div></div>
+          <div class="field"><label>إلى مطار</label>
+            <div class="ac-wrap"><span class="ac-icon">${icons.plane}</span>
+              <input class="input ac-input" id="fl-to" value="${esc(f.to || '')}" placeholder="رمز/مدينة" autocomplete="off">
+              <div class="ac-list" id="fl-to-list"></div></div></div>
+        </div>
+        <div class="two-col">
+          <div class="field"><label>الإقلاع</label><input class="input" id="fl-depat" type="datetime-local" value="${esc(f.depAt || '')}" dir="ltr"></div>
+          <div class="field"><label>الوصول</label><input class="input" id="fl-arrat" type="datetime-local" value="${esc(f.arrAt || '')}" dir="ltr"></div>
+        </div>
+        <div class="two-col">
+          <div class="field"><label>الصالة</label><input class="input" id="fl-term" value="${esc(f.terminal || '')}" placeholder="مثال: 2" dir="ltr"></div>
+          <div class="field"><label>البوابة</label><input class="input" id="fl-gate" value="${esc(f.gate || '')}" placeholder="مثال: A12" dir="ltr"></div>
+        </div>
+        <div class="field"><label>الطائرة <span class="hint">اختياري</span></label><input class="input" id="fl-ac" value="${esc(f.aircraft || '')}" placeholder="مثال: Boeing 737" dir="ltr"></div>
+        <div class="field"><label>الحالة <span class="hint">اختياري</span></label><input class="input" id="fl-st" value="${esc(f.status || '')}" placeholder="مثال: في الموعد" autocomplete="off"></div>
+      </div>`,
+    footer: `<button class="btn btn-primary btn-block" id="fl-save">${icons.check} حفظ الرحلة</button>`,
   });
-  wireAirportPicker($('#it-dep-ap'), $('#it-dep-ap-list'));
-  wireAirportPicker($('#it-arr-ap'), $('#it-arr-ap-list'));
-  const showAir = (inp, box) => { const n = airlineName($(inp).value); $(box).innerHTML = n ? '✈️ ' + n : ''; };
-  $('#it-depf').oninput = () => showAir('#it-depf', '#it-depf-air');
-  $('#it-retf').oninput = () => showAir('#it-retf', '#it-retf-air');
-  showAir('#it-depf', '#it-depf-air'); showAir('#it-retf', '#it-retf-air');
-  $('#it-save').onclick = () => {
-    db.setItinerary(t.id, {
-      departAt: $('#it-dep').value, departFlight: $('#it-depf').value.trim(),
-      returnAt: $('#it-ret').value, returnFlight: $('#it-retf').value.trim(),
-      depAirport: $('#it-dep-ap').value.trim(), arrAirport: $('#it-arr-ap').value.trim(),
+
+  // فروع النوع
+  const autoBox = $('#fl-auto'), manualBox = $('#fl-manual');
+  modalRoot.querySelectorAll('[data-fmode]').forEach(b => b.onclick = () => {
+    modalRoot.querySelectorAll('[data-fmode]').forEach(x => x.classList.remove('sel')); b.classList.add('sel');
+    const auto = b.dataset.fmode === 'auto';
+    autoBox.style.display = auto ? 'block' : 'none';
+    manualBox.style.display = auto ? 'none' : 'block';
+  });
+
+  wireAirportPicker($('#fl-from'), $('#fl-from-list'));
+  wireAirportPicker($('#fl-to'), $('#fl-to-list'));
+
+  const showAir = () => { const n = airlineName($('#fl-no').value); $('#fl-air').innerHTML = n ? '✈️ ' + n : ''; $('#fl-fa').href = flightawareUrl($('#fl-no').value); };
+  $('#fl-no').oninput = showAir; showAir();
+
+  // جلب التفاصيل
+  $('#fl-fetch').onclick = async () => {
+    const no = $('#fl-no').value.trim();
+    if (!no) { toast('اكتب رقم الرحلة'); return; }
+    const date = $('#fl-date').value || new Date().toISOString().slice(0, 10);
+    const st = $('#fl-status');
+    if (!getFlightKey()) { st.innerHTML = `<span style="color:var(--sand-600)">أضِف مفتاح AeroDataBox من الإعدادات — أو استخدم FlightAware والإدخال اليدوي.</span>`; return; }
+    st.innerHTML = 'جارٍ الجلب…'; $('#fl-fetch').disabled = true;
+    try {
+      const d = await fetchFlight(no, date);
+      // عبّئ الحقول اليدوية
+      $('#fl-from').value = d.from || $('#fl-from').value;
+      $('#fl-to').value = d.to || $('#fl-to').value;
+      $('#fl-depat').value = d.depAt || $('#fl-depat').value;
+      $('#fl-arrat').value = d.arrAt || $('#fl-arrat').value;
+      $('#fl-term').value = d.terminal || '';
+      $('#fl-gate').value = d.gate || '';
+      $('#fl-ac').value = d.aircraft || '';
+      $('#fl-st').value = d.status || '';
+      $('#fl-no').value = d.flightNo || no;
+      st.innerHTML = `<span style="color:var(--green)">${icons.check} تم الجلب — راجع التفاصيل بتبويب «يدوي» واحفظ.</span>`;
+      showAir();
+    } catch (e) {
+      const m = e?.message || '';
+      st.innerHTML = `<span style="color:var(--red)">${/not-found/.test(m) ? 'ما لقينا الرحلة بهذا التاريخ' : /no-key/.test(m) ? 'أضِف مفتاح AeroDataBox' : 'تعذّر الجلب — جرّب FlightAware يدويًا'}</span>`;
+    } finally { $('#fl-fetch').disabled = false; }
+  };
+
+  $('#fl-save').onclick = () => {
+    db.setFlight(t.id, leg, {
+      flightNo: $('#fl-no').value.trim(),
+      from: $('#fl-from').value.trim(), to: $('#fl-to').value.trim(),
+      depAt: $('#fl-depat').value, arrAt: $('#fl-arrat').value,
+      terminal: $('#fl-term').value.trim(), gate: $('#fl-gate').value.trim(),
+      aircraft: $('#fl-ac').value.trim(), status: $('#fl-st').value.trim(),
     });
-    closeModal(); render(); toast('تم حفظ المواعيد ✓');
+    closeModal(); render(); toast('تم حفظ الرحلة ✓');
   };
 }
 

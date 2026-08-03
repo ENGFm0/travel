@@ -51,8 +51,14 @@ function migrate(st) {
     }
     (t.places || []).forEach(p => { if (!p.reviews) p.reviews = []; });
 
-    // الرحلة (خط الرحلة)
-    if (!t.itinerary) t.itinerary = { departAt: '', departFlight: '', returnAt: '', returnFlight: '' };
+    // الرحلة (خط الرحلة) — رحلتان بكل التفاصيل
+    if (!t.itinerary) t.itinerary = {};
+    const it = t.itinerary;
+    if (!it.outbound) {
+      it.outbound = { flightNo: it.departFlight || '', from: it.depAirport || '', to: it.arrAirport || '', depAt: it.departAt || '', arrAt: '', terminal: '', gate: '', aircraft: '', status: '' };
+      it.inbound = { flightNo: it.returnFlight || '', from: it.arrAirport || '', to: it.depAirport || '', depAt: it.returnAt || '', arrAt: '', terminal: '', gate: '', aircraft: '', status: '' };
+      delete it.departAt; delete it.departFlight; delete it.returnAt; delete it.returnFlight; delete it.depAirport; delete it.arrAirport;
+    }
     if (!t.checklist) t.checklist = defaultChecklist();
     if (!t.cities) {
       t.cities = [];
@@ -112,7 +118,10 @@ export function createTrip({ destination, country, flag, destCurrency, homeCurre
     sharedExpenses: [],                 // قطة مشتركة بين أشخاص محددين
     personalExpenses: {},               // { memberId: [ ... ] }
     places: [],
-    itinerary: { departAt: '', departFlight: '', returnAt: '', returnFlight: '' },
+    itinerary: {
+      outbound: { flightNo: '', from: '', to: '', depAt: '', arrAt: '', terminal: '', gate: '', aircraft: '', status: '' },
+      inbound: { flightNo: '', from: '', to: '', depAt: '', arrAt: '', terminal: '', gate: '', aircraft: '', status: '' },
+    },
     cities: [],
     memories: [],
     checklist: defaultChecklist(),
@@ -300,10 +309,11 @@ export function addPlace(tripId, { name, note, mapUrl, placeId, lat, lng, addres
 }
 
 /* ---------------- الرحلة: المواعيد والمدن والتذكيرات ---------------- */
-export function setItinerary(tripId, patch) {
+export function setFlight(tripId, leg, patch) {
   const t = getTrip(tripId);
   if (!t) return;
-  t.itinerary = { ...t.itinerary, ...patch };
+  if (!t.itinerary[leg]) t.itinerary[leg] = {};
+  t.itinerary[leg] = { ...t.itinerary[leg], ...patch };
   persist();
 }
 

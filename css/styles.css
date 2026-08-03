@@ -534,7 +534,16 @@ textarea.input { resize: vertical; min-height: 72px; }
 .flight-label { font-weight: 700; }
 .flight-when { color: var(--ink-500); font-size: .88rem; }
 .flight-no { font-weight: 800; color: var(--teal-800); background: var(--teal-050); padding: 4px 10px; border-radius: 8px; font-size: .85rem; }
-.flight-divider { height: 1px; background: var(--line); margin: 4px 0 4px 52px; }
+.flight-divider { height: 1px; background: var(--line); margin: 10px 0; }
+.flight-leg-head { display: flex; align-items: center; gap: 12px; }
+.flight-ic.ret { transform: scaleX(-1); }
+.flight-details { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-inline-start: 52px; }
+.fd { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 700; color: var(--ink-700); background: var(--bg); border: 1px solid var(--line); padding: 3px 9px; border-radius: 999px; }
+.fd svg { width: 12px; height: 12px; }
+.fd.link { color: var(--teal-700); background: var(--teal-050); border-color: transparent; }
+.fl-status { font-size: .86rem; font-weight: 700; min-height: 4px; margin-bottom: 10px; }
+.fl-status:empty { display: none; }
+@media (max-width: 420px) { .flight-details { padding-inline-start: 0; } }
 
 /* التذكيرات */
 .checklist { display: grid; gap: 2px; }
