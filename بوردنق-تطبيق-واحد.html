@@ -1634,9 +1634,13 @@ async function fetchRate(home, dest) {
   throw new Error('no-rate');
 }
 
-/* ---------------- جلب تفاصيل الرحلة (AeroDataBox عبر RapidAPI) ---------------- */
+/* ---------------- جلب تفاصيل الرحلة (AeroDataBox عبر RapidAPI) ----------------
+   مفتاح افتراضي مدمج ليعمل الجلب للجميع. تنبيه: مفتاح RapidAPI خاص،
+   ويصبح علنيًا في المستودع — ضع حدًّا لحصّتك في RapidAPI لتفادي أي استهلاك زائد.
+--------------------------------------------------------------------------- */
 const FLIGHT_KEY_LS = 'boarding.flightKey';
-function getFlightKey() { try { return localStorage.getItem(FLIGHT_KEY_LS) || ''; } catch { return ''; } }
+const DEFAULT_FLIGHT_KEY = '9a96884d93msh090851587a6ad34p1144ddjsn5267546350f1';
+function getFlightKey() { try { return localStorage.getItem(FLIGHT_KEY_LS) || DEFAULT_FLIGHT_KEY; } catch { return DEFAULT_FLIGHT_KEY; } }
 function setFlightKey(k) { try { k && k.trim() ? localStorage.setItem(FLIGHT_KEY_LS, k.trim()) : localStorage.removeItem(FLIGHT_KEY_LS); } catch {} }
 const flightawareUrl = (no) => 'https://ar.flightaware.com/live/flight/' + encodeURIComponent(flightIdent(no));
 
