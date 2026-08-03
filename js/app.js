@@ -688,13 +688,19 @@ function placeCard(t, p, i) {
         ${r.note ? `<div class="review-note">${esc(r.note)}</div>` : ''}</div>
       <button class="icon-btn danger" data-del-review="${p.id}|${r.id}">${icons.trash}</button></div>`;
   }).join('');
+  const gRate = typeof p.rating === 'number'
+    ? `<span class="rating-pill g">${icons.star} ${p.rating} <small>(${(p.ratingsTotal || 0).toLocaleString('en')})</small></span>` : '';
+  const photos = (p.photos || []).length
+    ? `<div class="place-photos">${p.photos.slice(0, 6).map(u => `<a href="${p.mapUrl ? esc(p.mapUrl) : '#'}" target="_blank" rel="noopener"><img src="${esc(u)}" loading="lazy" alt=""></a>`).join('')}</div>` : '';
   return `
     <div class="place">
       <span class="place-idx">${i + 1}</span>
       <div class="place-body">
         <div class="place-name">${esc(p.name)}
-          ${avg ? `<span class="rating-pill">${icons.star} ${avg} <small>(${reviews.length})</small></span>` : ''}</div>
+          ${gRate}
+          ${avg ? `<span class="rating-pill">${icons.guest} ${avg} <small>(${reviews.length})</small></span>` : ''}</div>
         ${p.address ? `<div class="place-note">${esc(p.address)}</div>` : (p.note ? `<div class="place-note">${esc(p.note)}</div>` : '')}
+        ${photos}
         <div class="place-links">
           <a class="map-link" href="${p.mapUrl ? esc(p.mapUrl) : mapsPlaceUrl((p.name + ' ' + (t.destination || '')).trim(), p.placeId)}" target="_blank" rel="noopener">${icons.map} قوقل ماب</a>
           <button class="map-link" style="background:${p.visited ? 'var(--green-bg)' : '#eef1f0'};color:${p.visited ? 'var(--green)' : 'var(--ink-500)'}" data-visited="${p.id}">
@@ -1456,15 +1462,19 @@ function openPlace(t, cityId) {
           <div class="ac-list" id="p-ac"></div>
         </div>
         <span class="hint" id="p-hint">اكتب اسم المكان وتظهر النتائج هنا داخل التطبيق.</span></div>
+      <div class="gm-preview" id="p-preview"></div>
       <div class="field"><label>ملاحظة <span class="hint">اختياري</span></label>
         <input class="input" id="p-note" placeholder="مثال: أفضل وقت الزيارة الصباح" autocomplete="off"></div>
       <a class="btn btn-ghost btn-block" id="p-open" target="_blank" rel="noopener" href="#" style="display:none">${icons.map} ما لقيته؟ ابحث في قوقل ماب</a>`,
     footer: `<button class="btn btn-primary btn-block" id="p-save">${icons.plus} إضافة</button>`,
   });
 
-  const name = $('#p-name'), acList = $('#p-ac'), hint = $('#p-hint'), openBtn = $('#p-open');
-  const picked = { placeId: '', mapUrl: '', lat: null, lng: null, address: '' };
-  const clearPick = () => { picked.placeId = ''; picked.mapUrl = ''; picked.lat = picked.lng = null; picked.address = ''; };
+  const name = $('#p-name'), acList = $('#p-ac'), hint = $('#p-hint'), openBtn = $('#p-open'), preview = $('#p-preview');
+  const picked = { placeId: '', mapUrl: '', lat: null, lng: null, address: '', rating: null, ratingsTotal: null, photos: [], priceLevel: null, phone: '', website: '' };
+  const clearPick = () => {
+    Object.assign(picked, { placeId: '', mapUrl: '', lat: null, lng: null, address: '', rating: null, ratingsTotal: null, photos: [], priceLevel: null, phone: '', website: '' });
+    preview.innerHTML = ''; preview.classList.remove('show');
+  };
   let gsvc = null, placesSvc = null, debounce, reqId = 0;
 
   // حمّل خرائط قوقل بصمت (إن توفّر مفتاح صالح)
@@ -1491,18 +1501,49 @@ function openPlace(t, cityId) {
   }
   function chooseGoogle(placeId, mainText) {
     clearList(); name.value = mainText; showOpenBtn(false);
+    hint.textContent = 'جارٍ جلب التقييم والصور…';
     if (!placesSvc) return;
-    placesSvc.getDetails({ placeId, fields: ['name', 'geometry', 'formatted_address', 'url'] }, (d, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && d) {
-        picked.placeId = placeId;
-        picked.address = d.formatted_address || '';
-        picked.mapUrl = d.url || mapsPlaceUrl(d.name || mainText, placeId);
-        picked.lat = d.geometry?.location?.lat?.() ?? null;
-        picked.lng = d.geometry?.location?.lng?.() ?? null;
-        if (d.name) name.value = d.name;
-        hint.textContent = picked.address || 'تم اختيار المكان ✓';
-      }
+    placesSvc.getDetails({
+      placeId,
+      fields: ['name', 'geometry', 'formatted_address', 'url', 'rating', 'user_ratings_total',
+        'photos', 'price_level', 'opening_hours', 'international_phone_number', 'website', 'reviews'],
+    }, (d, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !d) { hint.textContent = 'تعذّر جلب التفاصيل.'; return; }
+      picked.placeId = placeId;
+      picked.address = d.formatted_address || '';
+      picked.mapUrl = d.url || mapsPlaceUrl(d.name || mainText, placeId);
+      picked.lat = d.geometry?.location?.lat?.() ?? null;
+      picked.lng = d.geometry?.location?.lng?.() ?? null;
+      picked.rating = typeof d.rating === 'number' ? d.rating : null;
+      picked.ratingsTotal = d.user_ratings_total ?? null;
+      picked.priceLevel = typeof d.price_level === 'number' ? d.price_level : null;
+      picked.phone = d.international_phone_number || '';
+      picked.website = d.website || '';
+      picked.photos = (d.photos || []).slice(0, 8).map(ph => { try { return ph.getUrl({ maxWidth: 640, maxHeight: 640 }); } catch { return ''; } }).filter(Boolean);
+      if (d.name) name.value = d.name;
+      hint.textContent = picked.address || 'تم اختيار المكان ✓';
+      renderPreview(d);
     });
+  }
+
+  function priceStr(lvl) { return lvl == null ? '' : ('$$$$'.slice(0, Math.max(1, lvl)) || '$'); }
+  function renderPreview(d) {
+    const openNow = d.opening_hours?.isOpen ? (d.opening_hours.isOpen() ? '<span class="gm-open">مفتوح الآن</span>' : '<span class="gm-closed">مغلق الآن</span>') : '';
+    const rev = (d.reviews || [])[0];
+    preview.innerHTML = `
+      ${picked.photos.length ? `<div class="gm-photos">${picked.photos.map(u => `<img src="${esc(u)}" loading="lazy" alt="">`).join('')}</div>` : ''}
+      <div class="gm-info">
+        <div class="gm-title">${esc(d.name || name.value)}</div>
+        <div class="gm-meta">
+          ${picked.rating != null ? `<span class="gm-rate">${icons.star} ${picked.rating} <small>(${(picked.ratingsTotal || 0).toLocaleString('en')})</small></span>` : '<span class="muted-text">لا يوجد تقييم</span>'}
+          ${picked.priceLevel != null ? `<span class="gm-price">${priceStr(picked.priceLevel)}</span>` : ''}
+          ${openNow}
+        </div>
+        ${d.formatted_address ? `<div class="gm-addr">${esc(d.formatted_address)}</div>` : ''}
+        ${rev ? `<div class="gm-review">“${esc((rev.text || '').slice(0, 140))}${(rev.text || '').length > 140 ? '…' : ''}” — ${esc(rev.author_name || '')} ${rev.rating ? stars(rev.rating, 11) : ''}</div>` : ''}
+        <a class="gm-open-link" href="${esc(picked.mapUrl)}" target="_blank" rel="noopener">${icons.external} صفحة المكان في قوقل ماب</a>
+      </div>`;
+    preview.classList.add('show');
   }
 
   // نتائج OpenStreetMap
@@ -1558,6 +1599,8 @@ function openPlace(t, cityId) {
       name: nm, note: $('#p-note').value,
       mapUrl: picked.mapUrl, placeId: picked.placeId,
       lat: picked.lat, lng: picked.lng, address: picked.address, cityId: cityId || '',
+      rating: picked.rating, ratingsTotal: picked.ratingsTotal, photos: picked.photos,
+      priceLevel: picked.priceLevel, phone: picked.phone, website: picked.website,
     });
     closeModal(); render(); toast('تمت إضافة المكان ✓');
   };

@@ -295,13 +295,18 @@ export function removeSharedExpense(tripId, id) {
 
 /* ---------------- الأماكن ---------------- */
 
-export function addPlace(tripId, { name, note, mapUrl, placeId, lat, lng, address, cityId }) {
+export function addPlace(tripId, data) {
   const t = getTrip(tripId);
   if (!t) return null;
+  const { name, note, mapUrl, placeId, lat, lng, address, cityId,
+          rating, ratingsTotal, photos, priceLevel, phone, website } = data;
   const p = {
     id: uid('pl'), name: name.trim(), note: (note || '').trim(),
     mapUrl: (mapUrl || '').trim(), placeId: placeId || '', address: (address || '').trim(),
     lat: lat ?? null, lng: lng ?? null, cityId: cityId || '', visited: false, reviews: [],
+    rating: rating ?? null, ratingsTotal: ratingsTotal ?? null,
+    photos: Array.isArray(photos) ? photos : [], priceLevel: priceLevel ?? null,
+    phone: phone || '', website: website || '',
   };
   t.places.push(p);
   persist();

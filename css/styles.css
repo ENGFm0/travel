@@ -508,6 +508,34 @@ textarea.input { resize: vertical; min-height: 72px; }
 .rating-pill { display: inline-flex; align-items: center; gap: 3px; font-size: .78rem; font-weight: 800; color: var(--sand-600); background: var(--sand-100); padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
 .rating-pill svg { width: 13px; height: 13px; fill: var(--sand-500); }
 .rating-pill small { font-weight: 700; color: var(--ink-300); }
+.rating-pill.g { color: #b0620a; background: #fff2dd; }
+.rating-pill:not(.g) svg { fill: none; }
+
+/* معاينة قوقل ماب في البحث */
+.gm-preview { display: none; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--paper); }
+.gm-preview.show { display: block; animation: fadein .2s ease; }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+.gm-photos { display: flex; gap: 4px; overflow-x: auto; scroll-snap-type: x mandatory; }
+.gm-photos::-webkit-scrollbar { height: 0; }
+.gm-photos img { width: 44%; flex: 0 0 auto; aspect-ratio: 4/3; object-fit: cover; scroll-snap-align: start; }
+.gm-info { padding: 12px 14px; }
+.gm-title { font-weight: 800; font-size: 1.05rem; }
+.gm-meta { display: flex; align-items: center; gap: 10px; margin: 5px 0; flex-wrap: wrap; }
+.gm-rate { display: inline-flex; align-items: center; gap: 3px; font-weight: 800; color: #b0620a; }
+.gm-rate svg { width: 15px; height: 15px; fill: var(--sand-500); }
+.gm-rate small { color: var(--ink-400, var(--ink-500)); font-weight: 700; }
+.gm-price { font-weight: 800; color: var(--green); }
+.gm-open { color: var(--green); font-weight: 700; font-size: .82rem; }
+.gm-closed { color: var(--red); font-weight: 700; font-size: .82rem; }
+.gm-addr { color: var(--ink-500); font-size: .84rem; margin-bottom: 6px; }
+.gm-review { font-size: .84rem; color: var(--ink-700); background: var(--bg); border-radius: 10px; padding: 8px 10px; line-height: 1.6; }
+.gm-open-link { display: inline-flex; align-items: center; gap: 5px; font-size: .84rem; font-weight: 700; margin-top: 8px; }
+.gm-open-link svg { width: 14px; height: 14px; }
+
+/* صور المكان في البطاقة */
+.place-photos { display: flex; gap: 5px; overflow-x: auto; margin: 8px 0; }
+.place-photos::-webkit-scrollbar { height: 0; }
+.place-photos img { width: 96px; height: 72px; flex: 0 0 auto; object-fit: cover; border-radius: 9px; }
 
 .star-pick { display: flex; gap: 6px; }
 .star-btn { width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); color: var(--line); display: grid; place-items: center; }
