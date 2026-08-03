@@ -137,10 +137,18 @@ async function fetchFlight(flightNo, dateStr) {
   if (!key) throw new Error('no-key');
   const num = flightNo.replace(/\s+/g, '').toUpperCase();
   const url = `https://aerodatabox.p.rapidapi.com/flights/number/${encodeURIComponent(num)}/${dateStr}?withAircraftImage=false&withLocation=false`;
-  const res = await fetch(url, { headers: { 'X-RapidAPI-Key': key, 'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com' } });
+  let res;
+  try {
+    res = await fetch(url, { headers: { 'x-rapidapi-key': key, 'x-rapidapi-host': 'aerodatabox.p.rapidapi.com' } });
+  } catch (e) { throw new Error('cors'); } // رفض fetch = غالبًا CORS/شبكة
   if (res.status === 204) throw new Error('not-found');
-  if (!res.ok) throw new Error('http ' + res.status);
-  const data = await res.json();
+  const text = await res.text();
+  if (!res.ok) {
+    let msg = text;
+    try { const j = JSON.parse(text); msg = j.message || j.error || j.detail || text; } catch {}
+    throw new Error('api:' + res.status + ':' + String(msg || '').slice(0, 140));
+  }
+  const data = JSON.parse(text);
   const f = Array.isArray(data) ? data[0] : (data.flights ? data.flights[0] : data);
   if (!f) throw new Error('not-found');
   const dep = f.departure || {}, arr = f.arrival || {};
@@ -1675,7 +1683,13 @@ function openFlightEdit(t, leg) {
       showAir();
     } catch (e) {
       const m = e?.message || '';
-      st.innerHTML = `<span style="color:var(--red)">${/not-found/.test(m) ? 'ما لقينا الرحلة بهذا التاريخ' : /no-key/.test(m) ? 'أضِف مفتاح AeroDataBox' : 'تعذّر الجلب — جرّب FlightAware يدويًا'}</span>`;
+      let txt;
+      if (/not-found/.test(m)) txt = 'ما لقينا الرحلة بهذا التاريخ — قد يكون بعيدًا (جرّب تاريخًا أقرب من موعد الرحلة).';
+      else if (/no-key/.test(m)) txt = 'أضِف مفتاح AeroDataBox من الإعدادات';
+      else if (/cors/.test(m)) txt = 'المتصفح منع الطلب (CORS). نحتاج وسيطًا خلفيًا — استخدم FlightAware يدويًا الآن.';
+      else if (/^api:/.test(m)) txt = 'رد الخدمة: ' + m.replace(/^api:/, '');
+      else txt = 'تعذّر الجلب — ' + m;
+      st.innerHTML = `<span style="color:var(--red)">${esc(txt)}</span>`;
     } finally { $('#fl-fetch').disabled = false; }
   };
 

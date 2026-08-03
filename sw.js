@@ -1,5 +1,5 @@
 /* بوردنق — Service Worker (تخزين مؤقت للعمل دون اتصال) */
-const CACHE = 'boarding-v10';
+const CACHE = 'boarding-v11';
 const ASSETS = [
   './',
   './index.html',
