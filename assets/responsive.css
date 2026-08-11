@@ -25,6 +25,15 @@ img.h-full, video.h-full { height: 100%; }
 /* أي جدول أو صف عريض يمرَّر أفقياً داخل حاويته بدل كسر التخطيط */
 .overflow-x-auto { -webkit-overflow-scrolling: touch; }
 
+/* النوافذ المنبثقة (المودال) تبقى مخفية تماماً في حالتها المغلقة —
+   حماية من ظهورها/قفلها للشاشة قبل أو أثناء تحميل Tailwind */
+.modal-overlay.opacity-0,
+#trip-modal.opacity-0,
+#auth-modal.opacity-0 {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* =========================
    شريط التنقل السفلي للجوال
    Mobile bottom tab bar
