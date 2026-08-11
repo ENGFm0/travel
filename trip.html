@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title class="">بوردنق - الرحلة</title>
+<!-- Google Fonts: IBM Plex Sans Arabic -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Custom subtle shadow from Style Guidance */
+        .shadow-level-1 {
+            box-shadow: 0px 4px 12px rgba(20, 33, 61, 0.05);
+        }
+        
+        /* Masonry fallback for older browsers */
+        .masonry-grid {
+            column-count: 1;
+            column-gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .masonry-grid { column-count: 2; }
+        }
+        @media (min-width: 1024px) {
+            .masonry-grid { column-count: 3; }
+        }
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1.5rem;
+        }
+        
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(232, 93, 61, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(232, 93, 61, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(232, 93, 61, 0); }
+        }
+
+        .accordion-content {
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 2000px; /* arbitrary large value */
+            opacity: 1;
+        }
+        .chevron-icon {
+            transition: transform 0.3s ease;
+        }
+        .open .chevron-icon {
+            transform: rotate(180deg);
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary": "#140800",
+                "on-primary": "#ffffff",
+                "on-primary-fixed-variant": "#3a4664",
+                "surface-tint": "#525e7d",
+                "on-tertiary-fixed": "#2b1700",
+                "inverse-primary": "#b9c6ea",
+                "secondary": "#ad3317",
+                "tertiary-fixed-dim": "#ffb868",
+                "outline": "#75777e",
+                "on-tertiary": "#ffffff",
+                "on-primary-container": "#7c89aa",
+                "tertiary-container": "#341c00",
+                "on-tertiary-container": "#bd7a25",
+                "primary-fixed": "#d9e2ff",
+                "error": "#ba1a1a",
+                "on-secondary-fixed-variant": "#8b1a00",
+                "background": "#fff8f0",
+                "primary": "#000a24",
+                "surface-container-low": "#faf3e9",
+                "surface-container-highest": "#e8e2d8",
+                "on-secondary-fixed": "#3d0600",
+                "primary-container": "#14213d",
+                "on-secondary": "#ffffff",
+                "secondary-fixed-dim": "#ffb4a3",
+                "on-background": "#1e1b16",
+                "primary-fixed-dim": "#b9c6ea",
+                "surface-variant": "#e8e2d8",
+                "outline-variant": "#c5c6ce",
+                "on-primary-fixed": "#0d1b36",
+                "inverse-on-surface": "#f7f0e6",
+                "secondary-container": "#ff6e4c",
+                "secondary-fixed": "#ffdad2",
+                "inverse-surface": "#33302a",
+                "on-error-container": "#93000a",
+                "tertiary-fixed": "#ffddbb",
+                "error-container": "#ffdad6",
+                "surface-container-lowest": "#ffffff",
+                "surface-bright": "#fff8f0",
+                "surface-dim": "#e0d9d0",
+                "on-secondary-container": "#671100",
+                "surface-container": "#f4ede3",
+                "on-tertiary-fixed-variant": "#673d00",
+                "on-surface-variant": "#45464d",
+                "on-error": "#ffffff",
+                "on-surface": "#1e1b16",
+                "surface-container-high": "#eee7dd",
+                "surface": "#fff8f0"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-lg": "32px",
+                "container-max": "1280px",
+                "stack-sm": "8px",
+                "stack-md": "16px",
+                "margin-mobile": "20px",
+                "gutter": "24px",
+                "unit": "4px",
+                "margin-desktop": "64px"
+        },
+        "fontFamily": {
+                "headline-xl": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-xl-mobile": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "body-lg": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-lg-mobile": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "body-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "label-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "label-sm": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-lg": [
+                        "IBM Plex Sans Arabic"
+                ]
+        },
+        "fontSize": {
+                "headline-xl": [
+                        "40px",
+                        {
+                                "lineHeight": "52px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-xl-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<link rel="stylesheet" href="assets/responsive.css"/>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased min-h-screen flex flex-col transition-colors duration-300 dark:bg-[#14213D]">
+<!-- TopNavBar (Shared Component) -->
+<header class="shadow-sm bg-[#FDF6EC] dark:bg-[#14213D] docked full-width top-0 sticky z-50 transition-colors duration-300">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop w-full max-w-container-max mx-auto h-20"><!-- Logo Section -->
+<div class="flex items-center">
+<img alt="Boarding Logo" class="h-10 md:h-12 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARSnlH3ALUHdtBexe9aN0YgX4p3_5HI-TQ3DWk-Xwu33bomzm9JaYuOSSl_L7SURu0GJz0BW69VXyz-r4iUPM5f7oHL_PW_5tuQu2hT5dHI4NojEv316SJAMoMJ4ijafxEz2gPEzJdPHmVHKi0ZuVFgoif99-YeM7syT8fb2SrtoI_vJxk0JyESrFHbxGU23QzbRmiEMhZLRSeQif8hYgDObKVprKpcWVcSzotK48K_H1K0kk6Bk0zDi5iinw89SeznA"/>
+<img alt="Boarding Logo" class="h-10 md:h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACVqpqi2npHFbdMoqz4wHghAdl21tr2L7gXqnVTQ8mOhttXrlxbQjZ6ZQiKBC6kmq2Jyu1BqdzU7Dn3XgL6eUcqNJek0BDfEbe8kPPF_9KrOENWhRLtm0hvZMLRvVpbBO1PdwcQxSfIlzK-RDzU0HPPrjQa874DEzRYVCkeU9zUQw61XUYOVkhrJDhuCcrsxFsdNLh2gFfJ1ATi35HDSTiqpDh4mo7HCUjF_gNJ8TwBZmmFFLqtk2KWnnpVNOFKci62g"/>
+</div>
+<!-- Navigation Links (Centered) -->
+<nav class="hidden md:flex items-center gap-8 font-label-md text-label-md">
+<a class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary transition-colors" data-i18n="nav_home" href="#">الرئيسية</a>
+<a class="text-primary dark:text-[#FDF6EC] font-bold border-b-2 border-secondary py-2" data-i18n="nav_trip" href="#">الرحلة</a>
+<a class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary transition-colors" data-i18n="nav_recommendations" href="#">التوصيات</a>
+<a class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary transition-colors" data-i18n="nav_expenses" href="#">المصاريف</a>
+<a class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary transition-colors" data-i18n="nav_friends" href="#">الأصدقاء</a>
+</nav>
+<!-- Actions Group -->
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant dark:text-[#FDF6EC]/70 font-label-md hover:text-secondary transition-colors" id="lang-toggle">EN</button>
+<button class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary transition-colors flex items-center" id="theme-toggle">
+<span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+</button>
+<button class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary transition-colors flex items-center">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="bg-primary dark:bg-primary-fixed text-on-primary dark:text-on-primary-fixed w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95">
+<span class="material-symbols-outlined">person</span>
+</button>
+</div></div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12 flex flex-col gap-12">
+<!-- Hero Section: Location Card & Countdown -->
+<section class="relative w-full rounded-xl overflow-hidden shadow-level-1 h-96 flex items-end">
+<!-- Background Image with Gradient Overlay -->
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A breathtaking, wide-angle architectural photograph of the London skyline at golden hour. The modern glass skyscrapers contrast with historic stone landmarks along the River Thames. Soft, warm sunlight bathes the scene, creating a sophisticated and inviting corporate-travel aesthetic. High-resolution, professional travel photography style." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB_C8_kN4UK3C-Kped1RrpRN_FM9yjp9W9M9XVqbAtfhf9GkqBDvgcmoWvPLAwx5yX6GYBsL1GLZv61WEKpxZmygjatRd6a54MBsUEpOwPyj78TIDkdCE1hX0SY0AClCsA2PlkWgv4SnrDln1_4nsZIc05r9IOujiduLrF0XuGGV4Fuc977SsWPa6ySPb1KRd39k4HNY-B7NDUeoT5tjL6v_TNgzFMoSvN9QtoI_1zf3iPoplLZF5yT");'>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+</div>
+<div class="relative z-10 w-full p-8 md:p-12 flex flex-col md:flex-row justify-between items-end gap-6 text-on-primary">
+<div>
+<h1 class="font-display-lg text-headline-xl text-white mb-2" data-i18n="hero_title">لندن ٢٠٢٤</h1>
+<p class="font-title-lg text-body-lg text-inverse-primary flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span data-i18n="hero_dates">١٥ مايو - ٢٢ مايو</span>
+</p>
+<button class="mt-4 flex items-center gap-2 bg-secondary-container text-on-secondary-container px-4 py-2 rounded-full font-label-md text-label-md hover:bg-secondary transition-colors active:scale-95 shadow-sm"><span class="material-symbols-outlined text-lg">person_add</span><span class="" data-i18n="hero_invite">دعوة أصدقاء</span></button></div>
+<!-- Countdown Progress Bar -->
+<div class="bg-surface/10 backdrop-blur-md border border-white/20 p-6 rounded-lg w-full md:w-96">
+<div class="flex justify-between items-end mb-3">
+<span class="font-headline-md text-headline-md text-white" data-i18n="hero_days">١٤ يوم</span>
+<span class="font-label-md text-label-md text-secondary-fixed-dim" data-i18n="hero_until">متبقية على الانطلاق</span>
+</div>
+<!-- Progress Bar (Primary track, Secondary fill) -->
+<div class="w-full h-3 bg-primary rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container rounded-full w-3/4"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Anchor City Strip -->
+<div class="w-full bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-level-1 flex flex-col md:flex-row items-center justify-between gap-8 transition-colors duration-300 sticky top-20 z-40">
+<div class="flex items-center gap-4 overflow-x-auto pb-2 w-full md:w-auto">
+<a class="flex items-center gap-3 px-4 py-2 rounded-full bg-[#E85D3D] text-white font-label-md transition-all border border-transparent" href="#section-london">
+<span class="text-lg">🇬🇧</span>
+<span data-i18n="city_london">لندن</span>
+<span class="text-label-sm opacity-70">١٥-١٨ مايو</span>
+</a>
+<div class="flex items-center gap-1 text-outline dark:text-[rgba(253,246,236,0.4)] opacity-50">
+<span class="material-symbols-outlined text-sm">train</span>
+<div class="h-px w-8 border-t border-dashed border-current"></div>
+</div>
+<a class="flex items-center gap-3 px-4 py-2 rounded-full bg-white text-[#14213D] border border-outline-variant dark:bg-[#1F2F54] dark:text-[#FDF6EC] dark:border-[#2A3F6C] font-label-md hover:border-[#E85D3D] transition-all" href="#section-paris">
+<span class="text-lg">🇫🇷</span>
+<span data-i18n="city_paris">باريس</span>
+<span class="text-label-sm opacity-70">١٨-٢٠ مايو</span>
+</a>
+<div class="flex items-center gap-1 text-outline dark:text-[rgba(253,246,236,0.4)] opacity-50">
+<span class="material-symbols-outlined text-sm">flight</span>
+<div class="h-px w-8 border-t border-dashed border-current"></div>
+</div>
+<a class="flex items-center gap-3 px-4 py-2 rounded-full bg-white text-[#14213D] border border-outline-variant dark:bg-[#1F2F54] dark:text-[#FDF6EC] dark:border-[#2A3F6C] font-label-md hover:border-[#E85D3D] transition-all" href="#section-rome">
+<span class="text-lg">🇮🇹</span>
+<span data-i18n="city_rome">روما</span>
+<span class="text-label-sm opacity-70">٢٠-٢٢ مايو</span>
+</a>
+</div>
+<button class="shrink-0 flex items-center gap-2 text-secondary hover:text-secondary-container font-label-md transition-colors">
+<span class="material-symbols-outlined">add_location</span>
+<span data-i18n="add_destination">إضافة وجهة</span>
+</button>
+</div>
+<!-- Stacked City Sections -->
+<div class="w-full flex flex-col gap-12 mt-8">
+<!-- London Section -->
+<section class="border border-outline-variant dark:border-[#2A3F6C] rounded-2xl overflow-hidden bg-background dark:bg-[#14213D]" id="section-london">
+<!-- Accordion Header -->
+<button class="w-full flex justify-between items-center p-6 bg-surface-container-low dark:bg-[#1F2F54] hover:bg-surface-container transition-colors text-right ltr:text-left accordion-toggle">
+<div class="flex items-center gap-4">
+<span class="text-3xl">🇬🇧</span>
+<div>
+<h2 class="font-headline-lg text-headline-md text-primary dark:text-[#FDF6EC]" data-i18n="city_london">لندن</h2>
+<p class="text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70">١٥ مايو - ١٨ مايو</p>
+</div>
+<div class="mr-4 ltr:mr-0 ltr:ml-4 flex items-center gap-2 bg-[#E85D3D]/10 text-[#E85D3D] px-3 py-1 rounded-full text-label-sm font-bold border border-[#E85D3D]/20">
+<div class="w-2 h-2 rounded-full bg-[#E85D3D] pulse-dot"></div>
+<span data-i18n="status_current">أنت هنا الآن</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline dark:text-[#FDF6EC]/70 chevron-icon">expand_more</span>
+</button>
+<!-- Accordion Content -->
+<div class="accordion-content open p-6">
+<!-- Flight/Train Card -->
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl shadow-sm border border-outline-variant dark:border-[#2A3F6C] p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-3 bg-primary/5 px-4 py-2 rounded-full text-primary dark:text-[#FDF6EC] font-label-md text-label-md w-full md:w-auto">
+<span class="material-symbols-outlined">airlines</span>
+<span data-i18n="flight_airline">الخطوط الجوية البريطانية • BA 124</span>
+</div>
+<div class="flex-1 flex w-full justify-between items-center max-w-xl mx-auto">
+<div class="text-right ltr:text-left">
+<h3 class="font-display-lg text-headline-xl text-primary dark:text-[#FDF6EC]">RUH</h3>
+<p class="text-label-md text-outline dark:text-[#FDF6EC]/50 mt-1" data-i18n="flight_time_start">٠٨:٣٠ ص</p>
+</div>
+<div class="flex-1 flex flex-col items-center px-4">
+<span class="material-symbols-outlined text-[#E85D3D] mb-2 ltr:rotate-90 rtl:rotate-270">flight</span>
+<div class="w-full h-px border-t-2 border-dashed border-outline-variant dark:border-outline"></div>
+<span class="font-label-sm text-outline dark:text-[#FDF6EC]/50 mt-2" data-i18n="flight_duration">٦ ساعات و ٣٠ دقيقة</span>
+</div>
+<div class="text-left ltr:text-right">
+<h3 class="font-display-lg text-headline-xl text-primary dark:text-[#FDF6EC]">LHR</h3>
+<p class="text-label-md text-outline dark:text-[#FDF6EC]/50 mt-1" data-i18n="flight_time_end">٠٢:٠٠ م</p>
+</div>
+</div>
+</div>
+<!-- Accommodation & Map Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+<!-- Accommodation -->
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl shadow-sm border border-outline-variant dark:border-[#2A3F6C] p-6 flex flex-col justify-center">
+<h3 class="font-title-lg text-headline-md text-primary dark:text-[#FDF6EC] mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[#E85D3D]">hotel</span>
+<span data-i18n="acc_title">مقر الإقامة</span>
+</h3>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/70 font-bold" data-i18n="acc_hotel">فندق ريتز لندن</p>
+<p class="font-body-md text-body-md text-outline dark:text-[#FDF6EC]/50 mb-6" data-i18n="acc_address">١٥٠ بيكاديلي، سانت جيمس</p>
+<div class="mt-auto border-t border-surface-variant dark:border-[#2A3F6C] pt-4 flex justify-between items-center">
+<div>
+<p class="font-label-sm text-outline dark:text-[#FDF6EC]/50" data-i18n="acc_weather_title">الطقس المتوقع</p>
+<p class="text-body-lg text-primary dark:text-[#FDF6EC] mt-1" data-i18n="acc_weather_desc">١٨°C غائم جزئياً</p>
+</div>
+<span class="material-symbols-outlined text-3xl text-secondary-container">partly_cloudy_day</span>
+</div>
+</div>
+<!-- Map -->
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl shadow-sm border border-outline-variant dark:border-[#2A3F6C] overflow-hidden h-64 flex flex-col">
+<div class="p-3 bg-surface-container-low dark:bg-[#1F2F54] border-b border-surface-variant dark:border-[#2A3F6C] flex items-center gap-2">
+<span class="material-symbols-outlined text-primary dark:text-[#FDF6EC] text-sm">map</span>
+<h3 class="text-label-md font-bold text-primary dark:text-[#FDF6EC]" data-i18n="map_title_london">خريطة لندن</h3>
+</div>
+<div class="flex-grow bg-surface-variant relative">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBGv9lS6aEv_9W0svHnKwcdVv36dnX4nYb1Sa1uRrk1YXtcZq-4aF6m92nEx8sB-NoXgEywbPnGFKE7Dc2YL26orGQXuOSKnGdK5xyNnUI8k6-1DnxG-_7BwoHSFeYxugwA5319SPZ3k23APi8iZvMii1y7a0Q-0ObyeVzHGHTR8h2wVKlVMlkwOSuVoBMHvhTZjtl9czddnhFIJOR56WXIsVRQ1pznSb1m8mKBQuvjCSOXQhknHj1a");'></div>
+</div>
+</div>
+</div>
+<!-- Itinerary Days -->
+<div class="space-y-6 pl-8 ltr:pl-0 ltr:pr-8 relative border-r-2 ltr:border-r-0 ltr:border-l-2 border-outline-variant dark:border-[#2A3F6C]">
+<div class="relative">
+<div class="absolute -right-[41px] ltr:right-auto ltr:-left-[41px] top-1 w-5 h-5 bg-[#E85D3D] rounded-full border-4 border-background dark:border-[#14213D] shadow-sm"></div>
+<h3 class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC] mb-4" data-i18n="itin_london_day1">اليوم الأول: الوصول</h3>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] border border-outline-variant dark:border-[#2A3F6C] rounded-lg p-4 flex gap-4">
+<div class="w-12 h-12 rounded-md bg-surface-container dark:bg-surface-container-high flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-outline">luggage</span></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-title-lg text-body-lg font-bold text-primary dark:text-[#FDF6EC]" data-i18n="itin_act1_title">تسجيل الدخول في الفندق</h4>
+<span class="text-label-md text-outline">٠٣:٠٠ م</span>
+</div>
+<p class="text-body-md text-on-surface-variant dark:text-[#FDF6EC]/70 mt-1" data-i18n="itin_act1_desc">استلام الغرف وأخذ قسط من الراحة.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Paris Section -->
+<section class="border border-outline-variant dark:border-[#2A3F6C] rounded-2xl overflow-hidden bg-background dark:bg-[#14213D]" id="section-paris">
+<!-- Accordion Header -->
+<button class="w-full flex justify-between items-center p-6 bg-surface-container-low dark:bg-[#1F2F54] hover:bg-surface-container transition-colors text-right ltr:text-left accordion-toggle">
+<div class="flex items-center gap-4">
+<span class="text-3xl">🇫🇷</span>
+<div>
+<h2 class="font-headline-lg text-headline-md text-primary dark:text-[#FDF6EC]" data-i18n="city_paris">باريس</h2>
+<p class="text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70">١٨ مايو - ٢٠ مايو</p>
+</div>
+<div class="mr-4 ltr:mr-0 ltr:ml-4 flex items-center gap-2 bg-surface-variant dark:bg-[#2A3F6C] text-on-surface-variant dark:text-[#FDF6EC]/70 px-3 py-1 rounded-full text-label-sm border border-outline-variant dark:border-transparent">
+<span data-i18n="status_upcoming">قادمة</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline dark:text-[#FDF6EC]/70 chevron-icon">expand_more</span>
+</button>
+<!-- Accordion Content -->
+<div class="accordion-content p-6 border-t border-outline-variant dark:border-[#2A3F6C]">
+<!-- Arrival Transfer Card -->
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl shadow-sm border border-dashed border-[#E85D3D] p-6 mb-8 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-[#E85D3D]/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#E85D3D]">train</span>
+</div>
+<div>
+<p class="font-label-md text-primary dark:text-[#FDF6EC]" data-i18n="transfer_lon_par">لندن ← باريس (Eurostar)</p>
+<p class="font-label-sm text-outline dark:text-[#FDF6EC]/50" data-i18n="transfer_duration_1">ساعتان و ١٥ دقيقة</p>
+</div>
+</div>
+<span class="font-label-md text-primary dark:text-[#FDF6EC]">١٠:٠٠ ص</span>
+</div>
+<div class="space-y-6 pl-8 ltr:pl-0 ltr:pr-8 relative border-r-2 ltr:border-r-0 ltr:border-l-2 border-outline-variant dark:border-[#2A3F6C]">
+<div class="relative">
+<div class="absolute -right-[41px] ltr:right-auto ltr:-left-[41px] top-1 w-5 h-5 bg-surface-variant dark:bg-[#2A3F6C] rounded-full border-4 border-background dark:border-[#14213D]"></div>
+<h3 class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC] mb-4" data-i18n="itin_paris_day1">اليوم الرابع: مدينة الأضواء</h3>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] border border-outline-variant dark:border-[#2A3F6C] rounded-lg p-4 flex gap-4">
+<div class="w-12 h-12 rounded-md bg-surface-container dark:bg-surface-container-high flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-outline">museum</span></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-title-lg text-body-lg font-bold text-primary dark:text-[#FDF6EC]" data-i18n="itin_act_louvre">متحف اللوفر</h4>
+<span class="text-label-md text-outline">٠٩:٠٠ ص</span>
+</div>
+<p class="text-body-md text-on-surface-variant dark:text-[#FDF6EC]/70 mt-1" data-i18n="itin_act_louvre_desc">جولة في أكبر متحف فني في العالم.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Rome Section -->
+<section class="border border-outline-variant dark:border-[#2A3F6C] rounded-2xl overflow-hidden bg-background dark:bg-[#14213D]" id="section-rome">
+<!-- Accordion Header -->
+<button class="w-full flex justify-between items-center p-6 bg-surface-container-low dark:bg-[#1F2F54] hover:bg-surface-container transition-colors text-right ltr:text-left accordion-toggle">
+<div class="flex items-center gap-4">
+<span class="text-3xl">🇮🇹</span>
+<div>
+<h2 class="font-headline-lg text-headline-md text-primary dark:text-[#FDF6EC]" data-i18n="city_rome">روما</h2>
+<p class="text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70">٢٠ مايو - ٢٢ مايو</p>
+</div>
+<div class="mr-4 ltr:mr-0 ltr:ml-4 flex items-center gap-2 bg-surface-variant dark:bg-[#2A3F6C] text-on-surface-variant dark:text-[#FDF6EC]/70 px-3 py-1 rounded-full text-label-sm border border-outline-variant dark:border-transparent">
+<span data-i18n="status_upcoming">قادمة</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline dark:text-[#FDF6EC]/70 chevron-icon">expand_more</span>
+</button>
+<!-- Accordion Content -->
+<div class="accordion-content p-6 border-t border-outline-variant dark:border-[#2A3F6C]">
+<div class="space-y-6 pl-8 ltr:pl-0 ltr:pr-8 relative border-r-2 ltr:border-r-0 ltr:border-l-2 border-outline-variant dark:border-[#2A3F6C]">
+<div class="relative">
+<div class="absolute -right-[41px] ltr:right-auto ltr:-left-[41px] top-1 w-5 h-5 bg-surface-variant dark:bg-[#2A3F6C] rounded-full border-4 border-background dark:border-[#14213D]"></div>
+<h3 class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC] mb-4" data-i18n="itin_rome_day1">اليوم السادس: التاريخ الروماني</h3>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] border border-outline-variant dark:border-[#2A3F6C] rounded-lg p-4 flex gap-4">
+<div class="w-12 h-12 rounded-md bg-surface-container dark:bg-surface-container-high flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-outline">account_balance</span></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-title-lg text-body-lg font-bold text-primary dark:text-[#FDF6EC]" data-i18n="itin_act_colosseum">الكولوسيوم</h4>
+<span class="text-label-md text-outline">١٠:٠٠ ص</span>
+</div>
+<p class="text-body-md text-on-surface-variant dark:text-[#FDF6EC]/70 mt-1" data-i18n="itin_act_colosseum_desc">زيارة المدرج الروماني الشهير.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Trip Memories Section -->
+<section class="mt-16 w-full flex flex-col gap-6">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary dark:text-[#FDF6EC] text-3xl">photo_library</span>
+<h2 class="font-headline-lg text-headline-lg text-primary dark:text-[#FDF6EC]" data-i18n="memories_title">ذكريات الرحلة</h2>
+<span class="bg-[#E85D3D]/10 text-[#E85D3D] px-3 py-1 rounded-full text-label-sm font-bold" data-i18n="memories_count">24 ذكرى</span>
+</div>
+<p class="flex items-center gap-2 text-on-surface-variant dark:text-[#FDF6EC]/70 text-body-md">
+<span class="material-symbols-outlined text-sm">bookmark</span>
+<span data-i18n="memories_subtitle">تبقى الذكريات محفوظة حتى بعد انتهاء الرحلة</span>
+</p>
+</div>
+<button class="bg-[#E85D3D] text-white px-6 py-3 rounded-lg font-label-md flex items-center gap-2 hover:bg-[#E85D3D]/90 transition-colors shadow-sm active:scale-95" id="add-memory-btn">
+<span class="material-symbols-outlined">add_a_photo</span>
+<span data-i18n="memories_add">إضافة ذكرى</span>
+</button>
+</div>
+<!-- Gallery Filters -->
+<div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+<button class="memory-filter-btn active px-4 py-2 rounded-full bg-[#E85D3D] text-white font-label-md whitespace-nowrap transition-all" data-filter="all" data-i18n="filter_all">الكل</button>
+<button class="memory-filter-btn px-4 py-2 rounded-full bg-surface-container dark:bg-[#1F2F54] text-on-surface dark:text-[#FDF6EC] font-label-md whitespace-nowrap hover:bg-[#E85D3D]/10 hover:text-[#E85D3D] transition-all" data-filter="ritz" data-i18n="memories_filter_ritz">فندق ريتز لندن</button>
+<button class="memory-filter-btn px-4 py-2 rounded-full bg-surface-container dark:bg-[#1F2F54] text-on-surface dark:text-[#FDF6EC] font-label-md whitespace-nowrap hover:bg-[#E85D3D]/10 hover:text-[#E85D3D] transition-all" data-filter="louvre" data-i18n="memories_filter_louvre">متحف اللوفر</button>
+<button class="memory-filter-btn px-4 py-2 rounded-full bg-surface-container dark:bg-[#1F2F54] text-on-surface dark:text-[#FDF6EC] font-label-md whitespace-nowrap hover:bg-[#E85D3D]/10 hover:text-[#E85D3D] transition-all" data-filter="colosseum" data-i18n="memories_filter_colosseum">الكولوسيوم</button>
+<button class="memory-filter-btn px-4 py-2 rounded-full bg-surface-container dark:bg-[#1F2F54] text-on-surface dark:text-[#FDF6EC] font-label-md whitespace-nowrap hover:bg-[#E85D3D]/10 hover:text-[#E85D3D] transition-all" data-filter="general" data-i18n="memories_filter_general">ذكريات عامة</button>
+</div>
+<!-- Masonry Gallery -->
+<div class="masonry-grid w-full mt-4" id="memories-gallery">
+<!-- Demo Memory 1 -->
+<div class="masonry-item relative group cursor-pointer rounded-xl overflow-hidden shadow-level-1 bg-surface-container-lowest dark:bg-[#1F2F54]" data-location="ritz">
+<img alt="London memory" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3uhS7wt0sKs3FP_8IbNYHba2XhUvfyp6c6-DFSeiCDZqgdJg2NQpz_PGtm-0N5tEMqjWqzuEO7XA9A_E9T27QcsXf1efxMWdHGSwWlwCvJdTb9BISfjY8sBLpmRLAgtABhhxhhxFA056avf6ZfPZSPdy45-JoINwMofOJNrFJtLuBj5z2CHBWq4ES8ZK5jGmOi9za3qfHSIIlhfnvp0AD251B8F8IgfzwMQGOyDMGwJNiLysRsheR"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-white/20 backdrop-blur-md text-white px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">location_on</span> فندق ريتز لندن
+                    </span>
+</div>
+<p class="text-white text-sm line-clamp-2">وصولنا إلى الفندق، الإطلالة رائعة جداً ☕️🇬🇧</p>
+<div class="flex items-center justify-between mt-3 text-white/80 text-xs">
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_circle</span> أحمد</div>
+<span>١٥ مايو</span>
+</div>
+</div>
+</div>
+<!-- Demo Memory 2 (Video) -->
+<div class="masonry-item relative group cursor-pointer rounded-xl overflow-hidden shadow-level-1 bg-surface-container-lowest dark:bg-[#1F2F54]" data-location="louvre">
+<img alt="Paris memory" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1qbpyVKCrE5IqqLjDX_QSp_fYWFrU3lsViVPcmET06HBsMJ6yPBHLsUipJCz-I9yQ8bjUDyHdNnPkpINGfLuiK-mUAeNtmQXCFutIye5EYumN8_kOkjkuRQdjZW775FfPy_HaXo00qL3BERNAQ2ERxhvsL-l3NWk0gVD0oEneA1CVLjpMtrpVA6dXUAZlM6og49V1el54c5Cna7uHG7KTqAXJcA71I4NWIZ1qLYNL5Cr5Kxxw2xKb"/>
+<div class="absolute top-3 right-3 bg-black/50 backdrop-blur-sm p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-white">play_arrow</span>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-white/20 backdrop-blur-md text-white px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">location_on</span> متحف اللوفر
+                    </span>
+</div>
+<p class="text-white text-sm line-clamp-2">جولة سريعة حول الهرم الزجاجي في باريس.</p>
+<div class="flex items-center justify-between mt-3 text-white/80 text-xs">
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_circle</span> سارة</div>
+<span>١٨ مايو</span>
+</div>
+</div>
+</div>
+<!-- Demo Memory 3 -->
+<div class="masonry-item relative group cursor-pointer rounded-xl overflow-hidden shadow-level-1 bg-surface-container-lowest dark:bg-[#1F2F54]" data-location="general">
+<img alt="Travel friends" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHCZUa10E_T9IrI3KEp671Uq4xQ_uPIkDFpIkbyIlcHugDMJz62vrtG7Ix7YvjHT0Zx6QcgmoEeiuERT2QRpbh2cA-OMfA7m2KWZ-dTT89cXJyIXg70vCC4kpee6V0hQ0HJQZ5rEiXcKKlNoqNj_V6jd50mEanVkc0ghiKgri1F9DlRR3HaMPgxDqJw50jZrDCDj7YV8xqX3kt3TnwCW1Ghh-3zpakWP19zrY9Dead3VEfX5flA3Ag"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-white/20 backdrop-blur-md text-white px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1">
+                        ذكريات عامة
+                    </span>
+</div>
+<p class="text-white text-sm line-clamp-2">أفضل صحبة في هذه الرحلة! 🌍✈️</p>
+<div class="flex items-center justify-between mt-3 text-white/80 text-xs">
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_circle</span> خالد</div>
+<span>١٦ مايو</span>
+</div>
+</div>
+</div>
+<!-- Demo Memory 4 -->
+<div class="masonry-item relative group cursor-pointer rounded-xl overflow-hidden shadow-level-1 bg-surface-container-lowest dark:bg-[#1F2F54]" data-location="colosseum">
+<img alt="Rome memory" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2clYTADLeF08RG-5-7SuogUEaOZI0H4Fusml5kuLW8-7mBkl3JKCZveZEdo_PyYnaH_ZGq_n8DokPXjXhBtJFGB-aCgfCuRUkitnNSxOjLKlmA1R_mQe1M-J6AXGHlrtZuIDbkz2c4dDOh0CMjb7Ut-TP_guUESzQ3IE3FB4lyCZiuZ-U49vU85jp9ZpdKN2jMIeXmA0NbuP3nqJ3dNhIstH013TvgTe0yLpQar_9GEq4ioaoWnI1"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-white/20 backdrop-blur-md text-white px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">location_on</span> الكولوسيوم
+                    </span>
+</div>
+<p class="text-white text-sm line-clamp-2">تاريخ عظيم وهندسة مذهلة.</p>
+<div class="flex items-center justify-between mt-3 text-white/80 text-xs">
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_circle</span> أحمد</div>
+<span>٢٠ مايو</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Add Memory Modal -->
+<div class="fixed inset-0 z-[100] hidden flex items-center justify-center" id="add-memory-modal">
+<div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="add-memory-overlay"></div>
+<div class="relative bg-white dark:bg-[#1F2F54] w-full max-w-2xl rounded-2xl shadow-2xl p-6 md:p-8 m-4 max-h-[90vh] overflow-y-auto transition-colors duration-300">
+<!-- Header -->
+<div class="flex justify-between items-center border-b border-surface-variant dark:border-[#2A3F6C] pb-4 mb-6">
+<div class="flex items-center gap-3">
+<img alt="Boarding Logo" class="h-8 w-auto dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARSnlH3ALUHdtBexe9aN0YgX4p3_5HI-TQ3DWk-Xwu33bomzm9JaYuOSSl_L7SURu0GJz0BW69VXyz-r4iUPM5f7oHL_PW_5tuQu2hT5dHI4NojEv316SJAMoMJ4ijafxEz2gPEzJdPHmVHKi0ZuVFgoif99-YeM7syT8fb2SrtoI_vJxk0JyESrFHbxGU23QzbRmiEMhZLRSeQif8hYgDObKVprKpcWVcSzotK48K_H1K0kk6Bk0zDi5iinw89SeznA"/>
+<img alt="Boarding Logo" class="h-8 w-auto hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACVqpqi2npHFbdMoqz4wHghAdl21tr2L7gXqnVTQ8mOhttXrlxbQjZ6ZQiKBC6kmq2Jyu1BqdzU7Dn3XgL6eUcqNJek0BDfEbe8kPPF_9KrOENWhRLtm0hvZMLRvVpbBO1PdwcQxSfIlzK-RDzU0HPPrjQa874DEzRYVCkeU9zUQw61XUYOVkhrJDhuCcrsxFsdNLh2gFfJ1ATi35HDSTiqpDh4mo7HCUjF_gNJ8TwBZmmFFLqtk2KWnnpVNOFKci62g"/>
+<h3 class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-i18n="memories_modal_title">إضافة ذكرى جديدة</h3>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1" id="close-memory-modal">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Form Content -->
+<div class="space-y-8">
+<!-- Media Source Options -->
+<div>
+<p class="font-label-md text-on-surface dark:text-[#FDF6EC] mb-3" data-i18n="memories_source_label">اختر مصدر الميديا</p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<label class="cursor-pointer border-2 border-dashed border-outline-variant dark:border-[#2A3F6C] rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:border-[#E85D3D] hover:bg-[#E85D3D]/5 transition-colors group">
+<span class="material-symbols-outlined text-4xl text-outline group-hover:text-[#E85D3D]">photo_camera</span>
+<span class="font-label-md text-on-surface-variant dark:text-[#FDF6EC]/70" data-i18n="memories_source_camera">التقاط صورة</span>
+<input accept="image/*" capture="environment" class="hidden media-input" type="file"/>
+</label>
+<label class="cursor-pointer border-2 border-dashed border-outline-variant dark:border-[#2A3F6C] rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:border-[#E85D3D] hover:bg-[#E85D3D]/5 transition-colors group">
+<span class="material-symbols-outlined text-4xl text-outline group-hover:text-[#E85D3D]">videocam</span>
+<span class="font-label-md text-on-surface-variant dark:text-[#FDF6EC]/70" data-i18n="memories_source_video">تسجيل فيديو</span>
+<input accept="video/*" capture="environment" class="hidden media-input" type="file"/>
+</label>
+<label class="cursor-pointer border-2 border-dashed border-outline-variant dark:border-[#2A3F6C] rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:border-[#E85D3D] hover:bg-[#E85D3D]/5 transition-colors group">
+<span class="material-symbols-outlined text-4xl text-outline group-hover:text-[#E85D3D]">photo_library</span>
+<span class="font-label-md text-on-surface-variant dark:text-[#FDF6EC]/70" data-i18n="memories_source_gallery">من الألبوم</span>
+<input accept="image/*,video/*" class="hidden media-input" type="file"/>
+</label>
+</div>
+<!-- Preview Area -->
+<div class="hidden mt-4 relative rounded-xl overflow-hidden border border-surface-variant dark:border-[#2A3F6C] bg-black h-48" id="media-preview-container">
+<img class="w-full h-full object-contain hidden" id="media-preview-img" src=""/>
+<video class="w-full h-full object-contain hidden" controls="" id="media-preview-vid" src=""></video>
+<button class="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-error transition-colors" id="clear-media-btn">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+</div>
+<!-- Location Linking -->
+<div>
+<p class="font-label-md text-on-surface dark:text-[#FDF6EC] mb-3" data-i18n="memories_link_label">الربط بمكان</p>
+<div class="flex gap-6 mb-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="text-[#E85D3D] focus:ring-[#E85D3D] dark:bg-[#14213D] dark:border-[#2A3F6C]" name="location_type" type="radio" value="linked"/>
+<span class="text-body-md text-on-surface dark:text-[#FDF6EC]" data-i18n="memories_link_specific">ربط بمكان في الجدول</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="text-[#E85D3D] focus:ring-[#E85D3D] dark:bg-[#14213D] dark:border-[#2A3F6C]" name="location_type" type="radio" value="general"/>
+<span class="text-body-md text-on-surface dark:text-[#FDF6EC]" data-i18n="memories_link_general">ذكرى عامة</span>
+</label>
+</div>
+<select class="w-full rounded-lg border-outline-variant dark:border-[#2A3F6C] bg-white dark:bg-[#14213D] text-on-surface dark:text-[#FDF6EC] focus:ring-[#E85D3D] focus:border-[#E85D3D] p-3" id="location-select">
+<option data-i18n="memories_select_placeholder" disabled="" selected="" value="">اختر المكان...</option>
+<option data-i18n="memories_loc_current" value="current">📍 موقعي الحالي</option>
+<option data-i18n="memories_loc_ritz" value="ritz">فندق ريتز لندن</option>
+<option data-i18n="memories_loc_louvre" value="louvre">متحف اللوفر</option>
+<option data-i18n="memories_loc_colosseum" value="colosseum">الكولوسيوم</option>
+</select>
+</div>
+<!-- Caption -->
+<div>
+<label class="block font-label-md text-on-surface dark:text-[#FDF6EC] mb-2" data-i18n="memories_caption_label" for="memory-caption">تعليق</label>
+<textarea class="w-full rounded-lg border-outline-variant dark:border-[#2A3F6C] bg-white dark:bg-[#14213D] text-on-surface dark:text-[#FDF6EC] focus:ring-[#E85D3D] focus:border-[#E85D3D] p-3" data-i18n-placeholder="memories_caption_placeholder" id="memory-caption" placeholder="اكتب تعليقاً لذكرتك..." rows="3"></textarea>
+</div>
+<!-- Submit -->
+<button class="w-full bg-[#E85D3D] text-white py-3 rounded-lg font-label-md hover:bg-[#E85D3D]/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" id="save-memory-btn">
+<span data-i18n="memories_save">حفظ الذكرى</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer (Shared Component) -->
+<footer class="bg-[#FDF6EC] dark:bg-[#14213D] full-width bottom-0 flat no shadows mt-12 transition-colors duration-300">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center px-margin-mobile md:px-margin-desktop py-12 w-full max-w-container-max mx-auto gap-6 text-center md:text-right ltr:md:text-left">
+<div class="flex items-center gap-2 mb-4 md:mb-0 justify-center md:justify-start"><img alt="Boarding Logo" class="h-10 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHFj6UC6nEN0EZEmb1XCeFx7JCBDVKB9SN9WkFEcJyO-euCIBq6wNlW45KbWFaKpptE3sVmYrZ93AIbBkzF5xCVAE3m-oyqjh4esev27S7NdYD2lBvdjudm58E85knJVlo7-wPoawqpXNXNjU_ABmPapeHxRkOLYSgsfgz9qKd2KSv9g1Boc3ki8pxnYKq2Y7s6Wfl8QuuLnVeG4yCibZgroYeoNELVVqccoC4H0WNqXwgD_4YWCcznrRHVoJj5c9ifg"/><img alt="Boarding Logo" class="h-10 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIkeK5wNyVGosk-8S3z_o9QAHtKImzQICZdNco3DfH7iWbBYSiHp4GaPc3L1Gdty0SIbIiHZIKoZRh8Zw5tFBYJv-WvTvxFx8RevReGygcoCkdEXTsthLweApY03GVdRskHWEJcfatvkU9f7fHQYkDTUDtKCXkEk6Cnsilse_3tJhd_i591eU8TNnySZPRlRooFYLPzpmqnEa5qLH-QyyBDan9RZ3M1ak4Loram9UgNGPLA6EVx1vONGd_0hOoTjssTg"/></div>
+<nav class="flex flex-wrap justify-center md:justify-end ltr:md:justify-start gap-6 font-label-md text-label-md">
+<a class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-80 hover:opacity-100 transition-opacity" data-i18n="footer_privacy" href="#">سياسة الخصوصية</a>
+<a class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-80 hover:opacity-100 transition-opacity" data-i18n="footer_terms" href="#">شروط الخدمة</a>
+<a class="text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-80 hover:opacity-100 transition-opacity" data-i18n="footer_help" href="#">مركز المساعدة</a>
+</nav>
+<div class="text-on-surface-variant dark:text-[#FDF6EC]/70 font-label-md text-label-md" data-i18n="footer_copyright">© 2024 بوردنق. جميع الحقوق محفوظة.</div>
+</div>
+</footer>
+<script>
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const htmlElement = document.documentElement;
+
+    themeToggleBtn.addEventListener('click', () => {
+        htmlElement.classList.toggle('dark');
+        if (htmlElement.classList.contains('dark')) {
+            themeIcon.textContent = 'light_mode';
+        } else {
+            themeIcon.textContent = 'dark_mode';
+        }
+    });
+
+    const translations = {
+        en: {
+            nav_home: "Home",
+            nav_trip: "Trip",
+            nav_recommendations: "Recommendations",
+            nav_expenses: "Expenses",
+            nav_friends: "Friends",
+            hero_title: "London 2024",
+            hero_dates: "May 15 - May 22",
+            hero_invite: "Invite Friends",
+            hero_days: "14 Days",
+            hero_until: "until departure",
+            flight_airline: "British Airways • BA 124",
+            flight_riyadh: "Riyadh",
+            flight_time_start: "08:30 AM",
+            flight_duration: "6h 30m",
+            flight_london: "London Heathrow",
+            flight_time_end: "02:00 PM",
+            acc_title: "Accommodation",
+            acc_hotel: "Hotel Ritz London",
+            acc_address: "150 Piccadilly, St. James's",
+            acc_weather_title: "Expected Weather",
+            acc_weather_desc: "18°C Partly Cloudy",
+            itin_title: "Itinerary",
+            itin_add: "Add Activity",
+            itin_day1: "Day 1: Arrival & Exploration",
+            itin_act1_title: "Hotel Check-in",
+            itin_act1_time: "03:00 PM",
+            itin_act1_desc: "Room check-in and get some rest.",
+            itin_act2_title: "City Bus Tour",
+            itin_act2_time: "05:00 PM",
+            itin_act2_desc: "Introductory tour to main city landmarks.",
+            itin_day2: "Day 2: History & Culture",
+            itin_act3_title: "British Museum",
+            itin_act3_time: "10:00 AM",
+            itin_act3_desc: "Visit to the most important historical exhibits.",
+            map_title: "Trip Route",
+            map_title_london: "London Map",
+            footer_privacy: "Privacy Policy",
+            footer_terms: "Terms of Service",
+            footer_help: "Help Center",
+            footer_copyright: "© 2024 Boarding. All rights reserved.",
+            filter_all: "All",
+            city_london: "London",
+            city_paris: "Paris",
+            city_rome: "Rome",
+            add_destination: "Add Destination",
+            itin_london_day1: "Day 1: Arrival",
+            itin_paris_day1: "Day 4: City of Lights",
+            itin_rome_day1: "Day 6: Roman History",
+            transfer_lon_par: "London → Paris (Eurostar)",
+            transfer_par_rom: "Paris → Rome (Flight)",
+            transfer_duration_1: "2h 15m",
+            transfer_duration_2: "1h 45m",
+            itin_act_louvre: "Louvre Museum",
+            itin_act_louvre_desc: "Tour of the world's largest art museum.",
+            itin_act_colosseum: "Colosseum",
+            itin_act_colosseum_desc: "Visit the famous Roman amphitheatre.",
+            memories_title: "Trip Memories",
+            memories_count: "24 Memories",
+            memories_subtitle: "Memories remain preserved even after the trip ends",
+            memories_add: "Add Memory",
+            memories_filter_ritz: "Hotel Ritz London",
+            memories_filter_louvre: "Louvre Museum",
+            memories_filter_colosseum: "Colosseum",
+            memories_filter_general: "General Memories",
+            memories_modal_title: "Add New Memory",
+            memories_source_label: "Choose Media Source",
+            memories_source_camera: "Take Photo",
+            memories_source_video: "Record Video",
+            memories_source_gallery: "From Gallery",
+            memories_link_label: "Link to Location",
+            memories_link_specific: "Link to Itinerary Location",
+            memories_link_general: "General Memory",
+            memories_select_placeholder: "Select location...",
+            memories_loc_current: "📍 My Current Location",
+            memories_loc_ritz: "Hotel Ritz London",
+            memories_loc_louvre: "Louvre Museum",
+            memories_loc_colosseum: "Colosseum",
+            memories_caption_label: "Caption",
+            memories_caption_placeholder: "Write a caption for your memory...",
+            memories_save: "Save Memory",
+            status_current: "You are here",
+            status_upcoming: "Upcoming",
+            status_completed: "Completed"
+        },
+        ar: {
+            nav_home: "الرئيسية",
+            nav_trip: "الرحلة",
+            nav_recommendations: "التوصيات",
+            nav_expenses: "المصاريف",
+            nav_friends: "الأصدقاء",
+            hero_title: "لندن ٢٠٢٤",
+            hero_dates: "١٥ مايو - ٢٢ مايو",
+            hero_invite: "دعوة أصدقاء",
+            hero_days: "١٤ يوم",
+            hero_until: "متبقية على الانطلاق",
+            flight_airline: "الخطوط الجوية البريطانية • BA 124",
+            flight_riyadh: "الرياض",
+            flight_time_start: "٠٨:٣٠ ص",
+            flight_duration: "٦ ساعات و ٣٠ دقيقة",
+            flight_london: "لندن هيثرو",
+            flight_time_end: "٠٢:٠٠ م",
+            acc_title: "مقر الإقامة",
+            acc_hotel: "فندق ريتز لندن",
+            acc_address: "١٥٠ بيكاديلي، سانت جيمس",
+            acc_weather_title: "الطقس المتوقع",
+            acc_weather_desc: "١٨°C غائم جزئياً",
+            itin_title: "خط سير الرحلة",
+            itin_add: "إضافة نشاط",
+            itin_day1: "اليوم الأول: الوصول والاستكشاف",
+            itin_act1_title: "تسجيل الدخول في الفندق",
+            itin_act1_time: "٠٣:٠٠ م",
+            itin_act1_desc: "استلام الغرف وأخذ قسط من الراحة.",
+            itin_act2_title: "جولة بالباص السياحي",
+            itin_act2_time: "٠٥:٠٠ م",
+            itin_act2_desc: "جولة تعريفية لمعالم المدينة الرئيسية.",
+            itin_day2: "اليوم الثاني: التاريخ والثقافة",
+            itin_act3_title: "المتحف البريطاني",
+            itin_act3_time: "١٠:٠٠ ص",
+            itin_act3_desc: "زيارة لأهم المعروضات التاريخية.",
+            map_title: "مسار الرحلة",
+            map_title_london: "خريطة لندن",
+            footer_privacy: "سياسة الخصوصية",
+            footer_terms: "شروط الخدمة",
+            footer_help: "مركز المساعدة",
+            footer_copyright: "© ٢٠٢٤ بوردنق. جميع الحقوق محفوظة.",
+            filter_all: "الكل",
+            city_london: "لندن",
+            city_paris: "باريس",
+            city_rome: "روما",
+            add_destination: "إضافة وجهة",
+            itin_london_day1: "اليوم الأول: الوصول",
+            itin_paris_day1: "اليوم الرابع: مدينة الأضواء",
+            itin_rome_day1: "اليوم السادس: التاريخ الروماني",
+            transfer_lon_par: "لندن ← باريس (Eurostar)",
+            transfer_par_rom: "باريس ← روما (طيران)",
+            transfer_duration_1: "ساعتان و ١٥ دقيقة",
+            transfer_duration_2: "ساعة و ٤٥ دقيقة",
+            itin_act_louvre: "متحف اللوفر",
+            itin_act_louvre_desc: "جولة في أكبر متحف فني في العالم.",
+            itin_act_colosseum: "الكولوسيوم",
+            itin_act_colosseum_desc: "زيارة المدرج الروماني الشهير.",
+            memories_title: "ذكريات الرحلة",
+            memories_count: "24 ذكرى",
+            memories_subtitle: "تبقى الذكريات محفوظة حتى بعد انتهاء الرحلة",
+            memories_add: "إضافة ذكرى",
+            memories_filter_ritz: "فندق ريتز لندن",
+            memories_filter_louvre: "متحف اللوفر",
+            memories_filter_colosseum: "الكولوسيوم",
+            memories_filter_general: "ذكريات عامة",
+            memories_modal_title: "إضافة ذكرى جديدة",
+            memories_source_label: "اختر مصدر الميديا",
+            memories_source_camera: "التقاط صورة",
+            memories_source_video: "تسجيل فيديو",
+            memories_source_gallery: "من الألبوم",
+            memories_link_label: "الربط بمكان",
+            memories_link_specific: "ربط بمكان في الجدول",
+            memories_link_general: "ذكرى عامة",
+            memories_select_placeholder: "اختر المكان...",
+            memories_loc_current: "📍 موقعي الحالي",
+            memories_loc_ritz: "فندق ريتز لندن",
+            memories_loc_louvre: "متحف اللوفر",
+            memories_loc_colosseum: "الكولوسيوم",
+            memories_caption_label: "تعليق",
+            memories_caption_placeholder: "اكتب تعليقاً لذكرتك...",
+            memories_save: "حفظ الذكرى",
+            status_current: "أنت هنا الآن",
+            status_upcoming: "قادمة",
+            status_completed: "انتهت"
+        }
+    };
+
+    const langToggleBtn = document.getElementById('lang-toggle');
+    let currentLang = 'ar';
+
+    function updateLanguage() {
+        // Update HTML attributes
+        htmlElement.lang = currentLang;
+        htmlElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+        
+        // Update toggle button text
+        langToggleBtn.textContent = currentLang === 'ar' ? 'EN' : 'ع';
+        
+        // Update all translated elements
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[currentLang][key]) {
+                el.textContent = translations[currentLang][key];
+            }
+        });
+        
+        // Update placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (translations[currentLang][key]) {
+                el.placeholder = translations[currentLang][key];
+            }
+        });
+    }
+
+    langToggleBtn.addEventListener('click', () => {
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        updateLanguage();
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Accordion Logic
+  const accordionToggles = document.querySelectorAll('.accordion-toggle');
+  accordionToggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+          const content = toggle.nextElementSibling;
+          content.classList.toggle('open');
+      });
+  });
+
+  // Trip Memories Logic
+  const addMemoryBtn = document.getElementById('add-memory-btn');
+  const modal = document.getElementById('add-memory-modal');
+  const closeBtn = document.getElementById('close-memory-modal');
+  const overlay = document.getElementById('add-memory-overlay');
+  const mediaInputs = document.querySelectorAll('.media-input');
+  const previewContainer = document.getElementById('media-preview-container');
+  const previewImg = document.getElementById('media-preview-img');
+  const previewVid = document.getElementById('media-preview-vid');
+  const clearMediaBtn = document.getElementById('clear-media-btn');
+  const locationRadios = document.querySelectorAll('input[name="location_type"]');
+  const locationSelect = document.getElementById('location-select');
+  const saveBtn = document.getElementById('save-memory-btn');
+  const gallery = document.getElementById('memories-gallery');
+  const memoryFilters = document.querySelectorAll('.memory-filter-btn');
+  
+  let currentFile = null;
+
+  // Modal handlers
+  const openModal = () => modal.classList.remove('hidden');
+  const closeModal = () => {
+      modal.classList.add('hidden');
+      resetForm();
+  };
+
+  addMemoryBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+  });
+
+  // Location type toggle
+  locationRadios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+          if (e.target.value === 'general') {
+              locationSelect.disabled = true;
+              locationSelect.value = "";
+              locationSelect.classList.add('opacity-50');
+          } else {
+              locationSelect.disabled = false;
+              locationSelect.classList.remove('opacity-50');
+          }
+      });
+  });
+
+  // File input handler
+  mediaInputs.forEach(input => {
+      input.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+              currentFile = file;
+              const url = URL.createObjectURL(file);
+              
+              previewContainer.classList.remove('hidden');
+              if (file.type.startsWith('video/')) {
+                  previewVid.src = url;
+                  previewVid.classList.remove('hidden');
+                  previewImg.classList.add('hidden');
+              } else {
+                  previewImg.src = url;
+                  previewImg.classList.remove('hidden');
+                  previewVid.classList.add('hidden');
+              }
+          }
+      });
+  });
+
+  // Clear media
+  clearMediaBtn.addEventListener('click', () => {
+      resetMedia();
+  });
+
+  function resetMedia() {
+      currentFile = null;
+      mediaInputs.forEach(input => input.value = '');
+      previewContainer.classList.add('hidden');
+      previewImg.src = '';
+      previewVid.src = '';
+  }
+
+  function resetForm() {
+      resetMedia();
+      document.getElementById('memory-caption').value = '';
+      locationRadios[0].checked = true;
+      locationSelect.disabled = false;
+      locationSelect.classList.remove('opacity-50');
+      locationSelect.value = '';
+  }
+
+  // Gallery Filters
+  memoryFilters.forEach(btn => {
+      btn.addEventListener('click', () => {
+          const filter = btn.dataset.filter;
+          
+          memoryFilters.forEach(b => {
+              b.classList.remove('active', 'bg-[#E85D3D]', 'text-white');
+              b.classList.add('bg-surface-container', 'dark:bg-[#1F2F54]', 'text-on-surface', 'dark:text-[#FDF6EC]');
+          });
+          btn.classList.add('active', 'bg-[#E85D3D]', 'text-white');
+          btn.classList.remove('bg-surface-container', 'dark:bg-[#1F2F54]', 'text-on-surface', 'dark:text-[#FDF6EC]');
+
+          const items = document.querySelectorAll('.masonry-item');
+          items.forEach(item => {
+              if (filter === 'all' || item.dataset.location === filter) {
+                  item.style.display = 'block';
+              } else {
+                  item.style.display = 'none';
+              }
+          });
+      });
+  });
+
+  // Save Memory
+  saveBtn.addEventListener('click', () => {
+      if (!currentFile) {
+          alert(currentLang === 'ar' ? 'الرجاء اختيار صورة أو فيديو أولاً.' : 'Please select a photo or video first.');
+          return;
+      }
+      
+      const caption = document.getElementById('memory-caption').value;
+      const isGeneral = document.querySelector('input[name="location_type"]:checked').value === 'general';
+      const locValue = locationSelect.value;
+      const locText = locationSelect.options[locationSelect.selectedIndex]?.text || '';
+      
+      const url = URL.createObjectURL(currentFile);
+      const isVideo = currentFile.type.startsWith('video/');
+      const tagText = isGeneral ? (currentLang === 'ar' ? 'ذكريات عامة' : 'General Memories') : `<span class="material-symbols-outlined text-[14px]">location_on</span> ${locText}`;
+      const filterKey = isGeneral ? 'general' : locValue;
+
+      const newItemHTML = `
+      <div class="masonry-item relative group cursor-pointer rounded-xl overflow-hidden shadow-level-1 bg-surface-container-lowest dark:bg-[#1F2F54]" data-location="${filterKey}">
+          ${isVideo ? 
+              `<video src="${url}" class="w-full h-auto object-cover"></video>
+               <div class="absolute top-3 right-3 bg-black/50 backdrop-blur-sm p-2 rounded-full flex items-center justify-center">
+                  <span class="material-symbols-outlined text-white">play_arrow</span>
+               </div>` : 
+              `<img src="${url}" class="w-full h-auto object-cover" />`
+          }
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+              <div class="flex items-center gap-2 mb-2">
+                  <span class="bg-white/20 backdrop-blur-md text-white px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1">
+                      ${tagText}
+                  </span>
+              </div>
+              <p class="text-white text-sm line-clamp-2">${caption}</p>
+              <div class="flex items-center justify-between mt-3 text-white/80 text-xs">
+                  <div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">account_circle</span> ${currentLang === 'ar' ? 'أنت' : 'You'}</div>
+                  <span>${currentLang === 'ar' ? 'الآن' : 'Now'}</span>
+              </div>
+          </div>
+      </div>
+      `;
+
+      gallery.insertAdjacentHTML('afterbegin', newItemHTML);
+      closeModal();
+      
+      // Update count
+      const countEl = document.querySelector('[data-i18n="memories_count"]');
+      if(countEl) {
+          const currentCount = parseInt(countEl.textContent);
+          if(!isNaN(currentCount)) {
+              countEl.textContent = `${currentCount + 1} ${currentLang === 'ar' ? 'ذكرى' : 'Memories'}`;
+          }
+      }
+  });
+  
+  // Geolocation mock
+  locationSelect.addEventListener('change', (e) => {
+      if(e.target.value === 'current') {
+          try {
+              if (navigator.geolocation) {
+                  let opt = e.target.querySelector('option[value="current"]');
+                  opt.text = currentLang === 'ar' ? '📍 جاري تحديد الموقع...' : '📍 Locating...';
+                  setTimeout(() => {
+                      opt.text = currentLang === 'ar' ? '📍 بالقرب من عين لندن' : '📍 Near London Eye';
+                  }, 1500);
+              }
+          } catch(err) {
+              console.log(err);
+          }
+      }
+  });
+
+});
+</script>
+<script src="assets/responsive.js" defer></script>
+</body></html>

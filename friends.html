@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Boarding (بوردنق) - الأصدقاء والمجموعات</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: IBM Plex Sans Arabic -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        boarding: {
+                            primary: '#14213D',
+                            accent: '#E85D3D',
+                            gold: '#F4A950',
+                            bg: '#FDF6EC',
+                            dark: {
+                                card: '#1F2F54',
+                                border: '#2A3F6C',
+                                hover: '#26375F'
+                            }
+                        }
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "margin-mobile": "20px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "stack-md": "16px",
+                        "unit": "4px",
+                        "container-max": "1280px"
+                    },
+                    fontFamily: {
+                        "label-sm": ["IBM Plex Sans Arabic"],
+                        "body-md": ["IBM Plex Sans Arabic"],
+                        "headline-md": ["IBM Plex Sans Arabic"],
+                        "body-lg": ["IBM Plex Sans Arabic"],
+                        "headline-xl-mobile": ["IBM Plex Sans Arabic"],
+                        "headline-xl": ["IBM Plex Sans Arabic"],
+                        "label-md": ["IBM Plex Sans Arabic"],
+                        "headline-lg-mobile": ["IBM Plex Sans Arabic"],
+                        "headline-lg": ["IBM Plex Sans Arabic"]
+                    },
+                    fontSize: {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-xl-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "headline-xl": ["40px", { "lineHeight": "52px", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { 
+            background-color: theme('colors.boarding.bg'); 
+            color: theme('colors.boarding.primary'); 
+        }
+        .dark body { 
+            background-color: theme('colors.boarding.primary'); 
+            color: theme('colors.boarding.bg'); 
+        }
+    </style>
+<link rel="stylesheet" href="assets/responsive.css"/>
+</head>
+<body class="font-body-md text-body-md antialiased min-h-screen flex flex-col transition-colors duration-300">
+<!-- TopNavBar -->
+<header class="bg-boarding-bg dark:bg-boarding-primary shadow-sm docked full-width top-0 z-50 border-b border-black/5 dark:border-boarding-dark-border transition-colors duration-300">
+<div class="flex flex-row-reverse justify-between items-center px-margin-desktop w-full max-w-container-max mx-auto h-20 rtl:flex-row-reverse ltr:flex-row">
+<a class="flex items-center h-full" href="/">
+<img alt="Boarding Logo" class="h-12 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7bRz2f7vLb9S6Vslh_rZlvBlttkb1SljdDlVpuJ60fxaKlBTf_JL6aaHto4nLPrMpDMHlpe-QbSBFyjT8lIqNYG7zqODICOxzDzaRu6z3IW9-hPeWXW_Vq1L_OWgaPhjrnQ6ERyjbhxm6yTcCoT4en263oFfvjRjph0GcCDoVg_v7kQocDT1CsxOe3nx5CqiXJ_hYupdBdHyCV6LiyR_ce70nIUzma3oekUd_IadNJ2rjq7z9Y1vPoV7mINFRjm0FOA"/>
+<img alt="Boarding Logo" class="h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAM9jFvEJIXBMYCxIJjSwa8oCrv7v4GOlOVxkqRY8snX-knHdNqvMMJ4Mx9RHACf2Wm9YQ3v6YmfWIwGPQkM743ZSByqCgcWn8VvfYq49YfBfUQm_N-7uprGFFMrnustNuQwr1NhfbssUU8AuYm1kPpIPXdFfRLFMmPWuMigTXYi_aMujUXy1e6BF6B63GF2fyX4EepUl4Cyi5WaG9jeoAyg5v2ju1CRa-Op6O6M4K5M4yg9lnRBrQ1-pDuSOU5OO5iHg"/>
+</a>
+<nav class="hidden md:flex gap-gutter rtl:flex-row-reverse ltr:flex-row">
+<a class="text-boarding-primary/70 dark:text-boarding-bg/70 font-headline-md text-headline-md hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors active:scale-95 transition-transform" data-i18n="nav_home" href="#">الرئيسية</a>
+<a class="text-boarding-primary/70 dark:text-boarding-bg/70 font-headline-md text-headline-md hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors active:scale-95 transition-transform" data-i18n="nav_trip" href="#">الرحلة</a>
+<a class="text-boarding-primary/70 dark:text-boarding-bg/70 font-headline-md text-headline-md hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors active:scale-95 transition-transform" data-i18n="nav_recommendations" href="#">التوصيات</a>
+<a class="text-boarding-primary/70 dark:text-boarding-bg/70 font-headline-md text-headline-md hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors active:scale-95 transition-transform" data-i18n="nav_expenses" href="#">المصاريف</a>
+<a class="text-boarding-accent font-headline-md text-headline-md hover:text-boarding-accent transition-colors active:scale-95 transition-transform" data-i18n="nav_friends" href="#">الأصدقاء</a>
+</nav>
+<div class="flex items-center gap-4 ml-4 rtl:ml-4 rtl:mr-0 ltr:mr-4 ltr:ml-0">
+<button aria-label="Switch Language" class="font-label-md text-label-md text-boarding-primary dark:text-boarding-bg hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors active:scale-95" id="lang-toggle">EN</button>
+<button aria-label="Toggle Theme" class="text-boarding-primary dark:text-boarding-bg hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors active:scale-95 flex items-center" id="theme-toggle">
+<span class="material-symbols-outlined" style="font-size: 24px;">dark_mode</span>
+</button>
+</div>
+<button aria-label="Profile" class="text-boarding-primary dark:text-boarding-bg hover:text-boarding-accent dark:hover:text-boarding-accent active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-size: 32px;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12 flex flex-col gap-gutter">
+<!-- Page Header -->
+<div class="mb-4">
+<h1 class="font-headline-lg text-headline-lg md:font-headline-xl text-boarding-primary dark:text-boarding-bg" data-i18n="page_title">الأصدقاء والمجموعات</h1>
+<p class="font-body-lg text-body-lg text-boarding-primary/70 dark:text-boarding-bg/70 mt-2" data-i18n="page_subtitle">قم بإدارة أصدقائك وتنسيق رحلتك القادمة.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Main Column -->
+<div class="lg:col-span-8 flex flex-col gap-8">
+<!-- Search Section -->
+<div class="bg-white dark:bg-boarding-dark-card p-6 rounded-xl shadow-sm border border-black/5 dark:border-boarding-dark-border transition-colors duration-300">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute right-4 ltr:left-4 ltr:right-auto top-1/2 -translate-y-1/2 text-boarding-primary/50 dark:text-boarding-bg/50">search</span>
+<input class="w-full bg-boarding-bg/50 dark:bg-boarding-primary border border-black/5 dark:border-boarding-dark-border rounded-lg py-3 pr-12 pl-4 ltr:pl-12 ltr:pr-4 focus:outline-none focus:border-boarding-primary dark:focus:border-boarding-bg focus:ring-1 focus:ring-boarding-primary dark:focus:ring-boarding-bg font-body-md text-body-md transition-colors placeholder:text-boarding-primary/50 dark:placeholder:text-boarding-bg/50 dark:text-boarding-bg text-boarding-primary" data-i18n-placeholder="search_placeholder" placeholder="ابحث عن أصدقاء بالاسم أو اسم المستخدم..." type="text"/>
+</div>
+</div>
+<!-- My Group Section -->
+<section class="bg-white dark:bg-boarding-dark-card p-6 rounded-xl shadow-sm border border-black/5 dark:border-boarding-dark-border transition-colors duration-300">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-boarding-accent text-[28px]">group</span>
+<h2 class="font-headline-md text-headline-md text-boarding-primary dark:text-boarding-bg" data-i18n="my_group_title">مجموعتي للرحلة الحالية</h2>
+</div>
+<div class="flex flex-wrap gap-4 mb-6">
+<!-- Group Member -->
+<div class="flex flex-col items-center gap-2 w-20">
+<div class="relative">
+<img class="w-14 h-14 rounded-full object-cover ring-2 ring-boarding-primary dark:ring-boarding-bg" data-alt="A close up portrait photo of a young modern traveler with a warm smile, wearing casual adventure gear, against a blurred bright outdoor background. High quality, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmwGx0Yo0ieYmj2UlAUGhEnzAJam6VGe7M7Hnl7b2TD8lUUHvE0VKdL7y4F9rOvCrDbPSg_BIiR6PdoOyXppaUlvKNGXeT90PRcftUPaDQazO9tESWXo8-RYG1YHKOElbha6hufNoPVinqPQJ8O0b1BUbm1edWANt5mVXGPsw3dvmpewvSVFKIpuSnI7PIwsiZwQInd_53CKVxKhNtK_uCyDb9uMeV1dbvwzxP4Qva60CgoPRkNurQ"/>
+<div class="absolute bottom-0 right-0 ltr:left-0 ltr:right-auto w-4 h-4 bg-boarding-accent border-2 border-white dark:border-boarding-dark-card rounded-full" title="متصل"></div>
+</div>
+<span class="font-label-md text-label-md text-center line-clamp-1 w-full text-boarding-primary dark:text-boarding-bg" data-i18n="friend_you">أنت</span>
+</div>
+<!-- Group Member -->
+<div class="flex flex-col items-center gap-2 w-20">
+<img class="w-14 h-14 rounded-full object-cover ring-2 ring-black/10 dark:ring-boarding-dark-border" data-alt="A close up portrait photo of a young modern traveler with a warm smile, wearing casual adventure gear, against a blurred bright outdoor background. High quality, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyOaVHLH8iu-1lVPQWMhfPkjjJjPHCBcfYlocnrKU4rqZIR-VX-gpVvO0b82A095AzaJLwawK_5YXz4tuQ-Ftfw8yce4BVAVGkleCnCmXZ2Sj0CAgKQ6v2wkdJiHrSgfar81zNxIvIheAFEl0tdKy8lTa0BeulwpzXkwADHs7l-m9EkBImMFkE2tXXExhkYNsbdEcnnCAMNQ99Ni6N1BFsIxN-vuMh9tFf5ni3S5oLxEFBVW97dTkQ"/>
+<span class="font-label-md text-label-md text-center line-clamp-1 w-full text-boarding-primary dark:text-boarding-bg" data-i18n="friend_omar">عمر</span>
+</div>
+</div>
+<div class="p-4 bg-boarding-bg/50 dark:bg-boarding-primary rounded-lg border border-black/5 dark:border-boarding-dark-border flex items-center justify-between">
+<p class="font-body-md text-body-md text-boarding-primary/70 dark:text-boarding-bg/70" data-i18n="trip_details">رحلة جبال الألب - 5 أيام متبقية</p>
+<button class="text-boarding-primary dark:text-boarding-bg hover:text-boarding-accent dark:hover:text-boarding-accent font-headline-md text-headline-md flex items-center gap-1 text-[16px] transition-colors">
+<span class="material-symbols-outlined text-[20px]">add_link</span> <span data-i18n="copy_link">نسخ رابط الدعوة</span>
+</button>
+</div>
+</section>
+<!-- Current Friends Section -->
+<section class="bg-white dark:bg-boarding-dark-card p-6 rounded-xl shadow-sm border border-black/5 dark:border-boarding-dark-border transition-colors duration-300">
+<h2 class="font-headline-md text-headline-md text-boarding-primary dark:text-boarding-bg mb-6" data-i18n="friends_list_title">الأصدقاء (24)</h2>
+<div class="flex flex-col">
+<!-- Friend Item -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-b border-black/5 dark:border-boarding-dark-border last:border-0 gap-4">
+<div class="flex items-center gap-4">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover shadow-sm" data-alt="A close up portrait photo of a young modern traveler with a warm smile, wearing casual adventure gear, against a blurred bright outdoor background. High quality, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgx4wi19iO1woUJCelRlSjqFPtr-0TrL3mkNNeDAHGkz-fCiAAnhcCYEc2x2dLs_jIxlwedjoUuxifuLgPJjDupYuRo6US5cebMbsSnuzPi-d5LXOcjk8v_h1Ps9DeVQIvtKcq7OJzBUtnT5tOp2a3X__6L_pazSu7yG-v77ActyN6hNgODR9rIfizo31tS_LT5VGbIxNydNo7F5M0wsEdKDeTNGanU_TlhJwp6PzOPqdtm-dbBe8f"/>
+<div class="absolute bottom-0 right-0 ltr:left-0 ltr:right-auto w-3.5 h-3.5 bg-boarding-accent border-2 border-white dark:border-boarding-dark-card rounded-full" title="متصل"></div>
+</div>
+<div>
+<p class="font-headline-md text-headline-md text-[18px] text-boarding-primary dark:text-boarding-bg" data-i18n="friend_khaled">خالد اليوسف</p>
+<p class="font-label-md text-label-md text-boarding-primary/50 dark:text-boarding-bg/50">@khaled_y</p>
+</div>
+</div>
+<button class="w-full sm:w-auto border-2 border-boarding-primary dark:border-boarding-bg text-boarding-primary dark:text-boarding-bg px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-boarding-primary hover:text-white dark:hover:bg-boarding-bg dark:hover:text-boarding-primary transition-colors" data-i18n="invite_to_trip">
+                                دعوة للرحلة
+                            </button>
+</div>
+<!-- Friend Item -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-b border-black/5 dark:border-boarding-dark-border last:border-0 gap-4">
+<div class="flex items-center gap-4">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover shadow-sm grayscale opacity-80" data-alt="A close up portrait photo of a young modern traveler with a warm smile, wearing casual adventure gear, against a blurred bright outdoor background. High quality, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK-Ymr-344tYSR23YzULSmfuuv-moCj8VSzB5Yag_9o-ewz5xL53mSVddbnT1c3xwT4m-5DOI5hM8k6KjpjWjr5GEJns5qkuSK9OSHL4Gkaql_4lzaYVscvjjPuTgWplVejMo9c7cxroUn66DhXNYLVXhVhPWqk1Qstzl0Utr19KhsxEJfXCnx6vwVBOfl0VTE_Cq8CjC44gdG6jFygCRzDYTlU_e2A0Zua4jAGDKepWqwXOfRD4vT"/>
+</div>
+<div>
+<p class="font-headline-md text-headline-md text-[18px] text-boarding-primary dark:text-boarding-bg" data-i18n="friend_laila">ليلى عبدالله</p>
+<p class="font-label-md text-label-md text-boarding-primary/50 dark:text-boarding-bg/50">@laila_ab</p>
+</div>
+</div>
+<button class="w-full sm:w-auto border-2 border-boarding-primary dark:border-boarding-bg text-boarding-primary dark:text-boarding-bg px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-boarding-primary hover:text-white dark:hover:bg-boarding-bg dark:hover:text-boarding-primary transition-colors" data-i18n="invite_to_trip">
+                                دعوة للرحلة
+                            </button>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Column -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<!-- Pending Requests -->
+<aside class="bg-boarding-bg/50 dark:bg-boarding-dark-card p-6 rounded-xl border border-black/5 dark:border-boarding-dark-border transition-colors duration-300">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline-md text-headline-md text-[20px] text-boarding-primary dark:text-boarding-bg flex items-center gap-2">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+<span data-i18n="friend_requests">طلبات الصداقة</span>
+</h3>
+<span class="bg-boarding-accent text-white text-[12px] font-bold px-2 py-0.5 rounded-full">2</span>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Request Item -->
+<div class="bg-white dark:bg-boarding-primary p-4 rounded-lg shadow-sm border border-black/5 dark:border-boarding-dark-border transition-colors duration-300">
+<div class="flex items-center gap-3 mb-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A close up portrait photo of a young modern traveler with a warm smile, wearing casual adventure gear, against a blurred bright outdoor background. High quality, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB54VWeU5KO6D762MhoBI9qvhc9-NusegLJAThNXaJy8z4KnOw-A2ipS1mxN8GSylhFvcA3WjVA2bu1P461mutAGXMgwzQ9JcLd6-Qq0e7Q8B_e35oAH9PYojZl7p0kDhrFLYSFpR9_u6y06bIq1ra3E51gquY7P6pSzkRhbotu0kU0oNEWERJ0xP8aqhUdpZi7pNzTwJhlFEF4WUuDt46rAHJGct54YsRcYAb923V0TCFTVVtqV5WC"/>
+<div>
+<p class="font-headline-md text-headline-md text-boarding-primary dark:text-boarding-bg text-[16px]" data-i18n="friend_mohammed">محمد سالم</p>
+<p class="font-label-sm text-label-sm text-boarding-primary/50 dark:text-boarding-bg/50" data-i18n="wants_to_add">يريد إضافتك كصديق</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-boarding-primary dark:bg-boarding-bg text-white dark:text-boarding-primary py-1.5 rounded-md font-label-md text-label-md hover:bg-opacity-90 transition-colors" data-i18n="accept">قبول</button>
+<button class="flex-1 bg-transparent border border-boarding-primary/20 dark:border-boarding-bg/20 text-boarding-primary/70 dark:text-boarding-bg/70 py-1.5 rounded-md font-label-md text-label-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors" data-i18n="decline">رفض</button>
+</div>
+</div>
+<!-- Request Item -->
+<div class="bg-white dark:bg-boarding-primary p-4 rounded-lg shadow-sm border border-black/5 dark:border-boarding-dark-border transition-colors duration-300">
+<div class="flex items-center gap-3 mb-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A close up portrait photo of a young modern traveler with a warm smile, wearing casual adventure gear, against a blurred bright outdoor background. High quality, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV3BPFXTKf3V8mOl9wVC3Cmh70Mqm9Z0IM0lAAEfnT0colVj1pzvi-2EnryRMFzGuiqCDEGOLjp39zz94_-uzBU9kaqo2FtkxCPLCNsUN_F6g1zPzwv3GO_bp-q8g-rk9ICINbC8as2DEviFUA4QB9gN0W28_daArXG92NnwLGMasxQhDoSRtN3mmAlybjCh037dZTedl5qePzXEJiv0-9u-apHbiV6USETtkzAJdk5qhqPdH2Xrdi"/>
+<div>
+<p class="font-headline-md text-headline-md text-boarding-primary dark:text-boarding-bg text-[16px]" data-i18n="friend_noura">نورة فهد</p>
+<p class="font-label-sm text-label-sm text-boarding-primary/50 dark:text-boarding-bg/50" data-i18n="wants_to_add_f">تريد إضافتك كصديق</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-boarding-primary dark:bg-boarding-bg text-white dark:text-boarding-primary py-1.5 rounded-md font-label-md text-label-md hover:bg-opacity-90 transition-colors" data-i18n="accept">قبول</button>
+<button class="flex-1 bg-transparent border border-boarding-primary/20 dark:border-boarding-bg/20 text-boarding-primary/70 dark:text-boarding-bg/70 py-1.5 rounded-md font-label-md text-label-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors" data-i18n="decline">رفض</button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-boarding-bg dark:bg-boarding-primary full-width bottom-0 mt-auto border-t border-black/5 dark:border-boarding-dark-border transition-colors duration-300">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center px-margin-desktop py-12 w-full max-w-container-max mx-auto rtl:flex-row-reverse ltr:flex-row">
+<div class="font-headline-md text-headline-md mb-4 md:mb-0 opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex items-center gap-2">
+<img alt="Boarding Logo" class="h-10 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjd-T2FB1y8jzlW6_5f599Xu-vmXFHuJqvjLPGUUqIp9wKIjVJJh1nWXyigMaFd_xUKxE0yurBHkHfXLj7elE6_Md0K0opL2ltB8n_VsUJrgCDK6uX9z503667kwcmsoH-KENQrmPIaVknRSL59QIl9xeEahl2zKiKE6j5u0b9xAggfrIxO0tNzcAxlCe0ZTCjbMZ2ioRbyUYLdhhEysNxVd0MM1NvkcmomqEWi-yp0xX7Co7vbwtNpAg-h-KR-Ck2xw"/>
+<img alt="Boarding Logo" class="h-10 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcS9xVVrRWKJ4HX65qk36CKN-XWlXGHqQeOq86oBUzpHcJM1hIHPSY6r7CCKHWMnMDKhONaTRGJ05ujSi_mduEhlWwqIFncDuF4K0gZ_jQlDauK542QNp77rQshbVssBebpWUMQwJZctqSRm_EXx-OSJi2kljGztAOKtzhAEh7Zk0JCPBcq9WWaTUJnOmJYvIDBRU46ggWhdOmDS4wyFXSgJdwlTdauTmDZa5cftzGhyZt-3WobzkllznOaAxD5MWMeg"/>
+</div>
+</div>
+<nav class="flex gap-6 mb-4 md:mb-0">
+<a class="font-label-md text-label-md text-boarding-primary/70 dark:text-boarding-bg/70 hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors" data-i18n="footer_privacy" href="#">سياسة الخصوصية</a>
+<a class="font-label-md text-label-md text-boarding-primary/70 dark:text-boarding-bg/70 hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors" data-i18n="footer_terms" href="#">شروط الخدمة</a>
+<a class="font-label-md text-label-md text-boarding-primary/70 dark:text-boarding-bg/70 hover:text-boarding-accent dark:hover:text-boarding-accent transition-colors" data-i18n="footer_help" href="#">مركز المساعدة</a>
+</nav>
+<div class="font-label-md text-label-md text-boarding-primary/70 dark:text-boarding-bg/70" data-i18n="footer_copyright">
+                © 2024 بوردنق. جميع الحقوق محفوظة.
+            </div>
+</div>
+</footer>
+<script>
+        // Translations
+        const translations = {
+            ar: {
+                nav_home: "الرئيسية",
+                nav_trip: "الرحلة",
+                nav_recommendations: "التوصيات",
+                nav_expenses: "المصاريف",
+                nav_friends: "الأصدقاء",
+                page_title: "الأصدقاء والمجموعات",
+                page_subtitle: "قم بإدارة أصدقائك وتنسيق رحلتك القادمة.",
+                search_placeholder: "ابحث عن أصدقاء بالاسم أو اسم المستخدم...",
+                my_group_title: "مجموعتي للرحلة الحالية",
+                friend_you: "أنت",
+                friend_omar: "عمر",
+                trip_details: "رحلة جبال الألب - 5 أيام متبقية",
+                copy_link: "نسخ رابط الدعوة",
+                friends_list_title: "الأصدقاء (24)",
+                friend_khaled: "خالد اليوسف",
+                friend_laila: "ليلى عبدالله",
+                invite_to_trip: "دعوة للرحلة",
+                friend_requests: "طلبات الصداقة",
+                friend_mohammed: "محمد سالم",
+                wants_to_add: "يريد إضافتك كصديق",
+                friend_noura: "نورة فهد",
+                wants_to_add_f: "تريد إضافتك كصديق",
+                accept: "قبول",
+                decline: "رفض",
+                footer_privacy: "سياسة الخصوصية",
+                footer_terms: "شروط الخدمة",
+                footer_help: "مركز المساعدة",
+                footer_copyright: "© 2024 بوردنق. جميع الحقوق محفوظة.",
+                lang_btn: "EN"
+            },
+            en: {
+                nav_home: "Home",
+                nav_trip: "Trip",
+                nav_recommendations: "Recommendations",
+                nav_expenses: "Expenses",
+                nav_friends: "Friends",
+                page_title: "Friends & Groups",
+                page_subtitle: "Manage your friends and coordinate your next trip.",
+                search_placeholder: "Search for friends by name or username...",
+                my_group_title: "My Current Trip Group",
+                friend_you: "You",
+                friend_omar: "Omar",
+                trip_details: "Alps Trip - 5 days left",
+                copy_link: "Copy Invite Link",
+                friends_list_title: "Friends (24)",
+                friend_khaled: "Khaled Alyousef",
+                friend_laila: "Laila Abdullah",
+                invite_to_trip: "Invite to Trip",
+                friend_requests: "Friend Requests",
+                friend_mohammed: "Mohammed Salem",
+                wants_to_add: "wants to add you as a friend",
+                friend_noura: "Noura Fahad",
+                wants_to_add_f: "wants to add you as a friend",
+                accept: "Accept",
+                decline: "Decline",
+                footer_privacy: "Privacy Policy",
+                footer_terms: "Terms of Service",
+                footer_help: "Help Center",
+                footer_copyright: "© 2024 Boarding. All rights reserved.",
+                lang_btn: "AR"
+            }
+        };
+
+        // Dark Mode Toggle
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        const themeIcon = themeToggleBtn.querySelector('span');
+
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            if (htmlElement.classList.contains('dark')) {
+                themeIcon.textContent = 'light_mode';
+            } else {
+                themeIcon.textContent = 'dark_mode';
+            }
+        });
+
+        // Language Toggle
+        const langToggleBtn = document.getElementById('lang-toggle');
+        let currentLang = 'ar';
+
+        langToggleBtn.addEventListener('click', () => {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            
+            // Update document language and direction
+            htmlElement.setAttribute('lang', currentLang);
+            htmlElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+            
+            // Update toggle button text
+            langToggleBtn.textContent = translations[currentLang].lang_btn;
+            
+            // Update all translatable elements
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    element.textContent = translations[currentLang][key];
+                }
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                if (translations[currentLang][key]) {
+                    element.setAttribute('placeholder', translations[currentLang][key]);
+                }
+            });
+        });
+    </script>
+<script src="assets/responsive.js" defer></script>
+</body></html>

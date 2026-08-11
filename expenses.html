@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="ltr" lang="en" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>بوردنق - المصاريف</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-secondary-fixed-variant": "#8b1a00",
+                "on-error": "#ffffff",
+                "on-secondary-container": "#671100",
+                "on-primary-container": "#7c89aa",
+                "surface-container-high": "#eee7dd",
+                "error-container": "#ffdad6",
+                "on-tertiary": "#ffffff",
+                "surface-container-low": "#faf3e9",
+                "outline": "#75777e",
+                "on-background": "#1e1b16",
+                "secondary": "#E85D3D",
+                "secondary-fixed": "#ffdad2",
+                "surface-container": "#f4ede3",
+                "surface-bright": "#fff8f0",
+                "inverse-primary": "#b9c6ea",
+                "on-primary-fixed": "#0d1b36",
+                "secondary-container": "#F4A950",
+                "surface": "#FDF6EC",
+                "surface-dim": "#e0d9d0",
+                "tertiary-fixed-dim": "#ffb868",
+                "primary": "#14213D",
+                "primary-fixed": "#d9e2ff",
+                "surface-tint": "#525e7d",
+                "surface-container-lowest": "#ffffff",
+                "on-surface": "#1e1b16",
+                "primary-fixed-dim": "#b9c6ea",
+                "on-primary": "#ffffff",
+                "on-primary-fixed-variant": "#3a4664",
+                "outline-variant": "#c5c6ce",
+                "on-secondary-fixed": "#3d0600",
+                "surface-container-highest": "#e8e2d8",
+                "primary-container": "#14213d",
+                "error": "#ba1a1a",
+                "background": "#FDF6EC",
+                "tertiary-fixed": "#ffddbb",
+                "on-tertiary-fixed": "#2b1700",
+                "on-error-container": "#93000a",
+                "on-tertiary-fixed-variant": "#673d00",
+                "secondary-fixed-dim": "#ffb4a3",
+                "inverse-on-surface": "#f7f0e6",
+                "tertiary": "#140800",
+                "surface-variant": "#e8e2d8",
+                "inverse-surface": "#33302a",
+                "tertiary-container": "#341c00",
+                "on-secondary": "#ffffff",
+                "on-surface-variant": "#45464d",
+                "on-tertiary-container": "#bd7a25"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-sm": "8px",
+                "container-max": "1280px",
+                "margin-mobile": "20px",
+                "unit": "4px",
+                "stack-md": "16px",
+                "gutter": "24px",
+                "stack-lg": "32px",
+                "margin-desktop": "64px"
+        },
+        "fontFamily": {
+                "headline-lg": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "label-sm": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-lg-mobile": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "body-lg": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "body-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-xl": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "label-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-xl-mobile": [
+                        "IBM Plex Sans Arabic"
+                ]
+        },
+        "fontSize": {
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-xl": [
+                        "40px",
+                        {
+                                "lineHeight": "52px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-xl-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+          body { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+          
+html.dark .bg-surface-container-lowest,
+html.dark .bg-surface-container-low,
+html.dark .bg-surface-bright,
+html.dark .bg-surface-container,
+html.dark .bg-surface-container-high,
+html.dark .bg-surface-container-highest,
+html.dark .bg-white {
+    background-color: #1F2F54 !important;
+    border-color: #2A3F6C !important;
+}
+html.dark main h1, html.dark main h2, html.dark main h3,
+html.dark main .text-on-surface,
+html.dark main .text-primary,
+html.dark main td, html.dark main th {
+    color: #FDF6EC !important;
+}
+html.dark main .text-on-surface-variant,
+html.dark main .text-outline {
+    color: rgba(253, 246, 236, 0.6) !important;
+}
+html.dark main tbody tr:nth-child(even) {
+    background-color: #26375F !important;
+}
+html.dark .bg-surface-variant {
+    background-color: #2A3F6C !important;
+}
+      </style>
+<link rel="stylesheet" href="assets/responsive.css"/>
+</head>
+<body class="bg-[#FDF6EC] dark:bg-[#14213D] text-on-background min-h-screen flex flex-col transition-colors duration-300">
+<!-- TopNavBar -->
+<nav class="bg-[#FDF6EC] dark:bg-[#14213D] shadow-sm w-full top-0 z-50 border-b border-surface-variant transition-colors duration-300">
+<div class="flex flex-row-reverse justify-between items-center px-margin-desktop w-full max-w-container-max mx-auto h-20">
+<!-- Brand -->
+<div class="flex items-center"><img alt="Boarding Logo" class="h-12 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDn4ByeB1VW_cqf2QOyeN99l8_S1Ko9fBTS5csukGyAJ0V9VaZ_6CcTOY7XyCLzN-6xzEZAnf1906zeHo0FdF9qx40ZwVIRIGNOUEl6F9lxun0pddB96Xgvf5jhCaAp0oSgmTp5zvwCr1GC8rxWGQIsfpQ54I77k497hrlciFuNf1NI9gsqChKJySlK_nM7rAPskmMQx5C9lfxdLwA57eHineymUlm3bl4B8i-kauY1ts4i8QGqp5nHpy6i0mrNt1PLUw"/><img alt="Boarding Logo" class="h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD68rnP22Oh8tsVE6GmpCLfv5yNbhJUYQk_ZnLN7fThMlhiNVdJt3WYsGsw8zZg0QpJtMpZdrb9dbfFpmsQbAm4GQTIX1RGW1R_qmPaMWeN2xoki2HGR5fNoRkaK5nYLmAyiX5lnDOt31h8kNcs80XEKQz6aYg-tnkKSBk-2qMMqKPT0IjLnLmVVlTc0xiE0O276fkKSVccx7fmiO5aiNEsQGU1VeRcgK6k1XS7vSBK8o7iUyWYjAuBPf0WJaZ_l9cptw"/></div>
+<!-- Navigation Links (Desktop) -->
+<ul class="hidden md:flex flex-row-reverse items-center gap-6">
+<li class="">
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-secondary-container transition-colors active:scale-95 transition-transform block py-4 dark:text-[#FDF6EC]/70" data-i18n="home" href="#">Home</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-secondary-container transition-colors active:scale-95 transition-transform block py-4 dark:text-[#FDF6EC]/70" data-i18n="trip" href="#">Trip</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-secondary-container transition-colors active:scale-95 transition-transform block py-4 dark:text-[#FDF6EC]/70" data-i18n="recs" href="#">Recommendations</a>
+</li>
+<li class="">
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-secondary-container font-headline-md text-body-md hover:text-secondary-container transition-colors active:scale-95 transition-transform block py-4 dark:text-[#FDF6EC] dark:text-[#FDF6EC]/70" data-i18n="expenses" href="#">Expenses</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant dark:text-outline-variant font-body-md text-body-md hover:text-secondary-container transition-colors active:scale-95 transition-transform block py-4 dark:text-[#FDF6EC]/70" data-i18n="friends" href="#">Friends</a>
+</li></ul>
+<!-- Trailing Action -->
+<div class="flex items-center gap-4 ml-6">
+<button class="text-on-surface-variant dark:text-outline-variant font-label-md text-label-md hover:text-secondary-container transition-colors active:scale-95 dark:text-[#FDF6EC]/70" id="langBtn">AR</button>
+<button class="text-on-surface-variant dark:text-outline-variant p-1 hover:text-secondary-container transition-colors active:scale-95 flex items-center dark:text-[#FDF6EC]/70">
+<span class="material-symbols-outlined" data-icon="dark_mode">light_mode</span>
+</button>
+</div><button class="bg-[#14213D] dark:bg-[#FDF6EC] text-white dark:text-[#14213D] rounded-full w-10 h-10 flex items-center justify-center shadow-sm hover:opacity-90 transition-opacity"><span class="material-symbols-outlined">person</span></button>
+<!-- Mobile Menu Button -->
+<button class="md:hidden text-primary p-2 dark:text-[#FDF6EC]">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8">
+<div class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+<div class="flex items-center gap-4">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary dark:text-[#FDF6EC]" data-i18n="title">Expense Management</h1>
+<button class="bg-surface-variant dark:bg-[#26375F] text-on-surface dark:text-[#FDF6EC] px-3 py-1 rounded-full text-sm font-medium hover:bg-opacity-80 transition-opacity border border-outline-variant dark:border-[#2A3F6C]" id="currencyToggle">
+                    ر.س / £
+                </button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/70" data-i18n="subtitle">Track trip expenses, split bills, and ensure everyone has paid.</p>
+</div>
+</div>
+<button class="bg-[#E85D3D] text-white px-6 py-3 rounded-xl font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+<span class="" data-i18n="add">Add New Expense</span>
+</button>
+</div>
+<!-- Tabs -->
+<div class="border-b border-surface-variant dark:border-[#2A3F6C] mb-8 overflow-x-auto">
+<ul class="flex flex-row gap-8 min-w-max">
+<li>
+<button class="tab-button font-headline-md text-body-md py-4 border-b-2 border-secondary font-bold text-primary dark:text-[#FDF6EC]" data-i18n="tab_group" id="tab-group">Group Kitty</button>
+</li>
+<li>
+<button class="tab-button font-body-md text-body-md py-4 border-b-2 border-transparent text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary-container transition-colors" data-i18n="tab_side" id="tab-side">Side Kitties</button>
+</li>
+<li>
+<button class="tab-button font-body-md text-body-md py-4 border-b-2 border-transparent text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary-container transition-colors" data-i18n="tab_personal" id="tab-personal">Personal Expenses</button>
+</li>
+<li>
+<button class="tab-button font-body-md text-body-md py-4 border-b-2 border-transparent text-on-surface-variant dark:text-[#FDF6EC]/70 hover:text-secondary-container transition-colors" data-i18n="tab_summary" id="tab-summary">My Financial Summary</button>
+</li>
+</ul>
+</div>
+<!-- Tab Content: Group Kitty -->
+<div class="tab-content block" id="content-group">
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Summary Cards (Left Column on Desktop) -->
+<div class="md:col-span-4 flex flex-col gap-6">
+<!-- Total Card -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-low rounded-xl p-6 shadow-sm border border-surface-variant dark:bg-[#1F2F54] dark:border-[#2A3F6C]"><h3 class="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2 dark:text-[#FDF6EC]">
+<span class="material-symbols-outlined text-secondary" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="" data-i18n="total">Total Pool</span>
+</h3>
+<div class="font-headline-xl text-headline-xl text-primary mb-2 dark:text-[#FDF6EC]" data-amount="4500">4,500 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+<div class="mt-6">
+<div class="flex justify-between text-label-md font-label-md mb-2">
+<span class="text-primary dark:text-[#FDF6EC]" data-i18n="collected">Collected</span>
+<span class="text-secondary" data-i18n="remaining">Remaining</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mb-2 overflow-hidden flex dark:bg-[#2A3F6C]">
+<div class="bg-primary h-full dark:bg-[#F4A950]" style="width: 75%"></div>
+<div class="bg-secondary h-full" style="width: 25%"></div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-primary dark:text-[#FDF6EC]/75" data-amount="3375">3,375 <span class="" data-i18n="sar">SAR</span></span>
+<span class="text-secondary" data-amount="1125">1,125 <span class="" data-i18n="sar">SAR</span></span>
+</div>
+</div></div>
+<!-- Distribution Chart Placeholder -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-low rounded-xl p-6 shadow-sm border border-surface-variant dark:bg-[#1F2F54] dark:border-[#2A3F6C]"><h3 class="font-headline-md text-headline-md text-on-surface mb-4 dark:text-[#FDF6EC]" data-i18n="dist">Expense Distribution</h3>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between font-label-md text-label-md mb-1">
+<span class="flex items-center gap-1 dark:text-[#FDF6EC]/75"><span class="w-2 h-2 rounded-full bg-primary dark:bg-[#F4A950]"></span> <span class="" data-i18n="housing">Housing</span></span>
+<span class="dark:text-[#FDF6EC]/75">45%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1.5 dark:bg-[#2A3F6C]"><div class="bg-primary h-full rounded-full dark:bg-[#F4A950]" style="width: 45%"></div></div>
+</div>
+<div>
+<div class="flex justify-between font-label-md text-label-md mb-1">
+<span class="flex items-center gap-1 dark:text-[#FDF6EC]/75"><span class="w-2 h-2 rounded-full bg-secondary"></span> <span class="" data-i18n="food">Food</span></span>
+<span class="dark:text-[#FDF6EC]/75">30%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1.5 dark:bg-[#2A3F6C]"><div class="bg-secondary h-full rounded-full" style="width: 30%"></div></div>
+</div>
+<div>
+<div class="flex justify-between font-label-md text-label-md mb-1">
+<span class="flex items-center gap-1 dark:text-[#FDF6EC]/75"><span class="w-2 h-2 rounded-full bg-secondary-container"></span> <span class="" data-i18n="transport">Transport</span></span>
+<span class="dark:text-[#FDF6EC]/75">15%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1.5 dark:bg-[#2A3F6C]"><div class="bg-secondary-container h-full rounded-full" style="width: 15%"></div></div>
+</div>
+<div>
+<div class="flex justify-between font-label-md text-label-md mb-1">
+<span class="flex items-center gap-1 dark:text-[#FDF6EC]/75"><span class="w-2 h-2 rounded-full bg-outline"></span> <span class="" data-i18n="other">Other</span></span>
+<span class="dark:text-[#FDF6EC]/75">10%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1.5 dark:bg-[#2A3F6C]"><div class="bg-outline h-full rounded-full" style="width: 10%"></div></div>
+</div>
+</div></div>
+</div>
+<!-- Main Content Area (Right Column on Desktop) -->
+<div class="md:col-span-8 flex flex-col gap-6">
+<!-- Group Members Status -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-low rounded-xl shadow-sm border border-surface-variant overflow-hidden dark:bg-[#1F2F54] dark:border-[#2A3F6C]"><div class="p-4 border-b border-surface-variant bg-surface-bright dark:bg-[#26375F]">
+<h3 class="font-headline-md text-headline-md text-on-surface dark:text-[#FDF6EC]" data-i18n="status">Members Payment Status</h3>
+</div>
+<div class="p-0">
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-headline-md text-headline-md dark:bg-[#F4A950] dark:text-[#14213D]">أ</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface dark:text-[#FDF6EC]" data-i18n="you">Ahmed (You)</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/55"><span class="" data-i18n="due">Due</span>: <span data-amount="1125">1,125 <span class="" data-i18n="sar">SAR</span></span></div>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant dark:bg-[#1F4030] dark:text-[#A5E8C0] px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span> <span class="" data-i18n="paid">Paid</span>
+</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A portrait of a young middle eastern man smiling, professional travel context, well-lit, corporate modern style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcRcMeDhneEfOSyPX8Q81XCGh8GdJsSke51a-X_q9OKq8XeSlHrf_Csa5z5cYEd5u88Prhyun8I7uFU5kpKYlNZ2tzqRZHePtZo55DbUPa7LeKPzHqVLS0_m4CjBdgXKim375CunevM4ppqS4pd5AZOzEQFqhyaMwmX26_UiYKhzVaJCL6ADQlvGJTheiBKO-DuCAk92IRHL7ojs-N2XC_cXClmnKxfpXMtUwSXp6Sd8EudjvzNfNd"/>
+<div>
+<div class="font-label-md text-label-md text-on-surface dark:text-[#FDF6EC]">خالد</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/55"><span class="" data-i18n="due">Due</span>: <span data-amount="1125">1,125 <span class="" data-i18n="sar">SAR</span></span></div>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant dark:bg-[#1F4030] dark:text-[#A5E8C0] px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span> <span class="" data-i18n="paid">Paid</span>
+</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-headline-md text-headline-md">س</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface dark:text-[#FDF6EC]">سعد</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/55"><span class="" data-i18n="due">Due</span>: <span data-amount="1125">1,125 <span class="" data-i18n="sar">SAR</span></span></div>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="bg-error-container text-on-error-container dark:bg-[#4A2020] dark:text-[#FFB4A3] px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span> <span class="" data-i18n="pending">Pending</span>
+</span>
+<button class="text-primary dark:text-[#FDF6EC] font-label-sm text-label-sm mt-1 hover:underline" data-i18n="remind">Remind</button>
+</div>
+</div>
+</div></div>
+<!-- Expenses Log -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-low rounded-xl shadow-sm border border-surface-variant overflow-hidden dark:bg-[#1F2F54] dark:border-[#2A3F6C]"><div class="p-4 border-b border-surface-variant bg-surface-bright dark:bg-[#26375F] flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface dark:text-[#FDF6EC]" data-i18n="log">Expense Log</h3>
+<button class="text-primary dark:text-[#FDF6EC] font-label-md text-label-md flex items-center gap-1 hover:opacity-80 transition-opacity">
+<span class="" data-i18n="filter">Filter</span> <span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+<div class="w-full overflow-x-auto">
+<table class="w-full border-collapse min-w-[600px] text-center">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md border-b border-surface-variant dark:bg-[#26375F] dark:text-[#FDF6EC]/55">
+<th class="p-4 font-medium" data-i18n="desc">Description</th>
+<th class="p-4 font-medium" data-i18n="cat">Category</th>
+<th class="p-4 font-medium" data-i18n="payer">Paid by</th>
+<th class="p-4 font-medium" data-i18n="date">Date</th>
+<th class="p-4 font-medium" data-i18n="amount">Amount (SAR)</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<tr class="border-b border-surface-variant hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<td class="p-4 dark:text-[#FDF6EC]">
+<div class="flex items-center gap-2 text-on-surface dark:text-[#FDF6EC]">
+<span class="material-symbols-outlined text-outline dark:text-[#FDF6EC]/55" data-icon="restaurant">restaurant</span>
+                                                عشاء في مطعم الكرم
+                                            </div>
+</td>
+<td class="p-4 text-on-surface-variant dark:text-[#FDF6EC]/75 dark:text-[#FDF6EC]">طعام</td>
+<td class="p-4 text-on-surface dark:text-[#FDF6EC]">خالد</td>
+<td class="p-4 text-on-surface-variant font-label-sm text-label-sm dark:text-[#FDF6EC]/55 dark:text-[#FDF6EC]">12 مايو 2024</td>
+<td class="p-4 font-bold text-on-surface dark:text-[#FDF6EC]" data-amount="450">450</td>
+</tr>
+<tr class="border-b border-surface-variant bg-surface-bright dark:bg-[#26375F] hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<td class="p-4 dark:text-[#FDF6EC]">
+<div class="flex items-center gap-2 text-on-surface dark:text-[#FDF6EC]">
+<span class="material-symbols-outlined text-outline dark:text-[#FDF6EC]/55" data-icon="local_gas_station">local_gas_station</span>
+                                                بنزين - المحطة الأولى
+                                            </div>
+</td>
+<td class="p-4 text-on-surface-variant dark:text-[#FDF6EC]/75 dark:text-[#FDF6EC]">مواصلات</td>
+<td class="p-4 text-on-surface dark:text-[#FDF6EC]">أحمد</td>
+<td class="p-4 text-on-surface-variant font-label-sm text-label-sm dark:text-[#FDF6EC]/55 dark:text-[#FDF6EC]">12 مايو 2024</td>
+<td class="p-4 font-bold text-on-surface dark:text-[#FDF6EC]" data-amount="120">120</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<td class="p-4 dark:text-[#FDF6EC]">
+<div class="flex items-center gap-2 text-on-surface dark:text-[#FDF6EC]">
+<span class="material-symbols-outlined text-outline dark:text-[#FDF6EC]/55" data-icon="confirmation_number">confirmation_number</span>
+                                                تذاكر دخول المتحف
+                                            </div>
+</td>
+<td class="p-4 text-on-surface-variant dark:text-[#FDF6EC]/75 dark:text-[#FDF6EC]">أنشطة</td>
+<td class="p-4 text-on-surface dark:text-[#FDF6EC]">سعد</td>
+<td class="p-4 text-on-surface-variant font-label-sm text-label-sm dark:text-[#FDF6EC]/55 dark:text-[#FDF6EC]">13 مايو 2024</td>
+<td class="p-4 font-bold text-on-surface dark:text-[#FDF6EC]" data-amount="300">300</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 text-center dark:bg-transparent">
+<button class="text-primary dark:text-[#FDF6EC] font-label-md text-label-md hover:underline" data-i18n="more">Show More</button>
+</div></div>
+</div>
+</div>
+</div>
+<!-- Tab Content: Side Kitties -->
+<div class="tab-content hidden" id="content-side">
+<div class="mb-8 p-6 bg-surface-container dark:bg-[#26375F] rounded-xl border border-surface-variant dark:border-[#2A3F6C] flex justify-between items-center shadow-sm">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="total_side_kitties">Total Side Kitties</div>
+<div class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-amount="750">750 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+<div class="h-10 w-px bg-surface-variant dark:bg-[#2A3F6C]"></div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="total_group_kitty">Total Group Kitty</div>
+<div class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-amount="4500">4,500 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+<div class="h-10 w-px bg-surface-variant dark:bg-[#2A3F6C]"></div>
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="grand_total">Grand Total</div>
+<div class="font-headline-md text-headline-md text-secondary font-bold" data-amount="5250">5,250 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+</div>
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-i18n="side_title">القطات الجانبية</h2>
+<button class="bg-secondary text-white px-4 py-2 rounded-xl font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-2 shadow-sm" onclick="document.getElementById('modal-side').classList.remove('hidden')">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+<span data-i18n="create_side">إنشاء قطة جانبية</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-sm border border-surface-variant dark:border-[#2A3F6C]">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface dark:text-[#FDF6EC]">سهرة الملاهي</h3>
+<div class="flex -space-x-2 space-x-reverse">
+<img alt="Member" class="w-8 h-8 rounded-full border-2 border-white dark:border-[#1F2F54] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcRcMeDhneEfOSyPX8Q81XCGh8GdJsSke51a-X_q9OKq8XeSlHrf_Csa5z5cYEd5u88Prhyun8I7uFU5kpKYlNZ2tzqRZHePtZo55DbUPa7LeKPzHqVLS0_m4CjBdgXKim375CunevM4ppqS4pd5AZOzEQFqhyaMwmX26_UiYKhzVaJCL6ADQlvGJTheiBKO-DuCAk92IRHL7ojs-N2XC_cXClmnKxfpXMtUwSXp6Sd8EudjvzNfNd"/>
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary border-2 border-white dark:border-[#1F2F54] flex items-center justify-center font-label-sm text-label-sm dark:bg-[#F4A950] dark:text-[#14213D]">أ</div>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/55 mb-1" data-i18n="total_amount">Total Amount</div>
+<div class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-amount="600">600 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+<div class="text-left">
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/55 mb-1"><span data-i18n="your_share">Your Share</span>: <span data-amount="300">300 <span data-i18n="sar">SAR</span></span></div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant dark:bg-[#1F4030] dark:text-[#A5E8C0] px-2 py-1 rounded-md font-label-sm text-label-sm inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> <span data-i18n="paid">Paid</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-sm border border-surface-variant dark:border-[#2A3F6C]">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface dark:text-[#FDF6EC]">تذاكر السينما</h3>
+<div class="flex -space-x-2 space-x-reverse">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed border-2 border-white dark:border-[#1F2F54] flex items-center justify-center font-label-sm text-label-sm">س</div>
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary border-2 border-white dark:border-[#1F2F54] flex items-center justify-center font-label-sm text-label-sm dark:bg-[#F4A950] dark:text-[#14213D]">أ</div>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/55 mb-1" data-i18n="total_amount">Total Amount</div>
+<div class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-amount="150">150 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+<div class="text-left">
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/55 mb-1"><span data-i18n="your_share">Your Share</span>: <span data-amount="75">75 <span data-i18n="sar">SAR</span></span></div>
+<span class="bg-error-container text-on-error-container dark:bg-[#4A2020] dark:text-[#FFB4A3] px-2 py-1 rounded-md font-label-sm text-label-sm inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> <span data-i18n="pending">Pending</span>
+</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Tab Content: Personal Expenses -->
+<div class="tab-content hidden" id="content-personal">
+<div class="flex items-center gap-2 mb-6 p-4 bg-surface-container dark:bg-[#26375F] rounded-xl border border-surface-variant dark:border-[#2A3F6C]">
+<span class="material-symbols-outlined text-outline dark:text-[#FDF6EC]/70">lock</span>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/70" data-i18n="personal_note">هذه المصاريف خاصة بك ولا تظهر لبقية أعضاء الرحلة</p>
+</div>
+<div class="flex flex-col md:flex-row gap-6 mb-6">
+<div class="w-full md:w-1/3 bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-sm border border-surface-variant dark:border-[#2A3F6C]">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 dark:text-[#FDF6EC]" data-i18n="personal_total">إجمالي مصاريفي الشخصية</h3>
+<div class="font-headline-xl text-headline-xl text-primary dark:text-[#FDF6EC]" data-amount="850">850 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+<div class="w-full md:w-2/3 flex items-center justify-end">
+<button class="bg-primary text-white dark:bg-[#FDF6EC] dark:text-[#14213D] px-6 py-3 rounded-xl font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-2 shadow-sm" onclick="document.getElementById('modal-personal').classList.remove('hidden')">
+<span class="material-symbols-outlined">add</span>
+<span data-i18n="add_personal">إضافة مصروف شخصي</span>
+</button>
+</div>
+</div>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl shadow-sm border border-surface-variant dark:border-[#2A3F6C] overflow-hidden">
+<div class="w-full overflow-x-auto">
+<table class="w-full border-collapse min-w-[600px] text-center">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md border-b border-surface-variant dark:bg-[#26375F] dark:text-[#FDF6EC]/55">
+<th class="p-4 font-medium" data-i18n="desc">Description</th>
+<th class="p-4 font-medium" data-i18n="cat">Category</th>
+<th class="p-4 font-medium" data-i18n="date">Date</th>
+<th class="p-4 font-medium" data-i18n="amount">Amount (SAR)</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<tr class="border-b border-surface-variant hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<td class="p-4 dark:text-[#FDF6EC]">قهوة الصباح</td>
+<td class="p-4 text-on-surface-variant dark:text-[#FDF6EC]/75 dark:text-[#FDF6EC]">طعام</td>
+<td class="p-4 text-on-surface-variant font-label-sm text-label-sm dark:text-[#FDF6EC]/55 dark:text-[#FDF6EC]">12 مايو 2024</td>
+<td class="p-4 font-bold text-on-surface dark:text-[#FDF6EC]" data-amount="25">25</td>
+</tr>
+<tr class="border-b border-surface-variant bg-surface-bright dark:bg-[#26375F] hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<td class="p-4 dark:text-[#FDF6EC]">هدايا تذكارية</td>
+<td class="p-4 text-on-surface-variant dark:text-[#FDF6EC]/75 dark:text-[#FDF6EC]">أخرى</td>
+<td class="p-4 text-on-surface-variant font-label-sm text-label-sm dark:text-[#FDF6EC]/55 dark:text-[#FDF6EC]">13 مايو 2024</td>
+<td class="p-4 font-bold text-on-surface dark:text-[#FDF6EC]" data-amount="350">350</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<td class="p-4 dark:text-[#FDF6EC]">وجبة خفيفة</td>
+<td class="p-4 text-on-surface-variant dark:text-[#FDF6EC]/75 dark:text-[#FDF6EC]">طعام</td>
+<td class="p-4 text-on-surface-variant font-label-sm text-label-sm dark:text-[#FDF6EC]/55 dark:text-[#FDF6EC]">14 مايو 2024</td>
+<td class="p-4 font-bold text-on-surface dark:text-[#FDF6EC]" data-amount="45">45</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Tab Content: My Financial Summary -->
+<div class="tab-content hidden" id="content-summary">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-sm border border-surface-variant dark:border-[#2A3F6C]">
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/70 mb-2" data-i18n="my_total_obs">My Total Obligations</div>
+<div class="font-headline-xl text-headline-xl text-primary dark:text-[#FDF6EC]" data-amount="1500">1,500 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-sm border border-surface-variant dark:border-[#2A3F6C]">
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/70 mb-2" data-i18n="paid_total">Paid</div>
+<div class="font-headline-xl text-headline-xl text-secondary-container dark:text-[#F4A950]" data-amount="1425">1,425 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-sm border border-surface-variant dark:border-[#2A3F6C]">
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/70 mb-2" data-i18n="owe_total">I Still Owe</div>
+<div class="font-headline-xl text-headline-xl text-secondary dark:text-secondary" data-amount="75">75 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-sm border border-surface-variant dark:border-[#2A3F6C]">
+<div class="font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/70 mb-2" data-i18n="personal_total_sum">Personal Expenses</div>
+<div class="font-headline-xl text-headline-xl text-on-surface dark:text-[#FDF6EC]" data-amount="850">850 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+</div>
+</div>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 shadow-sm border border-surface-variant dark:border-[#2A3F6C] mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 dark:text-[#FDF6EC]" data-i18n="financial_split">Financial Split</h3>
+<div class="w-full bg-surface-variant rounded-full h-4 mb-4 overflow-hidden flex dark:bg-[#2A3F6C]">
+<div class="bg-primary dark:bg-[#14213D]" style="width: 75%" title="Group Kitty"></div>
+<div class="bg-secondary-container dark:bg-[#F4A950]" style="width: 20%" title="Side Kitties"></div>
+<div class="bg-secondary" style="width: 5%" title="Personal"></div>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/75">
+<span class="w-3 h-3 rounded-full bg-primary dark:bg-[#14213D]"></span> <span data-i18n="tab_group">Group Kitty</span>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/75">
+<span class="w-3 h-3 rounded-full bg-secondary-container dark:bg-[#F4A950]"></span> <span data-i18n="tab_side">Side Kitties</span>
+</div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant dark:text-[#FDF6EC]/75">
+<span class="w-3 h-3 rounded-full bg-secondary"></span> <span data-i18n="tab_personal">Personal Expenses</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl shadow-sm border border-surface-variant dark:border-[#2A3F6C] overflow-hidden">
+<div class="p-4 border-b border-surface-variant bg-surface-bright dark:bg-[#26375F]">
+<h3 class="font-headline-md text-headline-md text-on-surface dark:text-[#FDF6EC]" data-i18n="breakdown">Breakdown</h3>
+</div>
+<div class="p-0">
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<div class="flex items-center gap-3 text-on-surface dark:text-[#FDF6EC]">
+<span class="material-symbols-outlined text-primary dark:text-[#F4A950]">group</span>
+<div class="font-label-md text-label-md" data-i18n="tab_group">Group Kitty</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-amount="1125">1,125 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant dark:bg-[#1F4030] dark:text-[#A5E8C0] px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> <span data-i18n="paid">Paid</span>
+</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<div class="flex items-center gap-3 text-on-surface dark:text-[#FDF6EC]">
+<span class="material-symbols-outlined text-secondary-container dark:text-[#F4A950]">star</span>
+<div class="font-label-md text-label-md">سهرة الملاهي (Side Kitty)</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-amount="300">300 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant dark:bg-[#1F4030] dark:text-[#A5E8C0] px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> <span data-i18n="paid">Paid</span>
+</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low dark:hover:bg-[#2E4070] transition-colors dark:bg-transparent">
+<div class="flex items-center gap-3 text-on-surface dark:text-[#FDF6EC]">
+<span class="material-symbols-outlined text-secondary-container dark:text-[#F4A950]">star</span>
+<div class="font-label-md text-label-md">تذاكر السينما (Side Kitty)</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="font-headline-md text-headline-md text-primary dark:text-[#FDF6EC]" data-amount="75">75 <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span></div>
+<span class="bg-error-container text-on-error-container dark:bg-[#4A2020] dark:text-[#FFB4A3] px-2 py-1 rounded-md font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> <span data-i18n="pending">Pending</span>
+</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-[#FDF6EC] dark:bg-[#14213D] mt-auto border-t border-surface-variant transition-colors duration-300">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center px-margin-desktop py-12 w-full max-w-container-max mx-auto">
+<!-- Brand -->
+<div class="flex items-center gap-2 mb-6 md:mb-0"><img alt="Boarding Logo" class="h-10 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASyKwBekcZlhgYW-PkNvQgXQ4QNV5f7pCxXcqLPlMyjIUIVp4h2YC7wl8a4NxBcQrsDeAqCsoudBtaEu7HNHYX38Z-Xl3iqdn22A8hRtMvp8nZ9dIzqFFPkobh6B8Zd5x5cWMMcZFvlcvcbIR_mOI_kI7Po5yrTvfjCfM9jUtzmSx8fU0BEkNgBzLL-4vdeoH9Lpsld4lPV8tIiUuLHoVLWSe9u88nIv0eZ9xVuOF5u9fQqZoMPVhPhJhOm6eOMqwYcw"/><img alt="Boarding Logo" class="h-10 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzg7YL0kTIKjk7ZLv4UNL02xyjnVeO4x56UfxJ_5bW_Uv4ef5lMXhYViME7-OH8_dlf3ohYBPXtDST9S2hlOmOuOx74Hp2bWMOSlUfWkCmGmjgndFXyVsanPf9rRQMpFxWKtqX3l0WOylhPc_0MFfHqZctBqVy1s229oTwI9s-T5Ji4fx_EKDngj5BoSB5PHpMYJPr7nvzfE4bMp0vGuzLM5wnJrnWWXEVwoGNiufJ79xEIo5IussjHWFF-wD4wJMeBw"/></div>
+<!-- Links -->
+<ul class="flex flex-wrap justify-center gap-6 mb-6 md:mb-0">
+<li class="">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary transition-colors opacity-80 hover:opacity-100 transition-opacity dark:text-[#FDF6EC]/70" data-i18n="privacy" href="#">Privacy Policy</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary transition-colors opacity-80 hover:opacity-100 transition-opacity dark:text-[#FDF6EC]/70" data-i18n="terms" href="#">Terms of Service</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary transition-colors opacity-80 hover:opacity-100 transition-opacity dark:text-[#FDF6EC]/70" data-i18n="help" href="#">Help Center</a>
+</li>
+</ul>
+<!-- Copyright -->
+<div class="text-on-surface-variant font-label-md text-label-md text-center md:text-right dark:text-[#FDF6EC]/70 dark:bg-transparent dark:border-0" data-i18n="copyright">© 2024 Boarding. All rights reserved.</div>
+</div>
+</footer>
+<!-- Modals -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity" id="modal-side">
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 w-11/12 max-w-md shadow-lg border border-surface-variant dark:border-[#2A3F6C]">
+<h3 class="font-headline-md text-headline-md text-on-surface dark:text-[#FDF6EC] mb-4" data-i18n="create_side">إنشاء قطة جانبية</h3>
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="kitty_name">اسم القطة</label>
+<input class="w-full bg-surface-container dark:bg-[#2A3F6C] border-outline-variant dark:border-[#26375F] rounded-lg px-4 py-2 text-on-surface dark:text-[#FDF6EC] focus:border-secondary focus:ring-1 focus:ring-secondary outline-none" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="kitty_amount">المبلغ</label>
+<input class="w-full bg-surface-container dark:bg-[#2A3F6C] border-outline-variant dark:border-[#26375F] rounded-lg px-4 py-2 text-on-surface dark:text-[#FDF6EC] focus:border-secondary focus:ring-1 focus:ring-secondary outline-none" type="number"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="kitty_members">الأعضاء</label>
+<select class="w-full bg-surface-container dark:bg-[#2A3F6C] border-outline-variant dark:border-[#26375F] rounded-lg px-4 py-2 text-on-surface dark:text-[#FDF6EC] focus:border-secondary focus:ring-1 focus:ring-secondary outline-none" multiple="">
+<option>أحمد</option>
+<option>خالد</option>
+<option>سعد</option>
+</select>
+</div>
+</div>
+<div class="mt-6 flex justify-end gap-2">
+<button class="px-4 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70 hover:bg-surface-container dark:hover:bg-[#26375F] transition-colors" data-i18n="cancel" onclick="document.getElementById('modal-side').classList.add('hidden')">إلغاء</button>
+<button class="bg-secondary text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity" data-i18n="save" onclick="document.getElementById('modal-side').classList.add('hidden')">حفظ</button>
+</div>
+</div>
+</div>
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity" id="modal-personal">
+<div class="bg-surface-container-lowest dark:bg-[#1F2F54] rounded-xl p-6 w-11/12 max-w-md shadow-lg border border-surface-variant dark:border-[#2A3F6C]">
+<h3 class="font-headline-md text-headline-md text-on-surface dark:text-[#FDF6EC] mb-4" data-i18n="add_personal">إضافة مصروف شخصي</h3>
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="desc">الوصف</label>
+<input class="w-full bg-surface-container dark:bg-[#2A3F6C] border-outline-variant dark:border-[#26375F] rounded-lg px-4 py-2 text-on-surface dark:text-[#FDF6EC] focus:border-secondary focus:ring-1 focus:ring-secondary outline-none" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="cat">التصنيف</label>
+<select class="w-full bg-surface-container dark:bg-[#2A3F6C] border-outline-variant dark:border-[#26375F] rounded-lg px-4 py-2 text-on-surface dark:text-[#FDF6EC] focus:border-secondary focus:ring-1 focus:ring-secondary outline-none">
+<option>طعام</option>
+<option>مواصلات</option>
+<option>أنشطة</option>
+<option>أخرى</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70 mb-1" data-i18n="amount">المبلغ</label>
+<input class="w-full bg-surface-container dark:bg-[#2A3F6C] border-outline-variant dark:border-[#26375F] rounded-lg px-4 py-2 text-on-surface dark:text-[#FDF6EC] focus:border-secondary focus:ring-1 focus:ring-secondary outline-none" type="number"/>
+</div>
+</div>
+<div class="mt-6 flex justify-end gap-2">
+<button class="px-4 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant dark:text-[#FDF6EC]/70 hover:bg-surface-container dark:hover:bg-[#26375F] transition-colors" data-i18n="cancel" onclick="document.getElementById('modal-personal').classList.add('hidden')">إلغاء</button>
+<button class="bg-secondary text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity" data-i18n="save" onclick="document.getElementById('modal-personal').classList.add('hidden')">حفظ</button>
+</div>
+</div>
+</div>
+<script>
+  // Data Refactor
+  const tripData = {
+    groupKitty: 4500,
+    collected: 3375,
+    remaining: 1125,
+    sideKitties: 750,
+    grandTotal: 5250,
+    myObligations: {
+        total: 1500,
+        paid: 1425,
+        owe: 75,
+        personal: 850
+    },
+    exchangeRate: 4.71 // SAR to GBP approx
+  };
+
+  let primaryCurrency = 'SAR';
+
+  function formatMoney(amountSAR) {
+      const gbp = (amountSAR / tripData.exchangeRate).toFixed(2);
+      if (primaryCurrency === 'SAR') {
+          return `${amountSAR.toLocaleString()} <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55" data-i18n="sar">SAR</span> <span class="text-sm opacity-60 ml-2">(£${gbp})</span>`;
+      } else {
+          return `£${gbp} <span class="font-body-md text-body-md text-on-surface-variant dark:text-[#FDF6EC]/55 ml-2 text-sm opacity-60">(${amountSAR.toLocaleString()} SAR)</span>`;
+      }
+  }
+
+  function updateAllCurrencies() {
+      document.querySelectorAll('[data-amount]').forEach(el => {
+          const amount = parseFloat(el.getAttribute('data-amount'));
+          el.innerHTML = formatMoney(amount);
+      });
+  }
+
+  const currencyToggle = document.getElementById('currencyToggle');
+  currencyToggle.addEventListener('click', () => {
+      primaryCurrency = primaryCurrency === 'SAR' ? 'GBP' : 'SAR';
+      updateAllCurrencies();
+  });
+
+  // Dark Mode Toggle
+  const darkModeBtn = document.querySelector('button span[data-icon="dark_mode"]').parentElement;
+  darkModeBtn.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    const icon = darkModeBtn.querySelector('span');
+    icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+  });
+
+  // Language Toggle
+  const langBtn = document.getElementById('langBtn');
+  const translations = {
+    ar: {
+      home: 'الرئيسية', trip: 'الرحلة', recs: 'التوصيات', expenses: 'المصاريف', friends: 'الأصدقاء',
+      title: 'إدارة المصاريف', subtitle: 'تابع مصاريف الرحلة، قسم الفواتير، وتأكد من حالة دفع الجميع.', add: 'إضافة مصروف جديد', total: 'إجمالي "القطة"', collected: 'المُحصّل',
+      remaining: 'المتبقي', sar: 'ريال', dist: 'توزيع المصاريف', housing: 'سكن', food: 'طعام', transport: 'مواصلات', other: 'أخرى', status: 'حالة الدفع للأعضاء', you: 'أحمد (أنت)', due: 'المطلوب', log: 'سجل المصاريف',
+      filter: 'تصفية', desc: 'الوصف', cat: 'التصنيف', payer: 'الدافع', date: 'التاريخ', amount: 'المبلغ (ريال)',
+      paid: 'تم الدفع', pending: 'بانتظار الدفع', remind: 'تذكير', more: 'عرض المزيد',
+      privacy: 'سياسة الخصوصية', terms: 'شروط الخدمة', help: 'مركز المساعدة', copyright: '© 2024 بوردنق. جميع الحقوق محفوظة.',
+      tab_group: 'قطة القروب', tab_side: 'القطات الجانبية', tab_personal: 'مصاريفي الشخصية', tab_summary: 'ملخصي المالي',
+      side_title: 'القطات الجانبية', create_side: 'إنشاء قطة جانبية', total_amount: 'إجمالي المبلغ', your_share: 'حصتك',
+      personal_note: 'هذه المصاريف خاصة بك ولا تظهر لبقية أعضاء الرحلة', personal_total: 'إجمالي مصاريفي الشخصية', add_personal: 'إضافة مصروف شخصي',
+      kitty_name: 'اسم القطة', kitty_amount: 'المبلغ', kitty_members: 'الأعضاء', cancel: 'إلغاء', save: 'حفظ',
+      total_side_kitties: 'إجمالي القطات الجانبية', total_group_kitty: 'إجمالي قطة القروب', grand_total: 'المجموع الكلي',
+      my_total_obs: 'إجمالي التزاماتي', paid_total: 'المدفوع', owe_total: 'المتبقي علي', personal_total_sum: 'مصاريف شخصية', financial_split: 'التقسيم المالي', breakdown: 'التفاصيل'
+    },
+    en: {
+      home: 'Home', trip: 'Trip', recs: 'Recommendations', expenses: 'Expenses', friends: 'Friends',
+      title: 'Expense Management', subtitle: 'Track trip expenses, split bills, and ensure everyone has paid.', add: 'Add New Expense', total: 'Total Pool', collected: 'Collected',
+      remaining: 'Remaining', sar: 'SAR', dist: 'Expense Distribution', housing: 'Housing', food: 'Food', transport: 'Transport', other: 'Other', status: 'Members Payment Status', you: 'Ahmed (You)', due: 'Due', log: 'Expense Log',
+      filter: 'Filter', desc: 'Description', cat: 'Category', payer: 'Paid by', date: 'Date', amount: 'Amount (SAR)',
+      paid: 'Paid', pending: 'Pending', remind: 'Remind', more: 'Show More',
+      privacy: 'Privacy Policy', terms: 'Terms of Service', help: 'Help Center', copyright: '© 2024 Boarding. All rights reserved.',
+      tab_group: 'Group Kitty', tab_side: 'Side Kitties', tab_personal: 'Personal Expenses', tab_summary: 'My Financial Summary',
+      side_title: 'Side Kitties', create_side: 'Create Side Kitty', total_amount: 'Total Amount', your_share: 'Your Share',
+      personal_note: 'These expenses are private and not visible to other trip members.', personal_total: 'Total Personal Expenses', add_personal: 'Add Personal Expense',
+      kitty_name: 'Kitty Name', kitty_amount: 'Amount', kitty_members: 'Members', cancel: 'Cancel', save: 'Save',
+      total_side_kitties: 'Total Side Kitties', total_group_kitty: 'Total Group Kitty', grand_total: 'Grand Total',
+      my_total_obs: 'My Total Obligations', paid_total: 'Paid', owe_total: 'I Still Owe', personal_total_sum: 'Personal Expenses', financial_split: 'Financial Split', breakdown: 'Breakdown'
+    }
+  };
+
+  langBtn.addEventListener('click', () => {
+    const isAr = document.documentElement.lang === 'ar';
+    const newLang = isAr ? 'en' : 'ar';
+    document.documentElement.lang = newLang;
+    document.documentElement.dir = isAr ? 'ltr' : 'rtl';
+    langBtn.textContent = isAr ? 'AR' : 'EN';
+    
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (translations[newLang][key]) {
+          el.textContent = translations[newLang][key];
+      }
+    });
+    updateAllCurrencies(); // re-render text in formatMoney
+  });
+
+  // Tab Switching Logic
+  document.addEventListener('DOMContentLoaded', () => {
+      updateAllCurrencies(); // Initial render
+
+      const tabs = [
+          { id: 'tab-group', target: 'content-group' },
+          { id: 'tab-side', target: 'content-side' },
+          { id: 'tab-personal', target: 'content-personal' },
+          { id: 'tab-summary', target: 'content-summary' }
+      ];
+
+      tabs.forEach(tab => {
+          const btn = document.getElementById(tab.id);
+          if(!btn) return;
+          btn.addEventListener('click', () => {
+              // Reset all tabs
+              tabs.forEach(t => {
+                  const tBtn = document.getElementById(t.id);
+                  const tContent = document.getElementById(t.target);
+                  
+                  if(tBtn){
+                      // Reset Button Styles
+                      tBtn.classList.remove('border-secondary', 'font-bold', 'text-primary');
+                      tBtn.classList.add('border-transparent', 'text-on-surface-variant');
+                      if(document.documentElement.classList.contains('dark')){
+                          tBtn.classList.remove('dark:text-[#FDF6EC]');
+                          tBtn.classList.add('dark:text-[#FDF6EC]/70');
+                      }
+                  }
+                  
+                  if(tContent){
+                      // Hide Content
+                      tContent.classList.remove('block');
+                      tContent.classList.add('hidden');
+                  }
+              });
+
+              // Set active tab
+              btn.classList.remove('border-transparent', 'text-on-surface-variant', 'dark:text-[#FDF6EC]/70');
+              btn.classList.add('border-secondary', 'font-bold', 'text-primary', 'dark:text-[#FDF6EC]');
+              
+              const targetContent = document.getElementById(tab.target);
+              if(targetContent){
+                  targetContent.classList.remove('hidden');
+                  targetContent.classList.add('block');
+              }
+          });
+      });
+  });
+</script>
+<script src="assets/responsive.js" defer></script>
+</body></html>

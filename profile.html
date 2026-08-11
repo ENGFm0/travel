@@ -1,0 +1,535 @@
+<!DOCTYPE html><html dir="rtl" lang="ar" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>الملف الشخصي - بوردنق</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "navy": "#14213D",
+                "orange": "#E85D3D",
+                "gold": "#F4A950",
+                "bg-light": "#FDF6EC",
+                "on-secondary-fixed-variant": "#8b1a00",
+                "on-error": "#ffffff",
+                "on-secondary-container": "#671100",
+                "on-primary-container": "#7c89aa",
+                "surface-container-high": "#eee7dd",
+                "error-container": "#ffdad6",
+                "on-tertiary": "#ffffff",
+                "surface-container-low": "#faf3e9",
+                "outline": "#75777e",
+                "on-background": "#1e1b16",
+                "secondary": "#ad3317",
+                "secondary-fixed": "#ffdad2",
+                "surface-container": "#f4ede3",
+                "surface-bright": "#fff8f0",
+                "inverse-primary": "#b9c6ea",
+                "on-primary-fixed": "#0d1b36",
+                "secondary-container": "#ff6e4c",
+                "surface": "#fff8f0",
+                "surface-dim": "#e0d9d0",
+                "tertiary-fixed-dim": "#ffb868",
+                "primary": "#000a24",
+                "primary-fixed": "#d9e2ff",
+                "surface-tint": "#525e7d",
+                "surface-container-lowest": "#ffffff",
+                "on-surface": "#1e1b16",
+                "primary-fixed-dim": "#b9c6ea",
+                "on-primary": "#ffffff",
+                "on-primary-fixed-variant": "#3a4664",
+                "outline-variant": "#c5c6ce",
+                "on-secondary-fixed": "#3d0600",
+                "surface-container-highest": "#e8e2d8",
+                "primary-container": "#14213d",
+                "error": "#ba1a1a",
+                "background": "#fff8f0",
+                "tertiary-fixed": "#ffddbb",
+                "on-tertiary-fixed": "#2b1700",
+                "on-error-container": "#93000a",
+                "on-tertiary-fixed-variant": "#673d00",
+                "secondary-fixed-dim": "#ffb4a3",
+                "inverse-on-surface": "#f7f0e6",
+                "tertiary": "#140800",
+                "surface-variant": "#e8e2d8",
+                "inverse-surface": "#33302a",
+                "tertiary-container": "#341c00",
+                "on-secondary": "#ffffff",
+                "on-surface-variant": "#45464d",
+                "on-tertiary-container": "#bd7a25"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-sm": "8px",
+                "container-max": "1280px",
+                "margin-mobile": "20px",
+                "unit": "4px",
+                "stack-md": "16px",
+                "gutter": "24px",
+                "stack-lg": "32px",
+                "margin-desktop": "64px"
+        },
+        "fontFamily": {
+                "headline-lg": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "label-sm": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-lg-mobile": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "body-lg": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "body-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-xl": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "label-md": [
+                        "IBM Plex Sans Arabic"
+                ],
+                "headline-xl-mobile": [
+                        "IBM Plex Sans Arabic"
+                ]
+        },
+        "fontSize": {
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-xl": [
+                        "40px",
+                        {
+                                "lineHeight": "52px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-xl-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+          body {
+              background-color: #FDF6EC;
+              color: theme('colors.on-background');
+          }
+          .dark body {
+              background-color: #14213D;
+              color: theme('colors.inverse-on-surface');
+          }
+          .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+          }
+          html.dark .bg-surface-container-lowest,
+          html.dark .bg-surface-container-low,
+          html.dark .bg-surface-container-highest,
+          html.dark .bg-white {
+              background-color: #1F2F54 !important;
+              border-color: #2A3F6C !important;
+          }
+          html.dark main h1, html.dark main h2, html.dark main h3,
+          html.dark main .text-on-surface,
+          html.dark main .text-primary-container {
+              color: #FDF6EC !important;
+          }
+          html.dark main .text-on-surface-variant,
+          html.dark main .text-outline {
+              color: rgba(253, 246, 236, 0.6) !important;
+          }
+          html.dark main .border-surface-variant {
+              border-color: #2A3F6C !important;
+          }
+      </style>
+<link rel="stylesheet" href="assets/responsive.css"/>
+</head>
+<body class="min-h-screen flex flex-col font-body-md text-body-md transition-colors duration-300">
+<!-- TopNavBar Component -->
+<nav class="bg-[#FDF6EC] dark:bg-[#14213D] shadow-sm docked full-width top-0 sticky z-50 transition-colors duration-300">
+<div class="flex flex-row-reverse justify-between items-center px-margin-mobile md:px-margin-desktop w-full max-w-container-max mx-auto h-20">
+<!-- Actions Group -->
+<div class="flex items-center gap-4 ml-6 border-l border-surface-variant/50 pl-6">
+<button class="text-on-surface-variant dark:text-[#FDF6EC] hover:text-[#E85D3D] transition-colors font-bold text-label-md" id="lang-toggle">
+        EN
+    </button>
+<button class="flex items-center justify-center text-on-surface-variant dark:text-[#FDF6EC] hover:text-[#E85D3D] transition-colors" id="theme-toggle">
+<span class="material-symbols-outlined dark:hidden">dark_mode</span>
+<span class="material-symbols-outlined hidden dark:block">light_mode</span>
+</button>
+</div>
+<!-- Brand -->
+<div class="flex items-center h-full">
+<img alt="Boarding Logo" class="h-10 md:h-12 w-auto object-contain block dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpO0zRsB8C0sOc8pmKXzcVAdROOozeobTCCcXaGNkhMzxiYC-HyBJ-XD98vhm4RygPV2a9MQJHxswRoRz_s40CLZd_9TO7JJUvpcc0ii8eK8Nf39BIfCsJ4Np4IK9SBKBu-DFIikb46RYo0OXhzrwwcqhkCrec0PPpKPtn_WOD74ZdOnNqmdarFNdnMYcTuJWHoUogW7jhPkflcLOy0weFX3wKJlnl2wrCJPiO_eYYEmnh4c4x1CURTL6jbF6z9JX5AQ">
+<img alt="Boarding Logo" class="h-10 md:h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCX2mN2lXTEDwBHl-orTevBVdNi_7SAX-SxUAbEaerOR0Didm834dw4nfcrFX_5PpUgi6RNluaHkAdic4PqrEZZo6qF-nH5nek58cT8iR0xaZmKwMmKDN3KoQO9o8NjfdRoeoBhibQsI__cKM2dMPFDa8bEBRp7OOYy6-XrZ1GRj4xqa2LVPGL7ck3Q4BCarsu_oID--hnMCr_l8oMN2oA1Rc4DJhHK1ZXW1rDNS925tSrei0cibjLQ8ljAcxkuXrTMDA">
+</div>
+<!-- Desktop Nav -->
+<ul class="hidden md:flex flex-row-reverse gap-8 font-body-md text-body-md font-headline-md text-headline-md">
+<li class="">
+<a class="text-on-surface-variant dark:text-[#FDF6EC] hover:text-[#E85D3D] transition-colors py-6 block active:scale-95 transition-transform" data-i18n="الرئيسية" href="#">الرئيسية</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant dark:text-[#FDF6EC] hover:text-[#E85D3D] transition-colors py-6 block active:scale-95 transition-transform" data-i18n="الرحلة" href="#">الرحلة</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant dark:text-[#FDF6EC] hover:text-[#E85D3D] transition-colors py-6 block active:scale-95 transition-transform" data-i18n="التوصيات" href="#">التوصيات</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant dark:text-[#FDF6EC] hover:text-[#E85D3D] transition-colors py-6 block active:scale-95 transition-transform" data-i18n="المصاريف" href="#">المصاريف</a>
+</li>
+<li class="">
+<a class="text-on-surface-variant dark:text-[#FDF6EC] hover:text-[#E85D3D] transition-colors py-6 block active:scale-95 transition-transform" data-i18n="الأصدقاء" href="#">الأصدقاء</a>
+</li>
+</ul>
+<!-- Trailing Action -->
+<div class="flex items-center">
+<button class="text-[#E85D3D] font-bold border-b-2 border-[#E85D3D] flex flex-row-reverse items-center gap-2 hover:opacity-80 transition-opacity active:scale-95 py-6">
+<span class="font-headline-md text-headline-md block" data-i18n="الملف الشخصي">الملف الشخصي</span>
+<div class="w-10 h-10 rounded-full bg-[#14213D] dark:bg-[#FDF6EC] text-[#FDF6EC] dark:text-[#14213D] flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Sidebar Profile (Left in LTR, Right in RTL) -->
+<aside class="col-span-1 md:col-span-4 flex flex-col gap-6">
+<!-- Avatar Section -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-highest rounded-xl p-8 flex flex-col items-center text-center shadow-md border border-surface-variant/50 dark:border-outline/30 transition-colors">
+<div class="relative w-32 h-32 mb-4 group cursor-pointer">
+<img class="w-full h-full rounded-full object-cover border-4 border-surface-container-lowest dark:border-surface-container-highest shadow-md" data-alt="A close-up portrait photograph of a confident young person outdoors, warmly lit by golden hour sunlight. The background is slightly blurred showing subtle greenery. They are wearing modern, casual travel attire in earthy tones. The image has a professional, bright, and welcoming aesthetic, fitting a modern corporate travel platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWaQ9u0hiYg59bB9Feug8by0u_-N_p0oigiXv-_B1eKFZycWVNKdV-L6gvod_GEHN-Q3D1Rd8QNRjdQ-S8bwqWWdaBp5g-SsDyaiNbZ4rEcnqedxEQYvnaW9bPh5gxkXvSoR7Cc5MsIM9Wik63Gkv08LxJNItZrqYxJFSxQGhmMt3uN6pcc9okrwKshAuyMKDVY750sBgM7oT6zr89BIHHKYqDhI_Ohy1F-HkaVBq_jfk5_TCZaDhP">
+<div class="absolute inset-0 bg-[#14213D]/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white">edit</span>
+</div>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface dark:text-inverse-on-surface mb-1">أحمد محمد عبدالله</h1>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-outline mb-6" data-i18n="مسافر شغوف">مسافر شغوف</p>
+<button class="w-full bg-[#14213D] text-[#FDF6EC] font-label-md text-label-md py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors active:scale-95 shadow-sm" data-i18n="تعديل الملف الشخصي">
+                    تعديل الملف الشخصي
+                </button>
+</div>
+<!-- Contact Info -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-highest rounded-xl p-6 shadow-md border border-surface-variant/50 dark:border-outline/30 transition-colors">
+<h2 class="font-headline-md text-headline-md text-primary-container dark:text-primary-fixed mb-4 border-b border-surface-variant dark:border-outline pb-2" data-i18n="المعلومات الشخصية">المعلومات الشخصية</h2>
+<ul class="flex flex-col gap-4">
+<li class="flex items-center gap-3 text-on-surface-variant dark:text-outline">
+<span class="material-symbols-outlined text-outline">mail</span>
+<div>
+<p class="font-label-sm text-label-sm text-outline" data-i18n="البريد الإلكتروني">البريد الإلكتروني</p>
+<p class="font-body-md text-body-md text-on-surface dark:text-inverse-on-surface">ahmed.m@example.com</p>
+</div>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant dark:text-outline">
+<span class="material-symbols-outlined text-outline">call</span>
+<div>
+<p class="font-label-sm text-label-sm text-outline" data-i18n="رقم الهاتف">رقم الهاتف</p>
+<p class="font-body-md text-body-md text-on-surface dark:text-inverse-on-surface">+966 50 123 4567</p>
+</div>
+</li>
+</ul>
+</div>
+<!-- Security Settings -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-highest rounded-xl p-6 shadow-md border border-surface-variant/50 dark:border-outline/30 transition-colors">
+<h2 class="font-headline-md text-headline-md text-primary-container dark:text-primary-fixed mb-4 border-b border-surface-variant dark:border-outline pb-2" data-i18n="إعدادات الأمان">إعدادات الأمان</h2>
+<button class="w-full text-right flex items-center justify-between text-on-surface dark:text-inverse-on-surface hover:text-[#E85D3D] transition-colors py-2 group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline group-hover:text-[#E85D3D]">lock</span>
+<span class="font-body-md text-body-md" data-i18n="تغيير كلمة المرور">تغيير كلمة المرور</span>
+</div>
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<section class="col-span-1 md:col-span-8 flex flex-col gap-6">
+<!-- Tabs -->
+<div class="flex gap-4 border-b border-surface-variant dark:border-outline">
+<button class="font-headline-md text-headline-md text-[#14213D] dark:text-[#FDF6EC] border-b-2 border-[#E85D3D] pb-2 px-2" data-i18n="رحلاتي">رحلاتي</button>
+
+</div>
+<!-- Trips Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Trip Card 1 (Upcoming) -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-highest rounded-xl overflow-hidden shadow-md border border-surface-variant/50 dark:border-outline/30 group cursor-pointer hover:-translate-y-1 transition-transform">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover" data-alt="A wide panoramic landscape shot of the Swiss Alps in spring. Lush green valleys contrast with snow-capped peaks under a clear blue sky. The image has a vibrant, airy, and adventurous mood, utilizing the warm and cool tones of the design system. High resolution, bright natural lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCX1-zhOhXctTDweSG40rpFU2yjDHH376Pndiaz5kZklQfeGdrHg5_Z2fiREUdZad4nbECdi-4A5q7X1WMEOKG-T8NA770--2wIfEdn04es-MdtxTDgpbWKN7QmZMqmpCFcoCg3KNXsyRoZnZ9kliGSi-jamUVEUCGdfXT-WZd1i0F_ymkfrOyPcqb0YXV91eoayzdz8nEkUzRMLNLuzi-GMToPoYagXMvVJpKb4TM62Maa9iei_MY">
+<div class="absolute top-4 right-4 bg-[#F4A950] text-[#14213D] px-3 py-1 rounded-full font-label-sm text-label-sm shadow-md" data-i18n="قادمة">
+                            قادمة
+                        </div>
+<div class="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-4 right-4 text-white">
+<h3 class="font-headline-md text-headline-md" data-i18n="رحلة جبال الألب">رحلة جبال الألب</h3>
+<p class="font-label-sm text-label-sm opacity-90 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span data-i18n="15 مايو 2024 - 25 مايو 2024" class="">15 مايو 2024 - 25 مايو 2024</span>
+</p>
+</div>
+</div>
+<div class="p-4 flex justify-between items-center bg-surface-container-lowest dark:bg-surface-container-highest">
+<div class="flex -space-x-2 space-x-reverse">
+<div class="w-8 h-8 rounded-full bg-[#14213D] text-[#FDF6EC] flex items-center justify-center font-label-sm border-2 border-surface-container-lowest dark:border-surface-container-highest">أ</div>
+<div class="w-8 h-8 rounded-full bg-[#E85D3D] text-white flex items-center justify-center font-label-sm border-2 border-surface-container-lowest dark:border-surface-container-highest">م</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant dark:bg-outline text-on-surface-variant dark:text-inverse-on-surface flex items-center justify-center font-label-sm border-2 border-surface-container-lowest dark:border-surface-container-highest">+2</div>
+</div>
+<span class="font-label-md text-label-md text-[#14213D] dark:text-[#FDF6EC] group-hover:text-[#E85D3D] transition-colors" data-i18n="عرض التفاصيل">عرض التفاصيل</span>
+</div>
+</div>
+<!-- Trip Card 2 (Past) -->
+<div class="bg-surface-container-lowest dark:bg-surface-container-highest rounded-xl overflow-hidden shadow-md border border-surface-variant/50 dark:border-outline/30 group cursor-pointer hover:-translate-y-1 transition-transform opacity-80 hover:opacity-100">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all" data-alt="A bustling street scene in a historic European city at dusk. Cobblestone streets, warm yellow streetlights, and outdoor cafes with people dining. The architecture is old and intricate. The mood is nostalgic and warm, aligning with the tactile and modern corporate aesthetic. Subtle shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCflZ_gm-1THmG8uQfCPjlBgjqHHqP-pzhQ3FttXtnOeSMldmrtTPbKOYlGNuhx3FKGQNwEfpv_pxx25_s_dxR7DUhfWW9YE82pY1AOKUcaOgDRKMk7tWIBP4HQN9DaGq91rEmmeLXlQAkGOXarzhcGXbbS4fZw8pQkRfUT59010Fn-YDq-TeWrieSH95K0PVZEe6hM_80UkH5RdBfm_VEyXmXxJALV6uhCSidyLCejnHvFzeL-F-Nj">
+<div class="absolute top-4 right-4 bg-surface-variant dark:bg-outline text-on-surface-variant dark:text-inverse-on-surface px-3 py-1 rounded-full font-label-sm text-label-sm shadow-md" data-i18n="سابقة">
+                            سابقة
+                        </div>
+<div class="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-4 right-4 text-white">
+<h3 class="font-headline-md text-headline-md" data-i18n="جولة أوروبا">جولة أوروبا</h3>
+<p class="font-label-sm text-label-sm opacity-90 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span data-i18n="10 أكتوبر 2023 - 20 أكتوبر 2023" class="">10 أكتوبر 2023 - 20 أكتوبر 2023</span>
+</p>
+</div>
+</div>
+<div class="p-4 flex justify-between items-center bg-surface-container-lowest dark:bg-surface-container-highest">
+<div class="flex items-center gap-2 text-outline dark:text-outline-variant">
+<span class="material-symbols-outlined">photo_library</span>
+<span class="font-label-sm text-label-sm" data-i18n="24 صورة">24 صورة</span>
+</div>
+<span class="font-label-md text-label-md text-[#14213D] dark:text-[#FDF6EC] group-hover:text-[#E85D3D] transition-colors" data-i18n="عرض الذكريات">عرض الذكريات</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="bg-[#FDF6EC] dark:bg-[#14213D] border-t border-surface-variant dark:border-outline full-width bottom-0 mt-auto transition-colors duration-300">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center px-margin-mobile md:px-margin-desktop py-12 w-full max-w-container-max mx-auto gap-8 md:gap-0">
+<!-- Brand -->
+<div class="flex flex-col items-center">
+<div class="h-10 w-auto mb-2 dark:hidden"><img alt="Boarding Logo" class="h-full w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrxgKu2yunnFBTQP4jf3_PsUKZDtobO0ulzohfvy9ekIe6C6aNW_hrConYowzLuaiQlXruv72Tr7NX4L6mgH36ETHRAoxiujh6v8jpQhFhTQ_NSwmeNzvYOs-LdPYXONqWmcZNss9fyIAOaOwnzRogn3X5lebwa_wig5SVZF966BtboF1UxtcpMWOx1Z1y9kkS67YVARDEWO5IVezf-pPI84ZO7nxKy05c0wL1mh-gvqYt5KSLPwILZjwEiu81HUC8-Q"></div>
+<div class="h-10 w-auto mb-2 hidden dark:block"><img alt="Boarding Logo" class="h-full w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARRKgWzs-YRwaxvgVDoosM5AUTRnsD1rmpcjw8M8WeQbkjsjokpfLP5z559lUMx86S2z4Wvr_l18vZ4XhrNhPZriqkFFDOhkdMq6p1gwhXTgrF_THiEHjzm5PwPdsiUuUMmBKqd_mS7Fj8ox8LIi-IzYEVArpGSELtjifjGwPs_o9dGXGwSSZKhJ5emJIUELQV3vKr6RQWDADLX6u1bKvPgpsuyMZa54KQZr_xxnCqcOC7waZenxIFD3QFdKo0GbVuYA"></div>
+</div>
+<!-- Links -->
+<ul class="flex flex-col md:flex-row-reverse gap-6 font-label-md text-label-md text-center">
+<li class=""><a class="text-on-surface-variant dark:text-outline hover:text-[#E85D3D] transition-colors opacity-80 hover:opacity-100" data-i18n="سياسة الخصوصية" href="#">سياسة الخصوصية</a></li>
+<li class=""><a class="text-on-surface-variant dark:text-outline hover:text-[#E85D3D] transition-colors opacity-80 hover:opacity-100" data-i18n="شروط الخدمة" href="#">شروط الخدمة</a></li>
+<li class=""><a class="text-on-surface-variant dark:text-outline hover:text-[#E85D3D] transition-colors opacity-80 hover:opacity-100" data-i18n="مركز المساعدة" href="#">مركز المساعدة</a></li>
+</ul>
+<!-- Copyright -->
+<div class="font-label-md text-label-md text-on-surface-variant dark:text-outline opacity-80" data-i18n="© 2024 بوردنق. جميع الحقوق محفوظة.">
+                © 2024 بوردنق. جميع الحقوق محفوظة.
+            </div>
+</div>
+</footer>
+<script>
+    const safeStorage = {
+        get(key) { try { return localStorage.getItem(key); } catch(e) { return null; } },
+        set(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+    };
+
+    // Theme Toggle Logic
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const htmlEl = document.documentElement;
+    
+    try {
+        // Check local storage or system preference
+        const savedTheme = safeStorage.get('theme');
+        if (savedTheme === 'dark' || (savedTheme === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlEl.classList.add('dark');
+        } else {
+            htmlEl.classList.remove('dark');
+        }
+    } catch(e) {
+        // Safe fallback if needed
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        htmlEl.classList.toggle('dark');
+        if (htmlEl.classList.contains('dark')) {
+            safeStorage.set('theme', 'dark');
+        } else {
+            safeStorage.set('theme', 'light');
+        }
+    });
+
+    // Language Toggle Logic (Mock Implementation)
+    const langToggleBtn = document.getElementById('lang-toggle');
+    let currentLang = safeStorage.get('lang') || 'ar';
+    const translations = {
+        'ar': {
+            'الرئيسية': 'الرئيسية',
+            'الرحلة': 'الرحلة',
+            'التوصيات': 'التوصيات',
+            'المصاريف': 'المصاريف',
+            'الأصدقاء': 'الأصدقاء',
+            'الملف الشخصي': 'الملف الشخصي',
+            'مسافر شغوف': 'مسافر شغوف',
+            'تعديل الملف الشخصي': 'تعديل الملف الشخصي',
+            'المعلومات الشخصية': 'المعلومات الشخصية',
+            'البريد الإلكتروني': 'البريد الإلكتروني',
+            'رقم الهاتف': 'رقم الهاتف',
+            'إعدادات الأمان': 'إعدادات الأمان',
+            'تغيير كلمة المرور': 'تغيير كلمة المرور',
+            'رحلاتي': 'رحلاتي',
+            'الذكريات': 'الذكريات',
+            'قادمة': 'قادمة',
+            'سابقة': 'سابقة',
+            'رحلة جبال الألب': 'رحلة جبال الألب',
+            'جولة أوروبا': 'جولة أوروبا',
+            '15 مايو 2024 - 25 مايو 2024': '15 مايو 2024 - 25 مايو 2024',
+            '10 أكتوبر 2023 - 20 أكتوبر 2023': '10 أكتوبر 2023 - 20 أكتوبر 2023',
+            'عرض التفاصيل': 'عرض التفاصيل',
+            'عرض الذكريات': 'عرض الذكريات',
+            '24 صورة': '24 صورة',
+            'سياسة الخصوصية': 'سياسة الخصوصية',
+            'شروط الخدمة': 'شروط الخدمة',
+            'مركز المساعدة': 'مركز المساعدة',
+            '© 2024 بوردنق. جميع الحقوق محفوظة.': '© 2024 بوردنق. جميع الحقوق محفوظة.',
+            'EN': 'EN'
+        },
+        'en': {
+            'الرئيسية': 'Home',
+            'الرحلة': 'Trip',
+            'التوصيات': 'Recommendations',
+            'المصاريف': 'Expenses',
+            'الأصدقاء': 'Friends',
+            'الملف الشخصي': 'Profile',
+            'مسافر شغوف': 'Passionate Traveler',
+            'تعديل الملف الشخصي': 'Edit Profile',
+            'المعلومات الشخصية': 'Personal Information',
+            'البريد الإلكتروني': 'Email',
+            'رقم الهاتف': 'Phone Number',
+            'إعدادات الأمان': 'Security Settings',
+            'تغيير كلمة المرور': 'Change Password',
+            'رحلاتي': 'My Trips',
+            'الذكريات': 'Memories',
+            'قادمة': 'Upcoming',
+            'سابقة': 'Past',
+            'رحلة جبال الألب': 'Alps Trip',
+            'جولة أوروبا': 'Europe Tour',
+            '15 مايو 2024 - 25 مايو 2024': 'May 15, 2024 - May 25, 2024',
+            '10 أكتوبر 2023 - 20 أكتوبر 2023': 'Oct 10, 2023 - Oct 20, 2023',
+            'عرض التفاصيل': 'View Details',
+            'عرض الذكريات': 'View Memories',
+            '24 صورة': '24 Photos',
+            'سياسة الخصوصية': 'Privacy Policy',
+            'شروط الخدمة': 'Terms of Service',
+            'مركز المساعدة': 'Help Center',
+            '© 2024 بوردنق. جميع الحقوق محفوظة.': '© 2024 Boarding. All rights reserved.',
+            'EN': 'AR'
+        }
+    };
+
+    function updateLanguage() {
+        const elements = document.querySelectorAll('[data-i18n]');
+        elements.forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[currentLang][key]) {
+                if (el.tagName === 'INPUT' && el.type === 'placeholder') {
+                    el.placeholder = translations[currentLang][key];
+                } else {
+                    el.textContent = translations[currentLang][key];
+                }
+            }
+        });
+        
+        langToggleBtn.textContent = translations[currentLang]['EN'];
+        
+        if (currentLang === 'en') {
+            htmlEl.setAttribute('dir', 'ltr');
+            htmlEl.setAttribute('lang', 'en');
+        } else {
+            htmlEl.setAttribute('dir', 'rtl');
+            htmlEl.setAttribute('lang', 'ar');
+        }
+    }
+
+    if (currentLang === 'en') {
+        updateLanguage();
+    }
+
+    langToggleBtn.addEventListener('click', () => {
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        safeStorage.set('lang', currentLang);
+        updateLanguage();
+    });
+</script>
+
+
+<script src="assets/responsive.js" defer></script>
+</body></html>

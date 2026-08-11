@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>بوردنق - الرئيسية</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "brand-surface": "#FDF6EC",
+                      "brand-navy": "#14213D",
+                      "brand-orange": "#E85D3D",
+                      "brand-gold": "#F4A950",
+                      "error": "#ba1a1a",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#ffb68c",
+                      "surface-dim": "#d9dadb",
+                      "outline": "#70787c",
+                      "on-secondary-container": "#642b00",
+                      "inverse-surface": "#2e3132",
+                      "on-background": "#14213D",
+                      "surface": "#FDF6EC",
+                      "on-tertiary-fixed": "#00210e",
+                      "secondary": "#E85D3D",
+                      "on-primary": "#ffffff",
+                      "background": "#FDF6EC",
+                      "tertiary-fixed": "#c5eccc",
+                      "primary-container": "#F4A950",
+                      "tertiary-fixed-dim": "#aad0b1",
+                      "on-surface-variant": "#40484b",
+                      "tertiary": "#143620",
+                      "surface-variant": "#e1e3e4",
+                      "tertiary-container": "#2b4d36",
+                      "outline-variant": "#c0c8cb",
+                      "secondary-container": "#E85D3D",
+                      "on-primary-fixed": "#001f28",
+                      "primary": "#14213D",
+                      "surface-tint": "#306576",
+                      "surface-container-high": "#e7e8e9",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed": "#ffdbc9",
+                      "on-secondary-fixed-variant": "#753400",
+                      "surface-container-low": "#f3f4f5",
+                      "on-primary-container": "#14213D",
+                      "on-surface": "#14213D",
+                      "on-tertiary-container": "#97bd9f",
+                      "primary-fixed": "#b6ebfe",
+                      "surface-bright": "#f8f9fa",
+                      "on-secondary": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-error": "#ffffff",
+                      "primary-fixed-dim": "#9acee1",
+                      "on-tertiary": "#ffffff",
+                      "surface-container": "#FDF6EC",
+                      "on-tertiary-fixed-variant": "#2c4e36",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#9acee1",
+                      "on-primary-fixed-variant": "#114d5d",
+                      "on-secondary-fixed": "#321200"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "base": "8px",
+                      "margin-desktop": "40px",
+                      "margin-mobile": "16px",
+                      "container-max": "1280px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "label-md": ["IBM Plex Sans Arabic"],
+                      "label-sm": ["IBM Plex Sans Arabic"],
+                      "body-lg": ["IBM Plex Sans Arabic"],
+                      "display-lg": ["IBM Plex Sans Arabic"],
+                      "body-md": ["IBM Plex Sans Arabic"],
+                      "title-lg": ["IBM Plex Sans Arabic"],
+                      "headline-lg": ["IBM Plex Sans Arabic"],
+                      "headline-md": ["IBM Plex Sans Arabic"],
+                      "headline-lg-mobile": ["IBM Plex Sans Arabic"]
+              },
+              "fontSize": {
+                      "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "60px", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+      </script>
+<style>
+        .custom-shadow { box-shadow: 0px 4px 12px rgba(20, 33, 61, 0.05); }
+        .modal-overlay { background-color: rgba(20,33,61,0.6); backdrop-filter: blur(4px); }
+        .modal-content { transition: all 200ms ease-in-out; }
+        .modal-hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
+        .modal-visible { opacity: 1; pointer-events: auto; transform: scale(1); }
+        
+        /* Dark Mode Implementations */
+        html.dark body { background-color: #14213D; }
+        html.dark .bg-brand-surface { background-color: #14213D !important; }
+        html.dark .bg-white { background-color: #1F2F54 !important; border-color: #2A3F6C !important; }
+        html.dark main h1, html.dark main h2, html.dark main h3, html.dark .text-brand-navy { color: #FDF6EC !important; }
+        html.dark .text-brand-navy\/70, html.dark .text-brand-navy\/60, html.dark .text-brand-navy\/50 { color: rgba(253,246,236,0.65) !important; }
+        html.dark .border-surface-variant { border-color: #2A3F6C !important; }
+        html.dark #auth-modal input, html.dark #trip-modal input { background-color: #14213D !important; color: #FDF6EC !important; border-color: #2A3F6C !important; }
+        html.dark footer a, html.dark footer div {
+            color: rgba(253, 246, 236, 0.7) !important;
+        }
+        html.dark footer { border-color: rgba(253,246,236,0.1) !important; }
+
+        @keyframes flash-gold {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(244, 169, 80, 0.3); }
+            100% { background-color: transparent; }
+        }
+        .flash-gold { animation: flash-gold 1s ease-out; }
+      </style>
+<link rel="stylesheet" href="assets/responsive.css"/>
+</head>
+<body class="bg-brand-surface text-brand-navy font-body-md min-h-screen flex flex-col" style="overflow: hidden;">
+<!-- TopNavBar -->
+<header class="bg-brand-surface w-full">
+<div class="flex flex-row justify-between items-center px-margin-desktop w-full max-w-container-max mx-auto h-20"><div class="flex items-center">
+<img alt="Boarding Logo Light" class="h-10 md:h-12 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuU-H5KA1yKYswa4aFfXcdEMRTmWrBVzRh8q4ssRiTA2Cn1kamLKEPRkGiBf6tAGq8Xj79RBy0Qx9irTqsQBvtsfBuIASp8w3GbW4kNCJEUklpHo0JSyY394oYnh5gXuxkGyqj2QwyAKd5CkEFiSfv2iU-H3aGZjUvMn37BB0wy-j_JWcJ2ubXYs-YE4Q4x5VxiIj0lUmdwS1-UN3ptGKJp40S5l3CLt6Zb2C20q3hwWky8LlzNefsuX8LfuF6P9Xmiw"/>
+<img alt="Boarding Logo Dark" class="h-10 md:h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBl5rMMfxK_ELBb_BeP3_x1HMPycju6slrR_ZyKEavU0GlCM2nzA-78azb2d6KWUirP63MYhw10YTxrYF5QPiKfZgCx6LHfGnucVhA2VPwalJdrQEwAinbEqZGIdI-O5ESEmiGeCq05ZpQW__ABHlv7sGnAiOhRkEiYRtnsfzR6-rAkBhYJf5d8iK5NarXQtxzKOA3n5bP1cCwDfcQrutFI7SA5N8Y_CAjJlz6yzxuZbMCELqxpO9ybKP-3TZeB1SvJ-w"/>
+</div>
+<nav class="hidden md:flex flex-row gap-gutter">
+<a class="text-brand-orange font-bold border-b-2 border-brand-orange hover:text-brand-orange transition-colors active:scale-95 transition-transform font-body-md text-body-md" data-i18n="nav-home" href="#">الرئيسية</a>
+<a class="text-brand-navy hover:text-brand-orange transition-colors active:scale-95 transition-transform font-body-md text-body-md" data-i18n="nav-trips" href="#">الرحلات</a>
+<a class="text-brand-navy hover:text-brand-orange transition-colors active:scale-95 transition-transform font-body-md text-body-md" data-i18n="nav-explore" href="#">استكشف</a>
+<a class="text-brand-navy hover:text-brand-orange transition-colors active:scale-95 transition-transform font-body-md text-body-md" data-i18n="nav-expenses" href="#">المصاريف</a>
+<a class="text-brand-navy hover:text-brand-orange transition-colors active:scale-95 transition-transform font-body-md text-body-md" data-i18n="nav-friends" href="#">الأصدقاء</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-brand-navy hover:text-brand-gold transition-colors active:scale-95 transition-transform font-label-md text-label-md" id="langToggle">
+        EN
+    </button>
+<button class="text-brand-navy hover:text-brand-gold transition-colors active:scale-95 transition-transform flex items-center justify-center" id="themeToggleBtn">
+<span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+</button>
+<button class="auth-trigger text-brand-navy hover:text-brand-gold transition-colors active:scale-95 transition-transform flex items-center justify-center" id="profile-btn">
+<span class="material-symbols-outlined profile-icon text-brand-orange" style='font-variation-settings: "FILL" 1;'>account_circle</span>
+</button>
+</div></div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 flex flex-col gap-12">
+<!-- Hero Section -->
+<section class="relative rounded-xl overflow-hidden min-h-[400px] md:min-h-[500px] flex items-center justify-center custom-shadow">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover" data-alt="A breathtaking landscape view of a scenic mountain range at sunrise, representing an inspiring travel destination. The sky is painted with warm orange and pink hues, casting a soft light on the rugged peaks. A winding road suggests a journey ahead. The style is high-quality, professional photography with a bright, uplifting mood, fitting for a travel app hero section." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPA9pP2gwLziYm5a4rBD3jAc06SkDopaYAyNCJEXwtjHfKkW-iP9P3gpb0PdjocQlJf5qg0P5dgB7FCs3xBRkhgU_2gU8GORZV3LrH23Ki9m3VPHM39OsOz6L5fAGwt24-4jxJ1uR4hvSFtxbXqme7ld-XG5yE50YakyvF4Xwx2GkOOijHvBTuAxRmkE0qTTsgrOpUEXJzpO51LbAs3RAdIM4NfVpmO911nRznUK42-PKHDtB1cPhj"/>
+<div class="absolute inset-0 bg-gradient-to-t from-brand-navy/60 to-brand-navy/20"></div>
+</div>
+<div class="relative z-10 text-center px-6 max-w-3xl flex flex-col items-center gap-6">
+<h1 class="font-display-lg text-headline-lg-mobile md:text-display-lg text-white drop-shadow-md" data-i18n="hero-heading" style="color: white !important;">نظّم رحلتك القادمة مع أصدقائك في مكان واحد</h1>
+<p class="font-body-lg text-body-lg text-brand-surface drop-shadow max-w-2xl" data-i18n="hero-subtitle">تطبيق "بوردنق" يجمع كل ما تحتاجه لتخطيط مغامرتك القادمة بسهولة واحترافية.</p>
+<div class="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
+<button class="bg-brand-orange text-white px-8 py-3 rounded-full font-label-md text-label-md hover:bg-brand-gold hover:text-brand-navy transition-colors shadow-md flex items-center justify-center gap-2" id="hero-create-trip-btn">
+<span class="material-symbols-outlined">add</span>
+<span class="" data-i18n="hero-btn-new">إنشاء رحلة جديدة</span>
+</button>
+<button class="bg-brand-surface/20 backdrop-blur-md border border-white/30 text-white px-8 py-3 rounded-full font-label-md text-label-md hover:bg-white/30 transition-colors shadow-md flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">explore</span>
+<span class="" data-i18n="hero-btn-current">رحلاتي الحالية</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Features Bento Grid -->
+<section class="flex flex-col gap-6">
+<h2 class="font-headline-lg text-headline-lg text-brand-navy" data-i18n="features-heading">المميزات الرئيسية</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-white p-6 rounded-xl custom-shadow flex flex-col gap-4 border border-surface-variant hover:border-brand-orange transition-colors cursor-pointer auth-trigger">
+<div class="w-12 h-12 rounded-full bg-brand-gold/20 text-brand-gold flex items-center justify-center">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-brand-navy mb-2" data-i18n="feature-expense-title">تتبع المصاريف</h3>
+<p class="font-body-md text-body-md text-brand-navy/70" data-i18n="feature-expense-desc">سجل وقسم المصاريف بين الأصدقاء بوضوح تام.</p>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl custom-shadow flex flex-col gap-4 border border-surface-variant hover:border-brand-orange transition-colors">
+<div class="w-12 h-12 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center">
+<span class="material-symbols-outlined">map</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-brand-navy mb-2" data-i18n="feature-plan-title">خطة الرحلة</h3>
+<p class="font-body-md text-body-md text-brand-navy/70" data-i18n="feature-plan-desc">جدول زمني تفاعلي لتنظيم مسار الرحلة يومياً.</p>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl custom-shadow flex flex-col gap-4 border border-surface-variant hover:border-brand-orange transition-colors">
+<div class="w-12 h-12 rounded-full bg-brand-navy/10 text-brand-navy flex items-center justify-center">
+<span class="material-symbols-outlined">recommend</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-brand-navy mb-2" data-i18n="feature-explore-title">استكشف</h3>
+<p class="font-body-md text-body-md text-brand-navy/70" data-i18n="feature-explore-desc">اكتشف أفضل الأماكن والمطاعم الموصى بها.</p>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl custom-shadow flex flex-col gap-4 border border-surface-variant hover:border-brand-orange transition-colors">
+<div class="w-12 h-12 rounded-full bg-brand-navy text-white flex items-center justify-center">
+<span class="material-symbols-outlined">photo_library</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-brand-navy mb-2" data-i18n="feature-memories-title">ألبوم الذكريات</h3>
+<p class="font-body-md text-body-md text-brand-navy/70" data-i18n="feature-memories-desc">شارك اللحظات الجميلة والصور مع مجموعتك.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Trips -->
+<section class="flex flex-col gap-6">
+<div class="flex justify-between items-end">
+<h2 class="font-headline-lg text-headline-lg text-brand-navy" data-i18n="trips-heading">رحلاتي القادمة</h2>
+<a class="font-label-md text-label-md text-brand-orange hover:underline" data-i18n="trips-view-all" href="#">عرض الكل</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="trips-grid">
+<div class="bg-white rounded-xl overflow-hidden custom-shadow flex flex-col group cursor-pointer border border-surface-variant">
+<div class="relative h-48 w-full">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Travel destination" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABMl_UP1Lnbx_Qi3ng3uoaMKk2krcBpwC_OZSyJbyYWQI3ZuBUeWNoW6-EIF4aTCSzPbCGe0Km5gL2-_j4QGBhDDD_rrtvDZUj1pPa03qy5JVPeTbrQltLdM1YmqBnvEbgnqviPIWzC-ur_St8meVUQgHvAIhB2T0TinhcBR-tMjxfqsyghOx8RiUl-dgaHXkXFuu-sYmlx6fXO5BczzqfH18D39zASYK272qb8fO1f02RU843ZPZd"/>
+<div class="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-brand-navy/20 to-transparent"></div>
+<div class="absolute bottom-4 right-4 text-white">
+<h3 class="font-title-lg text-title-lg font-bold" style="color: white !important;">لندن</h3>
+<p class="font-label-md text-label-md opacity-90 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">flight_takeoff</span>
+<span class="">لندن</span>
+</p>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2 -space-x-reverse">
+<div class="w-8 h-8 rounded-full bg-brand-gold text-brand-navy flex items-center justify-center text-xs font-bold border-2 border-white">أ</div>
+</div>
+<span class="font-label-sm text-label-sm text-brand-navy/70 mr-2" data-i18n="trip-members">أعضاء الرحلة</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm text-brand-navy/70">
+<span class="" data-i18n="trip-countdown">العد التنازلي</span>
+<span class="text-brand-orange font-bold">باقي 788 يوم</span>
+</div>
+<div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden">
+<div class="h-full bg-brand-orange w-[10%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-xl overflow-hidden custom-shadow flex flex-col group cursor-pointer border border-surface-variant">
+<div class="relative h-48 w-full">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Travel destination" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9OkiXp41zQtCZq5Ed-L0UB5tGFRSwRb3GeRXTMEJ5hbyV3TKiEKDpDpZKYZTbjo_2k78jaiJbAzUv-AH-oMzdHO_tlCLxlZVR0MpciebdwxkDBdC6Fes9kA3rDsHmLLvotKjEBWZD4spykycTjBVbSDD3DjYgGfwcTRCXshRMncDCGPWlZEF7PWeyZPa8qMXtUM_k26iv26ZWWmiPqOoijMJuPxoXOpV9ZpVawJ8BgY15KFy5-b_6"/>
+<div class="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-brand-navy/20 to-transparent"></div>
+<div class="absolute bottom-4 right-4 text-white">
+<h3 class="font-title-lg text-title-lg font-bold" style="color: white !important;">لندن</h3>
+<p class="font-label-md text-label-md opacity-90 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">flight_takeoff</span>
+<span class="">لندن</span>
+</p>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2 -space-x-reverse">
+<div class="w-8 h-8 rounded-full bg-brand-gold text-brand-navy flex items-center justify-center text-xs font-bold border-2 border-white">أ</div>
+</div>
+<span class="font-label-sm text-label-sm text-brand-navy/70 mr-2" data-i18n="trip-members">أعضاء الرحلة</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm text-brand-navy/70">
+<span class="" data-i18n="trip-countdown">العد التنازلي</span>
+<span class="text-brand-orange font-bold">باقي 788 يوم</span>
+</div>
+<div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden">
+<div class="h-full bg-brand-orange w-[10%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-xl overflow-hidden custom-shadow flex flex-col group cursor-pointer border border-surface-variant">
+<div class="relative h-48 w-full">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Travel destination" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq-vYI1RnjaSp3xbO11onJ5jHrdWLQ-IWXvlCH1msoM-Pca-N-C_113tI5E7bbadTmyXu9EsHBdrEZYI6Lgz_zmLULCPQ6lOWQMJmbbxnVL9wXOa-kXnsijkYLBIagHP2Qw4JZ7yk25BZMPt1bFz5wAyz3Vhg9nWz8qb5jcxhuae4_vDvi_n9IMxYr5-ey-ejpB1cldgS1weIYPOMeUA6BBk7s2eVPX4rO__RwKjaTUc5tlpk3870v"/>
+<div class="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-brand-navy/20 to-transparent"></div>
+<div class="absolute bottom-4 right-4 text-white">
+<h3 class="font-title-lg text-title-lg font-bold" style="color: white !important;">لندن</h3>
+<p class="font-label-md text-label-md opacity-90 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">flight_takeoff</span>
+<span class="">لندن</span>
+</p>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2 -space-x-reverse">
+<div class="w-8 h-8 rounded-full bg-brand-gold text-brand-navy flex items-center justify-center text-xs font-bold border-2 border-white">أ</div>
+</div>
+<span class="font-label-sm text-label-sm text-brand-navy/70 mr-2" data-i18n="trip-members">أعضاء الرحلة</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm text-brand-navy/70">
+<span class="" data-i18n="trip-countdown">العد التنازلي</span>
+<span class="text-brand-orange font-bold">باقي 788 يوم</span>
+</div>
+<div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden">
+<div class="h-full bg-brand-orange w-[10%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Trip Card 1 -->
+<div class="bg-white rounded-xl overflow-hidden custom-shadow flex flex-col group cursor-pointer border border-surface-variant">
+<div class="relative h-48 w-full">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A beautiful coastal city with white buildings and blue domes, characteristic of Santorini, Greece. The bright Mediterranean sun illuminates the scene, reflecting off the deep blue sea in the background. The style is inviting and vibrant, perfect for a travel destination card." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbhobcZx2QkXG57x2NB479KRNd4EtyerbF6MfJ0bVN4vxLZr_-ih13lgJ8aB1MZPOo_BiDCknwVF7YmIaQI0NySLEjroALsiNXy2P9w1qvo66phJUeBumAya2t2krUgY6jDMTEU4fqr9oEEUeHv23pFCQ7FMvZjRAbPBjCL5-imCRJQGs0oWjsUIXlBzKpg5iJyB0jAYSHd00RQrnEskoU6XjGq2vQluEHvVrDJ7oWXKTYxoanGPOS"/>
+<div class="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-brand-navy/20 to-transparent"></div>
+<div class="absolute bottom-4 right-4 text-white">
+<h3 class="font-title-lg text-title-lg font-bold" data-i18n="trip-1-title" style="color: white !important;">رحلة اليونان الصيفية</h3>
+<p class="font-label-md text-label-md opacity-90 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span class="" data-i18n="trip-1-loc">سانتوريني، اليونان</span>
+</p>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2 -space-x-reverse">
+<div class="w-8 h-8 rounded-full bg-brand-gold text-brand-navy flex items-center justify-center text-xs font-bold border-2 border-white">أ</div>
+<div class="w-8 h-8 rounded-full bg-brand-orange text-white flex items-center justify-center text-xs font-bold border-2 border-white">م</div>
+<div class="w-8 h-8 rounded-full bg-brand-surface text-brand-navy flex items-center justify-center text-xs border-2 border-white">+3</div>
+</div>
+<span class="font-label-sm text-label-sm text-brand-navy/70 mr-2" data-i18n="trip-members">أعضاء الرحلة</span>
+</div>
+<!-- Progress Bar (Countdown) -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm text-brand-navy/70">
+<span class="" data-i18n="trip-countdown">العد التنازلي</span>
+<span class="text-brand-orange font-bold" data-i18n="trip-1-left">باقي 12 يوم</span>
+</div>
+<div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden">
+<div class="h-full bg-brand-orange w-[70%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Trip Card 2 -->
+<div class="bg-white rounded-xl overflow-hidden custom-shadow flex flex-col group cursor-pointer border border-surface-variant">
+<div class="relative h-48 w-full">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A dense, misty pine forest with a wooden cabin partially visible in the foreground. The mood is serene, slightly moody, and adventurous. Soft, diffused natural light filters through the trees. The style is high-quality outdoor photography, suitable for a nature retreat travel card." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfJ3GAaSzDbB8P8T0Vc0VEuwBndDIdEDFxe2CPSBZcBgGolhW1ZiaK82umuYRmZSFQ4aLXroChP4m1qAQCwwcMA3IrjEzjdvQ5esXZeTSwsPnVszrXPEvmYpg0Za8AZzec7Lp-wbGQyJ3QLasnZlMuqe8zI6NpcTZiBe_CDXoIKmbQ7XGTpHzbiZpvzx6zVTvFBurUV4-tnJhb6BYstT9qF-AK_OM_N7jNxz_khKkOhIyWAnuPexj6"/>
+<div class="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-brand-navy/20 to-transparent"></div>
+<div class="absolute bottom-4 right-4 text-white">
+<h3 class="font-title-lg text-title-lg font-bold" data-i18n="trip-2-title" style="color: white !important;">تخييم الغابة السوداء</h3>
+<p class="font-label-md text-label-md opacity-90 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span class="" data-i18n="trip-2-loc">ألمانيا</span>
+</p>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2 -space-x-reverse">
+<div class="w-8 h-8 rounded-full bg-brand-navy text-white flex items-center justify-center text-xs font-bold border-2 border-white">س</div>
+<div class="w-8 h-8 rounded-full bg-brand-gold text-brand-navy flex items-center justify-center text-xs font-bold border-2 border-white">خ</div>
+</div>
+<span class="font-label-sm text-label-sm text-brand-navy/70 mr-2" data-i18n="trip-members">أعضاء الرحلة</span>
+</div>
+<!-- Progress Bar (Countdown) -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm text-brand-navy/70">
+<span class="" data-i18n="trip-countdown">العد التنازلي</span>
+<span class="text-brand-orange font-bold" data-i18n="trip-2-left">باقي 45 يوم</span>
+</div>
+<div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden">
+<div class="h-full bg-brand-navy w-[30%] rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-brand-surface w-full mt-auto border-t border-brand-navy/10">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center px-margin-desktop py-12 w-full max-w-container-max mx-auto gap-6">
+<div class="flex items-center">
+<img alt="Boarding Logo Light" class="h-10 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAb9zWBAfvurC7QaRppHjqGxSaI_0EIt8qb-SmQSEKunooNEVPXUVIRiLMQ4H-MbeBGO-hyut-KEV01qHp7dki9C3dbKy2Y4un-GT_ooY_TZX-RzYUyPUusdKxV0tWHeHCZT8HpEjnGE_teqZG3RoCkA4HjbaFCvelUOPdtpUaIKD3til7YuKG5HcFYlHW4uyh_hQ8yg4UO2Y8rRJLyhjBUcXojTmu-l8n8VJNQPBTxtDLspcpuaDTWsXRHXoNPPAnH1w"/>
+<img alt="Boarding Logo Dark" class="h-10 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQLJyKYZBMeZ9obHHaLOrxVKqklybFFd9VS_JDfmgaK1Eh95ul9WmOP3Ja4VIUlaR43v4cTYR67BDZyUVl7bE5ijTd9XNyk3fFjp6fdw4h5Drin81jDNTbLgP9JaScGKaufyTMtcWWiytOcLyZtdWiYPnjaKSejwXbRV4Ny1QafOur7J_noIHeGf92E_MBEFYHdcSStnA2jCRC6qGKWSUeLppFPKQWLrXeQQU2wrMGRwgoCzZ49_TdoEt1UHwwlQocIA"/>
+</div>
+<nav class="flex gap-4">
+<a class="font-label-md text-label-md text-brand-navy/80 hover:text-brand-orange transition-colors hover:opacity-100 transition-opacity" data-i18n="footer-privacy" href="#">سياسة الخصوصية</a>
+<a class="font-label-md text-label-md text-brand-navy/80 hover:text-brand-orange transition-colors hover:opacity-100 transition-opacity" data-i18n="footer-terms" href="#">شروط الخدمة</a>
+<a class="font-label-md text-label-md text-brand-navy/80 hover:text-brand-orange transition-colors hover:opacity-100 transition-opacity" data-i18n="footer-help" href="#">مركز المساعدة</a>
+</nav>
+<div class="font-label-md text-label-md text-brand-navy/70" data-i18n="footer-copyright">
+                © 2024 بوردنق. جميع الحقوق محفوظة.
+            </div>
+</div>
+</footer>
+<!-- Trip Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay modal-hidden transition-opacity duration-200 opacity-100 pointer-events-auto" id="trip-modal">
+<!-- Trip Modal Content -->
+<div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-8 relative flex flex-col gap-6 modal-content scale-95 transition-transform duration-200">
+<button class="modal-close absolute top-4 left-4 text-brand-navy/50 hover:text-brand-navy transition-colors" id="trip-modal-close">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="flex justify-center">
+<img alt="Boarding Light" class="h-12 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABoU8T0in3fgHMqWbZA19NKC7f3m0RN5_bsKsZOYNtE-4XLpqyDqXL9a_9qnR-RUrqy4j8lv3KjMYSE7eDB4IIyy9qKtBZno5f_YObV6QEvdta8fM2C6GVxO9FwSU2iVtqOPpTdOcyTOErGlT7OGKTKEizgYjZcH0Sqq2uT536zre2DCHCUa24X8mU2K86eHUlfN6CAqGYbIIH9LKKuG62InW_UojdEr-R3uxv_zkL_29z51lOvUvIpyiyWY3y7uNSfg"/>
+<img alt="Boarding Dark" class="h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvUtDJuPoSX0JUgPylgGPlEE0A0FG8kEP6vNNAILnLV23_frSNbEFF-QvMJqFIz7gzU8vkE0FoFuTPKjMdP-iRsCcp8Cla-gdYssiLV1PDCOOdlTceDhuIL7Z7VkyojtM9LMxt4ippE2hQTRqz0NqBz-l74VTuH_SENpY6hcfCABzKffSx_SfzvgXilfZVtDWFv4MH2-2dNibCQkBm7RmuhQkruZKAgTHhV2e_I1uFBv_-ObuzCFbWCol21CWcFkzqsA"/>
+</div>
+<!-- Trip Step 1 -->
+<div class="flex flex-col gap-6 hidden" id="trip-step-1">
+<h2 class="text-center font-headline-md text-brand-navy" data-i18n="trip-modal-title">إنشاء رحلة جديدة</h2>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy flex justify-between">
+<span class="" data-i18n="trip-flight-num">رقم الرحلة (اختياري)</span>
+<span class="text-error font-label-sm hidden" data-i18n="trip-flight-error" id="flight-error">يرجى تعبئة الحقول المطلوبة</span>
+</label>
+<div class="flex gap-2">
+<input class="flex-1 h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-left font-sans text-brand-navy uppercase" data-i18n-placeholder="trip-flight-placeholder" dir="ltr" id="flight-code" placeholder="مثال: SV123" type="text"/>
+<button class="bg-brand-surface border border-surface-variant text-brand-navy px-4 rounded-lg font-label-md hover:bg-surface-variant transition-colors whitespace-nowrap" data-i18n="trip-autofill" id="btn-autofill">تعبئة تلقائية</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="trip-departure-city">مدينة المغادرة</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy flash-gold" id="trip-departure-city" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="trip-destination"><span data-i18n="trip-destination">الوجهة *</span></label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy flash-gold" id="trip-destination" required="" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="trip-departure-date">تاريخ ووقت الطيران *</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy flash-gold" dir="ltr" id="trip-departure-date" required="" type="datetime-local"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="trip-arrival-date">تاريخ ووقت الوصول *</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy flash-gold" dir="ltr" id="trip-arrival-date" required="" type="datetime-local"/>
+</div>
+</div><div class="flex flex-col gap-4">
+<div class="flex items-center justify-between bg-brand-surface/50 p-3 rounded-lg border border-surface-variant dark:bg-[#1F2F54] dark:border-[#2A3F6C]">
+<label class="font-label-md text-brand-navy dark:text-white" data-i18n="trip-multi-toggle">رحلة بعدة وجهات؟</label>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" id="multi-city-toggle" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer dark:bg-brand-navy peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-orange"></div>
+</label>
+</div>
+<div class="hidden flex flex-col gap-4 relative" id="multi-city-container">
+<!-- Dynamic rows will be injected here -->
+</div>
+<button class="hidden w-full py-3 border-2 border-dashed border-brand-orange rounded-lg text-brand-orange font-label-md flex items-center justify-center gap-2 hover:bg-brand-orange/5 transition-colors" id="btn-add-destination" type="button">
+<span class="material-symbols-outlined">add_circle</span>
+<span data-i18n="trip-add-dest">إضافة وجهة</span>
+</button>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="trip-travelers">عدد المسافرين</label>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full border border-surface-variant flex items-center justify-center text-brand-navy hover:bg-brand-surface" id="travelers-minus" type="button"><span class="material-symbols-outlined">remove</span></button>
+<input class="w-16 h-12 rounded-lg border-surface-variant text-center font-sans text-brand-navy" id="trip-travelers" min="1" type="number" value="1"/>
+<button class="w-10 h-10 rounded-full border border-surface-variant flex items-center justify-center text-brand-navy hover:bg-brand-surface" id="travelers-plus" type="button"><span class="material-symbols-outlined">add</span></button>
+</div>
+</div>
+<button class="w-full bg-brand-orange hover:bg-brand-gold text-white hover:text-brand-navy transition-colors h-12 rounded-lg font-label-md mt-4" data-i18n="trip-create-btn" id="btn-create-trip">
+                إنشاء الرحلة
+            </button>
+</div>
+<!-- Trip Step 2 (Success) -->
+<div class="flex-col items-center gap-6 text-center" id="trip-step-2">
+<div class="w-16 h-16 rounded-full bg-tertiary-fixed text-tertiary flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-[32px]">check_circle</span>
+</div>
+<h2 class="font-headline-md text-brand-navy" data-i18n="trip-success-title">تم إنشاء رحلتك 🎉</h2>
+<p class="font-body-md text-brand-navy/70" id="trip-success-summary">رحلة إلى لندن - 6/15/2024</p>
+<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+<a class="w-full bg-brand-navy text-white hover:bg-brand-navy/90 transition-colors h-12 rounded-lg font-label-md flex items-center justify-center gap-2" href="friends.html">
+<span class="material-symbols-outlined">person_add</span>
+<span class="" data-i18n="trip-invite-friends">دعوة الأصدقاء</span>
+</a>
+<a class="w-full bg-brand-surface border border-surface-variant text-brand-navy hover:bg-surface-variant transition-colors h-12 rounded-lg font-label-md flex items-center justify-center gap-2" href="expenses.html">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="" data-i18n="trip-add-budget">إضافة الميزانية</span>
+</a>
+</div>
+<button class="text-brand-navy/70 hover:text-brand-navy font-label-md transition-colors mt-2" data-i18n="trip-finish-later" id="btn-finish-later">
+                إكمال التفاصيل لاحقاً
+            </button>
+</div>
+</div>
+</div>
+<!-- Auth Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay modal-hidden transition-opacity duration-200 opacity-0 pointer-events-none" id="auth-modal">
+<!-- Modal Step 1: Email Entry -->
+<div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col gap-6 modal-content transition-transform duration-200 hidden scale-95" id="modal-step-1">
+<button class="modal-close absolute top-4 left-4 text-brand-navy/50 hover:text-brand-navy transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="flex justify-center">
+<img alt="Boarding Light" class="h-12 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABoU8T0in3fgHMqWbZA19NKC7f3m0RN5_bsKsZOYNtE-4XLpqyDqXL9a_9qnR-RUrqy4j8lv3KjMYSE7eDB4IIyy9qKtBZno5f_YObV6QEvdta8fM2C6GVxO9FwSU2iVtqOPpTdOcyTOErGlT7OGKTKEizgYjZcH0Sqq2uT536zre2DCHCUa24X8mU2K86eHUlfN6CAqGYbIIH9LKKuG62InW_UojdEr-R3uxv_zkL_29z51lOvUvIpyiyWY3y7uNSfg"/>
+<img alt="Boarding Dark" class="h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvUtDJuPoSX0JUgPylgGPlEE0A0FG8kEP6vNNAILnLV23_frSNbEFF-QvMJqFIz7gzU8vkE0FoFuTPKjMdP-iRsCcp8Cla-gdYssiLV1PDCOOdlTceDhuIL7Z7VkyojtM9LMxt4ippE2hQTRqz0NqBz-l74VTuH_SENpY6hcfCABzKffSx_SfzvgXilfZVtDWFv4MH2-2dNibCQkBm7RmuhQkruZKAgTHhV2e_I1uFBv_-ObuzCFbWCol21CWcFkzqsA"/>
+</div>
+<h2 class="text-center font-headline-md text-brand-navy" data-i18n="modal-step1-title">تسجيل الدخول أو إنشاء حساب</h2>
+<button class="w-full flex items-center justify-center gap-3 border border-surface-variant rounded-lg h-12 text-brand-navy font-label-md hover:bg-surface-container-low transition-colors dark:bg-[#1F2F54] dark:border-[#2A3F6C] dark:text-[#FDF6EC] dark:hover:bg-[#26375F]">
+<img alt="Google" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARcI1YzaW879BGpJ7iGupe7MS0FiMk3SXwdMqrEsDPuM__XfGE-b2KSp05zfZCyi5cyi3J4JQFF59IUpx-_TK2ggc9fdevh_Oh5JbPrhAwLfixcj2ailpuGJ8jwCjCyioM3op6BVEnksl2SAe3PzYLDY6dudjALhvGa9DWUpVXo_unS9pzoMu5KrinmUT-07AMl43hMAfYfuPPl1H8Ej3FT6BPVWMGsZ96_lXDTIzjcxgaLUadnxCq"/>
+<span class="" data-i18n="modal-step1-google">المتابعة باستخدام Google</span>
+</button>
+<div class="flex items-center gap-4">
+<div class="h-px bg-surface-variant flex-1"></div>
+<span class="text-brand-navy/50 font-label-sm" data-i18n="modal-step1-or">أو</span>
+<div class="h-px bg-surface-variant flex-1"></div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="modal-step1-email-label">البريد الإلكتروني</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-left font-sans text-brand-navy" data-i18n-placeholder="modal-step1-email-placeholder" dir="ltr" id="email-input" placeholder="name@example.com" type="email"/>
+<p class="text-brand-navy/60 font-label-sm" data-i18n="modal-step1-helper">سيتم توجيهك لإنشاء حساب إذا لم يكن البريد الإلكتروني مسجلاً لدينا.</p>
+</div>
+<button class="w-full bg-brand-orange hover:bg-brand-gold text-white hover:text-brand-navy transition-colors h-12 rounded-lg font-label-md" data-i18n="modal-step1-continue" id="btn-step-1">
+            المتابعة بالبريد الإلكتروني
+        </button>
+</div>
+<!-- Modal Step 2: Password (Login) -->
+<div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative flex flex-col gap-6 modal-content transition-transform duration-200 scale-100" id="modal-step-2">
+<button class="modal-close absolute top-4 left-4 text-brand-navy/50 hover:text-brand-navy transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="flex justify-center">
+<img alt="Boarding Light" class="h-12 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA83d-VVTa5FPJKsUgTBMsVgfWwu5BQ8HoCmn4ecKEEXJAW7_NgDcQ7neH7Oj8FEkFfHBiFehblpNjgtaEw2QPYPHvrPR9qDeROcpsdX8fQ9CNUXxUf--wz48MgbPrhuyFYOkAaPVPQY80UtiG8dPi9tfFamxUL4MOP5Y2OaIZOEY34-PQW_311miHl4WQLte7if4V_BcHfWRLOksb_Rg4AXrEXKBO0k4kx36ydG6sMHZncfTusKmapsJAd_TjbTUiGTQ"/>
+<img alt="Boarding Dark" class="h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChEhMxSZ3sRbZY7_tnJorSB9YQOu4TPtB7sDJ2Xfvw3V537FOLOJcUey0UElIch07-HEKDTkpy9zwupSM7UhnzLahNyQw2zRQlpwlbJyklHW-LRsgbvl5jnYJ8ohfSTDD5qjrLztuHItOZpac3pzNNMJD5ehcM_dO6qKmAGKKYwElCxyjCJZ3L0TyKEbP0IU6v5rzU537WYxc_4tGva4hDwMJduu-31rENZa08dOFXcEDflMU625xG-2daKujEerkKCQ"/>
+</div>
+<h2 class="text-center font-headline-md text-brand-navy" data-i18n="modal-step2-title">تسجيل الدخول</h2>
+<div class="bg-brand-surface border border-surface-variant rounded-lg p-3 flex justify-between items-center">
+<span class="font-sans text-brand-navy dir-ltr text-left" id="display-email-login">user@example.com</span>
+<button class="edit-email-btn text-brand-orange hover:text-brand-gold transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<div class="flex flex-col gap-2 relative">
+<label class="font-label-md text-brand-navy" data-i18n="modal-step2-password-label">كلمة المرور</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy" id="password-input" type="password"/>
+<button class="toggle-password absolute left-3 top-10 text-brand-navy/50 hover:text-brand-navy" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+<a class="text-brand-orange hover:underline font-label-sm" data-i18n="modal-step2-forgot" href="#">هل نسيت كلمة المرور؟</a>
+<button class="w-full bg-brand-orange hover:bg-brand-gold text-white hover:text-brand-navy transition-colors h-12 rounded-lg font-label-md" data-i18n="modal-step2-signin" id="btn-login">
+            تسجيل الدخول
+        </button>
+</div>
+<!-- Modal Step 3: Registration -->
+<div class="hidden bg-white rounded-xl shadow-2xl w-full max-w-2xl p-8 relative flex flex-col gap-6 modal-content scale-95 transition-transform duration-200" id="modal-step-3">
+<button class="modal-close absolute top-4 left-4 text-brand-navy/50 hover:text-brand-navy transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="flex justify-center">
+<img alt="Boarding Light" class="h-12 w-auto object-contain dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWoNh80enAJXLzr2njZH7yNrENmulHZ1R9_XVYsWd9ENfuqQtRWparps5fB9kFwPBbYPcVUpt4a5C9qbkyICw9CbZsbWfAyZxQkbNJiadHohhYpwLt5yvL_dTJNJpefwyoA2ycUHgdCK0HsAnVRJtJAG5qwyWlGmDsn-vkYCcfCRqOnuDEj1DYrZ9nNQtZB81SZs4XLGw7YIBKhq2sLFFrTbfZeyM8C2K1gg06WAolz5SkFFgv-wAp2roGo3wu5GVNvg"/>
+<img alt="Boarding Dark" class="h-12 w-auto object-contain hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEe_s_b6YAUkH8RWa6GOVXgJ5t_VHizmqjWLwC3ickYrzdx6LYaQ9T8Wcx4J-F59cnR4KCRe1zaYdC1ohq9NMPqAGwsIUsNkFyAdDkbeSgNeN11KyKzkKcOpVRq5a-jRo3S494TnbUw4X9wvkRLUptJ4APbO34tP5P2V8Wg6CCM75bnxYXy0Bj0nt4RoYaDIFAbqFSZUGr64k_nFT0YIepq6rC5gjUejF-pYmV8p_8qoGUKpfqZAWUS-NA2EjUnaWBhg"/>
+</div>
+<h2 class="text-center font-headline-md text-brand-navy" data-i18n="modal-step3-title">إنشاء حساب جديد</h2>
+<div class="bg-brand-surface border border-surface-variant rounded-lg p-3 flex justify-between items-center max-w-md mx-auto w-full">
+<span class="font-sans text-brand-navy dir-ltr text-left" id="display-email-register"></span>
+<button class="edit-email-btn text-brand-orange hover:text-brand-gold transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="modal-step3-fname">الاسم الأول</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="modal-step3-mname">الاسم الأوسط</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-brand-navy" data-i18n="modal-step3-lname">الاسم الأخير</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-2 max-w-md">
+<label class="font-label-md text-brand-navy" data-i18n="modal-step3-phone">رقم الجوال</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-left font-sans text-brand-navy" dir="ltr" type="tel"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex flex-col gap-2 relative">
+<label class="font-label-md text-brand-navy" data-i18n="modal-step3-pass">كلمة المرور</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy" type="password"/>
+</div>
+<div class="flex flex-col gap-2 relative">
+<label class="font-label-md text-brand-navy" data-i18n="modal-step3-pass-confirm">تأكيد كلمة المرور</label>
+<input class="w-full h-12 rounded-lg border-surface-variant focus:border-brand-orange focus:ring-1 focus:ring-brand-orange px-4 text-brand-navy" type="password"/>
+</div>
+</div>
+<button class="w-full md:w-auto md:px-12 mx-auto bg-brand-orange hover:bg-brand-gold text-white hover:text-brand-navy transition-colors h-12 rounded-lg font-label-md mt-4" data-i18n="modal-step3-submit" id="btn-register">
+            إنشاء الحساب
+        </button>
+</div>
+</div>
+<script>
+    const translations = {
+        en: {
+            "nav-home": "Home", "nav-trips": "Trips", "nav-explore": "Explore", "nav-expenses": "Expenses", "nav-friends": "Friends",
+            "hero-heading": "Organize your next trip with friends in one place",
+            "hero-subtitle": 'The "Boarding" app brings together everything you need to plan your next adventure easily and professionally.',
+            "hero-btn-new": "Create New Trip", "hero-btn-current": "My Current Trips",
+            "features-heading": "Key Features",
+            "feature-expense-title": "Expense Tracking", "feature-expense-desc": "Record and split expenses among friends clearly.",
+            "feature-plan-title": "Trip Plan", "feature-plan-desc": "Interactive timeline to organize your daily itinerary.",
+            "feature-explore-title": "Explore", "feature-explore-desc": "Discover the best recommended places and restaurants.",
+            "feature-memories-title": "Memories Album", "feature-memories-desc": "Share beautiful moments and photos with your group.",
+            "trips-heading": "My Upcoming Trips", "trips-view-all": "View All",
+            "trip-1-title": "Summer Greece Trip", "trip-1-loc": "Santorini, Greece",
+            "trip-2-title": "Black Forest Camping", "trip-2-loc": "Germany",
+            "trip-members": "Trip Members", "trip-countdown": "Countdown",
+            "trip-1-left": "12 days left", "trip-2-left": "45 days left",
+            "footer-privacy": "Privacy Policy", "footer-terms": "Terms of Service", "footer-help": "Help Center",
+            "footer-copyright": "© 2024 Boarding. All rights reserved.",
+            "modal-step1-title": "Sign in or create account", "modal-step1-google": "Continue with Google",
+            "modal-step1-or": "or", "modal-step1-email-label": "Email", "modal-step1-email-placeholder": "name@example.com",
+            "modal-step1-helper": "You will be directed to create an account if the email is not registered with us.",
+            "modal-step1-continue": "Continue with email",
+            "modal-step2-title": "Sign in", "modal-step2-password-label": "Password", "modal-step2-forgot": "Forgot password?", "modal-step2-signin": "Sign in",
+            "modal-step3-title": "Create new account", "modal-step3-fname": "First Name", "modal-step3-mname": "Middle Name", "modal-step3-lname": "Last Name",
+            "modal-step3-phone": "Phone Number", "modal-step3-pass": "Password", "modal-step3-pass-confirm": "Confirm Password", "modal-step3-submit": "Create account",
+            "trip-modal-title": "Create Trip", "trip-flight-num": "Flight Number (Optional)", "trip-flight-placeholder": "e.g. SV123", "trip-flight-error": "Flight not found",
+            "trip-autofill": "Auto-fill", "trip-departure-city": "Departure City", "trip-destination": "Destination *", "trip-departure-date": "Departure Date *",
+            "trip-arrival-date": "Arrival Date *", "trip-travelers": "Travelers", "trip-create-btn": "Create Trip", "trip-success-title": "Trip Created! 🎉",
+            "trip-invite-friends": "Invite Friends", "trip-add-budget": "Add Budget", "trip-soon": "Coming Soon", "trip-finish-later": "Finish Later"
+        },
+        ar: {
+            "nav-home": "الرئيسية", "nav-trips": "الرحلات", "nav-explore": "استكشف", "nav-expenses": "المصاريف", "nav-friends": "الأصدقاء",
+            "hero-heading": "نظّم رحلتك القادمة مع أصدقائك في مكان واحد",
+            "hero-subtitle": 'تطبيق "بوردنق" يجمع كل ما تحتاجه لتخطيط مغامرتك القادمة بسهولة واحترافية.',
+            "hero-btn-new": "إنشاء رحلة جديدة", "hero-btn-current": "رحلاتي الحالية",
+            "features-heading": "المميزات الرئيسية",
+            "feature-expense-title": "تتبع المصاريف", "feature-expense-desc": "سجل وقسم المصاريف بين الأصدقاء بوضوح تام.",
+            "feature-plan-title": "خطة الرحلة", "feature-plan-desc": "جدول زمني تفاعلي لتنظيم مسار الرحلة يومياً.",
+            "feature-explore-title": "استكشف", "feature-explore-desc": "اكتشف أفضل الأماكن والمطاعم الموصى بها.",
+            "feature-memories-title": "ألبوم الذكريات", "feature-memories-desc": "شارك اللحظات الجميلة والصور مع مجموعتك.",
+            "trips-heading": "رحلاتي القادمة", "trips-view-all": "عرض الكل",
+            "trip-1-title": "رحلة اليونان الصيفية", "trip-1-loc": "سانتوريني، اليونان",
+            "trip-2-title": "تخييم الغابة السوداء", "trip-2-loc": "ألمانيا",
+            "trip-members": "أعضاء الرحلة", "trip-countdown": "العد التنازلي",
+            "trip-1-left": "باقي 12 يوم", "trip-2-left": "باقي 45 يوم",
+            "footer-privacy": "سياسة الخصوصية", "footer-terms": "شروط الخدمة", "footer-help": "مركز المساعدة",
+            "footer-copyright": "© 2024 بوردنق. جميع الحقوق محفوظة.",
+            "modal-step1-title": "تسجيل الدخول أو إنشاء حساب", "modal-step1-google": "المتابعة باستخدام Google",
+            "modal-step1-or": "أو", "modal-step1-email-label": "البريد الإلكتروني", "modal-step1-email-placeholder": "name@example.com",
+            "modal-step1-helper": "سيتم توجيهك لإنشاء حساب إذا لم يكن البريد الإلكتروني مسجلاً لدينا.",
+            "modal-step1-continue": "المتابعة بالبريد الإلكتروني",
+            "modal-step2-title": "تسجيل الدخول", "modal-step2-password-label": "كلمة المرور", "modal-step2-forgot": "هل نسيت كلمة المرور؟", "modal-step2-signin": "تسجيل الدخول",
+            "modal-step3-title": "إنشاء حساب جديد", "modal-step3-fname": "الاسم الأول", "modal-step3-mname": "الاسم الأوسط", "modal-step3-lname": "الاسم الأخير",
+            "modal-step3-phone": "رقم الجوال", "modal-step3-pass": "كلمة المرور", "modal-step3-pass-confirm": "تأكيد كلمة المرور", "modal-step3-submit": "إنشاء الحساب",
+            "trip-modal-title": "إنشاء رحلة جديدة", "trip-flight-num": "رقم الرحلة (اختياري)", "trip-flight-placeholder": "مثال: SV123", "trip-flight-error": "لم نجد هذه الرحلة",
+            "trip-autofill": "تعبئة تلقائية", "trip-departure-city": "مدينة المغادرة", "trip-destination": "الوجهة *", "trip-departure-date": "تاريخ ووقت الطيران *",
+            "trip-arrival-date": "تاريخ ووقت الوصول *", "trip-travelers": "عدد المسافرين", "trip-create-btn": "إنشاء الرحلة", "trip-success-title": "تم إنشاء رحلتك 🎉",
+            "trip-invite-friends": "دعوة الأصدقاء", "trip-add-budget": "إضافة الميزانية", "trip-soon": "قريباً", "trip-finish-later": "إكمال التفاصيل لاحقاً"
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        let state = {
+            isLoggedIn: false,
+            pendingTripCreation: false
+        };
+
+        // Theme Toggle
+        const themeBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        const applyTheme = (isDark) => {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeIcon.textContent = 'light_mode';
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIcon.textContent = 'dark_mode';
+            }
+        };
+
+        try {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') applyTheme(true);
+        } catch (e) {}
+
+        themeBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            try {
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        });
+
+        // Language Toggle
+        const langToggleBtn = document.getElementById('langToggle');
+        
+        langToggleBtn.addEventListener('click', () => {
+            const currentLang = document.documentElement.lang;
+            const newLang = currentLang === 'ar' ? 'en' : 'ar';
+            
+            document.documentElement.lang = newLang;
+            document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+            langToggleBtn.textContent = newLang === 'ar' ? 'EN' : 'AR';
+            
+            // Update text elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[newLang][key]) {
+                    el.textContent = translations[newLang][key];
+                }
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[newLang][key]) {
+                    el.placeholder = translations[newLang][key];
+                }
+            });
+        });
+
+        const authModal = document.getElementById('auth-modal');
+        const tripModal = document.getElementById('trip-modal');
+        const step1 = document.getElementById('modal-step-1');
+        const step2 = document.getElementById('modal-step-2');
+        const step3 = document.getElementById('modal-step-3');
+        const triggers = document.querySelectorAll('.auth-trigger');
+        const authCloseBtns = authModal.querySelectorAll('.modal-close');
+        const emailInput = document.getElementById('email-input');
+        
+        const registeredUsers = ['user@example.com', 'test@boarding.sa'];
+        
+        let currentEmail = '';
+
+        function openAuthModal() {
+            authModal.classList.remove('opacity-0', 'pointer-events-none');
+            authModal.classList.add('opacity-100', 'pointer-events-auto');
+            document.body.style.overflow = 'hidden';
+            showAuthStep(1);
+        }
+
+        function closeAuthModal() {
+            authModal.classList.remove('opacity-100', 'pointer-events-auto');
+            authModal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                emailInput.value = '';
+                document.getElementById('password-input').value = '';
+            }, 200);
+        }
+
+        function showAuthStep(stepNum) {
+            [step1, step2, step3].forEach(step => {
+                step.classList.add('hidden');
+                step.classList.remove('scale-100');
+                step.classList.add('scale-95');
+            });
+            
+            let activeStep;
+            if (stepNum === 1) activeStep = step1;
+            if (stepNum === 2) activeStep = step2;
+            if (stepNum === 3) activeStep = step3;
+            
+            if (activeStep) {
+                activeStep.classList.remove('hidden');
+                setTimeout(() => {
+                    activeStep.classList.remove('scale-95');
+                    activeStep.classList.add('scale-100');
+                }, 10);
+            }
+        }
+
+        // Triggers
+        triggers.forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                openAuthModal();
+            });
+        });
+
+        // Close actions
+        authCloseBtns.forEach(btn => btn.addEventListener('click', closeAuthModal));
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) closeAuthModal();
+        });
+
+        // Step 1 to 2/3
+        document.getElementById('btn-step-1').addEventListener('click', () => {
+            currentEmail = emailInput.value.trim().toLowerCase();
+            if (!currentEmail) return;
+            
+            if (registeredUsers.includes(currentEmail)) {
+                document.getElementById('display-email-login').textContent = currentEmail;
+                showAuthStep(2);
+            } else {
+                document.getElementById('display-email-register').textContent = currentEmail;
+                showAuthStep(3);
+            }
+        });
+
+        // Edit email (Back to step 1)
+        document.querySelectorAll('.edit-email-btn').forEach(btn => {
+            btn.addEventListener('click', () => showAuthStep(1));
+        });
+
+        // Password toggle
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const input = e.currentTarget.previousElementSibling;
+                const icon = e.currentTarget.querySelector('.material-symbols-outlined');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.textContent = 'visibility_off';
+                } else {
+                    input.type = 'password';
+                    icon.textContent = 'visibility';
+                }
+            });
+        });
+
+        function handleLoginSuccess() {
+             closeAuthModal();
+             state.isLoggedIn = true;
+             const profileIcon = document.querySelector('.profile-icon');
+             if (profileIcon) {
+                 profileIcon.style.fontVariationSettings = "'FILL' 1";
+                 profileIcon.classList.add('text-brand-orange');
+             }
+             if (state.pendingTripCreation) {
+                 setTimeout(openTripModal, 300);
+                 state.pendingTripCreation = false;
+             }
+        }
+
+        // Simulate Login Success
+        document.getElementById('btn-login').addEventListener('click', handleLoginSuccess);
+        // Simulate Register Success
+        document.getElementById('btn-register').addEventListener('click', handleLoginSuccess);
+
+        // --- Trip Modal Logic ---
+        
+        function openTripModal() {
+            tripModal.classList.remove('opacity-0', 'pointer-events-none');
+            tripModal.classList.add('opacity-100', 'pointer-events-auto');
+            document.body.style.overflow = 'hidden';
+            
+            document.getElementById('trip-step-1').classList.remove('hidden');
+            document.getElementById('trip-step-2').classList.add('hidden');
+            
+            // Reset fields
+            document.getElementById('flight-code').value = '';
+            document.getElementById('trip-departure-city').value = '';
+            document.getElementById('trip-destination').value = '';
+            document.getElementById('trip-departure-date').value = '';
+            document.getElementById('trip-arrival-date').value = '';
+            document.getElementById('trip-travelers').value = '1';
+            document.getElementById('flight-error').classList.add('hidden');
+            document.querySelectorAll('.flash-gold').forEach(el => el.classList.remove('flash-gold'));
+        }
+
+        function closeTripModal() {
+            tripModal.classList.remove('opacity-100', 'pointer-events-auto');
+            tripModal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('hero-create-trip-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (state.isLoggedIn) {
+                openTripModal();
+            } else {
+                state.pendingTripCreation = true;
+                openAuthModal();
+            }
+        });
+
+        document.getElementById('trip-modal-close').addEventListener('click', closeTripModal);
+        document.getElementById('btn-finish-later').addEventListener('click', closeTripModal);
+        
+        tripModal.addEventListener('click', (e) => {
+            if (e.target === tripModal) closeTripModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (!authModal.classList.contains('opacity-0')) closeAuthModal();
+                if (!tripModal.classList.contains('opacity-0')) closeTripModal();
+            }
+        });
+
+        // Travelers +/-
+        const travelersInput = document.getElementById('trip-travelers');
+        document.getElementById('travelers-minus').addEventListener('click', () => {
+            let val = parseInt(travelersInput.value) || 1;
+            if (val > 1) travelersInput.value = val - 1;
+        });
+        document.getElementById('travelers-plus').addEventListener('click', () => {
+            let val = parseInt(travelersInput.value) || 1;
+            travelersInput.value = val + 1;
+        });
+
+        // Flight Auto-fill Mock
+        const flightsDB = {
+            'SV123': { dep: 'الرياض', arr: 'لندن', depTime: '2024-06-15T10:00', arrTime: '2024-06-15T14:30' },
+            'BA124': { dep: 'لندن', arr: 'باريس', depTime: '2024-07-01T08:00', arrTime: '2024-07-01T10:15' },
+            'EK204': { dep: 'دبي', arr: 'طوكيو', depTime: '2024-08-10T22:00', arrTime: '2024-08-11T12:00' }
+        };
+
+        document.getElementById('btn-autofill').addEventListener('click', () => {
+            const code = document.getElementById('flight-code').value.trim().toUpperCase();
+            const errorEl = document.getElementById('flight-error');
+            
+            if (flightsDB[code]) {
+                errorEl.classList.add('hidden');
+                
+                const fDep = document.getElementById('trip-departure-city');
+                const fArr = document.getElementById('trip-destination');
+                const fDTime = document.getElementById('trip-departure-date');
+                const fATime = document.getElementById('trip-arrival-date');
+                
+                fDep.value = flightsDB[code].dep;
+                fArr.value = flightsDB[code].arr;
+                fDTime.value = flightsDB[code].depTime;
+                fATime.value = flightsDB[code].arrTime;
+                
+                [fDep, fArr, fDTime, fATime].forEach(el => {
+                    el.classList.remove('flash-gold');
+                    void el.offsetWidth; // trigger reflow
+                    el.classList.add('flash-gold');
+                });
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        // Create Trip Submit
+        document.getElementById('btn-create-trip').addEventListener('click', () => {
+            const dest = document.getElementById('trip-destination').value.trim();
+            const depDate = document.getElementById('trip-departure-date').value;
+            const arrDate = document.getElementById('trip-arrival-date').value;
+            const errorEl = document.getElementById('flight-error');
+
+            if (!dest || !depDate || !arrDate) {
+                 errorEl.textContent = "يرجى تعبئة الحقول المطلوبة";
+                 errorEl.classList.remove('hidden');
+                 return;
+            }
+            if (new Date(arrDate) <= new Date(depDate)) {
+                 errorEl.textContent = "تاريخ الوصول يجب أن يكون بعد المغادرة";
+                 errorEl.classList.remove('hidden');
+                 return;
+            }
+            errorEl.classList.add('hidden');
+
+            // Switch steps
+            document.getElementById('trip-step-1').classList.add('hidden');
+            document.getElementById('trip-step-2').classList.remove('hidden');
+            document.getElementById('trip-success-summary').textContent = `رحلة إلى ${dest} - ${new Date(depDate).toLocaleDateString()}`;
+
+            // Add card to grid
+            addTripCardToGrid(dest, depDate);
+        });
+
+        function addTripCardToGrid(dest, depDateStr) {
+            const grid = document.getElementById('trips-grid');
+            const depDate = new Date(depDateStr);
+            const today = new Date();
+            const diffTime = Math.abs(depDate - today);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            const isAr = document.documentElement.lang === 'ar';
+            const daysLeftText = isAr ? `باقي ${diffDays} يوم` : `${diffDays} days left`;
+            
+            const newCardHTML = `
+                <div class="bg-white rounded-xl overflow-hidden custom-shadow flex flex-col group cursor-pointer border border-surface-variant">
+                    <div class="relative h-48 w-full">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" data-alt="Travel destination"/>
+                        <div class="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-brand-navy/20 to-transparent"></div>
+                        <div class="absolute bottom-4 right-4 text-white">
+                            <h3 class="font-title-lg text-title-lg font-bold" style="color: white !important;">${dest}</h3>
+                            <p class="font-label-md text-label-md opacity-90 flex items-center gap-1 mt-1">
+                                <span class="material-symbols-outlined text-[16px]">flight_takeoff</span>
+                                <span>${dest}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col gap-4">
+                        <div class="flex items-center gap-2">
+                            <div class="flex -space-x-2 -space-x-reverse">
+                                <div class="w-8 h-8 rounded-full bg-brand-gold text-brand-navy flex items-center justify-center text-xs font-bold border-2 border-white">أ</div>
+                            </div>
+                            <span class="font-label-sm text-label-sm text-brand-navy/70 mr-2" data-i18n="trip-members">${isAr ? 'أعضاء الرحلة' : 'Trip Members'}</span>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex justify-between font-label-sm text-label-sm text-brand-navy/70">
+                                <span data-i18n="trip-countdown">${isAr ? 'العد التنازلي' : 'Countdown'}</span>
+                                <span class="text-brand-orange font-bold">${daysLeftText}</span>
+                            </div>
+                            <div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden">
+                                <div class="h-full bg-brand-orange w-[10%] rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            grid.insertAdjacentHTML('afterbegin', newCardHTML);
+        }
+
+    });
+</script>
+<script src="assets/responsive.js" defer></script>
+</body></html>

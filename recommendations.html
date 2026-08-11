@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>بوردنق - التوصيات</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-background": "#191c1d",
+                      "tertiary-container": "#2b4d36",
+                      "error-container": "#ffdad6",
+                      "outline": "#70787c",
+                      "secondary-fixed-dim": "#ffb68c",
+                      "surface-dim": "#d9dadb",
+                      "on-secondary-container": "#642b00",
+                      "on-error": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed": "#ffdbc9",
+                      "on-tertiary-fixed": "#00210e",
+                      "on-surface": "#191c1d",
+                      "error": "#ba1a1a",
+                      "primary-container": "#14213D",
+                      "surface-container": "#edeeef",
+                      "tertiary-fixed-dim": "#aad0b1",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed-variant": "#114d5d",
+                      "surface-bright": "#f8f9fa",
+                      "surface-variant": "#e1e3e4",
+                      "inverse-primary": "#9acee1",
+                      "tertiary-fixed": "#c5eccc",
+                      "secondary": "#E85D3D",
+                      "inverse-surface": "#2e3132",
+                      "surface-tint": "#306576",
+                      "on-primary": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-secondary-fixed": "#321200",
+                      "on-tertiary-fixed-variant": "#2c4e36",
+                      "secondary-container": "#E85D3D",
+                      "on-tertiary-container": "#97bd9f",
+                      "on-primary-fixed": "#001f28",
+                      "on-secondary-fixed-variant": "#753400",
+                      "on-surface-variant": "#40484b",
+                      "inverse-on-surface": "#f0f1f2",
+                      "primary-fixed": "#b6ebfe",
+                      "surface-container-high": "#e7e8e9",
+                      "on-error-container": "#93000a",
+                      "on-primary-container": "#87bbce",
+                      "background": "#FDF6EC",
+                      "on-secondary": "#ffffff",
+                      "outline-variant": "#c0c8cb",
+                      "surface": "#FDF6EC",
+                      "tertiary": "#143620",
+                      "primary-fixed-dim": "#9acee1",
+                      "surface-container-low": "#f3f4f5",
+                      "primary": "#14213D"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "40px",
+                      "base": "8px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "container-max": "1280px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "headline-lg": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "label-md": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "label-sm": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "display-lg": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "body-lg": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "headline-lg-mobile": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "title-lg": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "headline-md": [
+                              "IBM Plex Sans Arabic"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "60px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title-lg": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #FDF6EC;
+        }
+        .masonry-grid {
+            column-count: 1;
+            column-gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .masonry-grid {
+                column-count: 2;
+            }
+        }
+        @media (min-width: 1024px) {
+            .masonry-grid {
+                column-count: 3;
+            }
+        }
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1.5rem;
+        }
+        
+        html.dark .bg-surface-container-lowest,
+        html.dark .bg-surface-container-low,
+        html.dark .bg-surface-lowest,
+        html.dark .bg-white {
+            background-color: #1F2F54 !important;
+            border-color: #2A3F6C !important;
+        }
+        html.dark main h1, html.dark main h2, html.dark main h3,
+        html.dark main .text-on-background,
+        html.dark main .text-on-surface {
+            color: #FDF6EC !important;
+        }
+        html.dark main .text-on-surface-variant {
+            color: rgba(253, 246, 236, 0.6) !important;
+        }
+        html.dark main .border-surface-variant {
+            border-color: #2A3F6C !important;
+        }
+        html.dark main .bg-surface-variant {
+            background-color: #2A3F6C !important;
+            color: rgba(253, 246, 236, 0.75) !important;
+        }
+        html.dark main input {
+            background-color: #14213D !important;
+            color: #FDF6EC !important;
+            border-color: #2A3F6C !important;
+        }
+    </style>
+<link rel="stylesheet" href="assets/responsive.css"/>
+</head>
+<body class="bg-[#FDF6EC] dark:bg-[#14213D] text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-[#FDF6EC] dark:bg-[#14213D] shadow-sm w-full top-0 z-50 sticky">
+<div class="flex flex-row-reverse justify-between items-center px-margin-desktop w-full max-w-container-max mx-auto h-20">
+<!-- Brand -->
+<div class="flex items-center">
+<img alt="Boarding" class="h-10 md:h-12 w-auto dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9bXGJoWNguLkVPiRz2yrjwzqwTkNDDe9YuKJ3k39h00aD3UFsG00RtkOajLntsBQXVi3XY5GkwPdtD03HK6582_0-pJaprWlTW9rPYuFWb2kpAITr_R-261RjmJibVjjAgeps5LYJ51PP7dESDxST-OUnfMgFsONDHn1oOBHrKSu4gQ1AgDPZP4yGA5arx2JA1aICEubMg3pYXbJomIyz0F_HH7sesUJrsw8cW_LuRiqmD2-lXOMHoVzGxOe9oTmpag"/>
+<img alt="Boarding" class="h-10 md:h-12 w-auto hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_mbVeZA5s-Ml50CicCDQ224P6CuykTTGia9Sg6AD5RfcoPqOdBG2hUyzNg6bpVPuMOAlrTJnq9c7f1fkYrjKgwHQlVmL9N3QyBs-lpEKKQeEWFWZ59iS-PjDwM-_MJAI44CnuKRyP2uPwtOf-_pbcp9k6ZoidYXKq-UjEdhWwrMe1Cfl-hLMat_YdKI73VQmnrvxkId7xrcWV6sIeD4TVorCqnEFG3qCVyog6DC5H6Pb9pwEhE0W8WRcYiQ9Yq6rvOA"/>
+</div>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex flex-row-reverse gap-8 font-body-md text-body-md font-title-lg text-title-lg">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-secondary-container transition-colors active:scale-95 transition-transform flex flex-col items-center py-2" data-i18n="nav-home" href="#">
+                    الرئيسية
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-secondary-container transition-colors active:scale-95 transition-transform flex flex-col items-center py-2" data-i18n="nav-trip" href="#">
+                    الرحلة
+                </a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-secondary-container hover:text-secondary-container transition-colors active:scale-95 transition-transform flex flex-col items-center py-2" data-i18n="nav-recommendations" href="#">
+                    التوصيات
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-secondary-container transition-colors active:scale-95 transition-transform flex flex-col items-center py-2" data-i18n="nav-expenses" href="#">
+                    المصاريف
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-secondary-container transition-colors active:scale-95 transition-transform flex flex-col items-center py-2" data-i18n="nav-friends" href="#">
+                    الأصدقاء
+                </a></nav>
+<!-- Trailing Action / Search -->
+<div class="flex flex-row-reverse items-center gap-4">
+<div class="hidden md:flex relative">
+<input class="bg-surface-variant border border-outline rounded-full py-2 px-4 pr-10 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-body-md font-body-md text-on-surface w-64 placeholder-on-surface-variant" data-i18n-placeholder="search-placeholder" placeholder="بحث..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant" data-icon="search">search</span>
+</div>
+<button class="text-primary dark:text-primary-fixed hover:text-secondary-container transition-colors active:scale-95 transition-transform font-bold" id="langToggle">
+    EN
+</button>
+<button class="text-primary dark:text-primary-fixed hover:text-secondary-container transition-colors active:scale-95 transition-transform" id="themeToggle">
+<span class="material-symbols-outlined" data-icon="dark_mode" id="themeIcon">dark_mode</span>
+</button>
+<button class="text-primary dark:text-primary-fixed hover:text-secondary-container transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12">
+<!-- Header Section -->
+<div class="mb-10 flex flex-col gap-6">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background mb-2" data-i18n="page-title">استكشف الوجهات</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant" data-i18n="page-subtitle">اكتشف أفضل الأماكن والمطاعم والأنشطة لرحلتك القادمة.</p>
+</div>
+<!-- Search and Filter Bar -->
+<div class="flex flex-col md:flex-row gap-4 items-center w-full">
+<!-- Search Input Mobile -->
+<div class="md:hidden relative w-full">
+<input class="bg-surface-lowest border border-outline rounded-lg py-3 px-4 pr-12 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-body-md font-body-md text-on-surface w-full placeholder-on-surface-variant" data-i18n-placeholder="search-mobile" placeholder="ابحث عن أماكن، مطاعم..." type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-3.5 text-on-surface-variant" data-icon="search">search</span>
+</div>
+<!-- Filters -->
+<div class="flex flex-row gap-3 w-full overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-[#E85D3D] text-white font-label-md text-label-md transition-colors shadow-sm" data-i18n="filter-all">
+                        الكل
+                    </button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-lowest text-on-surface border border-outline hover:bg-surface-variant transition-colors font-label-md text-label-md" data-i18n="filter-food">
+<span class="material-symbols-outlined align-middle mr-1 text-[18px]" data-icon="restaurant">restaurant</span> أكل
+                    </button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-lowest text-on-surface border border-outline hover:bg-surface-variant transition-colors font-label-md text-label-md" data-i18n="filter-shopping">
+<span class="material-symbols-outlined align-middle mr-1 text-[18px]" data-icon="shopping_bag">shopping_bag</span> تسوق
+                    </button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-lowest text-on-surface border border-outline hover:bg-surface-variant transition-colors font-label-md text-label-md" data-i18n="filter-entertainment">
+<span class="material-symbols-outlined align-middle mr-1 text-[18px]" data-icon="attractions">attractions</span> ترفيه
+                    </button>
+<button class="whitespace-nowrap px-6 py-2 rounded-full bg-surface-lowest text-on-surface border border-outline hover:bg-surface-variant transition-colors font-label-md text-label-md" data-i18n="filter-landmarks">
+<span class="material-symbols-outlined align-middle mr-1 text-[18px]" data-icon="museum">museum</span> معالم
+                    </button>
+</div>
+</div>
+</div>
+<!-- Recommendations Grid (Masonry / Bento inspired) -->
+<div class="masonry-grid">
+<!-- Card 1: Restaurant -->
+<div class="masonry-item bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_4px_12px_rgba(20,33,61,0.05)] border border-surface-variant group flex flex-col">
+<div class="relative h-56 w-full overflow-hidden">
+<img class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZTLh4oOS3gUrh5_keXtkFXLTyF3HmYS6xFG8oa0BTMJlR8AW-bC-njR3jtl3qaSQNNbH3A0Qd6QjxC6OGCLvoa6A6leYm__SRRmwRHlSNDb-wz7xWs-yprNfkYUMAAof9luUHqPWhboFOKsLF3Nmsi53q9rajjsLaza5sNf4yPnFyEOi8UAXoyI8KVoduQKSLSZFvl6YVVgRaDP0sWl_sZeI0XqSR1oi-o--L8t1gGmwgOXrdMD1H"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[#F4A950] text-[16px]" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">4.8</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-title-lg text-title-lg text-on-background font-semibold" data-i18n="card1-title">مطعم المجلس</h3>
+<span class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded text-label-sm font-label-sm" data-i18n="tag-food">أكل</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 line-clamp-2" data-i18n="card1-desc">أطباق محلية أصيلة في أجواء عصرية ومريحة. مثالي للعشاء مع العائلة.</p>
+<div class="mt-auto flex justify-between items-center pt-4 border-t border-surface-variant">
+<div class="flex items-center text-on-surface-variant gap-1">
+<span class="material-symbols-outlined text-[18px]" data-icon="location_on">location_on</span>
+<span class="font-label-md text-label-md" data-i18n="loc-downtown">وسط المدينة</span>
+</div>
+<button class="bg-[#E85D3D] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-colors flex items-center gap-2" data-i18n="btn-add-trip">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                            إضافة للرحلة
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 2: Attraction (Taller image) -->
+<div class="masonry-item bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_4px_12px_rgba(20,33,61,0.05)] border border-surface-variant group flex flex-col">
+<div class="relative h-80 w-full overflow-hidden">
+<img class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-F65pEuHOZldAaR3bkCnTuPuyeAGDc0MCHQYpsuVYF55O6gq6DDoHlHOk3Ktx0behXkgCzhthac4g7hMCUulZ1COXqfP3p1mrzwsTRzzL3GTLgiGugiZKjUti1IOqXBJKE_YA9c0whSH5ki7QNivmhIuML1jTIurP7Svqcc53gXiRaeqOetdHSzs1DX0lgeNcTz-Aa03Tg915BOVW7-1fvoLdBSJDwyTDGmaW2nweMuQIqnTE7jj4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[#F4A950] text-[16px]" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">4.9</span>
+</div>
+<div class="absolute bottom-4 right-4 left-4 text-on-primary">
+<h3 class="font-headline-md text-headline-md font-bold mb-1" data-i18n="card2-title">متحف المستقبل</h3>
+<p class="font-body-md text-body-md opacity-90 line-clamp-1" data-i18n="card2-desc">تجربة تفاعلية مذهلة عبر الزمن.</p>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-grow bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-4">
+<span class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded text-label-sm font-label-sm" data-i18n="tag-landmark">معالم</span>
+<div class="flex items-center text-on-surface-variant gap-1">
+<span class="material-symbols-outlined text-[18px]" data-icon="schedule">schedule</span>
+<span class="font-label-md text-label-md" data-i18n="time-2-3">2-3 ساعات</span>
+</div>
+</div>
+<div class="mt-auto flex justify-between items-center pt-2">
+<button class="w-full bg-surface-variant text-on-surface px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-outline-variant transition-colors flex items-center justify-center gap-2 border border-outline" data-i18n="btn-map">
+<span class="material-symbols-outlined text-[18px]" data-icon="map">map</span>
+                            عرض الخريطة
+                        </button>
+<div class="w-2"></div>
+<button class="w-full bg-[#E85D3D] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2" data-i18n="btn-add">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                            إضافة
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 3: Shopping -->
+<div class="masonry-item bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_4px_12px_rgba(20,33,61,0.05)] border border-surface-variant group flex flex-col">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFq5VcXdWjHjqWyvilVynoIQnHpwYKBlKFthuYF4xAIXjfamPrwX4_UNBFihc15tYGghMnVyy-BYS_nwVEeaef0bYfnA-0U2mLHrvipJZU7z4RviI3dgtUJ-ZlSrY7tAfxvOKt_KOL34aAiICb-wWeFExkL8XL6CBG-gbWj8g2_P6Qwa1Nvle9UvecVVq4MavrSjP7WyokM_UCoIpTVt5tBazbRDBN1ABfolava-4I2d_Cx4Oel_tS"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[#F4A950] text-[16px]" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">4.5</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-title-lg text-title-lg text-on-background font-semibold" data-i18n="card3-title">السوق القديم</h3>
+<span class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded text-label-sm font-label-sm" data-i18n="tag-shopping">تسوق</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 line-clamp-2" data-i18n="card3-desc">تسوق للحرف اليدوية والتذكارات المحلية في هذا السوق التاريخي النابض بالحياة.</p>
+<div class="mt-auto flex justify-between items-center pt-4 border-t border-surface-variant">
+<div class="flex items-center text-on-surface-variant gap-1">
+<span class="material-symbols-outlined text-[18px]" data-icon="location_on">location_on</span>
+<span class="font-label-md text-label-md" data-i18n="loc-historic">المنطقة التاريخية</span>
+</div>
+<button class="bg-[#E85D3D] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-colors flex items-center gap-2" data-i18n="btn-add">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                            إضافة
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 4: Entertainment -->
+<div class="masonry-item bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_4px_12px_rgba(20,33,61,0.05)] border border-surface-variant group flex flex-col">
+<div class="relative h-64 w-full overflow-hidden">
+<img class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnjz_9xr0oBLvj26hTEegXHIPUgN8SBUgu1y80lnC8Ah5SLtcRFxZw1CkW8ch2jJw6mByd3Q3jidudiFO2W5aVnxOXffGvDveXxoURegBDVPpoxeo5KAqUuaYjPh-9SDvP8jq69XEDDe1nKqgLudsyWanvVVRWsBIrFGfAVFFQj4kbrhj2YG7E-jwwkWieDZ2GWuybO7UWYX5F1raFeHPtzYb9ia5L8ACrFx5kMUuD4y81wf-vdP9Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[#F4A950] text-[16px]" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">4.7</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-title-lg text-title-lg text-on-background font-semibold" data-i18n="card4-title">مدينة الألعاب الكبرى</h3>
+<span class="bg-surface-variant text-on-surface-variant px-2 py-1 rounded text-label-sm font-label-sm" data-i18n="tag-entertainment">ترفيه</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 line-clamp-2" data-i18n="card4-desc">يوم مليء بالمرح والإثارة مع الألعاب والأنشطة لجميع الأعمار.</p>
+<div class="mt-auto flex justify-between items-center pt-4 border-t border-surface-variant">
+<div class="flex items-center text-on-surface-variant gap-1">
+<span class="material-symbols-outlined text-[18px]" data-icon="confirmation_number">confirmation_number</span>
+<span class="font-label-md text-label-md" data-i18n="req-tickets">تتطلب تذاكر</span>
+</div>
+<button class="bg-[#E85D3D] text-white px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-colors flex items-center gap-2" data-i18n="btn-add">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                            إضافة
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-[#FDF6EC] dark:bg-[#14213D] full-width bottom-0 mt-auto">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center px-margin-desktop py-12 w-full max-w-container-max mx-auto font-label-md text-label-md text-primary dark:text-primary-fixed">
+<div class="mb-6 md:mb-0">
+<img alt="Boarding" class="h-10 w-auto dark:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrc1-g6LuKO8FtR1dByiyaMtsmPdzlzxnS6Sh6gWd_tsXL1pI1O9p7y-ZjgBM_bHY5Z2VKX6Ejpo_3Is6KGKWDvbtrty59PI1mvm_xZE43TSeXHiyvIeZtJp2Dc_utM5Y4sP6aftZyk4-id5nwFxy_4TXCdKDWojRwptyS9RXln-YHWFE2Dwm5hd5oejjo9OZUFUB8OmRtsehFl81rhlaAG2z-PTFqhUOGbdecRVZvq5AH6wltErQ48SJaN3UGjnjSMA"/>
+<img alt="Boarding" class="h-10 w-auto hidden dark:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKkhZVW4PvEm9JXIreNwH7PwtuTESHkPo5lSzOfr5L3ZrgXmm1B2O17qED4NBpwXWZaDg7sKGD-sTIpNqwZ5IG-ixOkRXggvxctWFd9zz8t1WSdIJuIwUmkgBobecXvo7bLLHXG2hChTrEBJxLnAJKCxOYfjMTPQp8xZrlOCMKoKy077TWcPDk30a-k7qZrpLVTe113LGSvulD2KS3X7FNxHlO5hRibtHvnBIemKDPn5NP30nZCCSptytJORqZcvLLGA"/>
+</div>
+<div class="flex flex-wrap justify-center gap-6 mb-6 md:mb-0">
+<a class="text-on-surface-variant hover:text-secondary transition-colors opacity-80 hover:opacity-100 transition-opacity" data-i18n="footer-privacy" href="#">سياسة الخصوصية</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors opacity-80 hover:opacity-100 transition-opacity" data-i18n="footer-terms" href="#">شروط الخدمة</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors opacity-80 hover:opacity-100 transition-opacity" data-i18n="footer-help" href="#">مركز المساعدة</a>
+</div>
+<div class="text-on-surface-variant opacity-80" data-i18n="footer-copyright">
+                © 2024 بوردنق. جميع الحقوق محفوظة.
+            </div>
+</div>
+</footer>
+<script>
+    // Theme Toggle
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    // Check initial theme preference
+    let isDark = false;
+    try {
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            isDark = true;
+            document.documentElement.classList.add('dark');
+            if(themeIcon) themeIcon.textContent = 'light_mode';
+        } else {
+            document.documentElement.classList.remove('dark');
+            if(themeIcon) themeIcon.textContent = 'dark_mode';
+        }
+    } catch (e) {
+        // Handle localStorage access error
+    }
+
+    themeToggleBtn.addEventListener('click', function() {
+        document.documentElement.classList.toggle('dark');
+        isDark = document.documentElement.classList.contains('dark');
+        if(themeIcon) {
+            themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
+        try {
+            if (isDark) {
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                localStorage.setItem('color-theme', 'light');
+            }
+        } catch (e) {}
+    });
+
+    // Language Toggle
+    const langToggleBtn = document.getElementById('langToggle');
+    const translations = {
+        ar: {
+            "nav-home": "الرئيسية",
+            "nav-trip": "الرحلة",
+            "nav-recommendations": "التوصيات",
+            "nav-expenses": "المصاريف",
+            "nav-friends": "الأصدقاء",
+            "search-placeholder": "بحث...",
+            "page-title": "استكشف الوجهات",
+            "page-subtitle": "اكتشف أفضل الأماكن والمطاعم والأنشطة لرحلتك القادمة.",
+            "search-mobile": "ابحث عن أماكن، مطاعم...",
+            "filter-all": "الكل",
+            "filter-food": "أكل",
+            "filter-shopping": "تسوق",
+            "filter-entertainment": "ترفيه",
+            "filter-landmarks": "معالم",
+            "card1-title": "مطعم المجلس",
+            "tag-food": "أكل",
+            "card1-desc": "أطباق محلية أصيلة في أجواء عصرية ومريحة. مثالي للعشاء مع العائلة.",
+            "loc-downtown": "وسط المدينة",
+            "btn-add-trip": "إضافة للرحلة",
+            "card2-title": "متحف المستقبل",
+            "card2-desc": "تجربة تفاعلية مذهلة عبر الزمن.",
+            "tag-landmark": "معالم",
+            "time-2-3": "2-3 ساعات",
+            "btn-map": "عرض الخريطة",
+            "btn-add": "إضافة",
+            "card3-title": "السوق القديم",
+            "tag-shopping": "تسوق",
+            "card3-desc": "تسوق للحرف اليدوية والتذكارات المحلية في هذا السوق التاريخي النابض بالحياة.",
+            "loc-historic": "المنطقة التاريخية",
+            "card4-title": "مدينة الألعاب الكبرى",
+            "tag-entertainment": "ترفيه",
+            "card4-desc": "يوم مليء بالمرح والإثارة مع الألعاب والأنشطة لجميع الأعمار.",
+            "req-tickets": "تتطلب تذاكر",
+            "footer-privacy": "سياسة الخصوصية",
+            "footer-terms": "شروط الخدمة",
+            "footer-help": "مركز المساعدة",
+            "footer-copyright": "© 2024 بوردنق. جميع الحقوق محفوظة."
+        },
+        en: {
+            "nav-home": "Home",
+            "nav-trip": "Trip",
+            "nav-recommendations": "Recommendations",
+            "nav-expenses": "Expenses",
+            "nav-friends": "Friends",
+            "search-placeholder": "Search...",
+            "page-title": "Explore Destinations",
+            "page-subtitle": "Discover the best places, restaurants, and activities for your next trip.",
+            "search-mobile": "Search places, restaurants...",
+            "filter-all": "All",
+            "filter-food": "Food",
+            "filter-shopping": "Shopping",
+            "filter-entertainment": "Entertainment",
+            "filter-landmarks": "Landmarks",
+            "card1-title": "Al Majlis Restaurant",
+            "tag-food": "Food",
+            "card1-desc": "Authentic local dishes in a modern and comfortable setting. Perfect for family dinner.",
+            "loc-downtown": "Downtown",
+            "btn-add-trip": "Add to Trip",
+            "card2-title": "Museum of the Future",
+            "card2-desc": "An amazing interactive journey through time.",
+            "tag-landmark": "Landmarks",
+            "time-2-3": "2-3 Hours",
+            "btn-map": "View Map",
+            "btn-add": "Add",
+            "card3-title": "Old Souq",
+            "tag-shopping": "Shopping",
+            "card3-desc": "Shop for handicrafts and local souvenirs in this vibrant historic market.",
+            "loc-historic": "Historic Area",
+            "card4-title": "Grand Theme Park",
+            "tag-entertainment": "Entertainment",
+            "card4-desc": "A day full of fun and excitement with rides and activities for all ages.",
+            "req-tickets": "Requires Tickets",
+            "footer-privacy": "Privacy Policy",
+            "footer-terms": "Terms of Service",
+            "footer-help": "Help Center",
+            "footer-copyright": "© 2024 Boarding. All rights reserved."
+        }
+    };
+
+    let currentLang = 'ar';
+
+    function updateLanguage() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[currentLang][key]) {
+                el.textContent = translations[currentLang][key];
+            }
+        });
+
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (translations[currentLang][key]) {
+                el.setAttribute('placeholder', translations[currentLang][key]);
+            }
+        });
+
+        // Update HTML dir and lang
+        document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+        document.documentElement.lang = currentLang;
+
+        // Update Toggle Button Text
+        langToggleBtn.textContent = currentLang === 'ar' ? 'EN' : 'AR';
+    }
+
+    langToggleBtn.addEventListener('click', () => {
+        currentLang = currentLang === 'ar' ? 'en' : 'ar';
+        updateLanguage();
+    });
+</script>
+<script src="assets/responsive.js" defer></script>
+</body></html>
