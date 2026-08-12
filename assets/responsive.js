@@ -40,6 +40,15 @@
 
   function icon(name) { return '<span class="material-symbols-outlined">' + name + '</span>'; }
 
+  // الشعار القديم (بوردنق Boarding) — نسخة فاتحة وأخرى داكنة
+  var LOGO_LIGHT = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuU-H5KA1yKYswa4aFfXcdEMRTmWrBVzRh8q4ssRiTA2Cn1kamLKEPRkGiBf6tAGq8Xj79RBy0Qx9irTqsQBvtsfBuIASp8w3GbW4kNCJEUklpHo0JSyY394oYnh5gXuxkGyqj2QwyAKd5CkEFiSfv2iU-H3aGZjUvMn37BB0wy-j_JWcJ2ubXYs-YE4Q4x5VxiIj0lUmdwS1-UN3ptGKJp40S5l3CLt6Zb2C20q3hwWky8LlzNefsuX8LfuF6P9Xmiw';
+  var LOGO_DARK = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBl5rMMfxK_ELBb_BeP3_x1HMPycju6slrR_ZyKEavU0GlCM2nzA-78azb2d6KWUirP63MYhw10YTxrYF5QPiKfZgCx6LHfGnucVhA2VPwalJdrQEwAinbEqZGIdI-O5ESEmiGeCq05ZpQW__ABHlv7sGnAiOhRkEiYRtnsfzR6-rAkBhYJf5d8iK5NarXQtxzKOA3n5bP1cCwDfcQrutFI7SA5N8Y_CAjJlz6yzxuZbMCELqxpO9ybKP-3TZeB1SvJ-w';
+  function logoHTML() {
+    return '<a class="bn-logo" href="index.html" aria-label="بوردنق">' +
+      '<img class="bn-logo-img bn-logo-light" src="' + LOGO_LIGHT + '" alt="بوردنق"/>' +
+      '<img class="bn-logo-img bn-logo-dark" src="' + LOGO_DARK + '" alt="بوردنق"/></a>';
+  }
+
   var _scrim = null;
   function openDrawer() { if (_scrim) _scrim.classList.add('open'); }
   function closeDrawer() { if (_scrim) _scrim.classList.remove('open'); }
@@ -55,12 +64,13 @@
     hd.id = 'bn-header';
     hd.innerHTML =
       '<div class="bn-hd">' +
-        '<a class="bn-logo" href="index.html">' + icon('flight') + '<span>بوردنق</span></a>' +
+        logoHTML() +
         '<nav class="bn-mainnav">' + navLinks + '</nav>' +
         '<div class="bn-hd-actions">' +
           '<a class="bn-cta bn-header-cta" href="' + NEW_TRIP + '">' + icon('add') + '<span class="bn-cta-txt">إنشاء رحلة</span></a>' +
+          '<button class="bn-icon bn-lang" data-act="lang" title="اللغة" aria-label="تغيير اللغة">EN</button>' +
           '<button class="bn-icon" data-act="theme" title="الوضع الليلي" aria-label="الوضع الليلي">' + icon('dark_mode') + '</button>' +
-          '<a class="bn-icon" href="mytrips.html" title="رحلاتي" aria-label="رحلاتي">' + icon('account_circle') + '</a>' +
+          '<a class="bn-icon bn-profile" href="index.html?auth=1" title="حسابي" aria-label="تسجيل الدخول / حسابي">' + icon('account_circle') + '</a>' +
           '<button class="bn-icon bn-burger" data-act="menu" aria-label="القائمة">' + icon('menu') + '</button>' +
         '</div>' +
       '</div>';
@@ -80,7 +90,7 @@
     var drawer = document.createElement('aside'); drawer.className = 'bn-drawer';
     drawer.innerHTML =
       '<div class="bn-drawer__head">' +
-        '<a class="bn-logo" href="index.html">' + icon('flight') + '<span>بوردنق</span></a>' +
+        logoHTML() +
         '<button class="bn-icon" data-act="close-menu" aria-label="إغلاق">' + icon('close') + '</button>' +
       '</div>' +
       links +
@@ -146,11 +156,50 @@
       .forEach(function (i) { i.textContent = dark ? 'light_mode' : 'dark_mode'; });
   }
 
+  // ===== زر اللغة: يفوّض لزر الترجمة الخاص بالصفحة =====
+  function findPageLangToggle() {
+    var t = document.getElementById('langToggle') || document.getElementById('lang-toggle');
+    if (t) return t;
+    var els = document.querySelectorAll('button, a');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].closest('#bn-header') || els[i].closest('.bn-drawer')) continue;
+      var tx = (els[i].textContent || '').trim();
+      if (tx === 'EN' || tx === 'AR') return els[i];
+    }
+    return null;
+  }
+  function wireLang() {
+    var btn = document.querySelector('#bn-header [data-act="lang"]');
+    if (!btn) return;
+    var hasI18n = !!document.querySelector('[data-i18n]');
+    var pageToggle = findPageLangToggle();
+    if (!hasI18n || !pageToggle) { btn.style.display = 'none'; return; }  // لا ترجمة على هذه الصفحة
+    function sync() { btn.textContent = (document.documentElement.lang === 'en') ? 'AR' : 'EN'; }
+    sync();
+    btn.addEventListener('click', function () { pageToggle.click(); setTimeout(sync, 60); });
+  }
+
+  // ===== الملف/الحساب: يفتح نافذة تسجيل الدخول والتسجيل إن وُجدت =====
+  function wireProfile() {
+    var pf = document.querySelector('#bn-header .bn-profile');
+    if (!pf) return;
+    var authBtn = document.getElementById('profile-btn'); // مُشغّل نافذة الدخول (في الصفحة الرئيسية)
+    if (authBtn) {
+      pf.addEventListener('click', function (e) { e.preventDefault(); authBtn.click(); });
+    }
+    // فتح النافذة تلقائياً عند القدوم برابط ?auth=1
+    if (/[?&]auth=1/.test(location.search)) {
+      setTimeout(function () { var a = document.getElementById('profile-btn'); if (a) a.click(); }, 300);
+    }
+  }
+
   function init() {
     try { buildDrawer(); } catch (e) {}
     try { buildHeader(); } catch (e) {}
     try { buildTabBar(); } catch (e) {}
     try { wireTheme(); } catch (e) {}
+    try { wireLang(); } catch (e) {}
+    try { wireProfile(); } catch (e) {}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

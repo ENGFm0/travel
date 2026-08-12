@@ -52,6 +52,13 @@ body > header:not(#bn-header) { display: none !important; }
 .bn-logo { display: inline-flex; align-items: center; gap: 8px;
   color: var(--hd-ink); font-weight: 700; font-size: 20px; text-decoration: none; white-space: nowrap; }
 .bn-logo .material-symbols-outlined { color: var(--or); font-size: 26px; }
+/* الشعار القديم (صورة) — نسخة فاتحة/داكنة حسب الثيم */
+.bn-logo-img { height: 34px; width: auto; object-fit: contain; display: block; }
+.bn-logo-dark { display: none; }
+html.dark .bn-logo-light { display: none; }
+html.dark .bn-logo-dark { display: block; }
+/* زر اللغة نصّي */
+.bn-lang { width: auto; min-width: 38px; padding: 0 8px; font-weight: 700; font-size: 14px; }
 .bn-mainnav { display: flex; align-items: center; gap: 6px; }
 .bn-mainnav a { display: inline-flex; align-items: center; gap: 6px;
   color: var(--hd-ink); text-decoration: none; font-weight: 600; font-size: 15px;
