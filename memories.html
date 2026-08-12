@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>الذكريات والمجتمع - بوردنق</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/theme.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/responsive.css"/>
+<style>
+  body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400}
+  html.dark body{background:#14213D;color:#FDF6EC}
+  html.dark .card{background:#1F2F54;border-color:#2A3F6C}
+  html.dark .muted{color:rgba(253,246,236,.7)}
+  .seg.is-active{background:#14213D;color:#fff}
+  html.dark .seg.is-active{background:#F4A950;color:#14213D}
+</style>
+</head>
+<body class="bg-brand-surface text-brand-navy">
+<main class="max-w-[1280px] mx-auto px-5 py-8 flex flex-col gap-6">
+
+  <section class="flex items-start justify-between gap-4 flex-wrap">
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center gap-2 text-brand-orange font-bold text-sm"><span class="material-symbols-outlined">photo_library</span><span>الذكريات والمجتمع</span></div>
+      <h1 class="text-3xl md:text-4xl font-bold">ألبوم رحلة لندن ٢٠٢٤</h1>
+      <p class="muted text-brand-navy/70">وثّق اللحظات حسب الأيام أو المكان، وشارك تقرير رحلتك مع الجميع.</p>
+    </div>
+    <div class="flex gap-2">
+      <button class="px-4 h-11 rounded-full bg-white card border border-surface-variant font-semibold inline-flex items-center gap-2" onclick="alert('تصدير الخطة PDF — قريباً')"><span class="material-symbols-outlined">picture_as_pdf</span>تصدير PDF</button>
+      <button class="bn-cta" onclick="navigator.clipboard&&navigator.clipboard.writeText(location.href);this.querySelector('span:last-child').textContent='تم النسخ ✓'"><span class="material-symbols-outlined">link</span><span>رابط مشاركة</span></button>
+    </div>
+  </section>
+
+  <!-- upload + view toggle -->
+  <div class="flex items-center justify-between gap-3 flex-wrap">
+    <div class="inline-flex bg-white card border border-surface-variant rounded-full p-1 shadow-card">
+      <button class="seg is-active px-5 h-10 rounded-full font-semibold text-sm" data-view="days">حسب الأيام</button>
+      <button class="seg px-5 h-10 rounded-full font-semibold text-sm" data-view="place">حسب المكان</button>
+    </div>
+    <button class="bn-cta" onclick="alert('رفع من الكاميرا أو الألبوم — قريباً 📸')"><span class="material-symbols-outlined">add_a_photo</span><span>أضف ذكرى</span></button>
+  </div>
+
+  <div id="view-days" class="flex flex-col gap-8"></div>
+  <div id="view-place" class="hidden flex-col gap-8"></div>
+</main>
+
+<script>
+  var IMGS=[
+    'photo-1533929736458-ca588d08c8be','photo-1513635269975-59663e0ac1ad','photo-1520986606214-8b456906c813',
+    'photo-1543832923-44667a44c804','photo-1486299267070-83823f5448dd','photo-1502602898657-3e91760cbb34',
+    'photo-1499856871958-5b9627545d1a','photo-1471623320832-752e8bbf8413'
+  ];
+  function url(id){return 'https://images.unsplash.com/'+id+'?auto=format&fit=crop&w=500&q=60';}
+  function tile(id,tall){return '<div class="rounded-xl overflow-hidden bg-brand-surface"><img loading="lazy" class="w-full '+(tall?'h-64':'h-40')+' object-cover" src="'+url(id)+'"/></div>';}
+
+  var DAYS=[
+    {t:'اليوم الأول · الوصول',imgs:[0,1,2]},
+    {t:'اليوم الثاني · وسط لندن',imgs:[3,4,5]},
+    {t:'اليوم الثالث · متاحف',imgs:[6,7]}
+  ];
+  var PLACES=[
+    {t:'عين لندن',imgs:[1,4]},
+    {t:'حي كوفنت غاردن',imgs:[3,5,0]},
+    {t:'المتحف البريطاني',imgs:[6,7,2]}
+  ];
+  function group(list){
+    return list.map(function(g){
+      var grid=g.imgs.map(function(i,idx){return tile(IMGS[i], idx%3===0);}).join('');
+      return '<section class="flex flex-col gap-3"><h2 class="font-bold text-lg flex items-center gap-2"><span class="material-symbols-outlined text-brand-orange">'+
+        'photo_camera</span>'+g.t+'</h2><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">'+grid+'</div></section>';
+    }).join('');
+  }
+  document.getElementById('view-days').innerHTML=group(DAYS);
+  document.getElementById('view-place').innerHTML=group(PLACES);
+
+  document.querySelectorAll('.seg').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.seg').forEach(function(x){x.classList.remove('is-active');});
+      b.classList.add('is-active');
+      var days=b.dataset.view==='days';
+      document.getElementById('view-days').classList.toggle('hidden',!days);
+      document.getElementById('view-place').classList.toggle('hidden',days);
+      document.getElementById('view-place').classList.toggle('flex',!days);
+    });
+  });
+</script>
+<script src="assets/responsive.js" defer></script>
+</body></html>

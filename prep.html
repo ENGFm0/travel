@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>المهام والحجوزات - بوردنق</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/theme.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/responsive.css"/>
+<style>
+  body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400}
+  html.dark body{background:#14213D;color:#FDF6EC}
+  html.dark .card{background:#1F2F54;border-color:#2A3F6C}
+  html.dark .muted{color:rgba(253,246,236,.7)}
+  .task.done .t-label{text-decoration:line-through;opacity:.5}
+</style>
+</head>
+<body class="bg-brand-surface text-brand-navy">
+<main class="max-w-[900px] mx-auto px-5 py-8 flex flex-col gap-6">
+
+  <section class="flex flex-col gap-2">
+    <a href="planner.html" class="text-sm text-brand-navy/60 inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>خطط لرحلتك</a>
+    <h1 class="text-3xl font-bold">المهام والحجوزات</h1>
+    <p class="muted text-brand-navy/70">تابع كل ما يلزم إنهاؤه قبل السفر. تُحفظ حالتك تلقائياً على جهازك.</p>
+  </section>
+
+  <!-- progress -->
+  <div class="card bg-white rounded-2xl shadow-card border border-surface-variant p-5">
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-bold">الإنجاز</span>
+      <span id="pg-txt" class="text-brand-orange font-bold">0%</span>
+    </div>
+    <div class="w-full h-2.5 bg-brand-surface rounded-full overflow-hidden"><div id="pg-bar" class="h-full bg-brand-orange rounded-full transition-all" style="width:0%"></div></div>
+  </div>
+
+  <div id="lists" class="flex flex-col gap-5"></div>
+</main>
+
+<script>
+  var GROUPS = [
+    { title:'الحجوزات', icon:'flight', items:['تأكيد حجز الطيران','تأكيد حجز السكن','حجز مواصلات المطار','حجز أنشطة/تذاكر'] },
+    { title:'الوثائق', icon:'badge', items:['استخراج/تجديد الفيزا','التأكد من صلاحية الجواز','تصوير نسخ من الوثائق','تأمين السفر'] },
+    { title:'المال والاتصال', icon:'payments', items:['تحويل العملة','تفعيل شريحة/باقة تجوال','إبلاغ البنك بالسفر','تجهيز مبلغ نقدي'] }
+  ];
+  var KEY='boarding.prep.v1';
+  var state={}; try{state=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+  var host=document.getElementById('lists'), total=0;
+
+  GROUPS.forEach(function(g,gi){
+    var sec=document.createElement('section');
+    sec.className='card bg-white rounded-2xl shadow-card border border-surface-variant p-2';
+    var head='<div class="flex items-center gap-2 px-3 py-2 font-bold"><span class="material-symbols-outlined text-brand-orange">'+g.icon+'</span>'+g.title+'</div>';
+    var rows=g.items.map(function(it,ii){
+      total++; var id=gi+'-'+ii; var done=!!state[id];
+      return '<label class="task '+(done?'done':'')+' flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer hover:bg-brand-surface/60" data-id="'+id+'">'+
+        '<input type="checkbox" class="w-5 h-5 accent-[#E85D3D]" '+(done?'checked':'')+'/>'+
+        '<span class="t-label">'+it+'</span></label>';
+    }).join('');
+    sec.innerHTML=head+'<div class="flex flex-col">'+rows+'</div>';
+    host.appendChild(sec);
+  });
+
+  function refresh(){
+    var done=Object.keys(state).filter(function(k){return state[k]}).length;
+    var pct=total?Math.round(done/total*100):0;
+    document.getElementById('pg-bar').style.width=pct+'%';
+    document.getElementById('pg-txt').textContent=pct+'%';
+  }
+  host.addEventListener('change',function(e){
+    var lab=e.target.closest('.task'); if(!lab)return;
+    state[lab.dataset.id]=e.target.checked; lab.classList.toggle('done',e.target.checked);
+    try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+    refresh();
+  });
+  refresh();
+</script>
+<script src="assets/responsive.js" defer></script>
+</body></html>

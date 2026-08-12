@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>خطط لرحلتك - بوردنق</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="assets/theme.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/responsive.css"/>
+<style>
+  body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+  html.dark body{background:#14213D;color:#FDF6EC}
+  html.dark .card{background:#1F2F54;border-color:#2A3F6C}
+  html.dark .muted{color:rgba(253,246,236,.7)}
+</style>
+</head>
+<body class="bg-brand-surface text-brand-navy">
+<main class="max-w-[1280px] mx-auto px-5 py-8 flex flex-col gap-8">
+
+  <!-- Header block -->
+  <section class="flex flex-col gap-2">
+    <div class="flex items-center gap-2 text-brand-teal font-bold text-sm">
+      <span class="material-symbols-outlined">event</span><span>خطط لرحلتك</span>
+    </div>
+    <h1 class="text-3xl md:text-4xl font-bold">جهّز رحلتك خطوة بخطوة</h1>
+    <p class="muted text-brand-navy/70 max-w-2xl">كل أدوات ما قبل السفر في مكان واحد: بناء الجدول الزمني، إنهاء الحجوزات والمهام، تجهيز الحقيبة، وتقسيم القطة بين المجموعة.</p>
+  </section>
+
+  <!-- Current trip + create -->
+  <section class="card bg-white rounded-2xl shadow-card border border-surface-variant p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-brand-teal/15 text-brand-teal flex items-center justify-center">
+        <span class="material-symbols-outlined" style="font-size:30px">luggage</span>
+      </div>
+      <div>
+        <div class="text-xs muted text-brand-navy/60 font-semibold">الرحلة الحالية</div>
+        <div class="text-lg font-bold">لندن ٢٠٢٤ · <span class="text-brand-orange">باقي ١٤ يوم</span></div>
+        <div class="text-sm muted text-brand-navy/60">١٥ – ٢٢ مايو · ٣ مسافرين</div>
+      </div>
+    </div>
+    <button id="btn-new-trip" class="bn-cta" style="align-self:flex-start">
+      <span class="material-symbols-outlined">add</span><span>إنشاء رحلة جديدة</span>
+    </button>
+  </section>
+
+  <!-- Tools -->
+  <section class="flex flex-col gap-4">
+    <h2 class="text-xl font-bold">أدوات التخطيط</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <a href="trip.html" class="card group bg-white rounded-2xl shadow-card border border-surface-variant p-5 flex flex-col gap-3 hover:border-brand-orange transition-colors">
+        <div class="w-12 h-12 rounded-xl bg-brand-orange/15 text-brand-orange flex items-center justify-center"><span class="material-symbols-outlined">route</span></div>
+        <div>
+          <div class="font-bold text-lg">بناء الجدول الزمني</div>
+          <div class="text-sm muted text-brand-navy/70">جدول يومي بالخريطة والأنشطة والمدن والسكن والطيران.</div>
+        </div>
+        <div class="mt-auto flex items-center gap-1 text-brand-orange text-sm font-bold">افتح <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span></div>
+      </a>
+
+      <a href="expenses.html" class="card group bg-white rounded-2xl shadow-card border border-surface-variant p-5 flex flex-col gap-3 hover:border-brand-orange transition-colors">
+        <div class="w-12 h-12 rounded-xl bg-brand-gold/20 text-brand-gold flex items-center justify-center"><span class="material-symbols-outlined">account_balance_wallet</span></div>
+        <div>
+          <div class="font-bold text-lg">حاسبة القطة والميزانية</div>
+          <div class="text-sm muted text-brand-navy/70">قسّم المصاريف بين المجموعة وسوِّ المبالغ تلقائياً.</div>
+        </div>
+        <div class="mt-auto flex items-center gap-1 text-brand-orange text-sm font-bold">افتح <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span></div>
+      </a>
+    </div>
+
+    <!-- Trip prep group -->
+    <h2 class="text-xl font-bold mt-2">تجهيزات الرحلة</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <a href="prep.html" class="card group bg-white rounded-2xl shadow-card border border-surface-variant p-5 flex flex-col gap-3 hover:border-brand-orange transition-colors">
+        <div class="w-12 h-12 rounded-xl bg-brand-teal/15 text-brand-teal flex items-center justify-center"><span class="material-symbols-outlined">checklist</span></div>
+        <div>
+          <div class="font-bold text-lg">المهام والحجوزات</div>
+          <div class="text-sm muted text-brand-navy/70">تأكيد الطيران والسكن، الفيزا، الجواز، تحويل العملة، الشريحة.</div>
+        </div>
+        <div class="mt-auto flex items-center gap-1 text-brand-orange text-sm font-bold">افتح <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span></div>
+      </a>
+
+      <a href="packing.html" class="card group bg-white rounded-2xl shadow-card border border-surface-variant p-5 flex flex-col gap-3 hover:border-brand-orange transition-colors">
+        <div class="w-12 h-12 rounded-xl bg-brand-violet/15 text-brand-violet flex items-center justify-center"><span class="material-symbols-outlined">backpack</span></div>
+        <div>
+          <div class="font-bold text-lg">تجهيز الحقيبة</div>
+          <div class="text-sm muted text-brand-navy/70">قائمة تفاعلية بالأغراض مع قوالب جاهزة بنقرة واحدة.</div>
+        </div>
+        <div class="mt-auto flex items-center gap-1 text-brand-orange text-sm font-bold">افتح <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span></div>
+      </a>
+    </div>
+  </section>
+</main>
+
+<!-- Create trip modal -->
+<div id="new-trip-modal" class="modal-overlay opacity-0 pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-4 transition-opacity" style="background:rgba(20,33,61,.6);backdrop-filter:blur(4px)">
+  <div class="card bg-white rounded-2xl shadow-pop w-full max-w-lg p-6 flex flex-col gap-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-xl font-bold">إنشاء رحلة جديدة</h3>
+      <button data-close-new class="bn-icon"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div id="nt-form" class="flex flex-col gap-3">
+      <label class="text-sm font-semibold">الوجهة *
+        <input id="nt-dest" type="text" placeholder="مثال: طوكيو" class="mt-1 w-full h-11 rounded-lg border border-surface-variant px-3 bg-brand-surface/40"/>
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="text-sm font-semibold">تاريخ الذهاب *
+          <input id="nt-dep" type="date" class="mt-1 w-full h-11 rounded-lg border border-surface-variant px-3 bg-brand-surface/40"/>
+        </label>
+        <label class="text-sm font-semibold">تاريخ العودة
+          <input id="nt-ret" type="date" class="mt-1 w-full h-11 rounded-lg border border-surface-variant px-3 bg-brand-surface/40"/>
+        </label>
+      </div>
+      <p id="nt-err" class="text-error text-sm hidden">فضلاً عبّي الوجهة وتاريخ الذهاب.</p>
+      <button id="nt-create" class="bn-cta justify-center h-12"><span class="material-symbols-outlined">add</span><span>إنشاء الرحلة</span></button>
+    </div>
+    <div id="nt-done" class="hidden flex-col items-center text-center gap-3 py-2">
+      <div class="w-14 h-14 rounded-full bg-brand-teal/15 text-brand-teal flex items-center justify-center"><span class="material-symbols-outlined" style="font-size:32px">check_circle</span></div>
+      <div class="font-bold text-lg" id="nt-summary">تم إنشاء رحلتك 🎉</div>
+      <div class="grid grid-cols-2 gap-3 w-full">
+        <a href="trip.html" class="h-11 rounded-lg bg-brand-navy text-white flex items-center justify-center gap-2 font-semibold"><span class="material-symbols-outlined">route</span>الجدول الزمني</a>
+        <a href="prep.html" class="h-11 rounded-lg bg-brand-surface border border-surface-variant flex items-center justify-center gap-2 font-semibold"><span class="material-symbols-outlined">checklist</span>التجهيزات</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var modal=document.getElementById('new-trip-modal');
+    function open(){modal.classList.remove('opacity-0','pointer-events-none');modal.classList.add('opacity-100','pointer-events-auto');}
+    function close(){modal.classList.add('opacity-0','pointer-events-none');modal.classList.remove('opacity-100','pointer-events-auto');}
+    document.getElementById('btn-new-trip').addEventListener('click',open);
+    document.querySelectorAll('[data-close-new]').forEach(function(b){b.addEventListener('click',close);});
+    modal.addEventListener('click',function(e){if(e.target===modal)close();});
+    if(/[?&]new=1/.test(location.search)) open();
+    document.getElementById('nt-create').addEventListener('click',function(){
+      var dest=document.getElementById('nt-dest').value.trim();
+      var dep=document.getElementById('nt-dep').value;
+      if(!dest||!dep){document.getElementById('nt-err').classList.remove('hidden');return;}
+      document.getElementById('nt-form').classList.add('hidden');
+      var done=document.getElementById('nt-done');done.classList.remove('hidden');done.classList.add('flex');
+      document.getElementById('nt-summary').textContent='تم إنشاء رحلتك إلى '+dest+' 🎉';
+    });
+  })();
+</script>
+<script src="assets/responsive.js" defer></script>
+</body></html>
