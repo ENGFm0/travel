@@ -35,6 +35,14 @@
   html.dark .tab.active{background:#E85D3D;color:#fff}
   .mview{color:rgba(20,33,61,.6)} html.dark .mview{color:rgba(253,246,236,.6)}
   .mview.is-active{background:#14213D;color:#fff} html.dark .mview.is-active{background:#E85D3D;color:#fff}
+  /* expenses inner tabs + currency */
+  .etab{padding:.5rem .75rem;border-radius:.6rem;font-weight:600;font-size:.85rem;white-space:nowrap;color:rgba(20,33,61,.6);display:inline-flex;align-items:center;gap:.3rem;transition:all .2s}
+  html.dark .etab{color:rgba(253,246,236,.6)}
+  .etab .material-symbols-outlined{font-size:18px}
+  .etab.is-active{background:#E85D3D;color:#fff}
+  .curbtn{color:rgba(20,33,61,.6)} html.dark .curbtn{color:rgba(253,246,236,.6)}
+  .curbtn.is-active{background:#14213D;color:#fff} html.dark .curbtn.is-active{background:#F4A950;color:#14213D}
+  .epanel{display:none} .epanel.active{display:flex;animation:fade .25s ease}
   .tab .material-symbols-outlined{font-size:20px}
   /* Panels + transitions */
   .panel{display:none} .panel.active{display:block;animation:fade .28s ease}
@@ -104,26 +112,25 @@
 
   <!-- ===== Panel: Expenses ===== -->
   <div class="panel" id="panel-expenses">
-    <div class="grid md:grid-cols-2 gap-4">
-      <div class="glass p-5 flex flex-col gap-3">
-        <div class="flex items-center gap-2 font-bold"><span class="material-symbols-outlined text-brand-orange">savings</span>قطة الرحلة</div>
-        <div class="text-3xl font-extrabold">٤٬٥٠٠ <span class="text-base muted font-bold">ريال</span></div>
-        <div class="flex justify-between text-sm"><span class="muted">تم تحصيل</span><span class="font-bold text-brand-teal">٣٬٣٧٥ ريال</span></div>
-        <div class="w-full h-2.5 rounded-full bg-black/10 overflow-hidden"><div class="h-full bg-brand-orange rounded-full" style="width:75%"></div></div>
-        <div class="flex justify-between text-sm"><span class="muted">المتبقي</span><span class="font-bold text-brand-orange">١٬١٢٥ ريال</span></div>
-      </div>
-      <div class="glass p-5 flex flex-col gap-3">
-        <div class="flex items-center justify-between"><div class="flex items-center gap-2 font-bold"><span class="material-symbols-outlined text-brand-orange">receipt_long</span>حالة السداد</div></div>
-        <div id="pay-status" class="flex flex-col gap-2"></div>
+    <!-- total + currency toggle -->
+    <div class="glass p-4 mb-4 flex items-center justify-between flex-wrap gap-3">
+      <div><div class="text-xs muted font-semibold">إجمالي قطة الرحلة</div><div class="text-2xl font-extrabold" id="ex-total">—</div></div>
+      <div class="inline-flex bg-black/[.06] rounded-full p-1">
+        <button class="curbtn is-active px-4 h-9 rounded-full text-sm font-bold" data-cur="SAR">﷼ ريال</button>
+        <button class="curbtn px-4 h-9 rounded-full text-sm font-bold" data-cur="GBP">£ جنيه</button>
       </div>
     </div>
-    <div class="glass p-5 mt-4 flex flex-col gap-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2 font-bold"><span class="material-symbols-outlined text-brand-orange">list_alt</span>سجل المصاريف</div>
-        <button class="px-3 h-9 rounded-full bg-brand-orange text-white text-sm font-bold inline-flex items-center gap-1" onclick="alert('إضافة مصروف — قريباً')"><span class="material-symbols-outlined" style="font-size:18px">add</span>مصروف</button>
-      </div>
-      <div id="exp-log" class="flex flex-col divide-y divide-line"></div>
+    <!-- inner sub-tabs -->
+    <div class="glass p-1 flex gap-1 overflow-x-auto mb-4" style="scrollbar-width:none">
+      <button class="etab is-active" data-e="kitty"><span class="material-symbols-outlined">savings</span>قطة الرحلة</button>
+      <button class="etab" data-e="side"><span class="material-symbols-outlined">groups</span>قطّات مشتركة</button>
+      <button class="etab" data-e="personal"><span class="material-symbols-outlined">account_balance_wallet</span>مصاريف شخصية</button>
+      <button class="etab" data-e="summary"><span class="material-symbols-outlined">query_stats</span>ملخّصي المالي</button>
     </div>
+    <div class="epanel active flex-col gap-4" id="e-kitty"></div>
+    <div class="epanel flex-col gap-4" id="e-side"></div>
+    <div class="epanel flex-col gap-4" id="e-personal"></div>
+    <div class="epanel flex-col gap-4" id="e-summary"></div>
   </div>
 
   <!-- ===== Panel: Tasks & Packing ===== -->
@@ -265,21 +272,150 @@ function renderItinerary(){
   }).join('');
 }
 
-/* ---- Expenses (static demo) ---- */
-function renderExpenses(){
-  el('pay-status').innerHTML=[
-    {n:'أنت',s:'مدفوع',ok:true},{n:'خالد',s:'مدفوع',ok:true},{n:'عمر',s:'معلّق',ok:false}
-  ].map(function(m){
-    return '<div class="flex items-center justify-between py-1"><span class="font-semibold">'+m.n+' <span class="muted text-xs">١٬١٢٥ ريال</span></span>'+
-      '<span class="text-xs font-bold px-2 py-1 rounded-full '+(m.ok?'bg-brand-teal/15 text-brand-teal':'bg-brand-orange/15 text-brand-orange')+'">'+m.s+'</span></div>';
-  }).join('');
-  el('exp-log').innerHTML=[
-    {d:'عشاء مطعم الكرم',by:'خالد',a:'٤٥٠'},{d:'بنزين',by:'أنت',a:'١٢٠'},{d:'تذاكر المتحف',by:'عمر',a:'٣٠٠'}
-  ].map(function(e){
-    return '<div class="flex items-center justify-between py-2.5"><div><div class="font-semibold text-sm">'+e.d+'</div><div class="muted text-xs">دفعها '+e.by+'</div></div>'+
-      '<div class="font-bold">'+e.a+' <span class="muted text-xs">ريال</span></div></div>';
-  }).join('');
+/* ============ المصاريف: عملتان + قطة + قطّات مشتركة + شخصية + تحليل ============ */
+var RATE=0.2123, cur='SAR';                 // ١ ريال ≈ ٠٫٢١٢٣ جنيه
+function money(sar){
+  if(cur==='GBP') return '£'+(sar*RATE).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return sar.toLocaleString('ar-EG')+' ريال';
 }
+var POOL={total:4500,collected:3375};
+var PAY=[{n:'أنت',due:1125,paid:true},{n:'خالد',due:1125,paid:true},{n:'سعد',due:1125,paid:false}];
+var DIST=[{k:'سكن',pct:45,c:'#E85D3D'},{k:'طعام',pct:30,c:'#F4A950'},{k:'مواصلات',pct:15,c:'#2A9D8F'},{k:'أخرى',pct:10,c:'#3A6EA5'}];
+var LOG=[{d:'عشاء مطعم الكرم',cat:'طعام',by:'خالد',amt:450},{d:'بنزين',cat:'مواصلات',by:'أنت',amt:120},{d:'تذاكر المتحف',cat:'أنشطة',by:'سعد',amt:300}];
+function load(k,def){try{var v=JSON.parse(localStorage.getItem(k));return v||def;}catch(e){return def;}}
+function saveK(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var SKEY='boarding.trip.side.v1', PPKEY='boarding.trip.personal.v1';
+var side=load(SKEY,[{title:'عشاء ياباني',people:['أنت','عمر','خالد'],total:600,payer:'أنت'},{title:'أوبر المطار',people:['أنت','عمر'],total:80,payer:'عمر'}]);
+var personalBudget=2000;
+var personal=load(PPKEY,[{d:'هدايا العائلة',amt:250},{d:'قهوة',amt:40},{d:'تسوق شخصي',amt:350}]);
+
+function renderKitty(){
+  var remaining=POOL.total-POOL.collected, pct=Math.round(POOL.collected/POOL.total*100);
+  var pay=PAY.map(function(m){
+    return '<div class="flex items-center justify-between py-1.5"><span class="font-semibold text-sm">'+m.n+' <span class="muted text-xs">'+money(m.due)+'</span></span>'+
+      '<span class="text-xs font-bold px-2 py-1 rounded-full '+(m.paid?'bg-brand-teal/15 text-brand-teal':'bg-brand-orange/15 text-brand-orange')+'">'+(m.paid?'مدفوع':'معلّق')+'</span></div>';
+  }).join('');
+  var dist=DIST.map(function(d){
+    return '<div><div class="flex justify-between text-xs mb-1"><span>'+d.k+'</span><span class="font-bold">'+d.pct+'٪</span></div>'+
+      '<div class="w-full h-2 rounded-full bg-black/10 overflow-hidden"><div class="h-full rounded-full" style="width:'+d.pct+'%;background:'+d.c+'"></div></div></div>';
+  }).join('');
+  var log=LOG.map(function(e){
+    return '<div class="flex items-center justify-between py-2.5"><div><div class="font-semibold text-sm">'+e.d+'</div><div class="muted text-xs">'+e.cat+' · دفعها '+e.by+'</div></div><div class="font-bold">'+money(e.amt)+'</div></div>';
+  }).join('');
+  el('e-kitty').innerHTML=
+    '<div class="grid md:grid-cols-2 gap-4">'+
+      '<div class="glass p-5 flex flex-col gap-3"><div class="flex items-center gap-2 font-bold"><span class="material-symbols-outlined text-brand-orange">savings</span>القطة</div>'+
+        '<div class="text-3xl font-extrabold">'+money(POOL.total)+'</div>'+
+        '<div class="flex justify-between text-sm"><span class="muted">تم تحصيل</span><span class="font-bold text-brand-teal">'+money(POOL.collected)+'</span></div>'+
+        '<div class="w-full h-2.5 rounded-full bg-black/10 overflow-hidden"><div class="h-full bg-brand-orange rounded-full" style="width:'+pct+'%"></div></div>'+
+        '<div class="flex justify-between text-sm"><span class="muted">المتبقي</span><span class="font-bold text-brand-orange">'+money(remaining)+'</span></div></div>'+
+      '<div class="glass p-5 flex flex-col gap-2"><div class="flex items-center gap-2 font-bold"><span class="material-symbols-outlined text-brand-orange">receipt_long</span>حالة السداد</div>'+pay+'</div>'+
+    '</div>'+
+    '<div class="glass p-5 flex flex-col gap-3"><div class="flex items-center gap-2 font-bold"><span class="material-symbols-outlined text-brand-orange">pie_chart</span>توزيع الإنفاق</div><div class="flex flex-col gap-2.5">'+dist+'</div></div>'+
+    '<div class="glass p-5 flex flex-col gap-1"><div class="flex items-center justify-between mb-1"><div class="flex items-center gap-2 font-bold"><span class="material-symbols-outlined text-brand-orange">list_alt</span>سجل المصاريف</div>'+
+      '<button class="px-3 h-9 rounded-full bg-brand-orange text-white text-sm font-bold inline-flex items-center gap-1" onclick="alert(\'إضافة مصروف للقطة — قريباً\')"><span class="material-symbols-outlined" style="font-size:18px">add</span>مصروف</button></div>'+
+      '<div class="flex flex-col divide-y divide-line">'+log+'</div></div>';
+}
+
+function renderSide(){
+  var cards=side.map(function(s,i){
+    var share=s.total/s.people.length;
+    var av=s.people.map(function(p){return '<span class="w-7 h-7 rounded-full bg-brand-teal text-white grid place-items-center text-xs font-bold border-2 border-white" title="'+p+'">'+p[0]+'</span>';}).join('');
+    return '<div class="glass p-4 flex flex-col gap-3"><div class="flex items-center justify-between"><div class="font-bold">'+s.title+'</div>'+
+      '<button data-sdel="'+i+'" class="muted hover:text-brand-orange"><span class="material-symbols-outlined" style="font-size:20px">delete</span></button></div>'+
+      '<div class="flex items-center justify-between"><div class="flex -space-x-2 -space-x-reverse">'+av+'</div>'+
+        '<div class="text-sm muted">'+s.people.length+' أشخاص</div></div>'+
+      '<div class="flex items-center justify-between text-sm"><span class="muted">الإجمالي</span><span class="font-bold">'+money(s.total)+'</span></div>'+
+      '<div class="flex items-center justify-between text-sm"><span class="muted">نصيب كل شخص</span><span class="font-bold text-brand-orange">'+money(share)+'</span></div>'+
+      '<div class="text-xs muted">دفعها: '+s.payer+' · الباقون يسدّدون له عبر برق</div>'+
+      '<button class="h-9 rounded-full bg-brand-navy text-white text-sm font-bold" onclick="alert(\'تسوية عبر برق — نسخ نص التحويل\')">تسوية عبر برق</button></div>';
+  }).join('');
+  el('e-side').innerHTML=
+    '<div class="glass p-4 flex flex-col gap-3"><div class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-brand-teal">group_add</span>قطة مشتركة جديدة</div>'+
+      '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2">'+
+        '<input id="sd-title" class="field" placeholder="الوصف (عشاء…)"/>'+
+        '<input id="sd-total" type="number" class="field" placeholder="المبلغ (ريال)"/>'+
+        '<input id="sd-people" class="field" placeholder="الأسماء بفاصلة"/></div>'+
+      '<button id="sd-add" class="h-11 rounded-lg bg-brand-teal text-white font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined">add</span>أضف قطة مشتركة</button></div>'+
+    '<div class="grid md:grid-cols-2 gap-4">'+cards+'</div>';
+  el('sd-add').addEventListener('click',function(){
+    var t=el('sd-title').value.trim(), tot=parseFloat(el('sd-total').value), pp=el('sd-people').value.split(/[،,]/).map(function(x){return x.trim();}).filter(Boolean);
+    if(!t||!tot||pp.length<2){alert('اكتب الوصف والمبلغ واسمين على الأقل');return;}
+    side.push({title:t,total:tot,people:pp,payer:pp[0]}); saveK(SKEY,side); renderSide();
+  });
+  document.querySelectorAll('#e-side [data-sdel]').forEach(function(b){b.addEventListener('click',function(){side.splice(+b.dataset.sdel,1);saveK(SKEY,side);renderSide();});});
+}
+
+function renderPersonal(){
+  var spent=personal.reduce(function(a,x){return a+x.amt;},0), rem=personalBudget-spent;
+  var log=personal.map(function(e,i){
+    return '<div class="flex items-center justify-between py-2.5"><div class="font-semibold text-sm">'+e.d+'</div>'+
+      '<div class="flex items-center gap-3"><span class="font-bold">'+money(e.amt)+'</span>'+
+      '<button data-pdel="'+i+'" class="muted hover:text-brand-orange"><span class="material-symbols-outlined" style="font-size:18px">close</span></button></div></div>';
+  }).join('');
+  el('e-personal').innerHTML=
+    '<div class="grid grid-cols-3 gap-3">'+
+      '<div class="glass p-4 text-center"><div class="text-xs muted">ميزانيتك</div><div class="font-extrabold text-lg mt-1">'+money(personalBudget)+'</div></div>'+
+      '<div class="glass p-4 text-center"><div class="text-xs muted">صرفت</div><div class="font-extrabold text-lg mt-1 text-brand-orange">'+money(spent)+'</div></div>'+
+      '<div class="glass p-4 text-center"><div class="text-xs muted">المتبقي</div><div class="font-extrabold text-lg mt-1 text-brand-teal">'+money(rem)+'</div></div>'+
+    '</div>'+
+    '<div class="glass p-4 flex gap-2"><input id="pp-desc" class="field flex-1" placeholder="مصروف شخصي…"/>'+
+      '<input id="pp-amt" type="number" class="field w-28" placeholder="ريال"/>'+
+      '<button id="pp-add" class="h-11 px-4 rounded-lg bg-brand-orange text-white font-bold inline-flex items-center"><span class="material-symbols-outlined">add</span></button></div>'+
+    '<div class="glass p-4"><div class="font-bold mb-1 flex items-center gap-2"><span class="material-symbols-outlined text-brand-orange">receipt</span>مصاريفك الشخصية</div><div class="flex flex-col divide-y divide-line">'+log+'</div></div>';
+  el('pp-add').addEventListener('click',function(){
+    var d=el('pp-desc').value.trim(), a=parseFloat(el('pp-amt').value); if(!d||!a)return;
+    personal.push({d:d,amt:a}); saveK(PPKEY,personal); renderPersonal();
+  });
+  document.querySelectorAll('#e-personal [data-pdel]').forEach(function(b){b.addEventListener('click',function(){personal.splice(+b.dataset.pdel,1);saveK(PPKEY,personal);renderPersonal();});});
+}
+
+function renderSummary(){
+  var me='أنت';
+  var myDue=1125;
+  var paidByMe=LOG.filter(function(e){return e.by===me;}).reduce(function(a,x){return a+x.amt;},0);
+  var groupTotal=LOG.reduce(function(a,x){return a+x.amt;},0);
+  var myFair=Math.round(groupTotal/PAY.length);
+  var netGroup=paidByMe-myFair;                       // + لك / - عليك
+  var sideMine=side.filter(function(s){return s.people.indexOf(me)>-1;});
+  var sideShare=sideMine.reduce(function(a,s){return a+s.total/s.people.length;},0);
+  var sidePaid=side.filter(function(s){return s.payer===me;}).reduce(function(a,s){return a+(s.total-s.total/s.people.length);},0);
+  var netSide=sidePaid-sideShare;
+  var personalSpent=personal.reduce(function(a,x){return a+x.amt;},0);
+  function row(l,v,cls){return '<div class="flex items-center justify-between py-2"><span class="muted text-sm">'+l+'</span><span class="font-bold '+(cls||'')+'">'+v+'</span></div>';}
+  function net(n){return (n>=0?'لك ':'عليك ')+money(Math.abs(n));}
+  var totalNet=netGroup+netSide;
+  el('e-summary').innerHTML=
+    '<div class="glass p-5 flex flex-col"><div class="flex items-center gap-2 font-bold mb-2"><span class="material-symbols-outlined text-brand-orange">account_balance</span>مركزك المالي</div>'+
+      '<div class="divide-y divide-line">'+
+        row('دفعتَه للقطة','<span class="text-brand-teal">'+money(myDue)+'</span>')+
+        row('مصاريف دفعتها للمجموعة',money(paidByMe))+
+        row('نصيبك العادل من مصاريف المجموعة',money(myFair))+
+        row('الصافي مع المجموعة',net(netGroup), netGroup>=0?'text-brand-teal':'text-brand-orange')+
+        row('نصيبك من القطّات المشتركة',money(sideShare))+
+        row('الصافي في القطّات المشتركة',net(netSide), netSide>=0?'text-brand-teal':'text-brand-orange')+
+        row('مصاريفك الشخصية',money(personalSpent))+
+      '</div>'+
+      '<div class="mt-3 p-3 rounded-xl '+(totalNet>=0?'bg-brand-teal/12':'bg-brand-orange/12')+' flex items-center justify-between">'+
+        '<span class="font-bold">صافي رصيدك الكلّي</span><span class="font-extrabold '+(totalNet>=0?'text-brand-teal':'text-brand-orange')+'">'+net(totalNet)+'</span></div></div>'+
+    '<div class="glass p-5"><div class="flex items-center gap-2 font-bold mb-3"><span class="material-symbols-outlined text-brand-orange">insights</span>تحليل الإنفاق</div>'+
+      '<div class="flex flex-col gap-2.5">'+DIST.map(function(d){return '<div><div class="flex justify-between text-xs mb-1"><span>'+d.k+'</span><span class="font-bold">'+money(Math.round(groupTotal*d.pct/100))+' · '+d.pct+'٪</span></div><div class="w-full h-2 rounded-full bg-black/10 overflow-hidden"><div class="h-full rounded-full" style="width:'+d.pct+'%;background:'+d.c+'"></div></div></div>';}).join('')+'</div></div>';
+}
+
+function renderExpenses(){
+  el('ex-total').textContent=money(POOL.total);
+  renderKitty(); renderSide(); renderPersonal(); renderSummary();
+}
+// inner tabs + currency toggle
+document.querySelectorAll('.etab').forEach(function(b){b.addEventListener('click',function(){
+  document.querySelectorAll('.etab').forEach(function(x){x.classList.remove('is-active')});b.classList.add('is-active');
+  document.querySelectorAll('.epanel').forEach(function(p){p.classList.remove('active')});
+  el('e-'+b.dataset.e).classList.add('active');
+});});
+document.querySelectorAll('.curbtn').forEach(function(b){b.addEventListener('click',function(){
+  cur=b.dataset.cur; document.querySelectorAll('.curbtn').forEach(function(x){x.classList.toggle('is-active',x.dataset.cur===cur)});
+  renderExpenses();
+});});
 
 /* ---- Tasks (localStorage) ---- */
 var TKEY='boarding.trip.tasks.v1';
