@@ -2,7 +2,7 @@
    بوردنق / Boarding — طبقة الاستجابة + التنقّل الموحّد
    ========================================================= */
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; overflow-x: clip; }
 html, body { max-width: 100%; }
 body { overflow-x: hidden !important; overflow-y: auto !important; }
 img, video, canvas, svg { max-width: 100%; height: auto; }
@@ -86,12 +86,16 @@ html.dark .bn-icon:hover { background: rgba(253,246,236,.06); }
 .bn-drawer-scrim { position: fixed; inset: 0; z-index: 60; background: rgba(20,33,61,.5);
   opacity: 0; pointer-events: none; transition: opacity .2s; }
 .bn-drawer-scrim.open { opacity: 1; pointer-events: auto; }
-.bn-drawer { position: fixed; top: 0; inset-inline-start: 0; z-index: 61; height: 100%;
-  width: 82%; max-width: 320px; background: var(--drw-bg); box-shadow: var(--pop, 0 12px 28px rgba(20,33,61,.2));
-  transform: translateX(-105%); transition: transform .25s ease;
+.bn-drawer { position: fixed; top: 0; z-index: 61; height: 100%; height: 100dvh;
+  width: 84%; max-width: 320px; background: var(--drw-bg); box-shadow: 0 12px 28px rgba(20,33,61,.22);
+  transition: transform .25s ease; overflow-y: auto;
   display: flex; flex-direction: column; padding: 16px; font-family: 'IBM Plex Sans Arabic', sans-serif; }
-html[dir="rtl"] .bn-drawer { inset-inline-start: auto; inset-inline-end: 0; transform: translateX(105%); }
-.bn-drawer.open { transform: translateX(0); }
+/* الاتجاه RTL: الدرج من اليمين */
+[dir="rtl"] .bn-drawer { right: 0; left: auto; transform: translateX(100%); }
+[dir="rtl"] .bn-drawer.open { transform: translateX(0); }
+/* الاتجاه LTR: الدرج من اليسار */
+html:not([dir="rtl"]) .bn-drawer { left: 0; right: auto; transform: translateX(-100%); }
+html:not([dir="rtl"]) .bn-drawer.open { transform: translateX(0); }
 .bn-drawer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .bn-drawer a { display: flex; align-items: center; gap: 12px; color: var(--hd-ink);
   text-decoration: none; font-weight: 600; font-size: 16px; padding: 14px 12px; border-radius: 12px; }
