@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>خطط لرحلتك - بوردنق</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="assets/theme.js?v=5"></script>
+<script src="assets/theme.js?v=6"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="assets/responsive.css?v=5"/>
+<link rel="stylesheet" href="assets/responsive.css?v=6"/>
 <style>
   body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
   .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
@@ -94,57 +94,171 @@
   </section>
 </main>
 
-<!-- Create trip modal -->
-<div id="new-trip-modal" class="modal-overlay opacity-0 pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-4 transition-opacity" style="background:rgba(20,33,61,.6);backdrop-filter:blur(4px)">
-  <div class="card bg-white rounded-2xl shadow-pop w-full max-w-lg p-6 flex flex-col gap-4">
+<!-- Create trip modal (3 steps) -->
+<div id="new-trip-modal" class="modal-overlay opacity-0 pointer-events-none fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity" style="background:rgba(20,33,61,.6);backdrop-filter:blur(4px)">
+  <div class="w-full max-w-xl rounded-t-2xl sm:rounded-2xl p-6 flex flex-col gap-5 max-h-[92vh] overflow-y-auto"
+       style="background:rgba(255,255,255,.9);backdrop-filter:blur(16px)">
     <div class="flex items-center justify-between">
       <h3 class="text-xl font-bold">إنشاء رحلة جديدة</h3>
       <button data-close-new class="bn-icon"><span class="material-symbols-outlined">close</span></button>
     </div>
-    <div id="nt-form" class="flex flex-col gap-3">
-      <label class="text-sm font-semibold">الوجهة *
-        <input id="nt-dest" type="text" placeholder="مثال: طوكيو" class="mt-1 w-full h-11 rounded-lg border border-surface-variant px-3 bg-brand-surface/40"/>
-      </label>
-      <div class="grid grid-cols-2 gap-3">
-        <label class="text-sm font-semibold">تاريخ الذهاب *
-          <input id="nt-dep" type="date" class="mt-1 w-full h-11 rounded-lg border border-surface-variant px-3 bg-brand-surface/40"/>
-        </label>
-        <label class="text-sm font-semibold">تاريخ العودة
-          <input id="nt-ret" type="date" class="mt-1 w-full h-11 rounded-lg border border-surface-variant px-3 bg-brand-surface/40"/>
-        </label>
-      </div>
-      <p id="nt-err" class="text-error text-sm hidden">فضلاً عبّي الوجهة وتاريخ الذهاب.</p>
-      <button id="nt-create" class="bn-cta justify-center h-12"><span class="material-symbols-outlined">add</span><span>إنشاء الرحلة</span></button>
+
+    <!-- Stepper -->
+    <div class="flex items-center gap-2" id="nt-stepper">
+      <div class="nt-dot flex-1 flex items-center gap-2" data-s="1"><span class="dot w-7 h-7 rounded-full grid place-items-center text-sm font-bold">1</span><span class="text-xs font-semibold hidden sm:inline">الأساسيات</span></div>
+      <div class="h-0.5 flex-1 bg-black/10 rounded"></div>
+      <div class="nt-dot flex-1 flex items-center gap-2" data-s="2"><span class="dot w-7 h-7 rounded-full grid place-items-center text-sm font-bold">2</span><span class="text-xs font-semibold hidden sm:inline">الوجهات</span></div>
+      <div class="h-0.5 flex-1 bg-black/10 rounded"></div>
+      <div class="nt-dot flex-1 flex items-center gap-2" data-s="3"><span class="dot w-7 h-7 rounded-full grid place-items-center text-sm font-bold">3</span><span class="text-xs font-semibold hidden sm:inline">الأصدقاء</span></div>
     </div>
+
+    <!-- Step 1 -->
+    <div class="nt-step flex flex-col gap-4" data-step="1">
+      <label class="text-sm font-semibold flex flex-col gap-1">عنوان الرحلة *
+        <input id="nt-title" type="text" placeholder="مثال: رحلة أوروبا الصيفية" class="h-11 rounded-lg border border-surface-variant px-3 bg-white/70"/>
+      </label>
+      <div class="flex flex-col gap-1">
+        <span class="text-sm font-semibold">نوع الرحلة *</span>
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" class="nt-type h-11 rounded-lg border border-surface-variant font-semibold flex items-center justify-center gap-2 is-on" data-type="داخلية"><span class="material-symbols-outlined">home_pin</span>داخلية</button>
+          <button type="button" class="nt-type h-11 rounded-lg border border-surface-variant font-semibold flex items-center justify-center gap-2" data-type="خارجية"><span class="material-symbols-outlined">public</span>خارجية</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="text-sm font-semibold flex flex-col gap-1">من *<input id="nt-from" type="date" class="h-11 rounded-lg border border-surface-variant px-3 bg-white/70"/></label>
+        <label class="text-sm font-semibold flex flex-col gap-1">إلى<input id="nt-to" type="date" class="h-11 rounded-lg border border-surface-variant px-3 bg-white/70"/></label>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="nt-step hidden flex-col gap-4" data-step="2">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-semibold">الوجهات</span>
+        <label class="flex items-center gap-2 text-sm cursor-pointer"><input id="nt-multi" type="checkbox" class="w-4 h-4 accent-[#E85D3D]"/>رحلة متعددة المدن</label>
+      </div>
+      <div id="nt-cities" class="flex flex-col gap-3"></div>
+      <button id="nt-addcity" type="button" class="hidden w-full py-2.5 border-2 border-dashed border-brand-orange rounded-lg text-brand-orange font-semibold items-center justify-center gap-2"><span class="material-symbols-outlined">add_location_alt</span>أضف مدينة</button>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="nt-step hidden flex-col gap-3" data-step="3">
+      <div class="text-sm muted text-brand-navy/70">ادعُ أصدقاءك للرحلة (اختياري) — تقدر تدعوهم لاحقاً أيضاً.</div>
+      <div class="flex flex-col gap-2" id="nt-friends"></div>
+      <div class="flex gap-2">
+        <input id="nt-invite" type="text" placeholder="اسم أو رقم جوال…" class="flex-1 h-11 rounded-lg border border-surface-variant px-3 bg-white/70"/>
+        <button id="nt-invite-add" type="button" class="h-11 px-4 rounded-lg bg-brand-surface border border-surface-variant font-semibold">إضافة</button>
+      </div>
+    </div>
+
+    <p id="nt-err" class="text-error text-sm hidden"></p>
+
+    <!-- Footer nav -->
+    <div class="flex items-center justify-between gap-3 pt-1">
+      <button id="nt-back" class="h-11 px-5 rounded-lg bg-brand-surface border border-surface-variant font-semibold invisible">السابق</button>
+      <button id="nt-next" class="bn-cta h-11 px-6"><span>التالي</span><span class="material-symbols-outlined">arrow_back</span></button>
+    </div>
+
+    <!-- Done -->
     <div id="nt-done" class="hidden flex-col items-center text-center gap-3 py-2">
-      <div class="w-14 h-14 rounded-full bg-brand-teal/15 text-brand-teal flex items-center justify-center"><span class="material-symbols-outlined" style="font-size:32px">check_circle</span></div>
+      <div class="w-16 h-16 rounded-full bg-brand-teal/15 text-brand-teal flex items-center justify-center"><span class="material-symbols-outlined" style="font-size:34px">check_circle</span></div>
       <div class="font-bold text-lg" id="nt-summary">تم إنشاء رحلتك 🎉</div>
       <div class="grid grid-cols-2 gap-3 w-full">
-        <a href="trip.html" class="h-11 rounded-lg bg-brand-navy text-white flex items-center justify-center gap-2 font-semibold"><span class="material-symbols-outlined">route</span>الجدول الزمني</a>
-        <a href="prep.html" class="h-11 rounded-lg bg-brand-surface border border-surface-variant flex items-center justify-center gap-2 font-semibold"><span class="material-symbols-outlined">checklist</span>التجهيزات</a>
+        <a href="trip.html" class="h-11 rounded-lg bg-brand-navy text-white flex items-center justify-center gap-2 font-semibold"><span class="material-symbols-outlined">route</span>افتح الرحلة</a>
+        <a href="mytrips.html" class="h-11 rounded-lg bg-brand-surface border border-surface-variant flex items-center justify-center gap-2 font-semibold"><span class="material-symbols-outlined">luggage</span>رحلاتي</a>
       </div>
     </div>
   </div>
 </div>
 
+<style>
+  .nt-dot .dot{background:rgba(20,33,61,.12);color:rgba(20,33,61,.6)}
+  .nt-dot.on .dot{background:#E85D3D;color:#fff}
+  .nt-type.is-on{border-color:#E85D3D;background:rgba(232,93,61,.10);color:#E85D3D}
+  html.dark #new-trip-modal > div{background:rgba(31,47,84,.92)!important;color:#FDF6EC}
+  html.dark #new-trip-modal input{background:rgba(20,33,61,.6);color:#FDF6EC}
+</style>
+
 <script>
   (function(){
-    var modal=document.getElementById('new-trip-modal');
+    var modal=document.getElementById('new-trip-modal'), step=1, type='داخلية', friends=[], cityN=0;
+    var multi=document.getElementById('nt-multi');
     function open(){modal.classList.remove('opacity-0','pointer-events-none');modal.classList.add('opacity-100','pointer-events-auto');}
     function close(){modal.classList.add('opacity-0','pointer-events-none');modal.classList.remove('opacity-100','pointer-events-auto');}
     document.getElementById('btn-new-trip').addEventListener('click',open);
     document.querySelectorAll('[data-close-new]').forEach(function(b){b.addEventListener('click',close);});
     modal.addEventListener('click',function(e){if(e.target===modal)close();});
     if(/[?&]new=1/.test(location.search)) open();
-    document.getElementById('nt-create').addEventListener('click',function(){
-      var dest=document.getElementById('nt-dest').value.trim();
-      var dep=document.getElementById('nt-dep').value;
-      if(!dest||!dep){document.getElementById('nt-err').classList.remove('hidden');return;}
-      document.getElementById('nt-form').classList.add('hidden');
-      var done=document.getElementById('nt-done');done.classList.remove('hidden');done.classList.add('flex');
-      document.getElementById('nt-summary').textContent='تم إنشاء رحلتك إلى '+dest+' 🎉';
+
+    // Type toggle
+    document.querySelectorAll('.nt-type').forEach(function(b){b.addEventListener('click',function(){
+      document.querySelectorAll('.nt-type').forEach(function(x){x.classList.remove('is-on')});b.classList.add('is-on');type=b.dataset.type;});});
+
+    // Cities
+    function addCity(first){
+      cityN++; var id='city'+cityN;
+      var row=document.createElement('div'); row.className='flex gap-2 items-end'; row.dataset.city=id;
+      row.innerHTML='<label class="text-sm font-semibold flex flex-col gap-1 flex-1">المدينة'+(first?' *':'')+'<input class="c-name h-11 rounded-lg border border-surface-variant px-3 bg-white/70" placeholder="مثال: لندن"/></label>'+
+        '<label class="text-sm font-semibold flex flex-col gap-1 c-dates '+(multi.checked?'':'hidden')+'">التواريخ<input class="c-date h-11 rounded-lg border border-surface-variant px-3 bg-white/70 w-32" placeholder="١٥–١٨ مايو"/></label>'+
+        (first?'':'<button type="button" class="c-del h-11 w-11 rounded-lg bg-brand-surface border border-surface-variant flex items-center justify-center"><span class="material-symbols-outlined">delete</span></button>');
+      var del=row.querySelector('.c-del'); if(del)del.addEventListener('click',function(){row.remove();});
+      document.getElementById('nt-cities').appendChild(row);
+    }
+    addCity(true);
+    document.getElementById('nt-addcity').addEventListener('click',function(){addCity(false);});
+    multi.addEventListener('change',function(){
+      var add=document.getElementById('nt-addcity');
+      add.classList.toggle('hidden',!multi.checked); add.classList.toggle('flex',multi.checked);
+      document.querySelectorAll('.c-dates').forEach(function(d){d.classList.toggle('hidden',!multi.checked);});
     });
+
+    // Friends (mock)
+    ['خالد اليوسف','ليلى عبدالله','عمر','سعد المطيري'].forEach(function(n){friends.push({n:n,on:false});});
+    function renderFriends(){
+      document.getElementById('nt-friends').innerHTML=friends.map(function(f,i){
+        return '<label class="flex items-center justify-between p-2.5 rounded-lg border border-surface-variant cursor-pointer">'+
+          '<span class="font-medium">'+f.n+'</span>'+
+          '<input type="checkbox" data-f="'+i+'" class="w-5 h-5 accent-[#E85D3D]" '+(f.on?'checked':'')+'/></label>';
+      }).join('');
+      document.querySelectorAll('#nt-friends [data-f]').forEach(function(c){c.addEventListener('change',function(e){friends[e.target.dataset.f].on=e.target.checked;});});
+    }
+    renderFriends();
+    document.getElementById('nt-invite-add').addEventListener('click',function(){
+      var v=document.getElementById('nt-invite').value.trim();if(!v)return;friends.push({n:v,on:true});document.getElementById('nt-invite').value='';renderFriends();});
+
+    // Stepper UI
+    function show(){
+      document.querySelectorAll('.nt-step').forEach(function(s){var on=+s.dataset.step===step;s.classList.toggle('hidden',!on);s.classList.toggle('flex',on);});
+      document.querySelectorAll('.nt-dot').forEach(function(d){d.classList.toggle('on',+d.dataset.s<=step);});
+      document.getElementById('nt-back').classList.toggle('invisible',step===1);
+      var next=document.getElementById('nt-next');
+      next.querySelector('span:first-child').textContent = step===3 ? 'إنشاء الرحلة' : 'التالي';
+      document.getElementById('nt-err').classList.add('hidden');
+    }
+    function err(m){var e=document.getElementById('nt-err');e.textContent=m;e.classList.remove('hidden');}
+    document.getElementById('nt-back').addEventListener('click',function(){if(step>1){step--;show();}});
+    document.getElementById('nt-next').addEventListener('click',function(){
+      if(step===1){
+        if(!document.getElementById('nt-title').value.trim())return err('فضلاً اكتب عنوان الرحلة.');
+        if(!document.getElementById('nt-from').value)return err('فضلاً حدد تاريخ البداية.');
+        step=2;return show();
+      }
+      if(step===2){
+        var first=document.querySelector('#nt-cities .c-name');
+        if(!first||!first.value.trim())return err('فضلاً أضف وجهة واحدة على الأقل.');
+        step=3;return show();
+      }
+      // step 3 -> create
+      var title=document.getElementById('nt-title').value.trim();
+      var cities=[].map.call(document.querySelectorAll('#nt-cities .c-name'),function(i){return i.value.trim();}).filter(Boolean);
+      var chosen=friends.filter(function(f){return f.on;}).length;
+      document.querySelectorAll('.nt-step').forEach(function(s){s.classList.add('hidden');});
+      document.getElementById('nt-stepper').classList.add('hidden');
+      document.getElementById('nt-next').parentElement.classList.add('hidden');
+      var done=document.getElementById('nt-done');done.classList.remove('hidden');done.classList.add('flex');
+      document.getElementById('nt-summary').textContent='تم إنشاء «'+title+'» ('+type+') — '+cities.length+' وجهة، '+chosen+' مدعو 🎉';
+    });
+    show();
   })();
 </script>
-<script src="assets/responsive.js?v=5" defer></script>
+<script src="assets/responsive.js?v=6" defer></script>
 </body></html>

@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>رحلاتي - بوردنق</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="assets/theme.js?v=5"></script>
+<script src="assets/theme.js?v=6"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="assets/responsive.css?v=5"/>
+<link rel="stylesheet" href="assets/responsive.css?v=6"/>
 <style>
   body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
   .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400}
@@ -17,6 +17,8 @@
   html.dark .muted{color:rgba(253,246,236,.7)}
   .seg.is-active{background:#14213D;color:#fff}
   html.dark .seg.is-active{background:#F4A950;color:#14213D}
+  .tfilter{color:rgba(20,33,61,.6)} html.dark .tfilter{color:rgba(253,246,236,.6)}
+  .tfilter.is-active{background:#E85D3D;color:#fff}
 </style>
 </head>
 <body class="bg-brand-surface text-brand-navy">
@@ -38,103 +40,139 @@
   </div>
 
   <!-- ===================== TAB: رحلاتي ===================== -->
-  <div id="panel-trips" class="flex flex-col gap-8">
+  <div id="panel-trips" class="flex flex-col gap-5">
 
-    <!-- Active & upcoming -->
-    <section class="flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold flex items-center gap-2"><span class="material-symbols-outlined text-brand-teal">flight_takeoff</span>الرحلات الحالية والقادمة</h2>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Filter: upcoming / past -->
+    <div class="inline-flex bg-white card border border-surface-variant rounded-full p-1 self-start shadow-card">
+      <button class="tfilter is-active px-5 h-9 rounded-full font-semibold text-sm" data-f="upcoming">الرحلات القادمة</button>
+      <button class="tfilter px-5 h-9 rounded-full font-semibold text-sm" data-f="past">الرحلات السابقة</button>
+    </div>
 
-        <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
-          <a href="trip.html" class="block h-36 bg-cover bg-center relative" style="background-image:url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=70')">
-            <span class="absolute top-3 start-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-orange text-white">باقي ١٤ يوم</span>
-          </a>
-          <div class="p-4 flex flex-col gap-3 flex-1">
-            <div>
-              <h3 class="font-bold text-lg">لندن ٢٠٢٤</h3>
-              <div class="text-sm muted text-brand-navy/70 flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">place</span>لندن</span>
-                <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">calendar_month</span>١٥–٢٢ مايو</span>
-              </div>
-            </div>
-            <div class="mt-auto flex flex-col gap-1">
-              <div class="flex justify-between text-xs muted text-brand-navy/60"><span>تقدّم التخطيط</span><span class="text-brand-orange font-bold">٦٥٪</span></div>
-              <div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden"><div class="h-full bg-brand-orange rounded-full" style="width:65%"></div></div>
-            </div>
-            <div class="flex gap-2">
-              <a href="trip.html" class="flex-1 h-9 rounded-full bg-brand-navy text-white text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">route</span>الجدول</a>
-              <a href="planner.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">edit_calendar</span>التخطيط</a>
-            </div>
-          </div>
-        </article>
+    <!-- Upcoming grid -->
+    <div id="trips-upcoming" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-        <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
-          <a href="trip.html" class="block h-36 bg-cover bg-center relative" style="background-image:url('https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?auto=format&fit=crop&w=800&q=70')">
-            <span class="absolute top-3 start-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-orange text-white">باقي ٤٥ يوم</span>
-          </a>
-          <div class="p-4 flex flex-col gap-3 flex-1">
-            <div>
-              <h3 class="font-bold text-lg">رحلة اليونان الصيفية</h3>
-              <div class="text-sm muted text-brand-navy/70 flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">place</span>سانتوريني</span>
-                <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">calendar_month</span>١٠–١٧ يوليو</span>
-              </div>
-            </div>
-            <div class="mt-auto flex flex-col gap-1">
-              <div class="flex justify-between text-xs muted text-brand-navy/60"><span>تقدّم التخطيط</span><span class="text-brand-orange font-bold">٤٠٪</span></div>
-              <div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden"><div class="h-full bg-brand-orange rounded-full" style="width:40%"></div></div>
-            </div>
-            <div class="flex gap-2">
-              <a href="trip.html" class="flex-1 h-9 rounded-full bg-brand-navy text-white text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">route</span>الجدول</a>
-              <a href="planner.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">edit_calendar</span>التخطيط</a>
-            </div>
-          </div>
-        </article>
-
-        <!-- Create new trip card -->
-        <a href="planner.html?new=1" class="card bg-white/60 rounded-2xl border-2 border-dashed border-brand-orange/50 flex flex-col items-center justify-center gap-2 p-6 text-brand-orange hover:bg-brand-orange/5 transition-colors min-h-[220px]">
-          <span class="material-symbols-outlined" style="font-size:40px">add_circle</span>
-          <span class="font-bold">إنشاء رحلة جديدة</span>
+      <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
+        <a href="trip.html" class="block h-36 bg-cover bg-center relative" style="background-image:url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=70')">
+          <span class="absolute top-3 start-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-orange text-white">باقي ١٤ يوم</span>
+          <span class="absolute top-3 end-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-blue text-white inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">public</span>خارجية</span>
         </a>
-      </div>
-    </section>
-
-    <!-- Past trips -->
-    <section class="flex flex-col gap-4">
-      <h2 class="text-xl font-bold flex items-center gap-2"><span class="material-symbols-outlined text-brand-navy/60">history</span>رحلات سابقة</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-        <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
-          <div class="h-32 bg-cover bg-center grayscale-[.15]" style="background-image:url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=70')"></div>
-          <div class="p-4 flex flex-col gap-3 flex-1">
-            <div>
-              <h3 class="font-bold">دبي ٢٠٢٣</h3>
-              <div class="text-xs muted text-brand-navy/60 mt-1">١٢–١٦ ديسمبر · منتهية</div>
-            </div>
-            <div class="flex gap-2 mt-auto">
-              <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">photo_library</span>الألبوم</a>
-              <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">description</span>التقرير</a>
+        <div class="p-4 flex flex-col gap-3 flex-1">
+          <div>
+            <h3 class="font-bold text-lg">لندن ٢٠٢٤</h3>
+            <div class="text-sm muted text-brand-navy/70 flex flex-wrap gap-x-4 gap-y-1 mt-1">
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">place</span>لندن</span>
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">calendar_month</span>١٥–٢٢ مايو</span>
             </div>
           </div>
-        </article>
+          <div class="mt-auto flex flex-col gap-1">
+            <div class="flex justify-between text-xs muted text-brand-navy/60"><span>تقدّم التخطيط</span><span class="text-brand-orange font-bold">٦٥٪</span></div>
+            <div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden"><div class="h-full bg-brand-orange rounded-full" style="width:65%"></div></div>
+          </div>
+          <div class="flex gap-2">
+            <a href="trip.html" class="flex-1 h-9 rounded-full bg-brand-navy text-white text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">route</span>الجدول</a>
+            <a href="trip.html#tasks" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">checklist</span>المهام</a>
+          </div>
+        </div>
+      </article>
 
-        <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
-          <div class="h-32 bg-cover bg-center grayscale-[.15]" style="background-image:url('https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=800&q=70')"></div>
-          <div class="p-4 flex flex-col gap-3 flex-1">
-            <div>
-              <h3 class="font-bold">إسطنبول ٢٠٢٣</h3>
-              <div class="text-xs muted text-brand-navy/60 mt-1">٣–٩ أكتوبر · منتهية</div>
-            </div>
-            <div class="flex gap-2 mt-auto">
-              <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">photo_library</span>الألبوم</a>
-              <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">description</span>التقرير</a>
+      <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
+        <a href="trip.html" class="block h-36 bg-cover bg-center relative" style="background-image:url('https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?auto=format&fit=crop&w=800&q=70')">
+          <span class="absolute top-3 start-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-orange text-white">باقي ٤٥ يوم</span>
+          <span class="absolute top-3 end-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-blue text-white inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">public</span>خارجية</span>
+        </a>
+        <div class="p-4 flex flex-col gap-3 flex-1">
+          <div>
+            <h3 class="font-bold text-lg">رحلة اليونان الصيفية</h3>
+            <div class="text-sm muted text-brand-navy/70 flex flex-wrap gap-x-4 gap-y-1 mt-1">
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">place</span>سانتوريني</span>
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">calendar_month</span>١٠–١٧ يوليو</span>
             </div>
           </div>
-        </article>
-      </div>
-    </section>
+          <div class="mt-auto flex flex-col gap-1">
+            <div class="flex justify-between text-xs muted text-brand-navy/60"><span>تقدّم التخطيط</span><span class="text-brand-orange font-bold">٤٠٪</span></div>
+            <div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden"><div class="h-full bg-brand-orange rounded-full" style="width:40%"></div></div>
+          </div>
+          <div class="flex gap-2">
+            <a href="trip.html" class="flex-1 h-9 rounded-full bg-brand-navy text-white text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">route</span>الجدول</a>
+            <a href="trip.html#tasks" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">checklist</span>المهام</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Domestic example -->
+      <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
+        <a href="trip.html" class="block h-36 bg-cover bg-center relative" style="background-image:url('https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=70')">
+          <span class="absolute top-3 start-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-orange text-white">باقي ٧ أيام</span>
+          <span class="absolute top-3 end-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-teal text-white inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">home_pin</span>داخلية</span>
+        </a>
+        <div class="p-4 flex flex-col gap-3 flex-1">
+          <div>
+            <h3 class="font-bold text-lg">شتاء العُلا</h3>
+            <div class="text-sm muted text-brand-navy/70 flex flex-wrap gap-x-4 gap-y-1 mt-1">
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">place</span>العُلا</span>
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:16px">calendar_month</span>٢٠–٢٣ ديسمبر</span>
+            </div>
+          </div>
+          <div class="mt-auto flex flex-col gap-1">
+            <div class="flex justify-between text-xs muted text-brand-navy/60"><span>تقدّم التخطيط</span><span class="text-brand-orange font-bold">٨٥٪</span></div>
+            <div class="w-full h-2 bg-brand-surface rounded-full overflow-hidden"><div class="h-full bg-brand-orange rounded-full" style="width:85%"></div></div>
+          </div>
+          <div class="flex gap-2">
+            <a href="trip.html" class="flex-1 h-9 rounded-full bg-brand-navy text-white text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">route</span>الجدول</a>
+            <a href="trip.html#tasks" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">checklist</span>المهام</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Create new trip card -->
+      <a href="planner.html?new=1" class="card bg-white/60 rounded-2xl border-2 border-dashed border-brand-orange/50 flex flex-col items-center justify-center gap-2 p-6 text-brand-orange hover:bg-brand-orange/5 transition-colors min-h-[220px]">
+        <span class="material-symbols-outlined" style="font-size:40px">add_circle</span>
+        <span class="font-bold">إنشاء رحلة جديدة</span>
+      </a>
+    </div>
+
+    <!-- Past grid -->
+    <div id="trips-past" class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
+        <div class="h-32 bg-cover bg-center grayscale-[.15] relative" style="background-image:url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=70')">
+          <span class="absolute top-3 end-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-blue text-white inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">public</span>خارجية</span>
+        </div>
+        <div class="p-4 flex flex-col gap-3 flex-1">
+          <div><h3 class="font-bold">دبي ٢٠٢٣</h3><div class="text-xs muted text-brand-navy/60 mt-1">١٢–١٦ ديسمبر · منتهية</div></div>
+          <div class="flex gap-2 mt-auto">
+            <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">photo_library</span>الألبوم</a>
+            <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">description</span>التقرير</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
+        <div class="h-32 bg-cover bg-center grayscale-[.15] relative" style="background-image:url('https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=800&q=70')">
+          <span class="absolute top-3 end-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-blue text-white inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">public</span>خارجية</span>
+        </div>
+        <div class="p-4 flex flex-col gap-3 flex-1">
+          <div><h3 class="font-bold">إسطنبول ٢٠٢٣</h3><div class="text-xs muted text-brand-navy/60 mt-1">٣–٩ أكتوبر · منتهية</div></div>
+          <div class="flex gap-2 mt-auto">
+            <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">photo_library</span>الألبوم</a>
+            <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">description</span>التقرير</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card bg-white rounded-2xl shadow-card border border-surface-variant overflow-hidden flex flex-col">
+        <div class="h-32 bg-cover bg-center grayscale-[.15] relative" style="background-image:url('https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=800&q=70')">
+          <span class="absolute top-3 end-3 text-xs font-bold px-2 py-1 rounded-full bg-brand-teal text-white inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">home_pin</span>داخلية</span>
+        </div>
+        <div class="p-4 flex flex-col gap-3 flex-1">
+          <div><h3 class="font-bold">أبها ٢٠٢٣</h3><div class="text-xs muted text-brand-navy/60 mt-1">١–٥ أغسطس · منتهية</div></div>
+          <div class="flex gap-2 mt-auto">
+            <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">photo_library</span>الألبوم</a>
+            <a href="memories.html" class="flex-1 h-9 rounded-full bg-brand-surface border border-surface-variant text-sm font-bold inline-flex items-center justify-center gap-1"><span class="material-symbols-outlined" style="font-size:18px">description</span>التقرير</a>
+          </div>
+        </div>
+      </article>
+    </div>
   </div>
 
   <!-- ===================== TAB: أصدقائي ومجموعتي ===================== -->
@@ -211,6 +249,16 @@
   document.querySelectorAll('.seg').forEach(function(b){b.addEventListener('click',function(){showTab(b.dataset.tab);history.replaceState(null,'',b.dataset.tab==='friends'?'#friends':'#trips');});});
   if(/friends/.test(location.hash)) showTab('friends');
 
+  // فلتر الرحلات: قادمة / سابقة
+  var upG=document.getElementById('trips-upcoming'), pastG=document.getElementById('trips-past');
+  function showFilter(f){
+    document.querySelectorAll('.tfilter').forEach(function(t){t.classList.toggle('is-active',t.dataset.f===f);});
+    upG.style.display=f==='upcoming'?'grid':'none';
+    pastG.style.display=f==='past'?'grid':'none';
+  }
+  document.querySelectorAll('.tfilter').forEach(function(t){t.addEventListener('click',function(){showFilter(t.dataset.f);});});
+  showFilter('upcoming');
+
   // نسخ رابط الدعوة
   var ci=document.getElementById('copy-invite');
   if(ci) ci.addEventListener('click',function(){
@@ -220,5 +268,5 @@
     setTimeout(function(){ci.querySelector('span:last-child').textContent='نسخ رابط الدعوة';},1800);
   });
 </script>
-<script src="assets/responsive.js?v=5" defer></script>
+<script src="assets/responsive.js?v=6" defer></script>
 </body></html>
