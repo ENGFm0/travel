@@ -40,9 +40,9 @@
 
   function icon(name) { return '<span class="material-symbols-outlined">' + name + '</span>'; }
 
-  var _scrim = null, _drawer = null;
-  function openDrawer() { if (_scrim) _scrim.classList.add('open'); if (_drawer) _drawer.classList.add('open'); }
-  function closeDrawer() { if (_scrim) _scrim.classList.remove('open'); if (_drawer) _drawer.classList.remove('open'); }
+  var _scrim = null;
+  function openDrawer() { if (_scrim) _scrim.classList.add('open'); }
+  function closeDrawer() { if (_scrim) _scrim.classList.remove('open'); }
 
   function buildHeader() {
     if (document.getElementById('bn-header')) return;
@@ -71,7 +71,7 @@
   }
 
   function buildDrawer() {
-    if (document.querySelector('.bn-drawer')) return;
+    if (document.querySelector('.bn-drawer-scrim')) return;
     var scrim = document.createElement('div'); scrim.className = 'bn-drawer-scrim';
     var links = SECTIONS.map(function (s) {
       return '<a href="' + s.file + '"' + (s.key === section ? ' class="is-active"' : '') + '>' +
@@ -86,11 +86,11 @@
       links +
       '<a href="mytrips.html"' + (section === 'mytrips' ? ' class="is-active"' : '') + '>' + icon('luggage') + '<span>رحلاتي</span></a>' +
       '<a class="bn-drawer__cta bn-cta" href="' + NEW_TRIP + '" style="justify-content:center">' + icon('add') + '<span>إنشاء رحلة جديدة</span></a>';
+    scrim.appendChild(drawer);           // الدرج داخل الغطاء
     document.body.appendChild(scrim);
-    document.body.appendChild(drawer);
-    _scrim = scrim; _drawer = drawer;
+    _scrim = scrim;
 
-    scrim.addEventListener('click', closeDrawer);
+    scrim.addEventListener('click', function (e) { if (e.target === scrim) closeDrawer(); });
     drawer.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', closeDrawer); });
     var closeBtn = drawer.querySelector('[data-act="close-menu"]');
     if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); closeDrawer(); });

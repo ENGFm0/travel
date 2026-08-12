@@ -82,20 +82,19 @@ html.dark .bn-icon:hover { background: rgba(253,246,236,.06); }
   .bn-burger { display: inline-flex; }
 }
 
-/* ===== درج التنقّل (Drawer) ===== */
+/* ===== درج التنقّل (Drawer) =====
+   الدرج داخل غطاء يملأ الشاشة (inset:0) ويقصّه، فلا يعتمد على عرض الصفحة
+   ولا يسبّب أي تمرير أفقي مهما حدث. */
 .bn-drawer-scrim { position: fixed; inset: 0; z-index: 60; background: rgba(20,33,61,.5);
-  opacity: 0; pointer-events: none; transition: opacity .2s; }
+  opacity: 0; pointer-events: none; transition: opacity .2s; overflow: hidden;
+  display: flex; justify-content: flex-start; direction: rtl; }
 .bn-drawer-scrim.open { opacity: 1; pointer-events: auto; }
-.bn-drawer { position: fixed; top: 0; z-index: 61; height: 100%; height: 100dvh;
-  width: 84%; max-width: 320px; background: var(--drw-bg); box-shadow: 0 12px 28px rgba(20,33,61,.22);
-  transition: transform .25s ease; overflow-y: auto;
-  display: flex; flex-direction: column; padding: 16px; font-family: 'IBM Plex Sans Arabic', sans-serif; }
-/* الاتجاه RTL: الدرج من اليمين */
-[dir="rtl"] .bn-drawer { right: 0; left: auto; transform: translateX(100%); }
-[dir="rtl"] .bn-drawer.open { transform: translateX(0); }
-/* الاتجاه LTR: الدرج من اليسار */
-html:not([dir="rtl"]) .bn-drawer { left: 0; right: auto; transform: translateX(-100%); }
-html:not([dir="rtl"]) .bn-drawer.open { transform: translateX(0); }
+.bn-drawer { width: 84%; max-width: 320px; height: 100%; background: var(--drw-bg);
+  box-shadow: 0 12px 28px rgba(20,33,61,.22); transition: transform .25s ease; overflow-y: auto;
+  display: flex; flex-direction: column; padding: 16px; font-family: 'IBM Plex Sans Arabic', sans-serif;
+  transform: translateX(100%); }
+/* مفتوح: يعود لمكانه (دائماً من اليمين لأن واجهة التنقّل عربية) */
+.bn-drawer-scrim.open .bn-drawer { transform: translateX(0); }
 .bn-drawer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .bn-drawer a { display: flex; align-items: center; gap: 12px; color: var(--hd-ink);
   text-decoration: none; font-weight: 600; font-size: 16px; padding: 14px 12px; border-radius: 12px; }
