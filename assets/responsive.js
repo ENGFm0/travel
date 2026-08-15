@@ -61,7 +61,8 @@
   }
   function logoHTML() {
     return '<a class="bn-logo" href="index.html" aria-label="بوردنق باس">' +
-      logoMarkSVG() +
+      '<img class="bn-mark" src="assets/logo.png?v=11" alt="BoardingPass Logo" ' +
+        'onerror="this.style.display=\'none\'"/>' +
       '<span class="bn-logo-tx"><span class="bn-logo-ar">بوردنق باس</span><span class="bn-logo-en">BoardingPass</span></span></a>';
   }
 
