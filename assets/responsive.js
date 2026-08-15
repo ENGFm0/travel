@@ -44,9 +44,9 @@
   var LOGO_LIGHT = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuU-H5KA1yKYswa4aFfXcdEMRTmWrBVzRh8q4ssRiTA2Cn1kamLKEPRkGiBf6tAGq8Xj79RBy0Qx9irTqsQBvtsfBuIASp8w3GbW4kNCJEUklpHo0JSyY394oYnh5gXuxkGyqj2QwyAKd5CkEFiSfv2iU-H3aGZjUvMn37BB0wy-j_JWcJ2ubXYs-YE4Q4x5VxiIj0lUmdwS1-UN3ptGKJp40S5l3CLt6Zb2C20q3hwWky8LlzNefsuX8LfuF6P9Xmiw';
   var LOGO_DARK = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBl5rMMfxK_ELBb_BeP3_x1HMPycju6slrR_ZyKEavU0GlCM2nzA-78azb2d6KWUirP63MYhw10YTxrYF5QPiKfZgCx6LHfGnucVhA2VPwalJdrQEwAinbEqZGIdI-O5ESEmiGeCq05ZpQW__ABHlv7sGnAiOhRkEiYRtnsfzR6-rAkBhYJf5d8iK5NarXQtxzKOA3n5bP1cCwDfcQrutFI7SA5N8Y_CAjJlz6yzxuZbMCELqxpO9ybKP-3TZeB1SvJ-w';
   function logoHTML() {
-    return '<a class="bn-logo" href="index.html" aria-label="بوردنق">' +
-      '<img class="bn-logo-img bn-logo-light" src="' + LOGO_LIGHT + '" alt="بوردنق"/>' +
-      '<img class="bn-logo-img bn-logo-dark" src="' + LOGO_DARK + '" alt="بوردنق"/></a>';
+    return '<a class="bn-logo" href="index.html" aria-label="بوردنق باس">' +
+      '<span class="bn-logo-ic material-symbols-outlined">confirmation_number</span>' +
+      '<span class="bn-logo-tx"><span class="bn-logo-ar">بوردنق باس</span><span class="bn-logo-en">BoardingPass</span></span></a>';
   }
 
   var _scrim = null;
