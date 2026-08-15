@@ -40,12 +40,21 @@
 
   function icon(name) { return '<span class="material-symbols-outlined">' + name + '</span>'; }
 
-  // الشعار القديم (بوردنق Boarding) — نسخة فاتحة وأخرى داكنة
-  var LOGO_LIGHT = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuU-H5KA1yKYswa4aFfXcdEMRTmWrBVzRh8q4ssRiTA2Cn1kamLKEPRkGiBf6tAGq8Xj79RBy0Qx9irTqsQBvtsfBuIASp8w3GbW4kNCJEUklpHo0JSyY394oYnh5gXuxkGyqj2QwyAKd5CkEFiSfv2iU-H3aGZjUvMn37BB0wy-j_JWcJ2ubXYs-YE4Q4x5VxiIj0lUmdwS1-UN3ptGKJp40S5l3CLt6Zb2C20q3hwWky8LlzNefsuX8LfuF6P9Xmiw';
-  var LOGO_DARK = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBl5rMMfxK_ELBb_BeP3_x1HMPycju6slrR_ZyKEavU0GlCM2nzA-78azb2d6KWUirP63MYhw10YTxrYF5QPiKfZgCx6LHfGnucVhA2VPwalJdrQEwAinbEqZGIdI-O5ESEmiGeCq05ZpQW__ABHlv7sGnAiOhRkEiYRtnsfzR6-rAkBhYJf5d8iK5NarXQtxzKOA3n5bP1cCwDfcQrutFI7SA5N8Y_CAjJlz6yzxuZbMCELqxpO9ybKP-3TZeB1SvJ-w';
+  // علامة الشعار: تذكرة برتقالية مائلة بداخلها طائرة (إعادة رسم SVG)
+  function logoMarkSVG() {
+    return '<svg class="bn-mark" viewBox="0 0 54 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<defs><linearGradient id="bnMarkG" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#F6AE55"/><stop offset="1" stop-color="#E85D3D"/></linearGradient></defs>' +
+      '<g transform="rotate(-18 27 20)">' +
+        '<rect x="9" y="9" width="36" height="22" rx="6.5" fill="url(#bnMarkG)"/>' +
+        '<line x1="35.5" y1="10.6" x2="35.5" y2="29.4" stroke="#FFF7EE" stroke-opacity=".6" stroke-width="1.7" stroke-dasharray="1.5 2.7" stroke-linecap="round"/>' +
+        '<g transform="translate(19.5,12.5) scale(.62) rotate(-28 12 12)" fill="#FFF7EE">' +
+          '<path d="M21 16v-2l-8-5V3.5C13 2.67 12.33 2 11.5 2S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>' +
+        '</g></g></svg>';
+  }
   function logoHTML() {
     return '<a class="bn-logo" href="index.html" aria-label="بوردنق باس">' +
-      '<span class="bn-logo-ic material-symbols-outlined">confirmation_number</span>' +
+      logoMarkSVG() +
       '<span class="bn-logo-tx"><span class="bn-logo-ar">بوردنق باس</span><span class="bn-logo-en">BoardingPass</span></span></a>';
   }
 
@@ -193,10 +202,24 @@
     }
   }
 
+  function buildFooter() {
+    if (document.getElementById('bn-footer')) return;
+    var f = document.createElement('footer');
+    f.id = 'bn-footer';
+    f.innerHTML =
+      '<div class="bn-ft-in">' +
+        logoHTML() +
+        '<nav class="bn-ft-links"><a href="#">سياسة الخصوصية</a><a href="#">شروط الخدمة</a><a href="#">مركز المساعدة</a></nav>' +
+        '<div class="bn-ft-cp">© 2025 بوردنق باس · BoardingPass — جميع الحقوق محفوظة.</div>' +
+      '</div>';
+    document.body.appendChild(f);
+  }
+
   function init() {
     try { buildDrawer(); } catch (e) {}
     try { buildHeader(); } catch (e) {}
     try { buildTabBar(); } catch (e) {}
+    try { buildFooter(); } catch (e) {}
     try { wireTheme(); } catch (e) {}
     try { wireLang(); } catch (e) {}
     try { wireProfile(); } catch (e) {}
