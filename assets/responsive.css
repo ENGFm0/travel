@@ -64,13 +64,13 @@ html.dark #bn-footer { border-color: rgba(255,255,255,.10); }
 }
 .bn-hd { display: flex; align-items: center; justify-content: space-between;
   gap: 12px; max-width: 1280px; margin: 0 auto; height: 64px; padding: 0 20px; }
-.bn-logo { display: inline-flex; align-items: center; gap: 8px;
+.bn-logo { display: inline-flex; align-items: center; gap: 12px;
   color: var(--hd-ink); font-weight: 700; font-size: 20px; text-decoration: none; white-space: nowrap; }
 .bn-logo .material-symbols-outlined { color: var(--or); font-size: 26px; }
 /* الشعار المدمج: تذكرة+طائرة (SVG) + بوردنق باس / BoardingPass */
-.bn-mark { height: 34px; width: auto; display: block; flex: 0 0 auto; }
-.bn-logo-tx { display: flex; flex-direction: column; line-height: 1.02; }
-.bn-logo-ar { font-weight: 700; font-size: 18px; color: var(--hd-ink); }
+.bn-mark { height: 38px; width: auto; display: block; flex: 0 0 auto; }
+.bn-logo-tx { display: flex; flex-direction: column; gap: 2px; line-height: 1.2; }
+.bn-logo-ar { font-weight: 700; font-size: 20px; color: var(--hd-ink); }
 .bn-logo-en { font-weight: 700; font-size: 11px; letter-spacing: .3px; color: var(--or); }
 /* زر اللغة نصّي */
 .bn-lang { width: auto; min-width: 38px; padding: 0 8px; font-weight: 700; font-size: 14px; }
