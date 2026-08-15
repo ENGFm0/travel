@@ -76,11 +76,8 @@
         logoHTML() +
         '<nav class="bn-mainnav">' + navLinks + '</nav>' +
         '<div class="bn-hd-actions">' +
-          '<a class="bn-cta bn-header-cta" href="' + NEW_TRIP + '">' + icon('add') + '<span class="bn-cta-txt">إنشاء رحلة</span></a>' +
-          '<button class="bn-icon bn-lang" data-act="lang" title="اللغة" aria-label="تغيير اللغة">EN</button>' +
           '<button class="bn-icon" data-act="theme" title="الوضع الليلي" aria-label="الوضع الليلي">' + icon('dark_mode') + '</button>' +
           '<a class="bn-icon bn-profile" href="index.html?auth=1" title="حسابي" aria-label="تسجيل الدخول / حسابي">' + icon('account_circle') + '</a>' +
-          '<button class="bn-icon bn-burger" data-act="menu" aria-label="القائمة">' + icon('menu') + '</button>' +
         '</div>' +
       '</div>';
     document.body.insertBefore(hd, document.body.firstChild);
