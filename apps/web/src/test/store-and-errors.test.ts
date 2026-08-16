@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useUIStore } from '@/app/store/uiStore';
-import { ApiError, isApiError, toApiError } from '@/shared/lib/errors';
+import { ApiError, isApiError, toApiError } from '@boardingpass/core';
 
 describe('UI store', () => {
   beforeEach(() => {

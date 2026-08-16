@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/app/store/uiStore';
-import { dirForLocale } from '@/shared/lib/format';
+import { dirForLocale } from '@boardingpass/types';
 
 /** Keeps i18next language and the <html lang/dir> in sync with the locale
  *  choice. Direction is derived from locale (ar→rtl, en→ltr) — components must

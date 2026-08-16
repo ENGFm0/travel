@@ -1,8 +1,6 @@
-import type { Locale } from '@/app/store/uiStore';
+import type { Locale } from '@boardingpass/types';
 
-/** Locale-aware formatters (shared, business-independent — extractable to a
- *  cross-platform package later per architecture §3). */
-
+/** Locale-aware formatters (business-independent, cross-platform). */
 const localeTag = (l: Locale): string => (l === 'ar' ? 'ar-SA' : 'en-US');
 
 export function formatNumber(value: number, locale: Locale): string {
@@ -24,8 +22,4 @@ export function formatDate(
 ): string {
   const d = value instanceof Date ? value : new Date(value);
   return new Intl.DateTimeFormat(localeTag(locale), opts).format(d);
-}
-
-export function dirForLocale(locale: Locale): 'rtl' | 'ltr' {
-  return locale === 'ar' ? 'rtl' : 'ltr';
 }

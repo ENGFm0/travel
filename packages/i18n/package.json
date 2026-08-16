@@ -1,0 +1,14 @@
+{
+  "name": "@boardingpass/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./ar.json": "./src/ar.json",
+    "./en.json": "./src/en.json"
+  },
+  "dependencies": {
+    "@boardingpass/types": "0.1.0"
+  }
+}

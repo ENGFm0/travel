@@ -1,0 +1,9 @@
+# monorepo (Node) — the static prototype at repo root is plain HTML/CSS/JS and
+# is unaffected. These ignore build tooling only.
+node_modules/
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+*.local
+.DS_Store

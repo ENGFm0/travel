@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import ar from '@/shared/i18n/ar.json';
-import en from '@/shared/i18n/en.json';
+import { ar, en } from '@boardingpass/i18n';
 
 /** FR-014-007 / AC7: i18n bundle completeness — AR and EN must have identical
  *  key sets (no missing/extra keys). This is the CI missing-key guard. */

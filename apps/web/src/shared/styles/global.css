@@ -1,5 +1,5 @@
 /* US-014 · Global base + shell layout (RTL-first, direction-agnostic via logical props) */
-@import './tokens.css';
+@import '@boardingpass/design-tokens/tokens.css';
 
 *,
 *::before,

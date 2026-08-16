@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { ThemeChoice, Locale } from '@boardingpass/types';
 
-export type ThemeChoice = 'light' | 'dark' | 'system';
-export type Locale = 'ar' | 'en';
+export type { ThemeChoice, Locale };
 
 interface UIState {
   theme: ThemeChoice;

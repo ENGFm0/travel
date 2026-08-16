@@ -1,0 +1,15 @@
+{
+  "name": "boardingpass-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "BoardingPass · بوردنق باس — monorepo (web, mobile, api, shared packages).",
+  "workspaces": [
+    "packages/*",
+    "apps/web"
+  ],
+  "scripts": {
+    "test": "npm run test --workspace @boardingpass/web",
+    "build": "npm run build --workspace @boardingpass/web",
+    "typecheck": "npm run typecheck --workspace @boardingpass/web"
+  }
+}
