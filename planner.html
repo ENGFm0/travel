@@ -132,6 +132,24 @@
 
     <!-- Step 2 -->
     <div class="nt-step hidden flex-col gap-4" data-step="2">
+
+      <!-- استيراد تفاصيل الطيران عبر رقم الرحلة (AviationStack) -->
+      <div class="rounded-xl border border-surface-variant bg-brand-surface/40 p-3 flex flex-col gap-3">
+        <div class="text-sm font-bold flex items-center gap-2"><span class="material-symbols-outlined text-brand-orange">flight</span>استيراد تفاصيل الطيران <span class="text-xs muted font-normal text-brand-navy/50">(اختياري)</span></div>
+        <div class="flex gap-2">
+          <input type="text" id="flight_iata" placeholder="رقم الرحلة — مثال: SV1020" class="flex-1 h-11 rounded-lg border border-surface-variant px-3 bg-white/70 uppercase" dir="ltr"/>
+          <button type="button" id="btn-fetch" class="h-11 px-4 rounded-lg bg-brand-navy text-white font-bold inline-flex items-center gap-1 whitespace-nowrap"><span class="material-symbols-outlined" style="font-size:18px">search</span>جلب</button>
+        </div>
+        <div id="loading-spinner" class="hidden text-sm text-brand-orange">جاري البحث عن بيانات الرحلة… ⏳</div>
+        <div id="flight-fields" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label class="text-xs font-semibold flex flex-col gap-1">شركة الطيران<input type="text" id="airline_name" placeholder="—" class="h-10 rounded-lg border border-surface-variant px-3 bg-white/70"/></label>
+          <label class="text-xs font-semibold flex flex-col gap-1">مطار المغادرة<input type="text" id="dep_airport" placeholder="—" class="h-10 rounded-lg border border-surface-variant px-3 bg-white/70"/></label>
+          <label class="text-xs font-semibold flex flex-col gap-1">مطار الوصول<input type="text" id="arr_airport" placeholder="—" class="h-10 rounded-lg border border-surface-variant px-3 bg-white/70"/></label>
+          <label class="text-xs font-semibold flex flex-col gap-1">وقت المغادرة المتوقع<input type="text" id="dep_time" placeholder="—" class="h-10 rounded-lg border border-surface-variant px-3 bg-white/70"/></label>
+          <label class="text-xs font-semibold flex flex-col gap-1 sm:col-span-2">وقت الوصول المتوقع<input type="text" id="arr_time" placeholder="—" class="h-10 rounded-lg border border-surface-variant px-3 bg-white/70"/></label>
+        </div>
+      </div>
+
       <div class="flex items-center justify-between">
         <span class="text-sm font-semibold">الوجهات</span>
         <label class="flex items-center gap-2 text-sm cursor-pointer"><input id="nt-multi" type="checkbox" class="w-4 h-4 accent-[#E85D3D]"/>رحلة متعددة المدن</label>
@@ -259,6 +277,69 @@
     });
     show();
   })();
+</script>
+
+<!-- ربط AviationStack: جلب تفاصيل الرحلة برقم الرحلة -->
+<script>
+(function(){
+  var btn=document.getElementById('btn-fetch');
+  var input=document.getElementById('flight_iata');
+  var spinner=document.getElementById('loading-spinner');
+  if(!btn) return;
+
+  function set(id,v){ var e=document.getElementById(id); if(e) e.value=v||''; }
+
+  async function fetchFlightDetails(){
+    var code=(input.value||'').trim().toUpperCase();
+    if(!code){ alert('يرجى إدخال رقم الرحلة أولاً.'); return; }
+
+    var apiKey='3700520163893d14908ad3a3886c889b';
+    // AviationStack المجاني http فقط، والموقع https → نمرّره عبر بروكسي https لتفادي حظر المحتوى المختلط
+    var api='http://api.aviationstack.com/v1/flights?access_key='+apiKey+'&flight_iata='+encodeURIComponent(code);
+    var proxies=[
+      'https://api.allorigins.win/raw?url='+encodeURIComponent(api),
+      'https://corsproxy.io/?url='+encodeURIComponent(api),
+      api  // محاولة مباشرة (تنفع فقط لو صُفّحت الصفحة عبر http)
+    ];
+
+    btn.disabled=true; spinner.style.display='block';
+    var result=null;
+    for(var i=0;i<proxies.length && !result;i++){
+      try{
+        var res=await fetch(proxies[i]);
+        if(!res.ok) continue;
+        var txt=await res.text();
+        result=JSON.parse(txt);
+      }catch(e){ /* جرّب البروكسي التالي */ }
+    }
+
+    try{
+      if(result && result.data && result.data.length>0){
+        var f=result.data[0];
+        set('airline_name', (f.airline && f.airline.name) || '');
+        set('dep_airport', ((f.departure && f.departure.airport) || '')+' ('+((f.departure && f.departure.iata) || '')+')');
+        set('arr_airport', ((f.arrival && f.arrival.airport) || '')+' ('+((f.arrival && f.arrival.iata) || '')+')');
+        if(f.departure && f.departure.scheduled) set('dep_time', new Date(f.departure.scheduled).toLocaleString('ar-SA'));
+        if(f.arrival && f.arrival.scheduled) set('arr_time', new Date(f.arrival.scheduled).toLocaleString('ar-SA'));
+        // تعبئة الوجهة وتاريخ الذهاب في النموذج إن كانا فارغين
+        var firstCity=document.querySelector('#nt-cities .c-name');
+        if(firstCity && !firstCity.value && f.arrival) firstCity.value=f.arrival.airport || f.arrival.iata || '';
+        var fromD=document.getElementById('nt-from');
+        if(fromD && !fromD.value && f.departure && f.departure.scheduled) fromD.value=f.departure.scheduled.slice(0,10);
+      } else {
+        alert('لم يتم العثور على بيانات لهذه الرحلة (قد تكون غير مجدولة اليوم في الخطة المجانية). يمكنك إدخال البيانات يدوياً.');
+      }
+    }catch(err){
+      console.error('Flight parse error:', err);
+      alert('تعذّر قراءة بيانات الرحلة. يمكنك إكمال البيانات يدوياً.');
+    }finally{
+      btn.disabled=false; spinner.style.display='none';
+    }
+  }
+
+  btn.addEventListener('click', fetchFlightDetails);
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); fetchFlightDetails(); }});
+})();
 </script>
 <script src="assets/responsive.js?v=11" defer></script>
 </body></html>
