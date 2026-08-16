@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { Layout } from '@/features/shell/Layout';
 import {
   HomePage,
@@ -12,8 +12,9 @@ import {
 } from '@/pages/pages';
 
 /** Route registry. Section pages are placeholders until their stories land.
- *  (Code-splitting via React.lazy is added per-route as pages grow.) */
-export const router = createBrowserRouter([
+ *  (Per-route code-splitting via React.lazy is applied per heavy page as they
+ *  grow.) Exported as `routes` so tests can mount a memory router. */
+export const routes: RouteObject[] = [
   {
     path: '/',
     element: <Layout />,
@@ -28,4 +29,6 @@ export const router = createBrowserRouter([
       { path: '*', element: <NotFoundPage /> },
     ],
   },
-]);
+];
+
+export const router = createBrowserRouter(routes);
