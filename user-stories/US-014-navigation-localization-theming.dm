@@ -1,5 +1,13 @@
 # US-014 — Platform Navigation, Localization, Theming & Accessibility (Shell)
-Status: DRAFT · Size: M · Tenant-scoped: No (app shell / cross-cutting)
+Status: IN-PROGRESS · Size: M · Tenant-scoped: No (app shell / cross-cutting)
+
+> **Implementation status**
+> - `US-014-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/` (React 19 + Vite 8 + Router 7 + i18next + Zustand). 13 tests green (shell behavior, i18n completeness, axe a11y, routing/404, store + error contract), `typecheck` + `build` green, real-browser no-overflow at 360/768/1280.
+> - `US-014-SEC-001` (web portion) — ✅ security headers + CSP (`apps/web/public/_headers`), no client secrets, axe gate.
+> - `US-014-QA-001` (web portion) — ✅ automated suite above.
+> - `US-014-BE-001` — 🟡 **scaffolded** in `apps/api/` (.NET 10 minimal API: unified error contract, exception + security-headers middleware, versioned `/api/v1`, OpenAPI, health/config). *Not compiled in the spec sandbox (no .NET SDK).*
+> - `US-014-FE-002` (mobile) — 🟡 **scaffolded** in `apps/mobile/` (Expo + RN 0.86: 5-tab nav, i18n, theme, RTL). *Not built (no emulator).*
+> - Remaining to reach DONE: compile/run BE + mobile on a real toolchain; extract shared `packages/*`; visual contrast audit; CI wiring.
 
 ## 1. Story ID & Title
 **US-014 — App Shell**: unified header (logo + dark-mode + profile), mobile bottom navigation (5 items), drawer (if used), routing, i18n (AR/EN + RTL/LTR), theming (light/dark/system), responsive framework, accessibility baseline.

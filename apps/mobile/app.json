@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "BoardingPass",
+    "slug": "boardingpass",
+    "scheme": "boardingpass",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true, "bundleIdentifier": "sa.boardingpass.app" },
+    "android": { "package": "sa.boardingpass.app" },
+    "extra": { "apiBaseUrl": "https://api.boardingpass.example/api/v1" }
+  }
+}
