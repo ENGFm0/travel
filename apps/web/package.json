@@ -1,0 +1,36 @@
+{
+  "name": "@boardingpass/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "BoardingPass Web — US-014 App Shell (React + TS + Vite): routing, i18n (AR/EN + RTL/LTR), theming (light/dark/system), responsive layout, accessibility, unified header/footer/bottom-nav.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "i18next": "^26.3.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-i18next": "^17.0.11",
+    "react-router-dom": "^7.18.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.5",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.0",
+    "vitest": "^4.1.10"
+  }
+}

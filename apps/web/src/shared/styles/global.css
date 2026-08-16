@@ -1,0 +1,294 @@
+/* US-014 · Global base + shell layout (RTL-first, direction-agnostic via logical props) */
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  margin: 0;
+  max-width: 100%;
+}
+
+body {
+  font-family: var(--bp-font);
+  background: var(--bp-bg);
+  color: var(--bp-ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400;
+  user-select: none;
+}
+
+/* Accessibility: visible focus + skip link + reduced motion */
+:focus-visible {
+  outline: 3px solid var(--bp-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.bp-skip-link {
+  position: fixed;
+  inset-inline-start: 12px;
+  top: -60px;
+  z-index: 10000;
+  background: var(--bp-navy);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--bp-r-md);
+  transition: top 0.15s ease;
+}
+.bp-skip-link:focus {
+  top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* App layout */
+.bp-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.bp-main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--bp-container);
+  margin-inline: auto;
+  padding: var(--bp-s-6) var(--bp-s-4);
+  /* clear the fixed bottom nav */
+  padding-bottom: calc(var(--bp-bottomnav-h) + env(safe-area-inset-bottom, 0px) + var(--bp-s-4));
+}
+
+/* ---------- Header ---------- */
+.bp-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: color-mix(in srgb, var(--bp-bg) 88%, transparent);
+  backdrop-filter: saturate(1.1) blur(8px);
+  border-bottom: 1px solid var(--bp-border);
+}
+.bp-header__inner {
+  max-width: var(--bp-container);
+  margin-inline: auto;
+  height: var(--bp-header-h);
+  padding-inline: var(--bp-s-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bp-s-3);
+}
+.bp-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bp-s-3);
+}
+.bp-logo__mark {
+  height: 38px;
+  width: auto;
+  display: block;
+  flex: 0 0 auto;
+}
+.bp-logo__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.1;
+}
+.bp-logo__ar {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--bp-ink);
+}
+.bp-logo__en {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--bp-orange);
+}
+.bp-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--bp-s-2);
+}
+.bp-icon-btn {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--bp-ink);
+  border-radius: var(--bp-r-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease;
+}
+.bp-icon-btn:hover {
+  background: color-mix(in srgb, var(--bp-ink) 8%, transparent);
+}
+
+/* ---------- Footer ---------- */
+.bp-footer {
+  border-top: 1px solid var(--bp-border);
+  padding: var(--bp-s-6) var(--bp-s-4);
+}
+.bp-footer__inner {
+  max-width: var(--bp-container);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--bp-s-3);
+  text-align: center;
+}
+.bp-footer__links {
+  display: flex;
+  gap: var(--bp-s-4);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.bp-footer__links a {
+  color: var(--bp-ink);
+  opacity: 0.72;
+  font-size: 14px;
+  font-weight: 600;
+}
+.bp-footer__links a:hover {
+  color: var(--bp-orange);
+  opacity: 1;
+}
+.bp-footer__cp {
+  font-size: 12.5px;
+  color: var(--bp-ink-muted);
+}
+@media (min-width: 768px) {
+  .bp-footer__inner {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: start;
+  }
+}
+
+/* ---------- Bottom Nav ---------- */
+.bp-bottomnav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: var(--bp-bar-bg);
+  border-top: 1px solid var(--bp-border);
+  box-shadow: 0 -4px 16px rgba(20, 33, 61, 0.07);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bp-bottomnav__inner {
+  max-width: 560px;
+  margin-inline: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+}
+.bp-tab {
+  flex: 1 1 0;
+  min-height: var(--bp-bottomnav-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 2px 6px;
+  color: var(--bp-ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+  -webkit-tap-highlight-color: transparent;
+}
+.bp-tab .material-symbols-outlined {
+  font-size: 24px;
+}
+.bp-tab[aria-current='page'] {
+  color: var(--bp-orange);
+}
+.bp-tab[aria-current='page'] .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1;
+}
+.bp-tab--cta {
+  flex: 0 0 auto;
+}
+.bp-tab--cta .bp-fab {
+  width: 52px;
+  height: 52px;
+  margin-top: -22px;
+  border-radius: var(--bp-r-full);
+  background: var(--bp-orange);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(232, 93, 61, 0.45);
+  border: 3px solid var(--bp-bar-bg);
+}
+.bp-tab--cta .material-symbols-outlined {
+  font-size: 28px;
+}
+
+/* ---------- Page scaffolding (placeholder) ---------- */
+.bp-page h1 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  margin: 0 0 var(--bp-s-2);
+}
+.bp-page__lead {
+  color: var(--bp-ink-muted);
+  margin: 0 0 var(--bp-s-6);
+}
+.bp-card {
+  background: var(--bp-surface);
+  border: 1px solid var(--bp-border);
+  border-radius: var(--bp-r-lg);
+  box-shadow: var(--bp-shadow-sm);
+  padding: var(--bp-s-6);
+}
+.bp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--bp-r-full);
+  font-size: 12px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--bp-orange) 14%, transparent);
+  color: var(--bp-orange);
+}

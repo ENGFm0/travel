@@ -1,0 +1,73 @@
+/* ============================================================
+   US-014 · Design Tokens — BoardingPass
+   Light palette on :root; dark overrides via [data-theme="dark"]
+   (explicit) and prefers-color-scheme (system). Theme is resolved
+   to an explicit data-theme by the ThemeProvider, so both paths
+   are covered.
+   ============================================================ */
+:root {
+  /* Brand */
+  --bp-navy: #14213d;
+  --bp-orange: #e85d3d;
+  --bp-gold: #f4a950;
+  --bp-sand: #fdf6ec;
+  --bp-teal: #2a9d8f;
+  --bp-blue: #3a6ea5;
+  --bp-violet: #7c5cbf;
+
+  /* Semantic (light) */
+  --bp-bg: #fdf6ec;
+  --bp-surface: #ffffff;
+  --bp-surface-2: #f4ede3;
+  --bp-ink: #14213d;
+  --bp-ink-muted: rgba(20, 33, 61, 0.62);
+  --bp-border: rgba(20, 33, 61, 0.1);
+  --bp-primary: var(--bp-orange);
+  --bp-on-primary: #ffffff;
+  --bp-bar-bg: #ffffff;
+  --bp-focus: #1a73c7;
+  --bp-danger: #ba1a1a;
+  --bp-success: var(--bp-teal);
+
+  /* Elevation */
+  --bp-shadow-sm: 0 4px 12px rgba(20, 33, 61, 0.06);
+  --bp-shadow-pop: 0 12px 28px rgba(20, 33, 61, 0.2);
+
+  /* Radius */
+  --bp-r-sm: 0.375rem;
+  --bp-r-md: 0.75rem;
+  --bp-r-lg: 1rem;
+  --bp-r-full: 9999px;
+
+  /* Spacing (8pt) */
+  --bp-s-1: 4px;
+  --bp-s-2: 8px;
+  --bp-s-3: 12px;
+  --bp-s-4: 16px;
+  --bp-s-6: 24px;
+  --bp-s-8: 32px;
+
+  /* Layout */
+  --bp-container: 1280px;
+  --bp-header-h: 64px;
+  --bp-bottomnav-h: 64px;
+
+  /* Type */
+  --bp-font: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bp-bg: #0f1a30;
+  --bp-surface: #1f2f54;
+  --bp-surface-2: #26375f;
+  --bp-ink: #fdf6ec;
+  --bp-ink-muted: rgba(253, 246, 236, 0.66);
+  --bp-border: rgba(255, 255, 255, 0.1);
+  --bp-bar-bg: #1f2f54;
+  --bp-on-primary: #ffffff;
+  --bp-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --bp-shadow-pop: 0 12px 28px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}

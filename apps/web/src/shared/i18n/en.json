@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "BoardingPass",
+    "brandEn": "BoardingPass",
+    "tagline": "Plan your trip and coordinate your group in one place"
+  },
+  "nav": {
+    "home": "Home",
+    "planner": "Planner",
+    "explore": "Explore",
+    "buddies": "Buddies",
+    "memories": "Memories",
+    "mytrips": "My Trips",
+    "newTrip": "New Trip",
+    "profile": "Account"
+  },
+  "header": {
+    "toggleTheme": "Toggle dark mode",
+    "toggleLang": "Change language",
+    "account": "Account / Sign in",
+    "skipToContent": "Skip to content"
+  },
+  "footer": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "help": "Help Center",
+    "copyright": "© 2026 BoardingPass · بوردنق باس — All rights reserved."
+  },
+  "theme": { "light": "Light", "dark": "Dark", "system": "System" },
+  "common": { "comingSoon": "Coming soon", "openMenu": "Open menu" },
+  "pages": {
+    "home": { "title": "Welcome to BoardingPass", "lead": "Organize your next trip with your group: itinerary, expenses, tasks, and memories — all in one place." },
+    "planner": { "title": "Plan your trip", "lead": "Prepare step by step: itinerary, bookings, packing, and the group kitty." },
+    "explore": { "title": "Explore & Recommendations", "lead": "Discover the best places, restaurants, and activities for your destination." },
+    "buddies": { "title": "Travel Buddies", "lead": "Find companions for a full trip or a specific activity." },
+    "memories": { "title": "Memories & Community", "lead": "Capture moments by day or place and share them." },
+    "mytrips": { "title": "My Trips & Group", "lead": "Track upcoming and past trips and manage your group." },
+    "profile": { "title": "Account", "lead": "Your details and preferences: language, theme, and notifications." },
+    "notFound": { "title": "Page not found", "lead": "We couldn't find what you're looking for.", "back": "Back to home" }
+  },
+  "shellNote": "This is the app shell (US-014): unified navigation, two languages with direction, theming, and full responsiveness. Real content arrives in later stories."
+}
