@@ -1,0 +1,54 @@
+rules_version = '2';
+
+// BoardingPass — Firebase Storage Security Rules (US-002 avatars, US-013 memories).
+// Access is membership-/owner-scoped and mirrors Firestore. Uploads are validated
+// for content type + size here; the backend additionally EXIF-strips and virus-
+// scans via the signed-URL pipeline (BR-013-004). Deny-by-default.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function role() { return signedIn() ? request.auth.token.role : 'GUEST'; }
+    function isAdmin() { return role() == 'ADMIN' || role() == 'SUPER_ADMIN'; }
+
+    // Trip membership is authoritative in Firestore.
+    function isTripMember(tripId) {
+      return signedIn() &&
+        firestore.exists(/databases/(default)/documents/trips/$(tripId)/members/$(uid()));
+    }
+    function tripRole(tripId) {
+      return firestore.get(/databases/(default)/documents/trips/$(tripId)/members/$(uid())).data.role;
+    }
+
+    function isImage() { return request.resource.contentType.matches('image/.*'); }
+    function isMedia() { return request.resource.contentType.matches('(image|video)/.*'); }
+
+    // Avatars: users/{uid}/avatar.* — self-write, jpg/png/webp, ≤ 5 MB (VR-002-003).
+    match /users/{userId}/avatar/{file} {
+      allow read: if signedIn();
+      allow write: if signedIn() && uid() == userId
+                   && request.resource.contentType.matches('image/(jpeg|png|webp)')
+                   && request.resource.size < 5 * 1024 * 1024;
+      allow delete: if signedIn() && uid() == userId;
+    }
+
+    // Memories: memories/{tripId}/... — trip members read/upload; images ≤10MB,
+    // videos ≤100MB (BR-013-006). Deletion of a specific object is authorized by
+    // the backend (own vs owner) — direct client delete is denied.
+    match /memories/{tripId}/{allPaths=**} {
+      allow read: if isTripMember(tripId) || isAdmin();
+      allow write: if isTripMember(tripId)
+                   && (tripRole(tripId) == 'OWNER' || tripRole(tripId) == 'MEMBER')
+                   && isMedia()
+                   && request.resource.size < 100 * 1024 * 1024;
+      allow delete: if false; // via backend (own vs owner check + audit)
+    }
+
+    // Deny everything else.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "//": "Composite indexes for the queries the app runs (US-005/011/012/013/015/016). Single-field indexes are automatic.",
+  "indexes": [
+    {
+      "//": "US-005: list a user's trips via the members collection-group, newest/soonest first.",
+      "collectionGroup": "members",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "joinedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "US-011: buddy discovery filtered by mode + category + budget, ordered by start date.",
+      "collectionGroup": "buddies",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "kind", "order": "ASCENDING" },
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "budget", "order": "ASCENDING" },
+        { "fieldPath": "dateFrom", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "//": "US-011: buddy discovery by city + start date.",
+      "collectionGroup": "buddies",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "kind", "order": "ASCENDING" },
+        { "fieldPath": "cityKey", "order": "ASCENDING" },
+        { "fieldPath": "dateFrom", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "//": "US-012: curated places by category, highest-rated first.",
+      "collectionGroup": "places",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "rating", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "US-015: a recipient's notifications, newest first.",
+      "collectionGroup": "items",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "read", "order": "ASCENDING" },
+        { "fieldPath": "ts", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "US-016: audit log filtered by action, newest first.",
+      "collectionGroup": "audit",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "action", "order": "ASCENDING" },
+        { "fieldPath": "ts", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

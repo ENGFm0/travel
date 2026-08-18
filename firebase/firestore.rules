@@ -1,0 +1,171 @@
+rules_version = '2';
+
+// BoardingPass — Firestore Security Rules (US-001..US-016).
+// Encodes the trip-as-tenant multi-tenant model + global roles from
+// user-stories/01-roles-and-permissions.dm. This is the SERVER-SIDE authority the
+// frontend's UX-only checks rely on. Deny-by-default; every trip-scoped read
+// resolves the caller's membership for tripId, so there is no cross-trip access.
+//
+// Global role comes from a custom auth claim (`request.auth.token.role` ∈
+// USER | ADMIN | SUPER_ADMIN), set by the backend on session creation (US-001).
+// Per-trip role lives in trips/{tripId}/members/{uid}.role ∈ OWNER | MEMBER | VIEWER.
+//
+// NOTE: high-integrity writes with invariants that rules can't express
+// atomically — capacity races (buddies join), one-owner transfer (members),
+// append-only audit, aggregate recompute (expenses/kitty) — are performed by the
+// backend via the Admin SDK (which bypasses these rules) and are DENIED to direct
+// clients below. Rules here secure direct client reads (realtime snapshots) and
+// the narrow, safe direct writes.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function role() { return signedIn() ? request.auth.token.role : 'GUEST'; }
+    function isAdmin() { return role() == 'ADMIN' || role() == 'SUPER_ADMIN'; }
+    function isSuperAdmin() { return role() == 'SUPER_ADMIN'; }
+
+    function memberDoc(tripId) {
+      return /databases/$(database)/documents/trips/$(tripId)/members/$(uid());
+    }
+    function isMember(tripId) { return signedIn() && exists(memberDoc(tripId)); }
+    function memberRole(tripId) { return get(memberDoc(tripId)).data.role; }
+    function isTripOwner(tripId) { return isMember(tripId) && memberRole(tripId) == 'OWNER'; }
+    // Members + owners may write; viewers are read-only (BR-006-003).
+    function canWriteTrip(tripId) {
+      return isMember(tripId) && (memberRole(tripId) == 'OWNER' || memberRole(tripId) == 'MEMBER');
+    }
+
+    // ── Users / profiles (US-002) ────────────────────────────────────────────
+    // Self read/write only; admins read (support, logged server-side). Email/uid
+    // immutability + deletion blocker are enforced by the backend.
+    match /users/{userId} {
+      allow read: if signedIn() && (uid() == userId || isAdmin());
+      allow create, update: if uid() == userId;
+      allow delete: if uid() == userId || isSuperAdmin();
+    }
+
+    // ── Trips (tenant root) + all trip-scoped subtrees (US-003/005/006/007/008/009/013)
+    match /trips/{tripId} {
+      allow read: if isMember(tripId) || isAdmin();
+      allow create: if signedIn()
+                    && request.resource.data.ownerUid == uid()
+                    && request.resource.data.status == 'ACTIVE';
+      // Owner-only lifecycle (update/archive/delete); super-admin override.
+      allow update: if isTripOwner(tripId) || isSuperAdmin();
+      allow delete: if isTripOwner(tripId) || isSuperAdmin();
+
+      // Members & roles (US-009). Owner manages; a non-owner member may remove
+      // (leave) only their own membership. Owner-transfer is atomic → backend.
+      match /members/{memberId} {
+        allow read: if isMember(tripId) || isAdmin();
+        allow create, update: if isTripOwner(tripId) || isSuperAdmin();
+        allow delete: if isSuperAdmin()
+                      || isTripOwner(tripId)
+                      || (uid() == memberId && memberRole(tripId) != 'OWNER');
+      }
+
+      // Itinerary: cities → days → activities (US-006). Member-write, viewer-read.
+      match /cities/{cityId} {
+        allow read: if isMember(tripId) || isAdmin();
+        allow write: if canWriteTrip(tripId);
+        match /{sub=**} {
+          allow read: if isMember(tripId) || isAdmin();
+          allow write: if canWriteTrip(tripId);
+        }
+      }
+
+      // Kitty + group/side expenses (US-007). Totals recompute + mark_paid are
+      // owner-authoritative and go through the backend; personal is self-scoped.
+      match /kitty/{doc} {
+        allow read: if isMember(tripId);
+        allow write: if isTripOwner(tripId); // set total / mark_paid (owner-only)
+      }
+      match /expenses/{expenseId} {
+        allow read: if isMember(tripId);
+        allow create: if canWriteTrip(tripId);
+        // creator or owner may edit/delete (BR-007-008)
+        allow update, delete: if canWriteTrip(tripId)
+                              && (resource.data.creatorUid == uid() || isTripOwner(tripId));
+      }
+      match /personal/{userId}/{doc=**} {
+        allow read, write: if signedIn() && uid() == userId && isMember(tripId); // strictly self (BR-007-003)
+      }
+
+      // Tasks, packing, bookings (US-008). Any member writes; viewer reads.
+      match /tasks/{taskId} {
+        allow read: if isMember(tripId);
+        allow write: if canWriteTrip(tripId);
+      }
+      match /packing/{itemId} {
+        allow read: if isMember(tripId);
+        allow write: if canWriteTrip(tripId);
+      }
+      match /bookings/{itemId} {
+        allow read: if isMember(tripId);
+        allow write: if canWriteTrip(tripId);
+      }
+
+      // Memories (US-013). Member reads (or shared viewer server-side); member
+      // uploads; uploader deletes own, owner deletes any (BR-013-002).
+      match /memories/{mediaId} {
+        allow read: if isMember(tripId) || isAdmin();
+        allow create: if canWriteTrip(tripId) && request.resource.data.uploaderUid == uid();
+        allow delete: if isTripOwner(tripId) || (isMember(tripId) && resource.data.uploaderUid == uid());
+      }
+    }
+
+    // ── Social graph: friends (US-010) ───────────────────────────────────────
+    // Self-scoped; the reciprocal side + uniqueness are handled by the backend.
+    match /friends/{userId}/{doc=**} {
+      allow read, write: if signedIn() && uid() == userId;
+    }
+
+    // ── Buddies (US-011) ─────────────────────────────────────────────────────
+    // Public browse for authenticated users; owner edits/deletes own request.
+    // join/leave (capacity race) go through the backend transaction → not writable here.
+    match /buddies/{requestId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.ownerUid == uid();
+      allow update, delete: if (signedIn() && resource.data.ownerUid == uid()) || isAdmin();
+    }
+
+    // ── Explore: curated places + self reviews (US-012) ──────────────────────
+    match /places/{placeId} {
+      allow read: if signedIn();                 // curated/read-only (server writes)
+      allow write: if false;
+      match /reviews/{reviewId} {
+        allow read: if signedIn();
+        allow write: if signedIn() && uid() == reviewId; // one review per user (VR-012)
+      }
+    }
+
+    // ── Notifications (US-015) ───────────────────────────────────────────────
+    // Recipient-scoped; the server creates them, the user may only mark read.
+    match /notifications/{userId}/items/{notifId} {
+      allow read: if signedIn() && uid() == userId;
+      allow update: if signedIn() && uid() == userId
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow create, delete: if false;
+    }
+
+    // ── Audit log (US-016) — append-only, admin-read, no client writes ────────
+    match /audit/{entryId} {
+      allow read: if isAdmin();
+      allow write: if false; // server (Admin SDK) only; never editable/deletable
+    }
+
+    // ── Platform config / feature flags (US-016) ─────────────────────────────
+    match /config/{doc} {
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+
+    // Deny-by-default for anything not matched above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
