@@ -267,5 +267,43 @@
     "analysis": "تحليل الإنفاق",
     "groupSpend": "إنفاق المجموعة",
     "personalSpend": "إنفاق شخصي"
+  },
+  "tasks": {
+    "title": "المهام",
+    "addPlaceholder": "مهمة جديدة…",
+    "assignee": "المسؤول",
+    "unassigned": "غير مُسندة",
+    "add": "إضافة",
+    "filterAll": "الكل",
+    "filterBy": "تصفية حسب العضو",
+    "noTasks": "لا توجد مهام بعد.",
+    "progress": "تقدّم المهام",
+    "delete": "حذف المهمة"
+  },
+  "bookings": {
+    "title": "قائمة الحجوزات",
+    "group": { "BOOKINGS": "الحجوزات", "DOCUMENTS": "الوثائق", "MONEY": "المال والاتصال" },
+    "item": {
+      "flight": "الطيران", "hotel": "السكن", "car": "تأجير سيارة",
+      "passport": "جواز السفر", "visa": "التأشيرة", "insurance": "تأمين السفر",
+      "currency": "العملة", "sim": "شريحة / eSIM"
+    }
+  },
+  "packing": {
+    "title": "قائمة الحقيبة",
+    "addPlaceholder": "أضف عنصرًا…",
+    "category": "الفئة",
+    "add": "إضافة",
+    "templates": "قوالب",
+    "tpl": { "essentials": "الأساسيات", "beach": "الشاطئ", "cold": "الطقس البارد" },
+    "empty": "حقيبتك فارغة. أضف عناصر أو طبّق قالبًا.",
+    "delete": "حذف العنصر",
+    "cat": { "CLOTHES": "ملابس", "ELECTRONICS": "إلكترونيات", "MEDS": "أدوية", "DOCS": "وثائق" },
+    "items": {
+      "passport": "جواز السفر", "tickets": "التذاكر", "charger": "الشاحن", "meds": "الأدوية",
+      "toiletries": "أدوات الاستحمام", "swimwear": "ملابس السباحة", "sunscreen": "واقي الشمس",
+      "sunglasses": "نظارة شمسية", "sandals": "صندل", "jacket": "جاكيت دافئ",
+      "gloves": "قفازات", "thermal": "ملابس حرارية"
+    }
   }
 }

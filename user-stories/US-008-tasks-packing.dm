@@ -1,5 +1,27 @@
 # US-008 — Tasks & Packing
-Status: DRAFT · Size: M · Tenant-scoped: Yes
+Status: IN-PROGRESS · Size: M · Tenant-scoped: Yes
+
+> **Implementation status**
+> - `US-008-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/tasks/`,
+>   mounted as the dashboard **Tasks tab**: a **task manager** (add with title +
+>   assignee from members, complete checkbox, delete, per-member filter, progress),
+>   a **bookings checklist** (bookings / documents / money groups with progress), and
+>   a **packing list** (categorized clothes/electronics/meds/docs, add/toggle/delete,
+>   one-tap templates essentials/beach/cold, progress). Pure model (`tasksModel.ts`)
+>   holds template **dedupe** (BR-008-002), **assignee integrity** (removed member →
+>   unassigned, BR-008-001), and progress — all unit-tested. Swappable `TasksService`
+>   (mock ↔ API) + reactive store. **Role-gated**: VIEWER read-only. 6 tests (3 model:
+>   dedupe, assignee integrity, progress; 3 UI: add+assign+toggle, template
+>   idempotency, viewer read-only) — **69/69 web tests green**, typecheck + build green.
+> - `US-008-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/TasksEndpoints.cs`:
+>   `GET /tasks-board`, tasks `POST`/toggle/`DELETE`, packing `POST`/toggle/`DELETE` +
+>   `POST /packing/template`, bookings toggle contracts. Server-side dedupe, assignee
+>   integrity, validation, realtime rules, and audit are the remaining BE work.
+>   *Not compiled (no .NET SDK).*
+> - `US-008-SEC-001` — partial: viewer read-only enforced in UX, tenant-scoped routes;
+>   server-side member-write enforcement + audit pending BE.
+> - Remaining to DONE: BE CRUD + dedupe/integrity + audit, Firestore realtime shared
+>   completion state, reminder hook (US-015).
 
 ## 1. Story ID & Title
 **US-008 — Tasks & Packing**: custom task manager (create task, assign to member, mark complete) + categorized packing/luggage checklist with one-tap templates.

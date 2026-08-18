@@ -267,5 +267,43 @@
     "analysis": "Spend analysis",
     "groupSpend": "Group spend",
     "personalSpend": "Personal spend"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "addPlaceholder": "New task…",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned",
+    "add": "Add",
+    "filterAll": "All",
+    "filterBy": "Filter by member",
+    "noTasks": "No tasks yet.",
+    "progress": "Tasks progress",
+    "delete": "Delete task"
+  },
+  "bookings": {
+    "title": "Bookings checklist",
+    "group": { "BOOKINGS": "Bookings", "DOCUMENTS": "Documents", "MONEY": "Money & connectivity" },
+    "item": {
+      "flight": "Flights", "hotel": "Accommodation", "car": "Car rental",
+      "passport": "Passport", "visa": "Visa", "insurance": "Travel insurance",
+      "currency": "Currency", "sim": "SIM / eSIM"
+    }
+  },
+  "packing": {
+    "title": "Packing list",
+    "addPlaceholder": "Add item…",
+    "category": "Category",
+    "add": "Add",
+    "templates": "Templates",
+    "tpl": { "essentials": "Essentials", "beach": "Beach", "cold": "Cold weather" },
+    "empty": "Your bag is empty. Add items or apply a template.",
+    "delete": "Delete item",
+    "cat": { "CLOTHES": "Clothes", "ELECTRONICS": "Electronics", "MEDS": "Meds", "DOCS": "Documents" },
+    "items": {
+      "passport": "Passport", "tickets": "Tickets", "charger": "Charger", "meds": "Medications",
+      "toiletries": "Toiletries", "swimwear": "Swimwear", "sunscreen": "Sunscreen",
+      "sunglasses": "Sunglasses", "sandals": "Sandals", "jacket": "Warm jacket",
+      "gloves": "Gloves", "thermal": "Thermal wear"
+    }
   }
 }
