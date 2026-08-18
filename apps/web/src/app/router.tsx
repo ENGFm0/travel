@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { Layout } from '@/features/shell/Layout';
 import { RequireAuth } from '@/features/auth/RequireAuth';
+import { RequireAdmin } from '@/features/admin/RequireAdmin';
 import {
   HomePage,
   PlannerPage,
@@ -22,6 +23,9 @@ const BuddiesPage = lazy(() =>
 );
 const ExplorePage = lazy(() =>
   import('@/features/places/ExplorePage').then((m) => ({ default: m.ExplorePage })),
+);
+const AdminPage = lazy(() =>
+  import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage })),
 );
 
 /** Route registry. Section pages are placeholders until their stories land.
@@ -59,6 +63,14 @@ export const routes: RouteObject[] = [
           <RequireAuth>
             <ProfilePage />
           </RequireAuth>
+        ),
+      },
+      {
+        path: 'admin',
+        element: (
+          <RequireAdmin>
+            <AdminPage />
+          </RequireAdmin>
         ),
       },
       { path: '*', element: <NotFoundPage /> },

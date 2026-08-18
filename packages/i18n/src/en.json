@@ -445,5 +445,34 @@
       "PAYMENT_REMINDER": "Payment reminder for your trip kitty",
       "BUDDY_JOIN": "Someone joined your buddy request"
     }
+  },
+  "admin": {
+    "title": "Admin & Moderation",
+    "deniedTitle": "Access denied",
+    "deniedLead": "This console is for administrators only.",
+    "tabUsers": "Users",
+    "tabModeration": "Moderation",
+    "tabAudit": "Audit log",
+    "tabRoles": "Roles",
+    "searchUsers": "Search users…",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "userStatus": { "ACTIVE": "Active", "SUSPENDED": "Suspended" },
+    "suspend": "Suspend",
+    "reactivate": "Reactivate",
+    "suspendTitle": "Suspend user",
+    "reason": "Reason",
+    "domain": { "REVIEW": "Review", "BUDDY": "Buddy request", "MEMORY": "Memory" },
+    "remove": "Remove",
+    "approve": "Approve",
+    "removeTitle": "Remove content",
+    "flagStatus": { "REMOVED": "Removed", "APPROVED": "Approved" },
+    "noFlags": "No flagged content — all clear.",
+    "auditNote": "The audit log is append-only and cannot be edited or deleted.",
+    "searchAudit": "Filter audit (actor, action, target)…",
+    "noAudit": "No audit entries match.",
+    "rolesBlocked": "Only a super-admin can manage roles."
   }
 }

@@ -445,5 +445,34 @@
       "PAYMENT_REMINDER": "تذكير بدفع قطة الرحلة",
       "BUDDY_JOIN": "انضم شخص إلى طلب الرفقة الخاص بك"
     }
+  },
+  "admin": {
+    "title": "الإدارة والإشراف",
+    "deniedTitle": "الوصول مرفوض",
+    "deniedLead": "هذه اللوحة مخصّصة للمشرفين فقط.",
+    "tabUsers": "المستخدمون",
+    "tabModeration": "الإشراف",
+    "tabAudit": "سجل التدقيق",
+    "tabRoles": "الأدوار",
+    "searchUsers": "ابحث في المستخدمين…",
+    "name": "الاسم",
+    "email": "البريد",
+    "role": "الدور",
+    "status": "الحالة",
+    "userStatus": { "ACTIVE": "نشط", "SUSPENDED": "موقوف" },
+    "suspend": "إيقاف",
+    "reactivate": "إعادة تفعيل",
+    "suspendTitle": "إيقاف المستخدم",
+    "reason": "السبب",
+    "domain": { "REVIEW": "مراجعة", "BUDDY": "طلب رفقة", "MEMORY": "ذكرى" },
+    "remove": "إزالة",
+    "approve": "اعتماد",
+    "removeTitle": "إزالة المحتوى",
+    "flagStatus": { "REMOVED": "أُزيل", "APPROVED": "مُعتمد" },
+    "noFlags": "لا يوجد محتوى مُبلّغ عنه — كل شيء سليم.",
+    "auditNote": "سجل التدقيق للإضافة فقط ولا يمكن تعديله أو حذفه.",
+    "searchAudit": "تصفية التدقيق (الفاعل، الإجراء، الهدف)…",
+    "noAudit": "لا توجد سجلات مطابقة.",
+    "rolesBlocked": "فقط المشرف الأعلى يمكنه إدارة الأدوار."
   }
 }

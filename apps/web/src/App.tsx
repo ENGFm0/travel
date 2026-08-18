@@ -16,6 +16,7 @@ import { initBuddies } from '@/features/buddies/buddiesStore';
 import { initPlaces } from '@/features/places/placesStore';
 import { initFlights } from '@/features/flights/flightsStore';
 import { initNotifications } from '@/features/notifications/notificationsStore';
+import { initAdmin } from '@/features/admin/adminStore';
 
 export function App() {
   useEffect(() => {
@@ -32,6 +33,7 @@ export function App() {
     initPlaces(); // bootstrap places service (API when configured, else in-memory mock)
     initFlights(); // bootstrap flights lookup service (API proxy when configured, else mock)
     initNotifications(); // bootstrap notifications service (API when configured, else in-memory mock)
+    initAdmin(); // bootstrap admin service (API when configured, else in-memory mock)
   }, []);
 
   return (

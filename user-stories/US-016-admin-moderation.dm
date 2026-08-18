@@ -1,5 +1,31 @@
 # US-016 — Admin & Moderation Console
-Status: DRAFT · Size: M · Tenant-scoped: No (cross-tenant, admin-global) — **Assumption-derived** (not visually in prototype; required to operate a real platform)
+Status: IN-PROGRESS · Size: M · Tenant-scoped: No (cross-tenant, admin-global) — **Assumption-derived** (not visually in prototype; required to operate a real platform)
+
+> **Implementation status**
+> - `US-016-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/admin/`,
+>   a **role-guarded** `/admin` console (`RequireAdmin` → non-admins & signed-out users
+>   get a denied page, never the console — AC6): **Users** (search, suspend with a
+>   required-reason modal / reactivate), **Moderation** queue (flagged reviews/buddy/
+>   memory content → remove-with-reason / approve), **Audit log** (append-only, filter,
+>   read-only with an "cannot edit/delete" note), and **Roles** (SUPER_ADMIN only —
+>   plain ADMIN sees a blocked banner, BR-016-002/AC3). Every mutation appends an
+>   **audit entry** (actor/action/target/reason, old→new) — AC5. Pure model
+>   (`adminModel.ts`): `isAdmin`, `canManageRoles`, `filterUsers`, `filterAudit`.
+>   Swappable `AdminService` (mock ↔ API) + reactive store; the page is code-split
+>   (React.lazy). 8 tests (2 model; 6 UI: denied-non-admin, denied-signed-out, suspend
+>   +audit, moderate-remove+audit, roles-blocked-for-admin, super-admin-assign+audit)
+>   — **129/129 web tests green**, typecheck + build green.
+> - `US-016-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/AdminEndpoints.cs`:
+>   `/api/v1/admin/overview`, `users/{uid}/suspend|reactivate`, `moderation/{id}`,
+>   `audit`, `users/{uid}/role` contracts. The ADMIN/SUPER_ADMIN authorization
+>   policies, token revocation on suspend, append-only tamper-evident audit store +
+>   query, take-down→owner notification (US-015), and role-manage restriction are the
+>   remaining BE work. *Not compiled (no .NET SDK).*
+> - `US-016-SEC-001` — partial: role gate + reason-required + append-only note in UX;
+>   server-side RBAC (403 no-leak), no-silent-tenant-access logging, tamper-evident
+>   audit, and least-privilege pending BE.
+> - Remaining to DONE: BE admin endpoints + RBAC policies + token revoke + audit store
+>   + take-down notifications + platform config/feature flags, audit export (restricted).
 
 ## 1. Story ID & Title
 **US-016 — Admin & Moderation Console**: user management (suspend/reactivate), content moderation (reviews, buddy requests, memories flags), audit log access, platform config, role management (super-admin).

@@ -47,6 +47,7 @@ v1.MapBuddiesEndpoints(); // US-011
 v1.MapPlacesEndpoints(); // US-012
 v1.MapFlightsEndpoints(); // US-004
 v1.MapNotificationsEndpoints(); // US-015
+v1.MapAdminEndpoints(); // US-016
 
 v1.MapGet("/config", () => Results.Ok(new
 {
