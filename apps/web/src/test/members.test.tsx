@@ -58,7 +58,7 @@ describe('US-009 Members', () => {
   it('renders the trip and its owner with an Amir role chip', async () => {
     await signIn();
     seed([OWNER]);
-    renderAt('/trips/trip-x');
+    renderAt('/trips/trip-x#members');
     expect(await screen.findByRole('heading', { name: 'رحلة الاختبار' })).toBeInTheDocument();
     expect(await screen.findByText('الأمير')).toBeInTheDocument();
   });
@@ -73,7 +73,7 @@ describe('US-009 Members', () => {
   it('owner invites someone, adding a pending member', async () => {
     await signIn();
     seed([OWNER]);
-    renderAt('/trips/trip-x');
+    renderAt('/trips/trip-x#members');
     await screen.findByText('الأمير');
     await userEvent.type(screen.getByLabelText('الاسم'), 'نورة');
     await userEvent.click(screen.getByRole('button', { name: 'دعوة' }));
@@ -84,7 +84,7 @@ describe('US-009 Members', () => {
   it('owner changes a member to viewer', async () => {
     await signIn();
     seed([OWNER, SALEM]);
-    renderAt('/trips/trip-x');
+    renderAt('/trips/trip-x#members');
     await screen.findByText('سالم');
     await userEvent.click(screen.getByRole('button', { name: 'اجعله مشاهدًا' }));
     expect(await screen.findByText('مشاهد')).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe('US-009 Members', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     await signIn();
     seed([OWNER, SALEM]);
-    renderAt('/trips/trip-x');
+    renderAt('/trips/trip-x#members');
     await screen.findByText('سالم');
     await userEvent.click(screen.getByRole('button', { name: 'نقل الإمارة' }));
     await waitFor(() => expect(screen.getAllByText('الأمير')).toHaveLength(1));
@@ -106,7 +106,7 @@ describe('US-009 Members', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     await signIn();
     seed([OWNER, SALEM]);
-    renderAt('/trips/trip-x');
+    renderAt('/trips/trip-x#members');
     const ownerName = await screen.findByText(/خالد/);
     const ownerRow = ownerName.closest('li') as HTMLElement;
     await userEvent.click(within(ownerRow).getByRole('button', { name: 'مغادرة الرحلة' }));
@@ -116,7 +116,7 @@ describe('US-009 Members', () => {
   it('copies the invite link and shows feedback', async () => {
     await signIn();
     seed([OWNER]);
-    renderAt('/trips/trip-x');
+    renderAt('/trips/trip-x#members');
     await screen.findByText('الأمير');
     await userEvent.click(screen.getByRole('button', { name: 'نسخ' }));
     expect(await screen.findByText('تم النسخ ✓')).toBeInTheDocument();

@@ -19,7 +19,6 @@ export function MembersPanel({ tripId }: { tripId: string }) {
 
   useEffect(() => {
     void membersActions.load(tripId);
-    return () => membersActions.reset();
   }, [tripId]);
 
   useEffect(() => {

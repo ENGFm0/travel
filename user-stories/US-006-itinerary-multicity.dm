@@ -1,5 +1,31 @@
 # US-006 — Itinerary & Multi-City Timeline
-Status: DRAFT · Size: M · Tenant-scoped: Yes
+Status: IN-PROGRESS · Size: M · Tenant-scoped: Yes
+
+> **Implementation status**
+> - `US-006-FE-001` (web) — ✅ **DONE & VERIFIED**: `TripDetailPage` is now the
+>   **dashboard shell** — trip header (badge, destinations, dates, members count) +
+>   accessible **tablist** (Itinerary, Expenses, Tasks & Packing, Members, Memories)
+>   with `aria-selected`, roving `tabIndex`, arrow-key nav, and `#hash` deep-links.
+>   New `apps/web/src/features/itinerary/`: swappable `ItineraryService` (mock ↔ API)
+>   + reactive store + `ItineraryTab` — horizontal **multi-city timeline** (seeded
+>   from the trip's cities, RTL/scrollable) that drives the active city's itinerary:
+>   flight + accommodation inline fields, weather placeholder (US-004), day list with
+>   activities, add/delete for cities/days/activities, city reorder (route order),
+>   cascade city delete (confirm), and empty states. **Role-gated**: VIEWER is
+>   read-only (edit controls hidden; server enforces per BR-006-003). Members tab
+>   hosts the US-009 panel; Expenses/Tasks/Memories show story placeholders. 5 tests
+>   (timeline switch, `#members` deep-link, add day+activity, viewer read-only, city
+>   cascade delete) — **48/48 web tests green**, typecheck + build green.
+> - `US-006-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/ItineraryEndpoints.cs`:
+>   `GET /itinerary`, cities/days/activities `POST`/`PATCH`/`DELETE` + `cities/{id}/move`
+>   contracts. Validation (VR-006-*), transactional reorder & cascade delete, order
+>   assignment, audit, indexes, and Firestore realtime rules are the remaining BE
+>   work. *Not compiled (no .NET SDK).*
+> - `US-006-SEC-001` — partial: viewer read-only enforced in UX, all routes
+>   tenant-scoped to `tripId`; server-side role enforcement + realtime rules pending BE.
+> - Remaining to DONE: BE CRUD + reorder/cascade + audit, Firestore realtime
+>   subscription (multi-user live updates), add-from-Explore hook (US-012), drag-drop
+>   reorder, flight fields sourced from US-004 lookup.
 
 ## 1. Story ID & Title
 **US-006 — Itinerary & Multi-City Timeline**: trip dashboard shell (tabbed) + interactive horizontal city timeline + per-city itinerary (flight, accommodation, weather, day-by-day activities).

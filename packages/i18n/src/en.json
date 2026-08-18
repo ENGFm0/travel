@@ -182,6 +182,41 @@
   "tripDetail": {
     "notFoundTitle": "Trip not found",
     "notFoundLead": "This trip may have been deleted or you don't have access.",
-    "backToTrips": "Back to My Trips"
+    "backToTrips": "Back to My Trips",
+    "tabsLabel": "Trip sections",
+    "tabItinerary": "Itinerary",
+    "tabExpenses": "Expenses",
+    "tabTasks": "Tasks & Packing",
+    "tabMembers": "Members",
+    "tabMemories": "Memories",
+    "tabSoon": "The {{tab}} tab arrives in its own story.",
+    "memberCount": "{{count}} members"
+  },
+  "itinerary": {
+    "timeline": "Cities timeline",
+    "addCity": "Add city",
+    "addCityPh": "Add city…",
+    "noCities": "No cities yet. Add your first stop.",
+    "moveEarlier": "Move earlier",
+    "moveLater": "Move later",
+    "deleteCity": "Delete city",
+    "confirmDeleteCity": "Delete {{name}} and its days and activities?",
+    "flight": "Flight",
+    "flightPh": "Airline / flight no. / times",
+    "hotel": "Accommodation",
+    "hotelPh": "Hotel / address",
+    "weather": "Weather",
+    "weatherSoon": "Coming soon",
+    "noDays": "No days yet. Add a day to start planning.",
+    "dayN": "Day {{n}}",
+    "addDay": "Add day",
+    "addDayPh": "Day title (optional)",
+    "confirmDeleteDay": "Delete this day and its activities?",
+    "deleteDay": "Delete day",
+    "add": "Add",
+    "addActivity": "Add activity",
+    "addActivityPh": "Activity…",
+    "activityTime": "Time",
+    "deleteActivity": "Delete activity"
   }
 }

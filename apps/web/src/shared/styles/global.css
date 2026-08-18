@@ -413,3 +413,47 @@ svg {
 .bp-status-chip { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: var(--bp-r-full); background: color-mix(in srgb, var(--bp-orange) 16%, transparent); color: var(--bp-orange); }
 .bp-member__actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .bp-btn--sm { height: 34px; padding-inline: 12px; font-size: 13px; }
+
+/* ── Dashboard tabs + itinerary timeline (US-006) ──────────────────────────── */
+.bp-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--bp-border); margin: 16px 0 20px; scrollbar-width: none; }
+.bp-tabs::-webkit-scrollbar { display: none; }
+.bp-tabbtn { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border: 0; background: transparent; color: var(--bp-ink-muted); font: inherit; font-weight: 700; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.bp-tabbtn .material-symbols-outlined { font-size: 20px; }
+.bp-tabbtn.is-on { color: var(--bp-primary); border-bottom-color: var(--bp-primary); }
+.bp-tabbtn:focus-visible { outline: 2px solid var(--bp-focus); outline-offset: 2px; border-radius: var(--bp-r-sm); }
+
+.bp-timeline { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px; scrollbar-width: thin; }
+.bp-stop { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-inline-size: 120px; padding: 10px 14px; border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-surface); cursor: pointer; font: inherit; flex: 0 0 auto; }
+.bp-stop.is-on { border-color: var(--bp-primary); background: color-mix(in srgb, var(--bp-primary) 8%, transparent); }
+.bp-stop__n { inline-size: 22px; block-size: 22px; border-radius: 50%; background: var(--bp-primary); color: var(--bp-on-primary); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+.bp-stop__name { font-weight: 700; }
+.bp-stop__date { font-size: 12px; color: var(--bp-ink-muted); }
+.bp-stop--add { flex-direction: row; align-items: center; gap: 6px; border-style: dashed; min-inline-size: 160px; }
+.bp-stop--add .bp-input { height: 34px; }
+
+.bp-city-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bp-city-panel__head h3 { margin: 0; }
+.bp-city-panel__ord { display: flex; gap: 4px; }
+.bp-info-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 14px 0; }
+.bp-info-card { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-surface); }
+.bp-info-card .material-symbols-outlined { color: var(--bp-primary); }
+.bp-info-card__body { display: flex; flex-direction: column; min-inline-size: 0; flex: 1; }
+.bp-info-card__label { font-size: 12px; font-weight: 700; color: var(--bp-ink-muted); }
+.bp-info-card__muted { color: var(--bp-ink-muted); }
+.bp-info-input { border: 0; border-bottom: 1px solid var(--bp-border); background: transparent; color: var(--bp-ink); font: inherit; padding: 2px 0; }
+.bp-info-input:focus { outline: none; border-bottom-color: var(--bp-primary); }
+
+.bp-days { margin-top: 8px; }
+.bp-day-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.bp-day-card { border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); padding: 12px; background: var(--bp-surface); }
+.bp-day-card__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bp-day-card__head h4 { margin: 0; font-size: 15px; }
+.bp-activity-list { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.bp-activity { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--bp-r-sm); background: var(--bp-surface-2); }
+.bp-activity__time { font-size: 12px; font-weight: 800; color: var(--bp-primary); min-inline-size: 42px; }
+.bp-activity__title { flex: 1; }
+.bp-add-row { display: flex; gap: 8px; align-items: center; }
+.bp-add-row .bp-input { flex: 1; }
+.bp-add-row--activity { margin-top: 8px; }
+.bp-icon-btn--xs { inline-size: 28px; block-size: 28px; }
+.bp-empty--sm { padding: 20px; }

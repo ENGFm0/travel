@@ -182,6 +182,41 @@
   "tripDetail": {
     "notFoundTitle": "الرحلة غير موجودة",
     "notFoundLead": "قد تكون هذه الرحلة محذوفة أو لا تملك صلاحية الوصول إليها.",
-    "backToTrips": "العودة إلى رحلاتي"
+    "backToTrips": "العودة إلى رحلاتي",
+    "tabsLabel": "أقسام الرحلة",
+    "tabItinerary": "الجدول",
+    "tabExpenses": "المصاريف",
+    "tabTasks": "المهام والحقيبة",
+    "tabMembers": "الأعضاء",
+    "tabMemories": "الذكريات",
+    "tabSoon": "قسم {{tab}} يأتي في ستوري خاص به.",
+    "memberCount": "{{count}} أعضاء"
+  },
+  "itinerary": {
+    "timeline": "مسار المدن",
+    "addCity": "أضف مدينة",
+    "addCityPh": "أضف مدينة…",
+    "noCities": "لا توجد مدن بعد. أضف أول محطة.",
+    "moveEarlier": "تقديم",
+    "moveLater": "تأخير",
+    "deleteCity": "حذف المدينة",
+    "confirmDeleteCity": "حذف {{name}} وأيامها وأنشطتها؟",
+    "flight": "الطيران",
+    "flightPh": "الناقل / رقم الرحلة / الأوقات",
+    "hotel": "السكن",
+    "hotelPh": "الفندق / العنوان",
+    "weather": "الطقس",
+    "weatherSoon": "قريبًا",
+    "noDays": "لا توجد أيام بعد. أضف يومًا لبدء التخطيط.",
+    "dayN": "اليوم {{n}}",
+    "addDay": "أضف يومًا",
+    "addDayPh": "عنوان اليوم (اختياري)",
+    "confirmDeleteDay": "حذف هذا اليوم وأنشطته؟",
+    "deleteDay": "حذف اليوم",
+    "add": "إضافة",
+    "addActivity": "أضف نشاطًا",
+    "addActivityPh": "نشاط…",
+    "activityTime": "الوقت",
+    "deleteActivity": "حذف النشاط"
   }
 }
