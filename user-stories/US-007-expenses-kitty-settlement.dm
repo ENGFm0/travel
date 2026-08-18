@@ -1,5 +1,32 @@
 # US-007 — Expenses, Kitty & Settlement (Dual Currency)
-Status: DRAFT · Size: L · Tenant-scoped: Yes
+Status: IN-PROGRESS · Size: L · Tenant-scoped: Yes
+
+> **Implementation status**
+> - `US-007-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/expenses/`:
+>   the dashboard **Expenses tab** with a **dual-currency toggle** (base ⇄ destination,
+>   display-only via stored rate) and 4 inner sub-tabs — **Kitty** (owner sets total →
+>   equal per-member dues, owner-only confirm/mark-paid, collected vs remaining +
+>   progress, category distribution, group-expense log with add/delete), **Side
+>   kitties** (create among ≥2 participants, equal split w/ per-person share, payer,
+>   settle note "برق", settle/delete), **Personal** (self-scoped budget/spend/remaining
+>   + log), and **Summary** (net balance لك/عليك + spend analysis). All money math is a
+>   pure, exhaustively-tested core (`finance.ts`) computed in integer cents with
+>   last-participant-absorbs-remainder rounding. Swappable `ExpensesService` (mock ↔
+>   API) + reactive store. **Role-gated**: owner-only kitty/mark-paid/rate; members add
+>   expenses; VIEWER read-only. 15 tests (9 finance-core: split/dues/collected/dist/
+>   group-net/side-net/net-balance/personal/convert; 6 UI: set-total→dues+confirm,
+>   non-owner hidden controls, add group expense, summary net, side create, personal
+>   privacy) — **63/63 web tests green**, typecheck + build green.
+> - `US-007-BE-001/002` — 🟡 **scaffolded** in `apps/api/.../Endpoints/ExpensesEndpoints.cs`:
+>   `GET /finance/summary`, `PUT /kitty`, `POST /kitty/mark-paid`, `POST/PATCH/DELETE
+>   /expenses`, `POST /expenses/{id}/settle`, `PUT /personal/budget`,
+>   `POST /currency/refresh` contracts. Server-side computation (source of truth),
+>   owner-only authz, personal isolation, transactional recompute, exchange-rate
+>   service + cache, and audit are the remaining BE work. *Not compiled (no .NET SDK).*
+> - `US-007-SEC-001` — partial: owner-only controls + personal privacy enforced in UX
+>   and self-scoped in the mock; server-side no-trusted-sums, authz, and audit pending BE.
+> - Remaining to DONE: BE endpoints + server math + audit, exchange-rate service,
+>   realtime kitty status, edit (not just delete) of expenses, reminder hook (US-015).
 
 ## 1. Story ID & Title
 **US-007 — Expenses, Kitty & Settlement**: group kitty (قطة) with collection/payment-status/distribution/log, side kitties (قطّات مشتركة) between 2+ people, personal expenses, "My financial summary", and dual-currency toggle.

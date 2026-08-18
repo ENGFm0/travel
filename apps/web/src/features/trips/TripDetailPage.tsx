@@ -7,6 +7,7 @@ import { MembersPanel } from '@/features/members/MembersPanel';
 import { CURRENT_UID } from '@/features/members/membersService';
 import { membersActions, useMembers } from '@/features/members/membersStore';
 import { ItineraryTab } from '@/features/itinerary/ItineraryTab';
+import { ExpensesTab } from '@/features/expenses/ExpensesTab';
 import { tripsActions } from './tripsStore';
 import type { Trip } from './tripsService';
 
@@ -116,8 +117,9 @@ export function TripDetailPage() {
           <ItineraryTab tripId={trip.id} canEdit={canEdit}
             seed={trip.cities.map((c) => ({ name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo }))} />
         )}
+        {tab === 'expenses' && <ExpensesTab tripId={trip.id} canEdit={canEdit} isOwner={myRole === 'OWNER'} />}
         {tab === 'members' && <MembersPanel tripId={trip.id} />}
-        {(tab === 'expenses' || tab === 'tasks' || tab === 'memories') && (() => {
+        {(tab === 'tasks' || tab === 'memories') && (() => {
           const cur = TABS.find((x) => x.key === tab)!;
           return <TabPlaceholder story={'story' in cur ? cur.story : ''} labelKey={cur.label} />;
         })()}

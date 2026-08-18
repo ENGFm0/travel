@@ -7,6 +7,7 @@ import { initAuth } from '@/features/auth/authStore';
 import { initTrips } from '@/features/trips/tripsStore';
 import { initMembers } from '@/features/members/membersStore';
 import { initItinerary } from '@/features/itinerary/itineraryStore';
+import { initExpenses } from '@/features/expenses/expensesStore';
 
 export function App() {
   useEffect(() => {
@@ -14,6 +15,7 @@ export function App() {
     initTrips(); // bootstrap trips service (API when configured, else in-memory mock)
     initMembers(); // bootstrap members service (API when configured, else in-memory mock)
     initItinerary(); // bootstrap itinerary service (API when configured, else in-memory mock)
+    initExpenses(); // bootstrap expenses service (API when configured, else in-memory mock)
   }, []);
 
   return (
