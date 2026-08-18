@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
+import { FlightLookup } from '@/features/flights/FlightLookup';
+import { flightSummary } from '@/features/flights/flightsModel';
 import type { CitySeed, CityStop, Day } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 
@@ -123,6 +125,10 @@ function CityPanel({ tripId, city, idx, count, canEdit, onMoved, onDeleted }: {
           <div><span className="bp-info-card__label">{t('itinerary.weather')}</span><span className="bp-info-card__muted">{t('itinerary.weatherSoon')}</span></div>
         </div>
       </div>
+
+      {canEdit && (
+        <FlightLookup onFilled={(info) => { void itineraryActions.setCityInfo(tripId, city.id, { flight: flightSummary(info) }); }} />
+      )}
 
       <DaysSection tripId={tripId} city={city} canEdit={canEdit} />
     </div>

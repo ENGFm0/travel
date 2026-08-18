@@ -1,5 +1,31 @@
 # US-004 — Flight Details Auto-Fill (AviationStack)
-Status: DRAFT · Size: S · Tenant-scoped: Yes (used within trip creation/edit)
+Status: IN-PROGRESS · Size: S · Tenant-scoped: Yes (used within trip creation/edit)
+
+> **Implementation status**
+> - `US-004-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/flights/`,
+>   mounted in the itinerary city panel (US-006): a `FlightLookup` panel — flight-code
+>   input (LTR, normalized uppercase) + Auto-fill button with `aria-busy` and a
+>   disabled/loading state, mapping the result to airline + departure/arrival airport
+>   (name + IATA) + localized scheduled times, with distinct **empty** ("no data,
+>   enter manually"), **error**, and **rate-limited** messages. On success it prefills
+>   the city's flight field non-destructively via `onFilled`. **The AviationStack key
+>   is NOT in the client** — the service calls the backend proxy (this re-platforms the
+>   prototype's exposed-key/mixed-content client call, AC6/BR-004-001). Pure model
+>   (`flightsModel.ts`): `normalizeCode`, `isValidCode` (`^[A-Z0-9]{2}\d{1,4}$`),
+>   `flightSummary`. Swappable `FlightsService` (mock ↔ API proxy). 7 tests (2 model;
+>   5 component: success+onFilled, empty, upstream-error+re-enable, rate-limited,
+>   invalid-code) — **115/115 web tests green**, typecheck + build green.
+> - `US-004-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/FlightsEndpoints.cs`:
+>   `GET /api/v1/flights/lookup?code=` proxy contract with server-side code validation
+>   and a `found:false` empty-result shape. The AviationStack client (key from secret
+>   store), fixed-upstream SSRF-safe fetch, DTO mapping, short-TTL cache, per-user/IP
+>   rate limiting, App Check, and audit are the remaining BE work. *Not compiled
+>   (no .NET SDK).*
+> - `US-004-SEC-001` — ✅ key absent from client (verified: no key in any FE file/bundle;
+>   service hits the proxy only); server-side secret mgmt, SSRF prevention, throttling,
+>   and App Check pending BE.
+> - Remaining to DONE: BE proxy + cache + throttle + audit, wizard prefill of
+>   destination/start when empty (AC4), live provisioning of the AviationStack key.
 
 ## 1. Story ID & Title
 **US-004 — Flight Details Auto-Fill**: enter a flight number → fetch airline, departure/arrival airports & scheduled times → prefill fields.

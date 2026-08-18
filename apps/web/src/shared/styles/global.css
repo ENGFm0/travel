@@ -612,3 +612,14 @@ svg {
 .bp-stars { display: inline-flex; gap: 2px; }
 .bp-star { border: 0; background: none; cursor: pointer; color: var(--bp-gold); padding: 2px; display: inline-flex; }
 .bp-star .material-symbols-outlined { font-size: 22px; }
+
+/* ── Flight lookup (US-004) ────────────────────────────────────────────────── */
+.bp-flight { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 10px; }
+.bp-flight-result { border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); padding: 12px; background: var(--bp-surface-2); }
+.bp-flight-result__airline { font-weight: 800; margin-bottom: 8px; }
+.bp-flight-legs { display: flex; align-items: center; gap: 12px; }
+.bp-flight-legs .material-symbols-outlined { color: var(--bp-primary); }
+.bp-flight-leg { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.bp-flight-leg__iata { font-weight: 800; font-size: 18px; }
+.bp-flight-leg__name { font-size: 13px; color: var(--bp-ink-muted); }
+.bp-flight-leg__time { font-size: 12px; color: var(--bp-ink-muted); }

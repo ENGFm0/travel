@@ -418,5 +418,18 @@
     "chooseTrip": "Trip",
     "chooseCity": "City",
     "confirmAdd": "Add"
+  },
+  "flight": {
+    "codeLabel": "Flight number",
+    "codePh": "e.g. SV1020",
+    "fetch": "Auto-fill",
+    "fetching": "Fetching…",
+    "empty": "No flight data found — enter the details manually.",
+    "errors": {
+      "INVALID": "Enter a valid flight code (e.g. SV1020)",
+      "RATE_LIMITED": "Too many lookups, try again shortly",
+      "UPSTREAM": "Flight service is unavailable — enter details manually",
+      "GENERIC": "Could not fetch the flight, try again"
+    }
   }
 }
