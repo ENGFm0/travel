@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { BottomNav } from './BottomNav';
+import { AuthController } from '@/features/auth/AuthController';
 
 /** App shell layout: skip-link + header + routed main + footer + bottom nav. */
 export function Layout() {
@@ -21,6 +22,7 @@ export function Layout() {
       </main>
       <Footer />
       <BottomNav />
+      <AuthController />
     </div>
   );
 }

@@ -38,5 +38,54 @@
     "profile": { "title": "Account", "lead": "Your details and preferences: language, theme, and notifications." },
     "notFound": { "title": "Page not found", "lead": "We couldn't find what you're looking for.", "back": "Back to home" }
   },
-  "shellNote": "This is the app shell (US-014): unified navigation, two languages with direction, theming, and full responsiveness. Real content arrives in later stories."
+  "shellNote": "This is the app shell (US-014): unified navigation, two languages with direction, theming, and full responsiveness. Real content arrives in later stories.",
+  "auth": {
+    "close": "Close",
+    "step1Title": "Sign in or create account",
+    "continueGoogle": "Continue with Google",
+    "or": "or",
+    "guest": "Continue as guest",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@example.com",
+    "helper": "We'll route you to sign up if the email isn't registered.",
+    "continueEmail": "Continue with email",
+    "signInTitle": "Sign in",
+    "passwordLabel": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "forgot": "Forgot your password?",
+    "signIn": "Sign in",
+    "editEmail": "Change email",
+    "createTitle": "Create a new account",
+    "firstName": "First name",
+    "middleName": "Middle name",
+    "lastName": "Last name",
+    "phone": "Phone number",
+    "confirmLabel": "Confirm password",
+    "createAccount": "Create account",
+    "forgotTitle": "Reset password",
+    "sendReset": "Send reset link",
+    "resetSent": "We sent a reset link to your email.",
+    "backToSignin": "Back to sign in",
+    "signedInAs": "Signed in",
+    "errors": {
+      "EMAIL_INVALID": "Invalid email address",
+      "PASSWORD_TOO_SHORT": "Password must be at least 8 characters",
+      "PASSWORD_WEAK": "Password must contain a letter and a number",
+      "PASSWORD_MISMATCH": "Passwords do not match",
+      "INVALID_CREDENTIALS": "Invalid credentials",
+      "EMAIL_EXISTS": "Email already registered",
+      "RATE_LIMITED": "Too many attempts, try later",
+      "REQUIRED": "This field is required",
+      "GENERIC": "Could not complete the request, try again"
+    }
+  },
+  "account": {
+    "guardTitle": "Sign in required",
+    "guardLead": "This page requires an account. Sign in or create one to continue.",
+    "guestGuardLead": "You're browsing as a guest. Create an account to access this page and save your data.",
+    "signInCta": "Sign in",
+    "signOut": "Sign out",
+    "guestBadge": "Guest"
+  }
 }

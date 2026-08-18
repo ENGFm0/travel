@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Logo } from '@/shared/ui/Logo';
 import { useUIStore } from '@/app/store/uiStore';
+import { useAuth } from '@/features/auth/authStore';
 import { ROUTES } from './nav.model';
 
 /** Unified header: logo (start/right in RTL) + actions (dark-mode, language,
@@ -9,6 +10,7 @@ import { ROUTES } from './nav.model';
 export function Header() {
   const { t } = useTranslation();
   const { theme, toggleTheme, locale, toggleLocale } = useUIStore();
+  const { isAuthenticated, openAuth } = useAuth();
 
   return (
     <header className="bp-header">
@@ -36,16 +38,26 @@ export function Header() {
               {theme === 'dark' ? 'light_mode' : theme === 'light' ? 'dark_mode' : 'brightness_auto'}
             </span>
           </button>
-          <Link
-            className="bp-icon-btn"
-            to={ROUTES.profile}
-            aria-label={t('header.account')}
-            title={t('header.account')}
-          >
-            <span className="material-symbols-outlined" aria-hidden="true">
-              account_circle
-            </span>
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              className="bp-icon-btn"
+              to={ROUTES.profile}
+              aria-label={t('header.account')}
+              title={t('header.account')}
+            >
+              <span className="material-symbols-outlined" aria-hidden="true">account_circle</span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="bp-icon-btn"
+              onClick={openAuth}
+              aria-label={t('header.account')}
+              title={t('header.account')}
+            >
+              <span className="material-symbols-outlined" aria-hidden="true">account_circle</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

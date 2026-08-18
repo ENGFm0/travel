@@ -1,4 +1,5 @@
 using BoardingPass.Api.Common;
+using BoardingPass.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,7 @@ if (app.Environment.IsDevelopment())
 var v1 = app.MapGroup("/api/v1");
 
 v1.MapHealthChecks("/health");
+v1.MapAuthEndpoints(); // US-001
 
 v1.MapGet("/config", () => Results.Ok(new
 {

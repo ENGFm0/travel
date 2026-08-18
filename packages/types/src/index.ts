@@ -19,6 +19,18 @@ export interface ApiErrorShape {
   details?: ApiErrorDetail[];
 }
 
+// ── Identity / roles ─────────────────────────────────────────────────────────
+export type GlobalRole = 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+export type AuthStatus = 'loading' | 'authenticated' | 'guest' | 'unauthenticated';
+
+export interface AuthUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  isAnonymous: boolean;
+  role: GlobalRole;
+}
+
 // ── Domain enums referenced across stories ───────────────────────────────────
 export type TripType = 'DOMESTIC' | 'INTERNATIONAL';
 export type TripStatus = 'ACTIVE' | 'ARCHIVED' | 'DELETED';

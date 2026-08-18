@@ -1,5 +1,23 @@
 # US-001 — Authentication & Account Access
-Status: DRAFT · Size: M · Tenant-scoped: No (global) · Owner role introduced: `USER`
+Status: IN-PROGRESS · Size: M · Tenant-scoped: No (global) · Owner role introduced: `USER`
+
+> **Implementation status**
+> - `US-001-FE-001/002` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/auth/`:
+>   swappable `AuthProvider` (mock for dev/tests, **Firebase** for prod behind
+>   env config — dynamically imported, excluded from bundle when unconfigured),
+>   auth store + hooks, `AuthModal` (email→login/register/forgot, Google, guest,
+>   show/hide password, Zod validation, a11y dialog), `RequireAuth` route guard,
+>   `?auth=1` controller, header profile→auth wiring. 8 auth tests (email routing,
+>   invalid email, wrong→right password, register, guest, route guard) — **25/25
+>   web tests green**, typecheck + build green.
+> - `US-001-BE-001` — 🟡 **scaffolded** in `apps/api/Endpoints/AuthEndpoints.cs`
+>   (`/api/v1/auth/session|guest|logout`, contract shape). Firebase Admin token
+>   validation + Firestore user upsert + rate-limit + audit are the remaining BE
+>   work. *Not compiled in sandbox (no .NET SDK).*
+> - `US-001-SEC-001` — partial: no client secrets, provider abstraction, Zod
+>   client validation; server-side token validation + throttling pending BE.
+> - Remaining to DONE: real Firebase project config, BE token validation + audit
+>   + rate limiting, e2e against live Firebase.
 
 ## 1. Story ID & Title
 **US-001 — Authentication & Account Access** (login gate, register, Google, guest, session, logout).

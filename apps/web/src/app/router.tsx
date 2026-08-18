@@ -1,5 +1,6 @@
 import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { Layout } from '@/features/shell/Layout';
+import { RequireAuth } from '@/features/auth/RequireAuth';
 import {
   HomePage,
   PlannerPage,
@@ -25,7 +26,14 @@ export const routes: RouteObject[] = [
       { path: 'buddies', element: <BuddiesPage /> },
       { path: 'memories', element: <MemoriesPage /> },
       { path: 'mytrips', element: <MyTripsPage /> },
-      { path: 'profile', element: <ProfilePage /> },
+      {
+        path: 'profile',
+        element: (
+          <RequireAuth>
+            <ProfilePage />
+          </RequireAuth>
+        ),
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
