@@ -1,5 +1,27 @@
 # US-005 — Trips Overview & Lifecycle (My Trips)
-Status: DRAFT · Size: M · Tenant-scoped: Yes (lists tenants the user belongs to)
+Status: IN-PROGRESS · Size: M · Tenant-scoped: Yes (lists tenants the user belongs to)
+
+> **Implementation status**
+> - `US-005-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/trips/`:
+>   `TripsList` renders sub-tabs (My Trips | Friends & Group, `#friends` deep-link),
+>   Upcoming/Past filter tabs with counts, responsive 1→2→3 card grid, trip cards
+>   (green داخلية / blue خارجية badge, destinations, date range, countdown,
+>   planning-progress bar), owner archive + soft-delete (confirm) with list refresh,
+>   loading skeletons, and empty states (none/upcoming/past) with a create CTA. List
+>   + lifecycle added to the swappable `TripsService`; store gained a reactive
+>   `trips` slice (`load`, `setStatus`, `remove`) and create appends to it. `/mytrips`
+>   is now behind `RequireAuth`. 6 tests (auth guard, upcoming/past split, empty
+>   state, archive-removes, `#friends` deep-link, badge) — **36/36 web tests green**,
+>   typecheck + build green.
+> - `US-005-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/TripsEndpoints.cs`:
+>   `GET /api/v1/trips?scope=`, `PATCH /api/v1/trips/{id}/status`,
+>   `DELETE /api/v1/trips/{id}` contracts. Membership-filtered query, progress
+>   computation (BR-005-001), owner-only authorization, pagination, and audit are
+>   the remaining BE work. *Not compiled in sandbox (no .NET SDK).*
+> - `US-005-SEC-001` — partial: page gated by auth, lifecycle controls owner-scoped
+>   in UX; server-side membership isolation + owner-only enforcement pending BE.
+> - Remaining to DONE: BE list/lifecycle + progress + audit, wire card "Open" to the
+>   trip dashboard (US-006), Friends tab content (US-010), archived-view toggle.
 
 ## 1. Story ID & Title
 **US-005 — Trips Overview & Lifecycle**: My Trips list with Upcoming/Past filter, domestic/international badges, planning-progress, open/archive/restore/delete.

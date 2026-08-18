@@ -27,9 +27,32 @@ public static class TripsEndpoints
                 DateTo: req.DateTo,
                 Cities: req.Cities,
                 OwnerUid: "me",
-                Status: "ACTIVE")))
+                Status: "ACTIVE",
+                Progress: 0)))
             .WithName("CreateTrip")
             .WithSummary("Create a trip; the authenticated caller becomes its owner.");
+
+        // List the caller's trips, membership-filtered, split by lifecycle scope.
+        // TODO(US-005-BE-001): query Firestore by membership, compute progress
+        // (BR-005-001), paginate.
+        trips.MapGet("", (string? scope) =>
+            Results.Ok(Array.Empty<TripResponse>()))
+            .WithName("ListTrips")
+            .WithSummary("List the caller's trips (scope: upcoming|past|archived|all).");
+
+        // Archive/restore (status change). Owner-only; enforced server-side.
+        // TODO(US-005-BE-001): validate transition (ACTIVE<->ARCHIVED), authorize
+        // owner, audit TRIP_ARCHIVE/RESTORE.
+        trips.MapPatch("/{id}/status", (string id, UpdateStatusRequest req) =>
+            Results.Ok(new { id, status = req.Status }))
+            .WithName("UpdateTripStatus")
+            .WithSummary("Archive or restore a trip (owner only).");
+
+        // Soft-delete. Owner-only; members lose access immediately (BR-005-003).
+        // TODO(US-005-BE-001): authorize owner, set status=DELETED, audit.
+        trips.MapDelete("/{id}", (string id) => Results.NoContent())
+            .WithName("DeleteTrip")
+            .WithSummary("Soft-delete a trip (owner only).");
 
         return group;
     }
@@ -45,6 +68,8 @@ public sealed record CreateTripRequest(
     TripCityDto[] Cities,
     string[]? Invitees);
 
+public sealed record UpdateStatusRequest(string Status); // ARCHIVED | ACTIVE
+
 public sealed record TripResponse(
     string Id,
     string Title,
@@ -53,4 +78,5 @@ public sealed record TripResponse(
     string? DateTo,
     TripCityDto[] Cities,
     string OwnerUid,
-    string Status);
+    string Status,
+    int Progress);

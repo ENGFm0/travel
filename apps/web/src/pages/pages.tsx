@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { TripsList } from '@/features/trips/TripsList';
 
 /** Placeholder section pages for the shell (US-014). Real content is delivered
  *  by later stories (US-001/003/005/006/007/… ) into these routes. */
@@ -22,7 +23,7 @@ export const PlannerPage = () => <Page tkey="planner" />;
 export const ExplorePage = () => <Page tkey="explore" />;
 export const BuddiesPage = () => <Page tkey="buddies" />;
 export const MemoriesPage = () => <Page tkey="memories" />;
-export const MyTripsPage = () => <Page tkey="mytrips" />;
+export const MyTripsPage = () => <TripsList />;
 export const ProfilePage = () => <Page tkey="profile" />;
 
 export function NotFoundPage() {

@@ -25,7 +25,14 @@ export const routes: RouteObject[] = [
       { path: 'explore', element: <ExplorePage /> },
       { path: 'buddies', element: <BuddiesPage /> },
       { path: 'memories', element: <MemoriesPage /> },
-      { path: 'mytrips', element: <MyTripsPage /> },
+      {
+        path: 'mytrips',
+        element: (
+          <RequireAuth>
+            <MyTripsPage />
+          </RequireAuth>
+        ),
+      },
       {
         path: 'profile',
         element: (
