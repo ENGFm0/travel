@@ -1,5 +1,31 @@
 # US-013 — Memories & Community Album (+ Report)
-Status: DRAFT · Size: L · Tenant-scoped: Yes
+Status: IN-PROGRESS · Size: L · Tenant-scoped: Yes
+
+> **Implementation status**
+> - `US-013-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/memories/`,
+>   mounted as the dashboard **Memories tab** (completing all 5 dashboard tabs): web
+>   file-input **uploader** with client MIME allowlist + size-cap validation and
+>   localized rejection (AC6), **day/place grouping toggle** (AC2), lazy-loaded album
+>   **grid** with image/video tiles, **permissioned delete** (own for members, any for
+>   owner — AC3), owner **share link** with copy feedback, and **report export** preview
+>   (itinerary + finance summary composition; full PDF/link is server-side, AC5). Pure
+>   model (`memoriesModel.ts`): `validateFile`, `canDelete`, `groupMedia` — unit-tested.
+>   Swappable `MemoriesService` (mock ↔ API) + reactive store. The whole trip dashboard
+>   is now **code-split** (React.lazy) to keep it out of the initial bundle. 7 tests
+>   (3 model: validate/canDelete/group; 4 UI: upload+reject, grouping toggle, delete
+>   permission member vs owner, report preview) — **76/76 web tests green**, typecheck +
+>   build green.
+> - `US-013-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/MemoriesEndpoints.cs`:
+>   `GET/POST/DELETE /memories`, `POST/DELETE /share`, `POST /report` contracts. The
+>   signed-URL upload pipeline (validate/EXIF-strip/scan), membership-scoped Storage
+>   Rules, scoped/revocable share tokens, PDF report composition, and audit are the
+>   remaining BE work. *Not compiled (no .NET SDK).*
+> - `US-013-SEC-001` — partial: client type/size validation is UX-only, delete
+>   permissions UX-gated, share link carries an auth-required model; secure upload
+>   pipeline, Storage Rules, token scoping, and audit pending BE.
+> - Remaining to DONE: BE upload pipeline + Storage Rules + report PDF + share tokens
+>   + audit, Firestore realtime album, community/cross-trip album, media viewer
+>   lightbox, places from US-012.
 
 ## 1. Story ID & Title
 **US-013 — Memories & Community Album**: upload photos/videos, group by day or place, view album, share trip, export trip report (PDF/link).

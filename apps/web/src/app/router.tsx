@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { Layout } from '@/features/shell/Layout';
 import { RequireAuth } from '@/features/auth/RequireAuth';
@@ -11,11 +12,17 @@ import {
   ProfilePage,
   NotFoundPage,
 } from '@/pages/pages';
-import { TripDetailPage } from '@/features/trips/TripDetailPage';
+
+// The trip dashboard pulls in every feature tab (itinerary/expenses/tasks/
+// members/memories) + their stores — code-split it so it stays out of the
+// initial bundle. The Layout's Suspense boundary covers the load.
+const TripDetailPage = lazy(() =>
+  import('@/features/trips/TripDetailPage').then((m) => ({ default: m.TripDetailPage })),
+);
 
 /** Route registry. Section pages are placeholders until their stories land.
- *  (Per-route code-splitting via React.lazy is applied per heavy page as they
- *  grow.) Exported as `routes` so tests can mount a memory router. */
+ *  Heavy pages (the trip dashboard) are code-split via React.lazy. Exported as
+ *  `routes` so tests can mount a memory router. */
 export const routes: RouteObject[] = [
   {
     path: '/',

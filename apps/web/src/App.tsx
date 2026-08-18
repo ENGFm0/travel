@@ -9,6 +9,7 @@ import { initMembers } from '@/features/members/membersStore';
 import { initItinerary } from '@/features/itinerary/itineraryStore';
 import { initExpenses } from '@/features/expenses/expensesStore';
 import { initTasks } from '@/features/tasks/tasksStore';
+import { initMemories } from '@/features/memories/memoriesStore';
 
 export function App() {
   useEffect(() => {
@@ -18,6 +19,7 @@ export function App() {
     initItinerary(); // bootstrap itinerary service (API when configured, else in-memory mock)
     initExpenses(); // bootstrap expenses service (API when configured, else in-memory mock)
     initTasks(); // bootstrap tasks service (API when configured, else in-memory mock)
+    initMemories(); // bootstrap memories service (API when configured, else in-memory mock)
   }, []);
 
   return (

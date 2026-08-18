@@ -305,5 +305,27 @@
       "sunglasses": "Sunglasses", "sandals": "Sandals", "jacket": "Warm jacket",
       "gloves": "Gloves", "thermal": "Thermal wear"
     }
+  },
+  "memories": {
+    "groupBy": "Group by",
+    "byDay": "By day",
+    "byPlace": "By place",
+    "export": "Export report",
+    "share": "Share trip",
+    "day": "Day",
+    "place": "Place",
+    "dayN": "Day {{n}}",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "empty": "No memories yet. Upload the first photo or video.",
+    "delete": "Delete media",
+    "mediaCount": "Media: {{count}}",
+    "report": "Trip report",
+    "reportFinanceNote": "Itinerary + finance summary are included in the exported PDF.",
+    "reportExportNote": "The full PDF/shareable link is generated server-side.",
+    "errors": {
+      "TYPE": "Unsupported file type — images and videos only",
+      "SIZE": "File is too large"
+    }
   }
 }

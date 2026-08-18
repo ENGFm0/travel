@@ -9,6 +9,7 @@ import { membersActions, useMembers } from '@/features/members/membersStore';
 import { ItineraryTab } from '@/features/itinerary/ItineraryTab';
 import { ExpensesTab } from '@/features/expenses/ExpensesTab';
 import { TasksTab } from '@/features/tasks/TasksTab';
+import { MemoriesTab } from '@/features/memories/MemoriesTab';
 import { tripsActions } from './tripsStore';
 import type { Trip } from './tripsService';
 
@@ -121,10 +122,10 @@ export function TripDetailPage() {
         {tab === 'expenses' && <ExpensesTab tripId={trip.id} canEdit={canEdit} isOwner={myRole === 'OWNER'} />}
         {tab === 'tasks' && <TasksTab tripId={trip.id} canEdit={canEdit} />}
         {tab === 'members' && <MembersPanel tripId={trip.id} />}
-        {tab === 'memories' && (() => {
-          const cur = TABS.find((x) => x.key === tab)!;
-          return <TabPlaceholder story={'story' in cur ? cur.story : ''} labelKey={cur.label} />;
-        })()}
+        {tab === 'memories' && (
+          <MemoriesTab tripId={trip.id} canEdit={canEdit} isOwner={myRole === 'OWNER'}
+            places={trip.cities.map((c) => c.name).filter(Boolean)} tripTitle={trip.title} memberCount={activeCount} />
+        )}
       </div>
     </section>
   );
@@ -158,12 +159,3 @@ function TabNav({ tab, onSelect }: { tab: TabKey; onSelect: (k: TabKey) => void 
   );
 }
 
-function TabPlaceholder({ story, labelKey }: { story: string; labelKey: string }) {
-  const { t } = useTranslation();
-  return (
-    <div className="bp-card">
-      <span className="bp-chip">{story}</span>
-      <p style={{ marginTop: 12, marginBottom: 0 }}>{t('tripDetail.tabSoon', { tab: t(labelKey) })}</p>
-    </div>
-  );
-}
