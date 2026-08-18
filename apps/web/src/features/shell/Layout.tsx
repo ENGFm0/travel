@@ -5,6 +5,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { BottomNav } from './BottomNav';
 import { AuthController } from '@/features/auth/AuthController';
+import { TripsController } from '@/features/trips/TripsController';
 
 /** App shell layout: skip-link + header + routed main + footer + bottom nav. */
 export function Layout() {
@@ -23,6 +24,7 @@ export function Layout() {
       <Footer />
       <BottomNav />
       <AuthController />
+      <TripsController />
     </div>
   );
 }

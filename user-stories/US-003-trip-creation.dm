@@ -1,5 +1,28 @@
 # US-003 — Trip Creation Wizard (single & multi-city)
-Status: DRAFT · Size: L · Tenant-scoped: **Creates the tenant (Trip)**
+Status: IN-PROGRESS · Size: L · Tenant-scoped: **Creates the tenant (Trip)**
+
+> **Implementation status**
+> - `US-003-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/trips/`:
+>   swappable `TripsService` (in-memory mock for dev/tests, **API** service behind
+>   `VITE_API_BASE_URL` via shared `createApiClient`), trips store + `initTrips()`,
+>   3-step `CreateTripWizard` (Step 1 basics: title, type toggle, date range with
+>   end≥start check · Step 2 destinations: single or multi-city with add/remove +
+>   per-city dates · Step 3 invitees chips), a11y dialog + stepper + success screen,
+>   shared **Zod** `createTripSchema` validation, `?new=1` `TripsController` mounted
+>   in `Layout` with **auth-gating** (guests/anonymous → auth modal). 5 trip tests
+>   (auth gating ×2, full create, step-1 validation, multi-city dates) — **30/30
+>   web tests green**, typecheck + build green.
+> - `US-003-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/TripsEndpoints.cs`
+>   (`POST /api/v1/trips`, request/response contract). Auth policy, payload
+>   validation, Firestore `trips/{id}` + owner-membership write, and creator →
+>   `TRIP_OWNER` assignment are the remaining BE work. *Not compiled in sandbox
+>   (no .NET SDK).*
+> - `US-003-SEC-001` — partial: server assigns `Id/OwnerUid/Status` authoritatively
+>   (client values ignored), shared client validation is UX-only. Server-side
+>   authorization + Firestore rules pending BE.
+> - Remaining to DONE: BE persistence + ownership + invitations, wire the created
+>   trip into My Trips (US-005) and the trip dashboard (US-006), e2e against live
+>   Firebase.
 
 ## 1. Story ID & Title
 **US-003 — Trip Creation Wizard**: 3-step modal → Step 1 basics (title, type domestic/international, date range) · Step 2 destinations (single or multi-city with per-city dates) · Step 3 invite friends (optional).

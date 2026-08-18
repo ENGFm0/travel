@@ -323,3 +323,29 @@ svg {
 .bp-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .bp-guest-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--bp-r-full);
   font-size: 11px; font-weight: 700; background: color-mix(in srgb, var(--bp-gold) 22%, transparent); color: var(--bp-navy); }
+
+/* ---------- Trip wizard (US-003) ---------- */
+.bp-stepper { display: flex; align-items: center; gap: 8px; }
+.bp-step { display: flex; align-items: center; gap: 8px; }
+.bp-step__dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 13px; background: color-mix(in srgb, var(--bp-ink) 12%, transparent); color: var(--bp-ink-muted); }
+.bp-step.is-on .bp-step__dot { background: var(--bp-primary); color: var(--bp-on-primary); }
+.bp-step__label { font-size: 12px; font-weight: 600; }
+.bp-step__line { flex: 1; height: 2px; background: var(--bp-border); border-radius: 2px; }
+.bp-toggle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bp-toggle { height: 46px; border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: transparent;
+  color: var(--bp-ink); font: inherit; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.bp-toggle.is-on { border-color: var(--bp-primary); background: color-mix(in srgb, var(--bp-primary) 10%, transparent); color: var(--bp-primary); }
+.bp-city-row { display: flex; gap: 8px; align-items: flex-end; }
+.bp-city-row .bp-field { flex: 1; }
+.bp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bp-chip-x { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: var(--bp-r-full); background: var(--bp-surface-2); font-size: 13px; font-weight: 600; }
+.bp-chip-x button { background: none; border: 0; cursor: pointer; color: var(--bp-ink-muted); font: inherit; display: inline-flex; }
+.bp-row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bp-footer-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
+.bp-check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.bp-add-btn { width: 100%; padding: 10px; border: 2px dashed var(--bp-primary); border-radius: var(--bp-r-md);
+  background: transparent; color: var(--bp-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.bp-success { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 8px 0; }
+.bp-success__ring { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--bp-success) 15%, transparent); color: var(--bp-success); }
