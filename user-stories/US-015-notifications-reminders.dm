@@ -1,5 +1,30 @@
 # US-015 — Notifications & Reminders (FCM)
-Status: DRAFT · Size: S · Tenant-scoped: Mixed
+Status: IN-PROGRESS · Size: S · Tenant-scoped: Mixed
+
+> **Implementation status**
+> - `US-015-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/notifications/`:
+>   an in-app **notification center** in the header (authenticated only) — a bell with
+>   an **unread badge**, a dropdown panel listing notifications (type icon, localized
+>   message with actor, time), **mark-read on open** + **mark-all-read**, and
+>   **deep-link** routing to the source (invite→members, reminder→expenses,
+>   friend→friends tab, buddy→buddies). Closes on outside-click / Escape; accessible
+>   dialog + count-announcing bell label. Pure model (`notificationsModel.ts`):
+>   `unreadCount`, `deepLinkFor`, `iconFor`. Per-category **preferences** already ship
+>   in US-002. Swappable `NotificationsService` (mock ↔ API) + reactive store. 6 tests
+>   (2 model; 4 UI: badge+list, mark-all-read clears badge, single-read on open, hidden
+>   for signed-out) — **121/121 web tests green**, typecheck + build green.
+> - `US-015-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/NotificationsEndpoints.cs`:
+>   `GET /notifications`, `PATCH /notifications/{id}`, `PATCH /notifications/read-all`,
+>   device-token `POST/DELETE /notifications/devices`, and owner reminder
+>   `POST /trips/{id}/reminders` contracts. The event handlers → FCM send, recipient
+>   authorization, per-category preference gating, reminder rate limiting, device-token
+>   lifecycle, and audit are the remaining BE work. *Not compiled (no .NET SDK).*
+> - `US-015-SEC-001` — partial: recipient-scoped list + minimal client payloads in UX;
+>   server-side recipient authorization, token security, reminder anti-spam, and
+>   no-leakage payloads pending BE.
+> - Remaining to DONE: BE notification service + FCM + device tokens + reminders +
+>   audit, owner "برق" reminder action wired into the US-007 members/dues list, token
+>   removal on logout, live push registration (web + RN).
 
 ## 1. Story ID & Title
 **US-015 — Notifications & Reminders**: in-app + push notifications for invitations, friend requests, payment/settlement reminders ("برق"), buddy join updates; notification center & preferences.

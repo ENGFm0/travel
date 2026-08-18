@@ -431,5 +431,19 @@
       "UPSTREAM": "Flight service is unavailable — enter details manually",
       "GENERIC": "Could not fetch the flight, try again"
     }
+  },
+  "notifications": {
+    "bell": "Notifications",
+    "bellUnread": "Notifications, {{count}} unread",
+    "title": "Notifications",
+    "markAll": "Mark all read",
+    "empty": "You're all caught up.",
+    "unread": "Unread",
+    "msg": {
+      "TRIP_INVITE": "{{actor}} invited you to a trip",
+      "FRIEND_REQUEST": "{{actor}} sent you a friend request",
+      "PAYMENT_REMINDER": "Payment reminder for your trip kitty",
+      "BUDDY_JOIN": "Someone joined your buddy request"
+    }
   }
 }

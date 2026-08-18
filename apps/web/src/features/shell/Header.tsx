@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Logo } from '@/shared/ui/Logo';
 import { useUIStore } from '@/app/store/uiStore';
 import { useAuth } from '@/features/auth/authStore';
+import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { ROUTES } from './nav.model';
 
 /** Unified header: logo (start/right in RTL) + actions (dark-mode, language,
@@ -38,6 +39,7 @@ export function Header() {
               {theme === 'dark' ? 'light_mode' : theme === 'light' ? 'dark_mode' : 'brightness_auto'}
             </span>
           </button>
+          {isAuthenticated && <NotificationBell />}
           {isAuthenticated ? (
             <Link
               className="bp-icon-btn"

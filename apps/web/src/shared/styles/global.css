@@ -623,3 +623,21 @@ svg {
 .bp-flight-leg__iata { font-weight: 800; font-size: 18px; }
 .bp-flight-leg__name { font-size: 13px; color: var(--bp-ink-muted); }
 .bp-flight-leg__time { font-size: 12px; color: var(--bp-ink-muted); }
+
+/* ── Notification center (US-015) ──────────────────────────────────────────── */
+.bp-notif { position: relative; display: inline-flex; }
+.bp-notif__bell { position: relative; }
+.bp-notif__badge { position: absolute; inset-block-start: 2px; inset-inline-end: 2px; min-inline-size: 16px; block-size: 16px; padding: 0 4px; border-radius: var(--bp-r-full); background: var(--bp-orange); color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; }
+.bp-notif__panel { position: absolute; inset-block-start: calc(100% + 8px); inset-inline-end: 0; inline-size: min(340px, 90vw); background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-lg); box-shadow: var(--bp-shadow-pop); z-index: 1000; overflow: hidden; }
+.bp-notif__head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--bp-border); }
+.bp-link-btn { border: 0; background: none; color: var(--bp-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.bp-notif__empty { padding: 24px 14px; text-align: center; color: var(--bp-ink-muted); margin: 0; }
+.bp-notif__list { list-style: none; margin: 0; padding: 0; max-block-size: 60vh; overflow-y: auto; }
+.bp-notif__item { display: flex; align-items: center; gap: 10px; inline-size: 100%; text-align: start; border: 0; background: none; font: inherit; color: inherit; padding: 12px 14px; cursor: pointer; border-bottom: 1px solid var(--bp-border); }
+.bp-notif__item:hover { background: var(--bp-surface-2); }
+.bp-notif__item.is-unread { background: color-mix(in srgb, var(--bp-primary) 6%, transparent); }
+.bp-notif__icon { color: var(--bp-primary); }
+.bp-notif__body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-inline-size: 0; }
+.bp-notif__msg { font-weight: 600; font-size: 14px; }
+.bp-notif__time { font-size: 12px; color: var(--bp-ink-muted); }
+.bp-notif__dot { inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--bp-orange); flex: 0 0 auto; }
