@@ -402,5 +402,21 @@
     "description": "Description",
     "descPh": "Describe the trip or activity…",
     "publish": "Publish"
+  },
+  "explorePage": {
+    "title": "Explore & Recommendations",
+    "lead": "Discover the best places, restaurants, and activities for your destination.",
+    "all": "All",
+    "cat": { "RESTAURANTS": "Restaurants & cafés", "LANDMARKS": "Landmarks", "ACTIVITIES": "Activities", "SHOPPING": "Shopping" },
+    "search": "Search places…",
+    "empty": "No places match your search.",
+    "rate": "Rate this place",
+    "rateN": "Rate {{n}} stars",
+    "addToTrip": "Add to trip",
+    "added": "Added to {{trip}} ✓",
+    "addTitle": "Add {{name}} to a trip",
+    "chooseTrip": "Trip",
+    "chooseCity": "City",
+    "confirmAdd": "Add"
   }
 }

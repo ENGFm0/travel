@@ -591,3 +591,24 @@ svg {
 .bp-buddy-card__spots { margin: 0; font-size: 13px; font-weight: 700; color: var(--bp-ink-muted); }
 .bp-buddy-card__actions { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; }
 .bp-buddy-card__actions .bp-btn { flex: 1; }
+
+/* ── Explore & Recommendations (US-012) ────────────────────────────────────── */
+.bp-explore { display: flex; flex-direction: column; gap: 12px; }
+.bp-chips-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.bp-chip--btn.is-on { background: var(--bp-primary); color: var(--bp-on-primary); border-color: var(--bp-primary); }
+.bp-place-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 640px) { .bp-place-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .bp-place-grid { grid-template-columns: repeat(3, 1fr); } }
+.bp-place-card { display: flex; flex-direction: column; background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-lg); overflow: hidden; box-shadow: var(--bp-shadow-sm); block-size: 100%; }
+.bp-place-card__photo { block-size: 120px; display: grid; place-items: center; background: var(--bp-surface-2); color: var(--bp-ink-muted); }
+.bp-place-card__photo .material-symbols-outlined { font-size: 40px; opacity: .5; }
+.bp-place-card__body { display: flex; flex-direction: column; gap: 6px; padding: 12px; }
+.bp-place-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bp-place-card__rating { display: inline-flex; align-items: center; gap: 3px; font-weight: 700; font-size: 14px; color: var(--bp-gold); }
+.bp-place-card__rating .material-symbols-outlined { font-size: 18px; font-variation-settings: 'FILL' 1; }
+.bp-place-card__count { color: var(--bp-ink-muted); font-weight: 500; font-size: 12px; }
+.bp-place-card__title { margin: 2px 0 0; font-size: 16px; }
+.bp-place-card__area { margin: 0; font-size: 13px; color: var(--bp-ink-muted); }
+.bp-stars { display: inline-flex; gap: 2px; }
+.bp-star { border: 0; background: none; cursor: pointer; color: var(--bp-gold); padding: 2px; display: inline-flex; }
+.bp-star .material-symbols-outlined { font-size: 22px; }

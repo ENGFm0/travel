@@ -402,5 +402,21 @@
     "description": "الوصف",
     "descPh": "صف الرحلة أو النشاط…",
     "publish": "نشر"
+  },
+  "explorePage": {
+    "title": "استكشف وتوصيات",
+    "lead": "اكتشف أفضل الأماكن والمطاعم والأنشطة لوجهتك.",
+    "all": "الكل",
+    "cat": { "RESTAURANTS": "مطاعم ومقاهي", "LANDMARKS": "معالم", "ACTIVITIES": "أنشطة", "SHOPPING": "تسوّق" },
+    "search": "ابحث عن الأماكن…",
+    "empty": "لا توجد أماكن مطابقة لبحثك.",
+    "rate": "قيّم هذا المكان",
+    "rateN": "قيّم {{n}} نجوم",
+    "addToTrip": "أضف إلى رحلة",
+    "added": "أُضيف إلى {{trip}} ✓",
+    "addTitle": "أضف {{name}} إلى رحلة",
+    "chooseTrip": "الرحلة",
+    "chooseCity": "المدينة",
+    "confirmAdd": "إضافة"
   }
 }

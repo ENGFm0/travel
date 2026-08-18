@@ -1,5 +1,31 @@
 # US-012 — Explore & Recommendations
-Status: DRAFT · Size: M · Tenant-scoped: No (curated content) / writes rating self-scoped
+Status: IN-PROGRESS · Size: M · Tenant-scoped: No (curated content) / writes rating self-scoped
+
+> **Implementation status**
+> - `US-012-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/places/`,
+>   activating the `/explore` page (replaced the placeholder): **category chips**
+>   (restaurants/landmarks/activities/shopping) + **text search**, responsive **place
+>   grid** (photo placeholder, category tag, aggregate rating + count, area/city), an
+>   interactive **1–5 star rating** widget (auth-gated; rate-once/update — no
+>   duplicates), and **add-to-trip** (auth + member-of-trip → picks trip/city →
+>   delegates to the US-006 itinerary) with a confirmation toast. **No Maps/Places key
+>   in the client** (AC6) — data comes from a mock standing in for the server proxy.
+>   Pure model (`placesModel.ts`): `filterPlaces`, `clampRating`, `applyRating`.
+>   Swappable `PlacesService` (mock ↔ API) + reactive store. The page is code-split
+>   (React.lazy). 8 tests (3 model; 5 UI: filter, rate, guest→auth, add-to-trip,
+>   no-trips-hidden) — **108/108 web tests green**, typecheck + build green.
+> - `US-012-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/PlacesEndpoints.cs`:
+>   `GET /places`, `GET /places/{id}`, `POST/DELETE /places/{id}/reviews`,
+>   `POST /places/{id}/add-to-trip` contracts. The Maps/Places **server-side proxy +
+>   cache** (key server-side), rating aggregation, review XSS-sanitization, membership
+>   check for add-to-trip, moderation, and audit are the remaining BE work.
+>   *Not compiled (no .NET SDK).*
+> - `US-012-SEC-001` — partial: **no client key** (AC6), auth-gated rating +
+>   member-gated add-to-trip in UX; server-side proxy secret mgmt, SSRF-safe fetch,
+>   sanitization, and rate limiting pending BE.
+> - Remaining to DONE: BE proxy + aggregation + moderation + audit, place detail
+>   gallery + reviews, real add-to-trip insertion into US-006, smart suggestions by
+>   location/trip type, pagination.
 
 ## 1. Story ID & Title
 **US-012 — Explore & Recommendations**: destination/place discovery (restaurants & cafés, landmarks, activities & events) with ratings/photos, smart suggestions, and add-to-trip.

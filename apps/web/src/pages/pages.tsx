@@ -20,7 +20,6 @@ function Page({ tkey }: { tkey: string }) {
 
 export const HomePage = () => <Page tkey="home" />;
 export const PlannerPage = () => <Page tkey="planner" />;
-export const ExplorePage = () => <Page tkey="explore" />;
 export const MemoriesPage = () => <Page tkey="memories" />;
 export const MyTripsPage = () => <TripsList />;
 

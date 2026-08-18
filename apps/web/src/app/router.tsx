@@ -5,19 +5,23 @@ import { RequireAuth } from '@/features/auth/RequireAuth';
 import {
   HomePage,
   PlannerPage,
-  ExplorePage,
   MemoriesPage,
   MyTripsPage,
   NotFoundPage,
 } from '@/pages/pages';
-import { ProfilePage } from '@/features/profile/ProfilePage';
-import { BuddiesPage } from '@/features/buddies/BuddiesPage';
-
-// The trip dashboard pulls in every feature tab (itinerary/expenses/tasks/
-// members/memories) + their stores — code-split it so it stays out of the
-// initial bundle. The Layout's Suspense boundary covers the load.
+// Route-level feature pages are code-split so they stay out of the initial
+// bundle; the Layout's Suspense boundary covers each load.
 const TripDetailPage = lazy(() =>
   import('@/features/trips/TripDetailPage').then((m) => ({ default: m.TripDetailPage })),
+);
+const ProfilePage = lazy(() =>
+  import('@/features/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+);
+const BuddiesPage = lazy(() =>
+  import('@/features/buddies/BuddiesPage').then((m) => ({ default: m.BuddiesPage })),
+);
+const ExplorePage = lazy(() =>
+  import('@/features/places/ExplorePage').then((m) => ({ default: m.ExplorePage })),
 );
 
 /** Route registry. Section pages are placeholders until their stories land.
