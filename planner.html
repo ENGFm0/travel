@@ -293,25 +293,11 @@
     var code=(input.value||'').trim().toUpperCase();
     if(!code){ alert('يرجى إدخال رقم الرحلة أولاً.'); return; }
 
-    var apiKey='3700520163893d14908ad3a3886c889b';
-    // AviationStack المجاني http فقط، والموقع https → نمرّره عبر بروكسي https لتفادي حظر المحتوى المختلط
-    var api='http://api.aviationstack.com/v1/flights?access_key='+apiKey+'&flight_iata='+encodeURIComponent(code);
-    var proxies=[
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(api),
-      'https://corsproxy.io/?url='+encodeURIComponent(api),
-      api  // محاولة مباشرة (تنفع فقط لو صُفّحت الصفحة عبر http)
-    ];
-
+    // أمان: تم نقل جلب بيانات الرحلة إلى تطبيق React عبر بروكسي خادمي آمن (US-004)
+    // حيث يبقى مفتاح AviationStack في الخادم فقط ولا يظهر في العميل إطلاقاً.
+    // هذه الصفحة الثابتة (النموذج الأولي) لم تعد تحمل أي مفتاح؛ الإدخال يدوي.
     btn.disabled=true; spinner.style.display='block';
     var result=null;
-    for(var i=0;i<proxies.length && !result;i++){
-      try{
-        var res=await fetch(proxies[i]);
-        if(!res.ok) continue;
-        var txt=await res.text();
-        result=JSON.parse(txt);
-      }catch(e){ /* جرّب البروكسي التالي */ }
-    }
 
     try{
       if(result && result.data && result.data.length>0){
