@@ -11,6 +11,7 @@ import { initExpenses } from '@/features/expenses/expensesStore';
 import { initTasks } from '@/features/tasks/tasksStore';
 import { initMemories } from '@/features/memories/memoriesStore';
 import { initProfile } from '@/features/profile/profileStore';
+import { initFriends } from '@/features/friends/friendsStore';
 
 export function App() {
   useEffect(() => {
@@ -22,6 +23,7 @@ export function App() {
     initTasks(); // bootstrap tasks service (API when configured, else in-memory mock)
     initMemories(); // bootstrap memories service (API when configured, else in-memory mock)
     initProfile(); // bootstrap profile service (API when configured, else in-memory mock)
+    initFriends(); // bootstrap friends service (API when configured, else in-memory mock)
   }, []);
 
   return (

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
+import { FriendsPanel } from '@/features/friends/FriendsPanel';
 import { tripsActions, useTripsList, useTripsStore } from './tripsStore';
 import { tripIsUpcoming, type Trip } from './tripsService';
 
@@ -72,10 +73,7 @@ export function TripsList() {
       </div>
 
       {sub === 'friends' ? (
-        <div className="bp-card">
-          <span className="bp-chip">US-010 · {t('trips.tabFriends')}</span>
-          <p style={{ marginTop: 12, marginBottom: 0 }}>{t('trips.friendsSoon')}</p>
-        </div>
+        <FriendsPanel />
       ) : (
         <>
           {/* Upcoming / Past filter */}

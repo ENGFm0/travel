@@ -1,5 +1,27 @@
 # US-010 — Friends & Groups (Social Graph)
-Status: DRAFT · Size: M · Tenant-scoped: No (user-owned social graph)
+Status: IN-PROGRESS · Size: M · Tenant-scoped: No (user-owned social graph)
+
+> **Implementation status**
+> - `US-010-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/friends/`,
+>   mounted as the **Friends & Group sub-tab** in My Trips (US-005), replacing its
+>   placeholder: incoming **friend requests** (accept/reject), **send request** by
+>   username/phone with idempotency/duplicate + self guards and error messages, a
+>   **friends list** with live **search** filter and remove, **invite-to-trip** (per
+>   friend, picks one of the caller's owned trips → delegates to the US-009 invitation
+>   flow), and an **empty state** linking to buddies (US-011). Pure model
+>   (`friendsModel.ts`): `filterFriends`, `normalizeHandle`. Swappable `FriendsService`
+>   (mock ↔ API) + reactive store. 8 tests (2 model; 6 UI: accept, duplicate blocked,
+>   search, remove, empty+buddies link, invite-to-trip) — **92/92 web tests green**,
+>   typecheck + build green.
+> - `US-010-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/FriendsEndpoints.cs`:
+>   `GET /friends`, `POST /friends/requests`, `PATCH /friends/requests/{id}`,
+>   `DELETE /friends/{id}`, `POST /friends/invite-to-trip` contracts. Self-scoped
+>   access, pair uniqueness/idempotency, owner check for invite (→ US-009), anti-spam
+>   throttling, and audit are the remaining BE work. *Not compiled (no .NET SDK).*
+> - `US-010-SEC-001` — partial: self-scoped graph in UX + mock; server-side no-cross-
+>   user-reads, rate limiting, and audit pending BE.
+> - Remaining to DONE: BE endpoints + uniqueness + throttling + audit, real
+>   invite-to-trip wiring into US-009, realtime request badge, optional block/unblock.
 
 ## 1. Story ID & Title
 **US-010 — Friends & Groups**: friend requests (send/accept/reject), friends list, search, invite friend to a trip; current-group view.

@@ -562,3 +562,12 @@ svg {
 .bp-danger-zone h3 { margin: 0; font-size: 15px; color: var(--bp-danger); }
 .bp-btn--danger { background: var(--bp-danger); color: #fff; border: 1px solid var(--bp-danger); }
 .bp-btn--danger:hover { background: color-mix(in srgb, var(--bp-danger) 85%, #000); }
+
+/* ── Friends & Groups (US-010) ─────────────────────────────────────────────── */
+.bp-friends { display: flex; flex-direction: column; gap: 22px; }
+.bp-friend-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.bp-friend { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-surface); flex-wrap: wrap; }
+.bp-friend__info { display: flex; flex-direction: column; min-inline-size: 0; margin-inline-end: auto; }
+.bp-friend__name { font-weight: 700; }
+.bp-friend__at { font-size: 13px; color: var(--bp-ink-muted); }
+.bp-invite-trip { display: inline-flex; align-items: center; gap: 6px; }

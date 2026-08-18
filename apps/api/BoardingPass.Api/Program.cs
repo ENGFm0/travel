@@ -42,6 +42,7 @@ v1.MapItineraryEndpoints(); // US-006
 v1.MapExpensesEndpoints(); // US-007
 v1.MapTasksEndpoints(); // US-008
 v1.MapMemoriesEndpoints(); // US-013
+v1.MapFriendsEndpoints(); // US-010
 
 v1.MapGet("/config", () => Results.Ok(new
 {

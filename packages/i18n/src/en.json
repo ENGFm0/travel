@@ -349,5 +349,29 @@
       "TYPE": "Unsupported file type — images and videos only",
       "SIZE": "File is too large"
     }
+  },
+  "friends": {
+    "requests": "Friend requests",
+    "accept": "Accept",
+    "reject": "Reject",
+    "addFriend": "Add a friend",
+    "handlePh": "Username or phone",
+    "send": "Send request",
+    "sent": "Request sent ✓",
+    "myFriends": "My friends",
+    "search": "Search friends",
+    "empty": "No friends yet. Find people to travel with.",
+    "discoverBuddies": "Discover buddies",
+    "noMatch": "No friends match your search.",
+    "remove": "Remove friend",
+    "inviteToTrip": "Invite to trip",
+    "invited": "Invited ✓",
+    "errors": {
+      "SELF": "You can't add yourself",
+      "ALREADY_FRIEND": "You're already friends",
+      "PENDING": "A request is already pending",
+      "NOT_FOUND": "Request not found",
+      "GENERIC": "Could not complete the action, try again"
+    }
   }
 }

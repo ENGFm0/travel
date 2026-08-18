@@ -11,6 +11,8 @@ import { useAuthStore } from '@/features/auth/authStore';
 import { createMockAuthProvider } from '@/features/auth/providers/mockAuthProvider';
 import { useTripsStore } from '@/features/trips/tripsStore';
 import { createMockTripsService, type Trip } from '@/features/trips/tripsService';
+import { useFriendsStore } from '@/features/friends/friendsStore';
+import { createMockFriendsService } from '@/features/friends/friendsService';
 
 beforeEach(() => {
   localStorage.clear();
@@ -19,6 +21,7 @@ beforeEach(() => {
   useAuthStore.getState().setProvider(createMockAuthProvider());
   useTripsStore.setState({ wizardOpen: false, lastCreated: null, trips: null, loading: false, error: null });
   useTripsStore.getState().setService(createMockTripsService());
+  useFriendsStore.setState({ graph: null, loading: false, error: null });
 });
 
 function renderAt(path: string) {
@@ -154,8 +157,10 @@ describe('US-005 My Trips', () => {
   it('opens the Friends sub-tab from the #friends deep-link', async () => {
     await signIn();
     seededService([]);
+    useFriendsStore.getState().setService(createMockFriendsService({ friends: [], incoming: [] }));
     renderAt('/mytrips#friends');
-    expect(await screen.findByText('أدر قروب السفر والأصدقاء من هنا — يأتي مع ستوري الأصدقاء.')).toBeInTheDocument();
+    // the Friends panel (US-010) now renders in this sub-tab
+    expect(await screen.findByRole('heading', { name: 'إضافة صديق' })).toBeInTheDocument();
   });
 
   it('renders the correct type badge per trip', async () => {
