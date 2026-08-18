@@ -269,6 +269,8 @@
     "amountPh": "0.00",
     "payer": "Payer",
     "add": "Add",
+    "edit": "Edit",
+    "saveEdit": "Save",
     "delete": "Delete",
     "share": "Share",
     "settled": "Settled",

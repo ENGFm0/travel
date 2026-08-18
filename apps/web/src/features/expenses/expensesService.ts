@@ -13,12 +13,14 @@ export interface ExpensesService {
   setKittyTotal(tripId: string, total: number): Promise<Finance>;
   markPaid(tripId: string, uid: string, paid: boolean): Promise<Finance>;
   addGroup(tripId: string, e: { desc: string; category: Category; amount: number; payerUid: string }): Promise<Finance>;
+  updateGroup(tripId: string, id: string, e: { desc: string; category: Category; amount: number; payerUid: string }): Promise<Finance>;
   deleteGroup(tripId: string, id: string): Promise<Finance>;
   addSide(tripId: string, s: { title: string; participantUids: string[]; total: number; payerUid: string }): Promise<Finance>;
   deleteSide(tripId: string, id: string): Promise<Finance>;
   settleSide(tripId: string, id: string): Promise<Finance>;
   setPersonalBudget(tripId: string, amount: number): Promise<Finance>;
   addPersonal(tripId: string, e: { desc: string; amount: number }): Promise<Finance>;
+  updatePersonal(tripId: string, id: string, e: { desc: string; amount: number }): Promise<Finance>;
   deletePersonal(tripId: string, id: string): Promise<Finance>;
 }
 
@@ -76,6 +78,12 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>)
       store(tripId).group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid });
       return view(tripId, ME(tripId));
     },
+    async updateGroup(tripId, id, e) {
+      await tick();
+      const g = store(tripId).group.find((x) => x.id === id);
+      if (g) { g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid; }
+      return view(tripId, ME(tripId));
+    },
     async deleteGroup(tripId, id) { await tick(); const s = store(tripId); s.group = s.group.filter((g) => g.id !== id); return view(tripId, ME(tripId)); },
     async addSide(tripId, x) {
       await tick();
@@ -89,6 +97,13 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>)
       await tick();
       const s = store(tripId); const me = ME(tripId);
       (s.personal[me] ??= []).push({ id: uid('p'), desc: e.desc.trim(), amount: e.amount });
+      return view(tripId, me);
+    },
+    async updatePersonal(tripId, id, e) {
+      await tick();
+      const me = ME(tripId);
+      const p = (store(tripId).personal[me] ?? []).find((x) => x.id === id);
+      if (p) { p.desc = e.desc.trim(); p.amount = e.amount; }
       return view(tripId, me);
     },
     async deletePersonal(tripId, id) {
@@ -117,12 +132,14 @@ export function createApiExpensesService(getToken?: () => string | undefined): E
     setKittyTotal: (tripId, total) => client.apiFetch<Finance>(`/trips/${tripId}/kitty`, { method: 'PUT', body: JSON.stringify({ total }) }),
     markPaid: (tripId, u, paid) => client.apiFetch<Finance>(`/trips/${tripId}/kitty/mark-paid`, { method: 'POST', body: JSON.stringify({ memberUid: u, paid }) }),
     addGroup: (tripId, e) => client.apiFetch<Finance>(`/trips/${tripId}/expenses`, { method: 'POST', body: JSON.stringify({ kind: 'GROUP', ...e }) }),
+    updateGroup: (tripId, id, e) => client.apiFetch<Finance>(`/trips/${tripId}/expenses/${id}`, { method: 'PATCH', body: JSON.stringify({ kind: 'GROUP', ...e }) }),
     deleteGroup: async (tripId, id) => { await client.apiFetch<void>(`/trips/${tripId}/expenses/${id}`, { method: 'DELETE' }); return fin(tripId); },
     addSide: (tripId, s) => client.apiFetch<Finance>(`/trips/${tripId}/expenses`, { method: 'POST', body: JSON.stringify({ kind: 'SIDE', ...s }) }),
     deleteSide: async (tripId, id) => { await client.apiFetch<void>(`/trips/${tripId}/expenses/${id}`, { method: 'DELETE' }); return fin(tripId); },
     settleSide: (tripId, id) => client.apiFetch<Finance>(`/trips/${tripId}/expenses/${id}/settle`, { method: 'POST' }),
     setPersonalBudget: (tripId, amount) => client.apiFetch<Finance>(`/trips/${tripId}/personal/budget`, { method: 'PUT', body: JSON.stringify({ amount }) }),
     addPersonal: (tripId, e) => client.apiFetch<Finance>(`/trips/${tripId}/expenses`, { method: 'POST', body: JSON.stringify({ kind: 'PERSONAL', ...e }) }),
+    updatePersonal: (tripId, id, e) => client.apiFetch<Finance>(`/trips/${tripId}/expenses/${id}`, { method: 'PATCH', body: JSON.stringify({ kind: 'PERSONAL', ...e }) }),
     deletePersonal: async (tripId, id) => { await client.apiFetch<void>(`/trips/${tripId}/expenses/${id}`, { method: 'DELETE' }); return fin(tripId); },
   };
 }

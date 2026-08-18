@@ -7,6 +7,7 @@ import { useMembers } from '@/features/members/membersStore';
 import {
   CATEGORIES, convert, distribution, kittyCollected, myNetBalance, perMemberDue,
   personalRemaining, personalSpent, splitEqual, type Category, type Finance,
+  type GroupExpense, type PersonalExpense,
 } from './finance';
 import { expensesActions, useFinance } from './expensesStore';
 
@@ -145,18 +146,58 @@ function KittyPanel({ finance, memberUids, nameOf, fmt, canEdit, isOwner }: {
       <h4 className="bp-panel__h">{t('expenses.groupLog')}</h4>
       <ul className="bp-exp-list" role="list">
         {finance.group.map((e) => (
-          <li key={e.id} className="bp-exp">
-            <span className="bp-exp__desc">{e.desc}</span>
-            <span className="bp-chip bp-chip--cat">{t(`expenses.cat.${e.category}`)}</span>
-            <span className="bp-exp__by">{nameOf(e.payerUid)}</span>
-            <span className="bp-exp__amt">{fmt(e.amount)}</span>
-            {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.delete')} onClick={() => expensesActions.deleteGroup(e.id)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
-          </li>
+          <GroupRow key={e.id} e={e} memberUids={memberUids} nameOf={nameOf} fmt={fmt} canEdit={canEdit} />
         ))}
         {finance.group.length === 0 && <li className="bp-members__empty">{t('expenses.noGroup')}</li>}
       </ul>
       {canEdit && <GroupForm memberUids={memberUids} nameOf={nameOf} />}
     </div>
+  );
+}
+
+function GroupRow({ e, memberUids, nameOf, fmt, canEdit }: {
+  e: GroupExpense; memberUids: string[]; nameOf: (u: string) => string; fmt: (n: number) => string; canEdit: boolean;
+}) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [desc, setDesc] = useState(e.desc);
+  const [cat, setCat] = useState<Category>(e.category);
+  const [amount, setAmount] = useState(String(e.amount));
+  const [payer, setPayer] = useState(e.payerUid);
+
+  function start() { setDesc(e.desc); setCat(e.category); setAmount(String(e.amount)); setPayer(e.payerUid); setEditing(true); }
+  async function save() {
+    const a = Number(amount);
+    if (!desc.trim() || !(a > 0)) return;
+    await expensesActions.updateGroup(e.id, { desc, category: cat, amount: a, payerUid: payer });
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <li className="bp-exp-form">
+        <input className="bp-input" value={desc} aria-label={t('expenses.desc')} onChange={(ev) => setDesc(ev.target.value)} />
+        <select className="bp-input" value={cat} aria-label={t('expenses.category')} onChange={(ev) => setCat(ev.target.value as Category)}>
+          {CATEGORIES.map((c) => <option key={c} value={c}>{t(`expenses.cat.${c}`)}</option>)}
+        </select>
+        <input className="bp-input" type="number" min="0" step="0.01" value={amount} aria-label={t('expenses.amount')} onChange={(ev) => setAmount(ev.target.value)} style={{ maxInlineSize: 120 }} />
+        <select className="bp-input" value={payer} aria-label={t('expenses.payer')} onChange={(ev) => setPayer(ev.target.value)}>
+          {memberUids.map((u) => <option key={u} value={u}>{nameOf(u)}</option>)}
+        </select>
+        <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={save}>{t('expenses.saveEdit')}</button>
+        <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setEditing(false)}>{t('trips.close')}</button>
+      </li>
+    );
+  }
+  return (
+    <li className="bp-exp">
+      <span className="bp-exp__desc">{e.desc}</span>
+      <span className="bp-chip bp-chip--cat">{t(`expenses.cat.${e.category}`)}</span>
+      <span className="bp-exp__by">{nameOf(e.payerUid)}</span>
+      <span className="bp-exp__amt">{fmt(e.amount)}</span>
+      {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.edit')} onClick={start}><span className="material-symbols-outlined" aria-hidden="true">edit</span></button>}
+      {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.delete')} onClick={() => expensesActions.deleteGroup(e.id)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
+    </li>
   );
 }
 
@@ -259,6 +300,39 @@ function SidePanel({ finance, active, nameOf, fmt, canEdit }: {
   );
 }
 
+function PersonalRow({ e, fmt, canEdit }: { e: PersonalExpense; fmt: (n: number) => string; canEdit: boolean }) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [desc, setDesc] = useState(e.desc);
+  const [amount, setAmount] = useState(String(e.amount));
+
+  async function save() {
+    const a = Number(amount);
+    if (!desc.trim() || !(a > 0)) return;
+    await expensesActions.updatePersonal(e.id, { desc, amount: a });
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <li className="bp-exp-form">
+        <input className="bp-input" value={desc} aria-label={t('expenses.desc')} onChange={(ev) => setDesc(ev.target.value)} />
+        <input className="bp-input" type="number" min="0" step="0.01" value={amount} aria-label={t('expenses.amount')} onChange={(ev) => setAmount(ev.target.value)} style={{ maxInlineSize: 120 }} />
+        <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={save}>{t('expenses.saveEdit')}</button>
+        <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setEditing(false)}>{t('trips.close')}</button>
+      </li>
+    );
+  }
+  return (
+    <li className="bp-exp">
+      <span className="bp-exp__desc">{e.desc}</span>
+      <span className="bp-exp__amt">{fmt(e.amount)}</span>
+      {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.edit')} onClick={() => { setDesc(e.desc); setAmount(String(e.amount)); setEditing(true); }}><span className="material-symbols-outlined" aria-hidden="true">edit</span></button>}
+      {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.delete')} onClick={() => expensesActions.deletePersonal(e.id)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
+    </li>
+  );
+}
+
 function PersonalPanel({ finance, fmt, canEdit }: { finance: Finance; fmt: (n: number) => string; canEdit: boolean }) {
   const { t } = useTranslation();
   const [budget, setBudget] = useState(String(finance.personalBudget || ''));
@@ -292,11 +366,7 @@ function PersonalPanel({ finance, fmt, canEdit }: { finance: Finance; fmt: (n: n
       </div>
       <ul className="bp-exp-list" role="list">
         {finance.personal.map((e) => (
-          <li key={e.id} className="bp-exp">
-            <span className="bp-exp__desc">{e.desc}</span>
-            <span className="bp-exp__amt">{fmt(e.amount)}</span>
-            {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.delete')} onClick={() => expensesActions.deletePersonal(e.id)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
-          </li>
+          <PersonalRow key={e.id} e={e} fmt={fmt} canEdit={canEdit} />
         ))}
         {finance.personal.length === 0 && <li className="bp-members__empty">{t('expenses.noPersonal')}</li>}
       </ul>

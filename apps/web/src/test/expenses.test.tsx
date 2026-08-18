@@ -99,6 +99,27 @@ describe('US-007 Expenses UI', () => {
     expect(screen.getByText(/200\.00/)).toBeInTheDocument();
   });
 
+  it('edits a group expense in place (BR-007-008)', async () => {
+    await signIn();
+    seed([OWNER, U2, U3]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
+    await userEvent.type(screen.getByLabelText('Amount'), '300');
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await screen.findByText('Taxi');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    const amount = screen.getAllByLabelText('Amount')[0]; // the inline edit row
+    await userEvent.clear(amount);
+    await userEvent.type(amount, '600');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => {
+      const g = useExpensesStore.getState().finance?.group.find((x) => x.desc === 'Taxi');
+      expect(g?.amount).toBe(600);
+    });
+  });
+
   it('creates a side kitty among two participants (AC3)', async () => {
     await signIn();
     seed([OWNER, U2, U3]);

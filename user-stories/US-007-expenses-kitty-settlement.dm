@@ -25,8 +25,10 @@ Status: IN-PROGRESS · Size: L · Tenant-scoped: Yes
 >   service + cache, and audit are the remaining BE work. *Not compiled (no .NET SDK).*
 > - `US-007-SEC-001` — partial: owner-only controls + personal privacy enforced in UX
 >   and self-scoped in the mock; server-side no-trusted-sums, authz, and audit pending BE.
+>   Group & personal expenses are now **editable in place** (creator/owner — BR-007-008)
+>   via `updateGroup`/`updatePersonal`, in addition to add/delete.
 > - Remaining to DONE: BE endpoints + server math + audit, exchange-rate service,
->   realtime kitty status, edit (not just delete) of expenses, reminder hook (US-015).
+>   realtime kitty status, side-kitty participant editing, reminder hook (US-015).
 
 ## 1. Story ID & Title
 **US-007 — Expenses, Kitty & Settlement**: group kitty (قطة) with collection/payment-status/distribution/log, side kitties (قطّات مشتركة) between 2+ people, personal expenses, "My financial summary", and dual-currency toggle.
