@@ -24,7 +24,6 @@ export const ExplorePage = () => <Page tkey="explore" />;
 export const BuddiesPage = () => <Page tkey="buddies" />;
 export const MemoriesPage = () => <Page tkey="memories" />;
 export const MyTripsPage = () => <TripsList />;
-export const ProfilePage = () => <Page tkey="profile" />;
 
 export function NotFoundPage() {
   const { t } = useTranslation();

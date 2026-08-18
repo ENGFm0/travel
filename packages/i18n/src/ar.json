@@ -86,7 +86,29 @@
     "guestGuardLead": "أنت متصفّح كضيف. أنشئ حسابًا للوصول لهذه الصفحة وحفظ بياناتك.",
     "signInCta": "تسجيل الدخول",
     "signOut": "تسجيل الخروج",
-    "guestBadge": "ضيف"
+    "guestBadge": "ضيف",
+    "profileTitle": "الملف الشخصي",
+    "avatar": "الصورة الرمزية",
+    "changeAvatar": "تغيير الصورة",
+    "avatarErrors": { "TYPE": "استخدم صورة JPG أو PNG أو WEBP", "SIZE": "يجب ألا يتجاوز حجم الصورة 5 ميجابايت" },
+    "emailImmutable": "لا يمكن تغيير البريد من هنا.",
+    "nameErrors": { "REQUIRED": "الاسم الأول والأخير مطلوبان", "TOO_LONG": "الاسم طويل جدًا (50 حرفًا كحد أقصى)" },
+    "save": "حفظ التغييرات",
+    "saved": "تم الحفظ ✓",
+    "preferences": "التفضيلات",
+    "notifications": "الإشعارات",
+    "notif": {
+      "invites": "دعوات الرحلات",
+      "friendRequests": "طلبات الصداقة",
+      "paymentReminders": "تذكيرات الدفع",
+      "buddyUpdates": "تحديثات الرفقاء"
+    },
+    "accountTitle": "الحساب",
+    "deleteTitle": "حذف الحساب",
+    "deleteLead": "هذا يحذف حسابك وبياناتك نهائيًا بعد فترة احتفاظ.",
+    "deleteBlocked": "أنت المالك الوحيد لرحلة نشطة بها أعضاء. انقل الملكية أو أرشفها أولًا.",
+    "deleteAccount": "حذف حسابي",
+    "confirmDelete": "نعم، احذف"
   },
   "trips": {
     "close": "إغلاق",

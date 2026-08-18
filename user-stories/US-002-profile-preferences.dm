@@ -1,5 +1,29 @@
 # US-002 — User Profile & Preferences
-Status: DRAFT · Size: S · Tenant-scoped: No
+Status: IN-PROGRESS · Size: S · Tenant-scoped: No
+
+> **Implementation status**
+> - `US-002-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/profile/`,
+>   replacing the `/profile` placeholder (behind `RequireAuth`): **Profile** (avatar
+>   upload with jpg/png/webp + 5 MB validation, editable first/middle/last + phone with
+>   name validation, read-only email with immutability note, optimistic save + "Saved
+>   ✓"), **Preferences** (language AR↔EN and theme light/dark/system segmented controls
+>   wired to the persisted `uiStore` — apply instantly, no reload), **Notifications**
+>   (four preference toggles persisted via the service), and an **Account** section
+>   (sign out + danger-zone delete with a confirm step and the sole-owner **transfer
+>   blocker** message). Pure model (`profileModel.ts`): `validateAvatar`, `validateName`,
+>   `fullName`. Swappable `ProfileService` (mock ↔ API) + reactive store. 8 tests (3
+>   model; 5 UI: save name, name validation, language+theme toggle, avatar reject,
+>   delete-blocked) — **84/84 web tests green**, typecheck + build green.
+> - `US-002-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/UsersEndpoints.cs`:
+>   `GET/PATCH /users/me`, `POST /users/me/avatar`, `DELETE /users/me` contracts.
+>   Self-only authorization, input validation, the sole-owner deletion blocker,
+>   avatar Storage rules, session revocation, and audit are the remaining BE work.
+>   *Not compiled (no .NET SDK).*
+> - `US-002-SEC-001` — partial: email immutability + delete confirm in UX, prefs
+>   persisted client+service; server-side self-only enforcement, Storage rules, and
+>   token revocation on delete pending BE.
+> - Remaining to DONE: BE endpoints + deletion blocker + audit, avatar Storage upload,
+>   server-side preference sync as source of truth, GDPR data export (open question).
 
 ## 1. Story ID & Title
 **US-002 — User Profile & Preferences** (profile view/edit, language, theme, notification prefs, account deletion).

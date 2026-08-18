@@ -86,7 +86,29 @@
     "guestGuardLead": "You're browsing as a guest. Create an account to access this page and save your data.",
     "signInCta": "Sign in",
     "signOut": "Sign out",
-    "guestBadge": "Guest"
+    "guestBadge": "Guest",
+    "profileTitle": "Profile",
+    "avatar": "Avatar",
+    "changeAvatar": "Change photo",
+    "avatarErrors": { "TYPE": "Use a JPG, PNG, or WEBP image", "SIZE": "Image must be 5 MB or smaller" },
+    "emailImmutable": "Email can't be changed here.",
+    "nameErrors": { "REQUIRED": "First and last name are required", "TOO_LONG": "Name is too long (max 50)" },
+    "save": "Save changes",
+    "saved": "Saved ✓",
+    "preferences": "Preferences",
+    "notifications": "Notifications",
+    "notif": {
+      "invites": "Trip invitations",
+      "friendRequests": "Friend requests",
+      "paymentReminders": "Payment reminders",
+      "buddyUpdates": "Buddy updates"
+    },
+    "accountTitle": "Account",
+    "deleteTitle": "Delete account",
+    "deleteLead": "This permanently removes your account and data after a retention window.",
+    "deleteBlocked": "You're the sole owner of an active trip with members. Transfer ownership or archive it first.",
+    "deleteAccount": "Delete my account",
+    "confirmDelete": "Yes, delete"
   },
   "trips": {
     "close": "Close",
