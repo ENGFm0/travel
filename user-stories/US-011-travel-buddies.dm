@@ -1,5 +1,29 @@
 # US-011 — Travel Buddies Discovery
-Status: DRAFT · Size: L · Tenant-scoped: Partly (a buddy request is a mini-tenant)
+Status: IN-PROGRESS · Size: L · Tenant-scoped: Partly (a buddy request is a mini-tenant)
+
+> **Implementation status**
+> - `US-011-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/buddies/`,
+>   activating the `/buddies` page (replaced the placeholder): **mode toggle**
+>   (Full Trips / Activities), **filter bar** (city + category + budget, combinable),
+>   responsive **card grid** (badge, city, budget, spots, status), **create request**
+>   form (auth-gated), **join/leave** with atomic capacity enforcement (FULL blocks
+>   over-join), owner **close**, and **flag** → moderation confirmation. Guests can
+>   browse; join/create route to the auth modal (BR-011-004). Pure model
+>   (`buddiesModel.ts`): `applyFilters`, `statusOf`, `spotsLeft`, `canManage`. Swappable
+>   `BuddiesService` (mock ↔ API) + reactive store. 8 tests (2 model; 6 UI: filter,
+>   join, FULL-blocked, owner-close, guest→auth, flag) — **100/100 web tests green**,
+>   typecheck + build green.
+> - `US-011-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/BuddiesEndpoints.cs`:
+>   `GET/POST /buddies`, `GET/PATCH/DELETE /buddies/{id}`, `POST /buddies/{id}/join|leave`,
+>   `POST /buddies/{id}/flag` contracts. Filtering/paging, the atomic capacity check,
+>   owner-only management, description XSS-sanitization, anti-abuse rate limiting, and
+>   audit are the remaining BE work. *Not compiled (no .NET SDK).*
+> - `US-011-SEC-001` — partial: owner-only manage + auth-gated join in UX; server-side
+>   authz, capacity concurrency, sanitization, rate limiting, and moderation hooks
+>   pending BE.
+> - Remaining to DONE: BE endpoints + capacity transaction + moderation (US-016) +
+>   audit, infinite-scroll pagination, request detail + participants view, join
+>   notifications (US-015), optional handoff to a real trip (US-003).
 
 ## 1. Story ID & Title
 **US-011 — Travel Buddies Discovery**: find/join full-trip groups or single activities/meetups; filter by city/date/category/budget; create a buddy request.

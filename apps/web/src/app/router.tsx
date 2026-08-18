@@ -6,12 +6,12 @@ import {
   HomePage,
   PlannerPage,
   ExplorePage,
-  BuddiesPage,
   MemoriesPage,
   MyTripsPage,
   NotFoundPage,
 } from '@/pages/pages';
 import { ProfilePage } from '@/features/profile/ProfilePage';
+import { BuddiesPage } from '@/features/buddies/BuddiesPage';
 
 // The trip dashboard pulls in every feature tab (itinerary/expenses/tasks/
 // members/memories) + their stores — code-split it so it stays out of the

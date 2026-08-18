@@ -373,5 +373,34 @@
       "NOT_FOUND": "Request not found",
       "GENERIC": "Could not complete the action, try again"
     }
+  },
+  "buddiesPage": {
+    "title": "Travel Buddies",
+    "lead": "Find companions for a full trip or a single activity.",
+    "create": "Post a request",
+    "mode": "Buddy mode",
+    "kind": { "FULL_TRIP": "Full trips", "MEETUP": "Activities" },
+    "city": "City",
+    "category": "Category",
+    "allCategories": "All categories",
+    "cat": { "GENERAL": "General", "YOUTH": "Youth", "WOMEN": "Women", "FAMILIES": "Families" },
+    "budget": "Budget",
+    "allBudgets": "Any budget",
+    "bud": { "LOW": "Budget", "MEDIUM": "Moderate", "HIGH": "Premium" },
+    "flagged": "Reported for moderation. Thank you.",
+    "empty": "No requests match your filters yet.",
+    "spots": "{{left}} of {{capacity}} spots left",
+    "status": { "OPEN": "Open", "FULL": "Full", "CLOSED": "Closed" },
+    "close": "Close request",
+    "leave": "Leave",
+    "join": "Join",
+    "flag": "Report",
+    "newTitle": "New buddy request",
+    "titleLabel": "Title",
+    "titlePh": "e.g. Weekend hike in Abha",
+    "capacity": "Capacity",
+    "description": "Description",
+    "descPh": "Describe the trip or activity…",
+    "publish": "Publish"
   }
 }

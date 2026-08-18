@@ -571,3 +571,23 @@ svg {
 .bp-friend__name { font-weight: 700; }
 .bp-friend__at { font-size: 13px; color: var(--bp-ink-muted); }
 .bp-invite-trip { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ── Travel Buddies (US-011) ───────────────────────────────────────────────── */
+.bp-buddies { display: flex; flex-direction: column; gap: 14px; }
+.bp-buddies__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.bp-buddies__head h1 { margin: 0; }
+.bp-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+.bp-filter-bar .bp-input { flex: 1; min-inline-size: 120px; max-inline-size: none; }
+.bp-create-buddy { display: flex; flex-direction: column; gap: 10px; border: 1px dashed var(--bp-border); border-radius: var(--bp-r-md); padding: 14px; }
+.bp-banner--ok { background: color-mix(in srgb, var(--bp-success) 14%, transparent); color: var(--bp-success); border: 0; }
+.bp-buddy-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 640px) { .bp-buddy-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .bp-buddy-grid { grid-template-columns: repeat(3, 1fr); } }
+.bp-buddy-card { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-lg); box-shadow: var(--bp-shadow-sm); block-size: 100%; }
+.bp-buddy-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bp-buddy-card__title { margin: 4px 0 0; font-size: 17px; }
+.bp-buddy-card__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; color: var(--bp-ink-muted); font-size: 14px; }
+.bp-buddy-card__meta .material-symbols-outlined { font-size: 18px; }
+.bp-buddy-card__spots { margin: 0; font-size: 13px; font-weight: 700; color: var(--bp-ink-muted); }
+.bp-buddy-card__actions { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; }
+.bp-buddy-card__actions .bp-btn { flex: 1; }
