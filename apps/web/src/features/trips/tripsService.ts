@@ -36,6 +36,7 @@ export type TripScope = 'upcoming' | 'past' | 'archived' | 'all';
 export interface TripsService {
   createTrip(payload: CreateTripPayload): Promise<Trip>;
   listTrips(scope?: TripScope): Promise<Trip[]>;
+  getTrip(id: string): Promise<Trip | null>;
   updateStatus(id: string, status: TripStatus): Promise<Trip>;
   deleteTrip(id: string): Promise<void>;
 }
@@ -77,6 +78,10 @@ export function createMockTripsService(seed?: Trip[]): TripsService {
         })
         .sort((a, b) => a.dateFrom.localeCompare(b.dateFrom));
     },
+    async getTrip(id) {
+      await tick();
+      return trips.find((t) => t.id === id && t.status !== 'DELETED') ?? null;
+    },
     async updateStatus(id, status) {
       await tick();
       const trip = trips.find((t) => t.id === id);
@@ -110,6 +115,9 @@ export function createApiTripsService(getToken?: () => string | undefined): Trip
     },
     listTrips(scope = 'all') {
       return client.apiFetch<Trip[]>(`/trips?scope=${scope}`);
+    },
+    getTrip(id) {
+      return client.apiFetch<Trip | null>(`/trips/${id}`);
     },
     updateStatus(id, status) {
       return client.apiFetch<Trip>(`/trips/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });

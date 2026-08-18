@@ -5,11 +5,13 @@ import { LocaleProvider } from '@/app/providers/LocaleProvider';
 import { router } from '@/app/router';
 import { initAuth } from '@/features/auth/authStore';
 import { initTrips } from '@/features/trips/tripsStore';
+import { initMembers } from '@/features/members/membersStore';
 
 export function App() {
   useEffect(() => {
     void initAuth(); // bootstrap auth provider (Firebase when configured, else mock)
     initTrips(); // bootstrap trips service (API when configured, else in-memory mock)
+    initMembers(); // bootstrap members service (API when configured, else in-memory mock)
   }, []);
 
   return (

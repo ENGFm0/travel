@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { tripsActions, useTripsList, useTripsStore } from './tripsStore';
@@ -161,9 +161,9 @@ function TripCard({ trip, today, locale, isPast }: { trip: Trip; today: string; 
       <span className="bp-progress__pct">{t('trips.progressPct', { pct: progress })}</span>
 
       <div className="bp-trip-actions">
-        <button className="bp-btn bp-btn--outline" disabled title={t('common.comingSoon')}>
+        <Link className="bp-btn bp-btn--outline" to={`/trips/${trip.id}`}>
           {t('trips.open')}
-        </button>
+        </Link>
         <button className="bp-icon-btn" aria-label={t('trips.archive')} disabled={busy} onClick={archive}>
           <span className="material-symbols-outlined" aria-hidden="true">archive</span>
         </button>

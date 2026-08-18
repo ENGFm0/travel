@@ -144,5 +144,44 @@
       "LIST_FAILED": "تعذّر تحميل رحلاتك، حاول مرة أخرى",
       "GENERIC": "تعذّر إنشاء الرحلة، حاول مرة أخرى"
     }
+  },
+  "members": {
+    "title": "الأعضاء",
+    "inviteLink": "رابط الدعوة",
+    "copy": "نسخ",
+    "copied": "تم النسخ ✓",
+    "linkNote": "أي شخص لديه الرابط يجب أن يسجّل الدخول للانضمام.",
+    "inviteeName": "الاسم",
+    "inviteeNamePh": "اسم الصديق",
+    "inviteeHandle": "الجوال أو اسم المستخدم",
+    "inviteeHandlePh": "‎+9665… أو @username",
+    "invite": "دعوة",
+    "pendingTitle": "دعوات معلّقة",
+    "activeTitle": "الأعضاء",
+    "onlyYou": "أنت فقط حتى الآن — ادعُ قروب سفرك.",
+    "pending": "معلّق",
+    "you": "أنت",
+    "role": { "OWNER": "الأمير", "MEMBER": "عضو", "VIEWER": "مشاهد" },
+    "accept": "قبول",
+    "decline": "رفض",
+    "makeViewer": "اجعله مشاهدًا",
+    "makeMember": "اجعله عضوًا",
+    "transfer": "نقل الإمارة",
+    "remove": "إزالة",
+    "leave": "مغادرة الرحلة",
+    "confirmTransfer": "نقل الملكية إلى {{name}}؟ ستصبح عضوًا.",
+    "confirmRemove": "إزالة {{name}} من الرحلة؟",
+    "confirmLeave": "مغادرة هذه الرحلة؟",
+    "errors": {
+      "ALREADY_MEMBER": "هذا الشخص موجود في الرحلة بالفعل",
+      "OWNER_MUST_TRANSFER": "انقل الملكية قبل مغادرة الرحلة",
+      "NOT_FOUND": "العضو غير موجود",
+      "GENERIC": "تعذّر إتمام العملية، حاول مرة أخرى"
+    }
+  },
+  "tripDetail": {
+    "notFoundTitle": "الرحلة غير موجودة",
+    "notFoundLead": "قد تكون هذه الرحلة محذوفة أو لا تملك صلاحية الوصول إليها.",
+    "backToTrips": "العودة إلى رحلاتي"
   }
 }

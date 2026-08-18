@@ -70,6 +70,9 @@ export const tripsActions = {
     if (trips) _setTrips([trip, ...trips]); // keep the loaded list in sync
     return trip;
   },
+  get(id: string): Promise<Trip | null> {
+    return requireService().getTrip(id);
+  },
   /** Loads all non-deleted trips; the page splits upcoming/past client-side. */
   async load(): Promise<void> {
     const s = useTripsStore.getState();

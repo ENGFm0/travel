@@ -40,6 +40,12 @@ public static class TripsEndpoints
             .WithName("ListTrips")
             .WithSummary("List the caller's trips (scope: upcoming|past|archived|all).");
 
+        // Fetch a single trip the caller can access (membership-checked).
+        // TODO(US-006-BE): load trip, verify membership, include progress.
+        trips.MapGet("/{id}", (string id) => Results.NotFound())
+            .WithName("GetTrip")
+            .WithSummary("Get one trip the caller belongs to.");
+
         // Archive/restore (status change). Owner-only; enforced server-side.
         // TODO(US-005-BE-001): validate transition (ACTIVE<->ARCHIVED), authorize
         // owner, audit TRIP_ARCHIVE/RESTORE.

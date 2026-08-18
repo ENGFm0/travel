@@ -11,6 +11,7 @@ import {
   ProfilePage,
   NotFoundPage,
 } from '@/pages/pages';
+import { TripDetailPage } from '@/features/trips/TripDetailPage';
 
 /** Route registry. Section pages are placeholders until their stories land.
  *  (Per-route code-splitting via React.lazy is applied per heavy page as they
@@ -30,6 +31,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireAuth>
             <MyTripsPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'trips/:id',
+        element: (
+          <RequireAuth>
+            <TripDetailPage />
           </RequireAuth>
         ),
       },

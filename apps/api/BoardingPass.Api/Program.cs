@@ -35,7 +35,8 @@ var v1 = app.MapGroup("/api/v1");
 
 v1.MapHealthChecks("/health");
 v1.MapAuthEndpoints(); // US-001
-v1.MapTripsEndpoints(); // US-003
+v1.MapTripsEndpoints(); // US-003 / US-005
+v1.MapMembersEndpoints(); // US-009
 
 v1.MapGet("/config", () => Results.Ok(new
 {

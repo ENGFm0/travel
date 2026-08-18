@@ -1,5 +1,29 @@
 # US-009 — Trip Members, Roles & Invitations
-Status: DRAFT · Size: M · Tenant-scoped: Yes
+Status: IN-PROGRESS · Size: M · Tenant-scoped: Yes
+
+> **Implementation status**
+> - `US-009-FE-001` (web) — ✅ **DONE & VERIFIED** in `apps/web/src/features/members/`
+>   + a minimal trip-detail shell `apps/web/src/features/trips/TripDetailPage.tsx`
+>   (route `/trips/:id`, behind `RequireAuth`; also unblocks US-005's "Open" button).
+>   `MembersPanel`: invite-link box with copy feedback ("تم النسخ ✓") + auth-required
+>   note, invite-by-name/handle form, members list with role chips (Amir/Member/
+>   Viewer) + pending status, and owner actions — accept/decline pending, change
+>   role (Member↔Viewer), transfer ownership (one-owner invariant), remove, and
+>   leave (owner-leave blocked → "transfer first"). Swappable `MembersService`
+>   (mock ↔ API) + reactive `membersStore`. 7 tests (list/owner chip, not-found,
+>   invite→pending, make-viewer, transfer keeps one Amir, owner-leave blocked, copy
+>   feedback) — **43/43 web tests green**, typecheck + build green.
+> - `US-009-BE-001` — 🟡 **scaffolded** in `apps/api/.../Endpoints/MembersEndpoints.cs`:
+>   `GET /members`, `POST /invitations` (+accept/decline), `POST /invite-link`,
+>   `PATCH /members/{uid}` (role/transfer), `DELETE /members/{uid}` (remove/leave)
+>   contracts, plus `GET /trips/{id}`. One-owner invariant, atomic transfer,
+>   owner-only authorization, capability-link token issuance/expiry, removal→task
+>   unassign, and audit are the remaining BE work. *Not compiled (no .NET SDK).*
+> - `US-009-SEC-001` — partial: owner-only controls are UX-gated client-side and the
+>   invite link carries an auth-required note; server-side owner enforcement, tenant
+>   isolation on removal, and token security pending BE.
+> - Remaining to DONE: BE endpoints + invariants + audit, friend-picker invite
+>   (US-010), notification delivery of invites (US-015), real invitee-side accept.
 
 ## 1. Story ID & Title
 **US-009 — Trip Members, Roles & Invitations**: manage the trip group — members list, roles (Amir/Member/Viewer), invite link, accept/decline, remove, leave, ownership transfer.

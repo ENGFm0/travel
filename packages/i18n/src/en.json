@@ -144,5 +144,44 @@
       "LIST_FAILED": "Could not load your trips, try again",
       "GENERIC": "Could not create the trip, try again"
     }
+  },
+  "members": {
+    "title": "Members",
+    "inviteLink": "Invite link",
+    "copy": "Copy",
+    "copied": "Copied ✓",
+    "linkNote": "Anyone with the link must sign in to join.",
+    "inviteeName": "Name",
+    "inviteeNamePh": "Friend's name",
+    "inviteeHandle": "Phone or username",
+    "inviteeHandlePh": "+9665… or @username",
+    "invite": "Invite",
+    "pendingTitle": "Pending invitations",
+    "activeTitle": "Members",
+    "onlyYou": "It's just you so far — invite your travel group.",
+    "pending": "Pending",
+    "you": "you",
+    "role": { "OWNER": "Amir", "MEMBER": "Member", "VIEWER": "Viewer" },
+    "accept": "Accept",
+    "decline": "Decline",
+    "makeViewer": "Make viewer",
+    "makeMember": "Make member",
+    "transfer": "Make Amir",
+    "remove": "Remove",
+    "leave": "Leave trip",
+    "confirmTransfer": "Transfer ownership to {{name}}? You'll become a member.",
+    "confirmRemove": "Remove {{name}} from the trip?",
+    "confirmLeave": "Leave this trip?",
+    "errors": {
+      "ALREADY_MEMBER": "This person is already in the trip",
+      "OWNER_MUST_TRANSFER": "Transfer ownership before leaving the trip",
+      "NOT_FOUND": "Member not found",
+      "GENERIC": "Could not complete the action, try again"
+    }
+  },
+  "tripDetail": {
+    "notFoundTitle": "Trip not found",
+    "notFoundLead": "This trip may have been deleted or you don't have access.",
+    "backToTrips": "Back to My Trips"
   }
 }
