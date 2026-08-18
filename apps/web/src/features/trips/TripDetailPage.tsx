@@ -51,11 +51,12 @@ export function TripDetailPage() {
     return () => { live = false; };
   }, [id]);
 
-  // Load members once at the dashboard level so role-gating works across tabs.
+  // Load members once at the dashboard level (in parallel with the trip fetch)
+  // so role-gating and member-dependent tabs are ready as early as possible.
   useEffect(() => {
-    if (state === 'ready') void membersActions.load(id);
+    void membersActions.load(id);
     return () => membersActions.reset();
-  }, [id, state]);
+  }, [id]);
 
   useEffect(() => {
     const h = hash.replace('#', '');
