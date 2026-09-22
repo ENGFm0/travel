@@ -577,7 +577,27 @@
     "addTitle": "أضف {{name}} إلى رحلة",
     "chooseTrip": "الرحلة",
     "chooseCity": "المدينة",
-    "confirmAdd": "إضافة"
+    "confirmAdd": "إضافة",
+    "tabs": {
+      "places": "الأماكن",
+      "partners": "شركاء النجاح"
+    },
+    "cityLabel": "المدينة",
+    "allCities": "كل المدن"
+  },
+  "partners": {
+    "lead": "شركاؤنا الموثوقون لتنظيم رحلتك — سفر، إقامة، تنقّل وأنشطة.",
+    "all": "الكل",
+    "nationwide": "جميع المدن",
+    "featured": "مميّز",
+    "empty": "لا يوجد شركاء في هذا التصنيف بعد.",
+    "cat": {
+      "AGENCY": "شركات سفر",
+      "HOTELS": "فنادق وإقامة",
+      "CARS": "تأجير سيارات",
+      "FLIGHTS": "طيران",
+      "ACTIVITIES": "أنشطة ومغامرات"
+    }
   },
   "flight": {
     "codeLabel": "رقم الرحلة",

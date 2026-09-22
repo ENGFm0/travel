@@ -2,26 +2,57 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/features/auth/authStore';
 import { useTripsList, tripsActions } from '@/features/trips/tripsStore';
-import { PLACE_CATEGORIES, filterPlaces, type Place, type PlaceCategory } from './placesModel';
+import { citiesOf, filterPlaces, PLACE_CATEGORIES, type Place, type PlaceCategory } from './placesModel';
 import { placesActions, usePlaces } from './placesStore';
+import {
+  filterPartners, PARTNER_CATEGORIES, PARTNER_ICON, type Partner, type PartnerCategory,
+} from '@/features/partners/partnersModel';
+import { partnersActions, usePartners } from '@/features/partners/partnersStore';
+
+type Tab = 'places' | 'partners';
 
 export function ExplorePage() {
+  const { t } = useTranslation();
+  const [tab, setTab] = useState<Tab>('places');
+
+  useEffect(() => {
+    void placesActions.load();
+    void partnersActions.load();
+  }, []);
+
+  return (
+    <section className="bp-page bp-explore">
+      <h1>{t('explorePage.title')}</h1>
+      <p className="bp-page__lead">{t('explorePage.lead')}</p>
+
+      <div className="bp-seg bp-seg--full" role="tablist" aria-label={t('explorePage.title')}>
+        <button role="tab" className={`bp-seg__btn ${tab === 'places' ? 'is-on' : ''}`} aria-selected={tab === 'places'}
+          onClick={() => setTab('places')}>{t('explorePage.tabs.places')}</button>
+        <button role="tab" className={`bp-seg__btn ${tab === 'partners' ? 'is-on' : ''}`} aria-selected={tab === 'partners'}
+          onClick={() => setTab('partners')}>{t('explorePage.tabs.partners')}</button>
+      </div>
+
+      {tab === 'places' ? <PlacesTab /> : <PartnersTab />}
+    </section>
+  );
+}
+
+/* ── Places tab ─────────────────────────────────────────────────────────────── */
+function PlacesTab() {
   const { t } = useTranslation();
   const { isAuthenticated, openAuth } = useAuth();
   const { places, loading } = usePlaces();
   const { trips } = useTripsList();
   const [category, setCategory] = useState<PlaceCategory | 'ALL'>('ALL');
+  const [city, setCity] = useState('ALL');
   const [query, setQuery] = useState('');
   const [addPlace, setAddPlace] = useState<Place | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    void placesActions.load();
-    if (trips === null) void tripsActions.load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => { if (trips === null) void tripsActions.load(); }, [trips]);
 
-  const shown = useMemo(() => filterPlaces(places ?? [], category, query), [places, category, query]);
+  const cities = useMemo(() => citiesOf(places ?? []), [places]);
+  const shown = useMemo(() => filterPlaces(places ?? [], category, query, city), [places, category, query, city]);
   const myTrips = useMemo(() => (trips ?? []).filter((tr) => tr.status === 'ACTIVE'), [trips]);
 
   function rate(place: Place, stars: number) {
@@ -35,9 +66,14 @@ export function ExplorePage() {
   function flash(msg: string) { setToast(msg); window.setTimeout(() => setToast(null), 2500); }
 
   return (
-    <section className="bp-page bp-explore">
-      <h1>{t('explorePage.title')}</h1>
-      <p className="bp-page__lead">{t('explorePage.lead')}</p>
+    <>
+      <div className="bp-explore__filters">
+        <select className="bp-input bp-input--sm" value={city} aria-label={t('explorePage.cityLabel')} onChange={(e) => setCity(e.target.value)}>
+          <option value="ALL">{t('explorePage.allCities')}</option>
+          {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <input className="bp-input bp-input--sm" value={query} placeholder={t('explorePage.search')} aria-label={t('explorePage.search')} onChange={(e) => setQuery(e.target.value)} />
+      </div>
 
       <div className="bp-chips-row">
         <button className={`bp-chip bp-chip--btn ${category === 'ALL' ? 'is-on' : ''}`} aria-pressed={category === 'ALL'} onClick={() => setCategory('ALL')}>{t('explorePage.all')}</button>
@@ -45,8 +81,6 @@ export function ExplorePage() {
           <button key={c} className={`bp-chip bp-chip--btn ${category === c ? 'is-on' : ''}`} aria-pressed={category === c} onClick={() => setCategory(c)}>{t(`explorePage.cat.${c}`)}</button>
         ))}
       </div>
-
-      <input className="bp-input" value={query} placeholder={t('explorePage.search')} aria-label={t('explorePage.search')} onChange={(e) => setQuery(e.target.value)} />
 
       {toast && <div className="bp-banner bp-banner--ok" role="status">{toast}</div>}
 
@@ -69,7 +103,60 @@ export function ExplorePage() {
           onClose={() => setAddPlace(null)}
           onDone={(tripTitle) => { setAddPlace(null); flash(t('explorePage.added', { trip: tripTitle })); }} />
       )}
-    </section>
+    </>
+  );
+}
+
+/* ── Partners tab ───────────────────────────────────────────────────────────── */
+function PartnersTab() {
+  const { t } = useTranslation();
+  const { partners, loading } = usePartners();
+  const [category, setCategory] = useState<PartnerCategory | 'ALL'>('ALL');
+  const shown = useMemo(() => filterPartners(partners ?? [], category), [partners, category]);
+
+  return (
+    <>
+      <p className="bp-explore__hint">{t('partners.lead')}</p>
+      <div className="bp-chips-row">
+        <button className={`bp-chip bp-chip--btn ${category === 'ALL' ? 'is-on' : ''}`} aria-pressed={category === 'ALL'} onClick={() => setCategory('ALL')}>{t('partners.all')}</button>
+        {PARTNER_CATEGORIES.map((c) => (
+          <button key={c} className={`bp-chip bp-chip--btn ${category === c ? 'is-on' : ''}`} aria-pressed={category === c} onClick={() => setCategory(c)}>{t(`partners.cat.${c}`)}</button>
+        ))}
+      </div>
+
+      {loading && partners === null ? (
+        <p className="bp-page__lead">…</p>
+      ) : shown.length === 0 ? (
+        <div className="bp-empty"><span className="material-symbols-outlined bp-empty__icon" aria-hidden="true">handshake</span><p>{t('partners.empty')}</p></div>
+      ) : (
+        <ul className="bp-partner-grid" role="list">
+          {shown.map((p) => <li key={p.id}><PartnerCard partner={p} /></li>)}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function PartnerCard({ partner }: { partner: Partner }) {
+  const { t } = useTranslation();
+  const coverage = partner.coverage === 'ALL' ? t('partners.nationwide') : partner.coverage;
+  return (
+    <article className="bp-partner-card">
+      <span className={`bp-partner-card__logo bp-partner-card__logo--${partner.category.toLowerCase()}`} aria-hidden="true">
+        <span className="material-symbols-outlined">{PARTNER_ICON[partner.category]}</span>
+      </span>
+      <div className="bp-partner-card__body">
+        <div className="bp-partner-card__top">
+          <span className="bp-chip bp-chip--cat">{t(`partners.cat.${partner.category}`)}</span>
+          {partner.featured && <span className="bp-badge bp-badge--gold">{t('partners.featured')}</span>}
+        </div>
+        <h3 className="bp-partner-card__title">{partner.name}</h3>
+        <p className="bp-partner-card__meta">
+          <span className="material-symbols-outlined" aria-hidden="true">location_on</span>{coverage}
+        </p>
+        <p className="bp-partner-card__tag">{partner.tagline}</p>
+      </div>
+    </article>
   );
 }
 

@@ -577,7 +577,27 @@
     "addTitle": "Add {{name}} to a trip",
     "chooseTrip": "Trip",
     "chooseCity": "City",
-    "confirmAdd": "Add"
+    "confirmAdd": "Add",
+    "tabs": {
+      "places": "Places",
+      "partners": "Success Partners"
+    },
+    "cityLabel": "City",
+    "allCities": "All cities"
+  },
+  "partners": {
+    "lead": "Our trusted partners for planning your trip — travel, stays, transport and activities.",
+    "all": "All",
+    "nationwide": "Nationwide",
+    "featured": "Featured",
+    "empty": "No partners in this category yet.",
+    "cat": {
+      "AGENCY": "Travel agencies",
+      "HOTELS": "Hotels & stays",
+      "CARS": "Car rental",
+      "FLIGHTS": "Flights",
+      "ACTIVITIES": "Activities"
+    }
   },
   "flight": {
     "codeLabel": "Flight number",

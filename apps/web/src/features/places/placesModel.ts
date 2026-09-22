@@ -17,13 +17,27 @@ export interface Place {
   myRating?: number; // the current user's rating, if any
 }
 
-/** Filter by category (or 'ALL') + free-text over name/area/city (FR-012-001). */
-export function filterPlaces(list: Place[], category: PlaceCategory | 'ALL', query: string): Place[] {
+/** Filter by category (or 'ALL') + optional city (or 'ALL') + free-text over
+ *  name/area/city (FR-012-001). */
+export function filterPlaces(
+  list: Place[],
+  category: PlaceCategory | 'ALL',
+  query: string,
+  city: string = 'ALL',
+): Place[] {
   const q = query.trim().toLowerCase();
   return list.filter((p) =>
     (category === 'ALL' || p.category === category) &&
+    (city === 'ALL' || p.city === city) &&
     (!q || p.name.toLowerCase().includes(q) || p.area.toLowerCase().includes(q) || p.city.toLowerCase().includes(q)),
   );
+}
+
+/** Unique city names present in the list, in first-seen order. */
+export function citiesOf(list: Place[]): string[] {
+  const seen: string[] = [];
+  for (const p of list) if (p.city && !seen.includes(p.city)) seen.push(p.city);
+  return seen;
 }
 
 /** Clamp a rating to the valid 1–5 range (VR-012-001). */
