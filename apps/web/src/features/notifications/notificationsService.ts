@@ -1,3 +1,4 @@
+import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
 import type { AppNotification } from './notificationsModel';
 
@@ -10,15 +11,17 @@ export interface NotificationsService {
 /** In-memory notifications service for dev/tests. The real service reads
  *  recipient-scoped `notifications/{uid}` and FCM delivery is server-side. NOT a
  *  security boundary. */
-export function createMockNotificationsService(seed?: AppNotification[]): NotificationsService {
-  let items: AppNotification[] = (seed ?? demoNotifications()).map((n) => ({ ...n }));
+export function createMockNotificationsService(seed?: AppNotification[], persistKey?: string): NotificationsService {
+  const src = persistKey ? loadJSON<AppNotification[]>(persistKey, seed ?? demoNotifications()) : (seed ?? demoNotifications());
+  let items: AppNotification[] = src.map((n) => ({ ...n }));
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
   const snap = () => items.map((n) => ({ ...n }));
-  return {
+  const base: NotificationsService = {
     async list() { await tick(); return snap(); },
     async markRead(id) { await tick(); items = items.map((n) => (n.id === id ? { ...n, read: true } : n)); return snap(); },
     async markAllRead() { await tick(); items = items.map((n) => ({ ...n, read: true })); return snap(); },
   };
+  return persistAfter(base, persistKey, () => items);
 }
 
 export function createApiNotificationsService(getToken?: () => string | undefined): NotificationsService {
@@ -41,5 +44,5 @@ export function demoNotifications(): AppNotification[] {
 }
 
 export function createNotificationsService(): NotificationsService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiNotificationsService() : createMockNotificationsService();
+  return import.meta.env.VITE_API_BASE_URL ? createApiNotificationsService() : createMockNotificationsService(undefined, 'bp.notifications.v1');
 }

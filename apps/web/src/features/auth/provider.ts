@@ -36,5 +36,5 @@ export async function createAuthProvider(): Promise<AuthProvider> {
     return createFirebaseAuthProvider();
   }
   const { createMockAuthProvider } = await import('./providers/mockAuthProvider');
-  return createMockAuthProvider();
+  return createMockAuthProvider('bp.auth.v1'); // persist the signed-in user across reloads (dev/demo)
 }

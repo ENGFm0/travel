@@ -1,3 +1,4 @@
+import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
 import { FriendsError, normalizeHandle, type Friend, type FriendRequest, type Graph } from './friendsModel';
 
@@ -15,13 +16,14 @@ const SELF_HANDLE = 'me';
 
 /** In-memory friends service for dev/tests. NOT a security boundary — the server
  *  enforces self-scoped access, pair uniqueness/idempotency, and anti-spam. */
-export function createMockFriendsService(seed?: Graph): FriendsService {
-  const friends: Friend[] = seed ? seed.friends.map((f) => ({ ...f })) : [];
-  let incoming: FriendRequest[] = seed ? seed.incoming.map((r) => ({ ...r })) : [];
+export function createMockFriendsService(seed?: Graph, persistKey?: string): FriendsService {
+  const init = persistKey ? loadJSON<Graph>(persistKey, seed ?? { friends: [], incoming: [] }) : (seed ?? { friends: [], incoming: [] });
+  const friends: Friend[] = init.friends.map((f) => ({ ...f }));
+  let incoming: FriendRequest[] = init.incoming.map((r) => ({ ...r }));
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
   const snap = (): Graph => ({ friends: friends.map((f) => ({ ...f })), incoming: incoming.map((r) => ({ ...r })) });
 
-  return {
+  const base: FriendsService = {
     async getGraph() { await tick(); return snap(); },
     async sendRequest(handle) {
       await tick();
@@ -57,6 +59,7 @@ export function createMockFriendsService(seed?: Graph): FriendsService {
       // Delegates to US-009 server-side (creates a pending trip invitation).
     },
   };
+  return persistAfter(base, persistKey, snap);
 }
 
 export function createApiFriendsService(getToken?: () => string | undefined): FriendsService {
@@ -85,5 +88,5 @@ export function demoGraph(): Graph {
 }
 
 export function createFriendsService(): FriendsService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiFriendsService() : createMockFriendsService(demoGraph());
+  return import.meta.env.VITE_API_BASE_URL ? createApiFriendsService() : createMockFriendsService(demoGraph(), 'bp.friends.v1');
 }

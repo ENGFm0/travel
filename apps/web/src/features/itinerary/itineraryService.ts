@@ -1,4 +1,5 @@
 import { createApiClient } from '@boardingpass/core';
+import { loadJSON, persistAfter } from '@/shared/persist';
 
 export interface Activity {
   id: string;
@@ -51,9 +52,10 @@ const uid = (p: string) => `${p}-${crypto.randomUUID()}`;
 
 /** In-memory itinerary service for dev/tests. NOT a security boundary — the real
  *  service enforces member-write / viewer-read and tenant isolation server-side. */
-export function createMockItineraryService(seedBoards?: Record<string, Board>): ItineraryService {
+export function createMockItineraryService(seedBoards?: Record<string, Board>, persistKey?: string): ItineraryService {
   const boards = new Map<string, Board>();
-  if (seedBoards) for (const [k, v] of Object.entries(seedBoards)) boards.set(k, structuredClone(v));
+  const initial = persistKey ? loadJSON<Record<string, Board>>(persistKey, seedBoards ?? {}) : (seedBoards ?? {});
+  for (const [k, v] of Object.entries(initial)) boards.set(k, structuredClone(v));
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
   function board(tripId: string, seed: CitySeed[] = []): Board {
@@ -71,7 +73,7 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>): 
   const city = (b: Board, id: string) => b.cities.find((c) => c.id === id);
   const day = (b: Board, cid: string, did: string) => city(b, cid)?.days.find((d) => d.id === did);
 
-  return {
+  const base: ItineraryService = {
     async getBoard(tripId, seed) { await tick(); board(tripId, seed); return snap(tripId); },
     async addCity(tripId, name) {
       await tick();
@@ -129,6 +131,7 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>): 
       return snap(tripId);
     },
   };
+  return persistAfter(base, persistKey, () => Object.fromEntries(boards));
 }
 
 export function createApiItineraryService(getToken?: () => string | undefined): ItineraryService {
@@ -149,5 +152,5 @@ export function createApiItineraryService(getToken?: () => string | undefined): 
 }
 
 export function createItineraryService(): ItineraryService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiItineraryService() : createMockItineraryService();
+  return import.meta.env.VITE_API_BASE_URL ? createApiItineraryService() : createMockItineraryService(undefined, 'bp.itinerary.v1');
 }

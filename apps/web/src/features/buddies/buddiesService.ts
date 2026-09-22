@@ -1,3 +1,4 @@
+import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
 import {
   spotsLeft, statusOf, type BuddyBudget, type BuddyCategory, type BuddyKind, type BuddyRequest,
@@ -35,13 +36,14 @@ export const CURRENT_UID = 'me';
 
 /** In-memory buddies service for dev/tests. Capacity is enforced atomically here
  *  to mirror the server's race-safe join (BR-011-002). NOT a security boundary. */
-export function createMockBuddiesService(seed?: BuddyRequest[]): BuddiesService {
-  const reqs: BuddyRequest[] = seed ? seed.map((r) => ({ ...r, participantUids: [...r.participantUids] })) : [];
+export function createMockBuddiesService(seed?: BuddyRequest[], persistKey?: string): BuddiesService {
+  const src = persistKey ? loadJSON<BuddyRequest[]>(persistKey, seed ?? []) : (seed ?? []);
+  const reqs: BuddyRequest[] = src.map((r) => ({ ...r, participantUids: [...r.participantUids] }));
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
   const snap = () => reqs.map((r) => ({ ...r, participantUids: [...r.participantUids] }));
   const find = (id: string) => reqs.find((r) => r.id === id);
 
-  return {
+  const base: BuddiesService = {
     async list() { await tick(); return snap(); },
     async create(p, ownerUid) {
       await tick();
@@ -82,6 +84,7 @@ export function createMockBuddiesService(seed?: BuddyRequest[]): BuddiesService 
       // Enters moderation (US-016) server-side.
     },
   };
+  return persistAfter(base, persistKey, snap);
 }
 
 export function createApiBuddiesService(getToken?: () => string | undefined): BuddiesService {
@@ -108,7 +111,7 @@ export function demoBuddies(): BuddyRequest[] {
 }
 
 export function createBuddiesService(): BuddiesService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiBuddiesService() : createMockBuddiesService(demoBuddies());
+  return import.meta.env.VITE_API_BASE_URL ? createApiBuddiesService() : createMockBuddiesService(demoBuddies(), 'bp.buddies.v1');
 }
 
 export { spotsLeft, statusOf };

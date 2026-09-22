@@ -1,3 +1,4 @@
+import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
 import { defaultPrefs, type NotifPrefs, type Profile } from './profileModel';
 
@@ -28,8 +29,13 @@ function splitName(displayName?: string | null): { firstName: string; lastName: 
 
 /** In-memory profile service for dev/tests. NOT a security boundary — the server
  *  enforces self-only access, validates input, and computes the delete blocker. */
-export function createMockProfileService(opts?: { blockedUids?: string[]; seedProfiles?: Record<string, Partial<Profile>> }): ProfileService {
+export function createMockProfileService(opts?: { blockedUids?: string[]; seedProfiles?: Record<string, Partial<Profile>>; persistKey?: string }): ProfileService {
   const profiles = new Map<string, Profile>();
+  const persistKey = opts?.persistKey;
+  if (persistKey) {
+    const saved = loadJSON<Record<string, Profile>>(persistKey, {});
+    for (const [k, v] of Object.entries(saved)) profiles.set(k, v);
+  }
   const blocked = new Set(opts?.blockedUids ?? []);
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
@@ -47,7 +53,7 @@ export function createMockProfileService(opts?: { blockedUids?: string[]; seedPr
     return p;
   }
 
-  return {
+  const base: ProfileService = {
     async getProfile(seed) { await tick(); return { ...ensure(seed) }; },
     async updateProfile(uid, patch) {
       await tick();
@@ -73,6 +79,7 @@ export function createMockProfileService(opts?: { blockedUids?: string[]; seedPr
       profiles.delete(uid);
     },
   };
+  return persistAfter(base, persistKey, () => Object.fromEntries(profiles));
 }
 
 export function createApiProfileService(getToken?: () => string | undefined): ProfileService {
@@ -88,5 +95,5 @@ export function createApiProfileService(getToken?: () => string | undefined): Pr
 }
 
 export function createProfileService(): ProfileService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiProfileService() : createMockProfileService();
+  return import.meta.env.VITE_API_BASE_URL ? createApiProfileService() : createMockProfileService({ persistKey: 'bp.profile.v1' });
 }

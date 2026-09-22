@@ -1,4 +1,5 @@
 import { createApiClient } from '@boardingpass/core';
+import { loadJSON, persistAfter } from '@/shared/persist';
 import type { Category, Finance, GroupExpense, PersonalExpense, SideKitty } from './finance';
 
 export interface FinanceInit {
@@ -39,8 +40,12 @@ interface Store {
 /** In-memory expenses service for dev/tests. Personal spend is strictly
  *  self-scoped (BR-007-003). NOT a security boundary — the server recomputes all
  *  totals and enforces owner-only confirmations. */
-export function createMockExpensesService(seed?: Record<string, Partial<Store>>): ExpensesService {
+export function createMockExpensesService(seed?: Record<string, Partial<Store>>, persistKey?: string): ExpensesService {
   const stores = new Map<string, Store>();
+  if (persistKey) {
+    const saved = loadJSON<Record<string, Store>>(persistKey, {});
+    for (const [k, v] of Object.entries(saved)) stores.set(k, v);
+  }
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
   function store(tripId: string, init?: FinanceInit): Store {
@@ -69,7 +74,7 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>)
     };
   }
 
-  return {
+  const base: ExpensesService = {
     async getFinance(tripId, init, me) { await tick(); store(tripId, init); return view(tripId, me); },
     async setKittyTotal(tripId, total) { await tick(); store(tripId).kittyTotal = Math.max(0, total); return view(tripId, ME(tripId)); },
     async markPaid(tripId, u, paid) { await tick(); store(tripId).paid[u] = paid; return view(tripId, ME(tripId)); },
@@ -117,6 +122,8 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>)
   // The mock has a single "current user" per session; the app passes it via
   // getFinance and the store remembers it for subsequent self-scoped writes.
   function ME(tripId: string): string { return currentUser.get(tripId) ?? 'me'; }
+
+  return persistAfter(base, persistKey, () => Object.fromEntries(stores));
 }
 
 // Records the "me" uid per trip for the mock's self-scoped personal writes.
@@ -145,5 +152,5 @@ export function createApiExpensesService(getToken?: () => string | undefined): E
 }
 
 export function createExpensesService(): ExpensesService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiExpensesService() : createMockExpensesService();
+  return import.meta.env.VITE_API_BASE_URL ? createApiExpensesService() : createMockExpensesService(undefined, 'bp.expenses.v1');
 }

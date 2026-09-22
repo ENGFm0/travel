@@ -1,10 +1,12 @@
 import { ApiError } from '@boardingpass/core';
 import type { AuthUser } from '@boardingpass/types';
 import type { AuthProvider, RegisterData } from '../provider';
+import { loadJSON, saveJSON } from '@/shared/persist';
 
 /** In-memory auth for dev/tests (no network). Mirrors the flows the Firebase
- *  provider implements. NOT a security boundary. */
-export function createMockAuthProvider(): AuthProvider {
+ *  provider implements. NOT a security boundary. When `persistKey` is set (the
+ *  default dev build), the signed-in user survives reloads. */
+export function createMockAuthProvider(persistKey?: string): AuthProvider {
   const users = new Map<string, { password: string; user: AuthUser }>();
   // seed one registered account (matches the prototype's demo)
   users.set('user@example.com', {
@@ -18,9 +20,12 @@ export function createMockAuthProvider(): AuthProvider {
     },
   });
 
-  let current: AuthUser | null = null;
+  let current: AuthUser | null = persistKey ? loadJSON<AuthUser | null>(persistKey, null) : null;
   const listeners = new Set<(u: AuthUser | null) => void>();
-  const emit = () => listeners.forEach((cb) => cb(current));
+  const emit = () => {
+    if (persistKey) saveJSON(persistKey, current);
+    listeners.forEach((cb) => cb(current));
+  };
 
   const delay = () => new Promise<void>((r) => setTimeout(r, 0));
 

@@ -1,5 +1,6 @@
 import { createApiClient } from '@boardingpass/core';
 import type { TripType, TripStatus } from '@boardingpass/types';
+import { loadJSON, saveJSON } from '@/shared/persist';
 
 export interface TripCity {
   name: string;
@@ -45,8 +46,9 @@ const CURRENT_UID = 'me';
 
 /** In-memory service for dev/tests (no backend). NOT a security boundary —
  *  the real service filters by membership and enforces ownership server-side. */
-export function createMockTripsService(seed?: Trip[]): TripsService {
-  const trips: Trip[] = seed ? [...seed] : [];
+export function createMockTripsService(seed?: Trip[], persistKey?: string): TripsService {
+  const trips: Trip[] = persistKey ? loadJSON(persistKey, seed ?? []) : seed ? [...seed] : [];
+  const save = () => { if (persistKey) saveJSON(persistKey, trips); };
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
   return {
@@ -64,6 +66,7 @@ export function createMockTripsService(seed?: Trip[]): TripsService {
         progress: 5,
       };
       trips.unshift(trip);
+      save();
       return trip;
     },
     async listTrips(scope = 'all') {
@@ -87,12 +90,14 @@ export function createMockTripsService(seed?: Trip[]): TripsService {
       const trip = trips.find((t) => t.id === id);
       if (!trip) throw new Error('NOT_FOUND');
       trip.status = status;
+      save();
       return trip;
     },
     async deleteTrip(id) {
       await tick();
       const trip = trips.find((t) => t.id === id);
       if (trip) trip.status = 'DELETED'; // soft-delete (BR-005-003)
+      save();
     },
   };
 }
@@ -161,5 +166,5 @@ export function demoTrips(): Trip[] {
 }
 
 export function createTripsService(): TripsService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiTripsService() : createMockTripsService(demoTrips());
+  return import.meta.env.VITE_API_BASE_URL ? createApiTripsService() : createMockTripsService(demoTrips(), 'bp.trips.v1');
 }

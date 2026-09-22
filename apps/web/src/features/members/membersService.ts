@@ -1,5 +1,6 @@
 import { createApiClient } from '@boardingpass/core';
 import type { MemberRole } from '@boardingpass/types';
+import { loadJSON, persistAfter } from '@/shared/persist';
 
 export type MemberStatus = 'ACTIVE' | 'PENDING' | 'DECLINED';
 
@@ -49,9 +50,10 @@ export const CURRENT_UID = 'me';
 
 /** In-memory members service for dev/tests. NOT a security boundary — the real
  *  service enforces one-owner, owner-only management, and tenant isolation. */
-export function createMockMembersService(seed?: Record<string, Member[]>): MembersService {
+export function createMockMembersService(seed?: Record<string, Member[]>, persistKey?: string): MembersService {
   const byTrip = new Map<string, Member[]>();
-  if (seed) for (const [k, v] of Object.entries(seed)) byTrip.set(k, v.map((m) => ({ ...m })));
+  const initial = persistKey ? loadJSON<Record<string, Member[]>>(persistKey, seed ?? {}) : (seed ?? {});
+  for (const [k, v] of Object.entries(initial)) byTrip.set(k, v.map((m) => ({ ...m })));
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
   function ensure(tripId: string): Member[] {
@@ -63,7 +65,7 @@ export function createMockMembersService(seed?: Record<string, Member[]>): Membe
     return list;
   }
 
-  return {
+  const base: MembersService = {
     async list(tripId) {
       await tick();
       return ensure(tripId).map((m) => ({ ...m }));
@@ -133,6 +135,7 @@ export function createMockMembersService(seed?: Record<string, Member[]>): Membe
       return `${origin()}/join/${tripId}`;
     },
   };
+  return persistAfter(base, persistKey, () => Object.fromEntries(byTrip));
 }
 
 function origin(): string {
@@ -176,5 +179,5 @@ export function createApiMembersService(getToken?: () => string | undefined): Me
 }
 
 export function createMembersService(): MembersService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiMembersService() : createMockMembersService();
+  return import.meta.env.VITE_API_BASE_URL ? createApiMembersService() : createMockMembersService(undefined, 'bp.members.v1');
 }

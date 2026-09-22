@@ -1,3 +1,4 @@
+import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
 import { applyRating, type Place } from './placesModel';
 
@@ -9,12 +10,12 @@ export interface PlacesService {
 
 /** In-memory places service for dev/tests. Real place data is served by a backend
  *  proxy to Maps/Places (keys server-side, cached — BR-012-004); NO client key. */
-export function createMockPlacesService(seed?: Place[]): PlacesService {
-  const places: Place[] = (seed ?? demoPlaces()).map((p) => ({ ...p }));
+export function createMockPlacesService(seed?: Place[], persistKey?: string): PlacesService {
+  const places: Place[] = (persistKey ? loadJSON<Place[]>(persistKey, seed ?? demoPlaces()) : (seed ?? demoPlaces())).map((p) => ({ ...p }));
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
   const snap = () => places.map((p) => ({ ...p }));
 
-  return {
+  const base: PlacesService = {
     async list() { await tick(); return snap(); },
     async rate(placeId, rating) {
       await tick();
@@ -27,6 +28,7 @@ export function createMockPlacesService(seed?: Place[]): PlacesService {
       // Delegates to US-006 server-side (adds an activity to the trip's itinerary).
     },
   };
+  return persistAfter(base, persistKey, snap);
 }
 
 export function createApiPlacesService(getToken?: () => string | undefined): PlacesService {
@@ -52,5 +54,5 @@ export function demoPlaces(): Place[] {
 }
 
 export function createPlacesService(): PlacesService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiPlacesService() : createMockPlacesService();
+  return import.meta.env.VITE_API_BASE_URL ? createApiPlacesService() : createMockPlacesService(undefined, 'bp.places.v1');
 }

@@ -1,3 +1,4 @@
+import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
 import {
   BOOKING_ITEMS, dedupeAppend, type BookingItem, type PackCategory,
@@ -20,9 +21,10 @@ const uid = (p: string) => `${p}-${crypto.randomUUID()}`;
 
 /** In-memory tasks service for dev/tests. NOT a security boundary — the server
  *  enforces member-write / viewer-read, assignee integrity, and audit. */
-export function createMockTasksService(seed?: Record<string, TasksBoard>): TasksService {
+export function createMockTasksService(seed?: Record<string, TasksBoard>, persistKey?: string): TasksService {
   const boards = new Map<string, TasksBoard>();
-  if (seed) for (const [k, v] of Object.entries(seed)) boards.set(k, structuredClone(v));
+  const initial = persistKey ? loadJSON<Record<string, TasksBoard>>(persistKey, seed ?? {}) : (seed ?? {});
+  for (const [k, v] of Object.entries(initial)) boards.set(k, structuredClone(v));
   const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
   function board(tripId: string): TasksBoard {
@@ -39,7 +41,7 @@ export function createMockTasksService(seed?: Record<string, TasksBoard>): Tasks
   }
   const snap = (tripId: string) => structuredClone(boards.get(tripId)!) as TasksBoard;
 
-  return {
+  const base: TasksService = {
     async getBoard(tripId) { await tick(); board(tripId); return snap(tripId); },
     async addTask(tripId, title, assigneeUid) {
       await tick();
@@ -89,6 +91,7 @@ export function createMockTasksService(seed?: Record<string, TasksBoard>): Tasks
       return snap(tripId);
     },
   };
+  return persistAfter(base, persistKey, () => Object.fromEntries(boards));
 }
 
 export function createApiTasksService(getToken?: () => string | undefined): TasksService {
@@ -110,7 +113,7 @@ export function createApiTasksService(getToken?: () => string | undefined): Task
 }
 
 export function createTasksService(): TasksService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiTasksService() : createMockTasksService();
+  return import.meta.env.VITE_API_BASE_URL ? createApiTasksService() : createMockTasksService(undefined, 'bp.tasks.v1');
 }
 
 export type { Task, TasksBoard };
