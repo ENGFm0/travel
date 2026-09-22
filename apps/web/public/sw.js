@@ -1,7 +1,8 @@
-// BoardingPass service worker — minimal offline shell for the PWA (US-014).
-// Runtime cache-first for same-origin GET (hashed assets are safe to cache);
-// navigations fall back to the cached app shell when offline.
-const CACHE = 'bp-cache-v3';
+// BoardingPass service worker — offline shell for the PWA (US-014).
+// HTML navigations are network-first (so updated markup + icon refs propagate
+// without a hard refresh, falling back to cache offline); other same-origin GETs
+// are stale-while-revalidate (hashed assets are safe to cache).
+const CACHE = 'bp-cache-v4';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -24,9 +25,25 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);
+
+      // HTML navigations: network-first so a new deploy is picked up promptly.
+      if (req.mode === 'navigation') {
+        try {
+          const res = await fetch(req);
+          if (res && res.ok) cache.put(req, res.clone());
+          return res;
+        } catch {
+          const cached = await cache.match(req);
+          if (cached) return cached;
+          const shell = await cache.match(self.registration.scope);
+          if (shell) return shell;
+          return Response.error();
+        }
+      }
+
+      // Other assets: stale-while-revalidate.
       const cached = await cache.match(req);
       if (cached) {
-        // stale-while-revalidate
         fetch(req).then((res) => { if (res && res.ok) cache.put(req, res.clone()); }).catch(() => {});
         return cached;
       }
@@ -35,10 +52,6 @@ self.addEventListener('fetch', (event) => {
         if (res && res.ok) cache.put(req, res.clone());
         return res;
       } catch {
-        if (req.mode === 'navigation') {
-          const shell = await cache.match(self.registration.scope);
-          if (shell) return shell;
-        }
         return Response.error();
       }
     })(),
