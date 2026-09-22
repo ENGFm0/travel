@@ -87,8 +87,6 @@ svg {
   max-width: var(--bp-container);
   margin-inline: auto;
   padding: var(--bp-s-6) var(--bp-s-4);
-  /* clear the fixed bottom nav */
-  padding-bottom: calc(var(--bp-bottomnav-h) + env(safe-area-inset-bottom, 0px) + var(--bp-s-4));
 }
 
 /* ---------- Header ---------- */
@@ -99,12 +97,16 @@ svg {
   background: color-mix(in srgb, var(--bp-bg) 88%, transparent);
   backdrop-filter: saturate(1.1) blur(8px);
   border-bottom: 1px solid var(--bp-border);
+  /* The app runs full-bleed (viewport-fit=cover + translucent status bar), so
+     push the bar below the notch/status bar; otherwise the top icons sit under
+     it and can't be tapped. */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 .bp-header__inner {
   max-width: var(--bp-container);
   margin-inline: auto;
   height: var(--bp-header-h);
-  padding-inline: var(--bp-s-4);
+  padding-inline: max(var(--bp-s-4), env(safe-area-inset-right, 0px), env(safe-area-inset-left, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -165,6 +167,9 @@ svg {
 .bp-footer {
   border-top: 1px solid var(--bp-border);
   padding: var(--bp-s-6) var(--bp-s-4);
+  /* footer is the last flow element, so it carries the clearance for the fixed
+     bottom nav (plus the home-indicator safe area) — otherwise it hides under it. */
+  padding-bottom: calc(var(--bp-bottomnav-h) + env(safe-area-inset-bottom, 0px) + var(--bp-s-6));
 }
 .bp-footer__inner {
   max-width: var(--bp-container);

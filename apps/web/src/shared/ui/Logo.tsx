@@ -45,12 +45,15 @@ export function LogoMark({ size = 38 }: { size?: number }) {
   );
 }
 
-export function Logo() {
+/** App logo. `markOnly` shows just the boarding-pass ticket (used in the header
+ *  for a cleaner top bar); the wordmark stays in the DOM but visually hidden so
+ *  the link keeps an accessible name. The footer uses the full lockup. */
+export function Logo({ markOnly = false, size }: { markOnly?: boolean; size?: number } = {}) {
   const { t } = useTranslation();
   return (
     <Link className="bp-logo" to="/" aria-label={t('app.name')}>
-      <LogoMark />
-      <span className="bp-logo__text">
+      <LogoMark size={size} />
+      <span className={markOnly ? 'bp-vh' : 'bp-logo__text'}>
         <span className="bp-logo__ar">{t('app.name')}</span>
         <span className="bp-logo__en">{t('app.brandEn')}</span>
       </span>
