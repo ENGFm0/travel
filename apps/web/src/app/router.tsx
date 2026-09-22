@@ -78,4 +78,8 @@ export const routes: RouteObject[] = [
   },
 ];
 
-export const router = createBrowserRouter(routes);
+// basename derives from Vite's base (e.g. '/travel/app/' on GitHub Pages) so
+// BrowserRouter builds correct links under a subpath; '/' at site root.
+export const router = createBrowserRouter(routes, {
+  basename: import.meta.env.BASE_URL.replace(/\/+$/, '') || '/',
+});

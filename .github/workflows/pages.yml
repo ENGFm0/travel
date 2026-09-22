@@ -25,6 +25,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install (workspaces)
+        run: npm ci
+
+      - name: Build web app (PWA) for /travel/app/
+        run: VITE_BASE=/travel/app/ npm --workspace apps/web run build
+
+      - name: Assemble site (static prototype at root + React PWA under /app)
+        run: |
+          rm -rf _site && mkdir -p _site/app
+          cp -r *.html assets _site/
+          cp -r apps/web/dist/* _site/app/
+          cp _site/app/index.html _site/app/404.html   # SPA deep-link fallback
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
@@ -33,7 +52,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
