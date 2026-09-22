@@ -26,17 +26,113 @@
     "help": "Help Center",
     "copyright": "© 2026 BoardingPass · بوردنق باس — All rights reserved."
   },
-  "theme": { "light": "Light", "dark": "Dark", "system": "System" },
-  "common": { "comingSoon": "Coming soon", "openMenu": "Open menu" },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "common": {
+    "comingSoon": "Coming soon",
+    "openMenu": "Open menu"
+  },
   "pages": {
-    "home": { "title": "Welcome to BoardingPass", "lead": "Organize your next trip with your group: itinerary, expenses, tasks, and memories — all in one place." },
-    "planner": { "title": "Plan your trip", "lead": "Prepare step by step: itinerary, bookings, packing, and the group kitty." },
-    "explore": { "title": "Explore & Recommendations", "lead": "Discover the best places, restaurants, and activities for your destination." },
-    "buddies": { "title": "Travel Buddies", "lead": "Find companions for a full trip or a specific activity." },
-    "memories": { "title": "Memories & Community", "lead": "Capture moments by day or place and share them." },
-    "mytrips": { "title": "My Trips & Group", "lead": "Track upcoming and past trips and manage your group." },
-    "profile": { "title": "Account", "lead": "Your details and preferences: language, theme, and notifications." },
-    "notFound": { "title": "Page not found", "lead": "We couldn't find what you're looking for.", "back": "Back to home" }
+    "home": {
+      "title": "Welcome to BoardingPass",
+      "lead": "Organize your next trip with your group: itinerary, expenses, tasks, and memories — all in one place."
+    },
+    "planner": {
+      "title": "Plan your trip",
+      "lead": "Prepare step by step: itinerary, bookings, packing, and the group kitty."
+    },
+    "explore": {
+      "title": "Explore & Recommendations",
+      "lead": "Discover the best places, restaurants, and activities for your destination."
+    },
+    "buddies": {
+      "title": "Travel Buddies",
+      "lead": "Find companions for a full trip or a specific activity."
+    },
+    "memories": {
+      "title": "Memories & Community",
+      "lead": "Capture moments by day or place and share them."
+    },
+    "mytrips": {
+      "title": "My Trips & Group",
+      "lead": "Track upcoming and past trips and manage your group."
+    },
+    "profile": {
+      "title": "Account",
+      "lead": "Your details and preferences: language, theme, and notifications."
+    },
+    "notFound": {
+      "title": "Page not found",
+      "lead": "We couldn't find what you're looking for.",
+      "back": "Back to home"
+    }
+  },
+  "home": {
+    "heroCta": "Start a new trip",
+    "heroCtaSub": "Create a trip and invite your group in minutes",
+    "browse": "Browse destinations",
+    "quickTitle": "Start here",
+    "actions": {
+      "newTrip": "New trip",
+      "newTripSub": "Plan a destination & dates",
+      "myTrips": "My trips",
+      "myTripsSub": "Track your active trips",
+      "buddies": "Travel buddies",
+      "buddiesSub": "Join or post a trip",
+      "explore": "Explore",
+      "exploreSub": "Suggested places & food"
+    },
+    "destTitle": "Suggested destinations",
+    "destSub": "Ideas for your next trip — pick one and start planning",
+    "plan": "Plan a trip",
+    "dest": {
+      "alula": {
+        "name": "AlUla",
+        "tag": "Enchanting history & desert"
+      },
+      "riyadh": {
+        "name": "Riyadh",
+        "tag": "A city buzzing with events"
+      },
+      "jeddah": {
+        "name": "Jeddah",
+        "tag": "Sea, corniche & heritage"
+      },
+      "abha": {
+        "name": "Abha",
+        "tag": "Cool weather & misty peaks"
+      },
+      "istanbul": {
+        "name": "Istanbul",
+        "tag": "Two continents & grand bazaars"
+      },
+      "dubai": {
+        "name": "Dubai",
+        "tag": "Shopping & modern adventures"
+      }
+    },
+    "featTitle": "Everything in one place",
+    "feat": {
+      "itinerary": {
+        "t": "Daily itinerary",
+        "d": "Organize activities day by day"
+      },
+      "expenses": {
+        "t": "Split expenses",
+        "d": "Track and settle up fairly"
+      },
+      "tasks": {
+        "t": "Tasks & prep",
+        "d": "Assign tasks and a packing list"
+      },
+      "memories": {
+        "t": "Memories",
+        "d": "Collect trip photos in an album"
+      }
+    }
   },
   "shellNote": "This is the app shell (US-014): unified navigation, two languages with direction, theming, and full responsiveness. Real content arrives in later stories.",
   "auth": {
@@ -90,9 +186,15 @@
     "profileTitle": "Profile",
     "avatar": "Avatar",
     "changeAvatar": "Change photo",
-    "avatarErrors": { "TYPE": "Use a JPG, PNG, or WEBP image", "SIZE": "Image must be 5 MB or smaller" },
+    "avatarErrors": {
+      "TYPE": "Use a JPG, PNG, or WEBP image",
+      "SIZE": "Image must be 5 MB or smaller"
+    },
     "emailImmutable": "Email can't be changed here.",
-    "nameErrors": { "REQUIRED": "First and last name are required", "TOO_LONG": "Name is too long (max 50)" },
+    "nameErrors": {
+      "REQUIRED": "First and last name are required",
+      "TOO_LONG": "Name is too long (max 50)"
+    },
     "save": "Save changes",
     "saved": "Saved ✓",
     "preferences": "Preferences",
@@ -183,7 +285,11 @@
     "onlyYou": "It's just you so far — invite your travel group.",
     "pending": "Pending",
     "you": "you",
-    "role": { "OWNER": "Amir", "MEMBER": "Member", "VIEWER": "Viewer" },
+    "role": {
+      "OWNER": "Amir",
+      "MEMBER": "Member",
+      "VIEWER": "Viewer"
+    },
     "accept": "Accept",
     "decline": "Decline",
     "makeViewer": "Make viewer",
@@ -259,7 +365,12 @@
     "markPending": "Mark pending",
     "confirmPaid": "Confirm paid",
     "distribution": "By category",
-    "cat": { "HOUSING": "Housing", "FOOD": "Food", "TRANSPORT": "Transport", "OTHER": "Other" },
+    "cat": {
+      "HOUSING": "Housing",
+      "FOOD": "Food",
+      "TRANSPORT": "Transport",
+      "OTHER": "Other"
+    },
     "groupLog": "Group expenses",
     "noGroup": "No group expenses yet.",
     "desc": "Description",
@@ -306,11 +417,20 @@
   },
   "bookings": {
     "title": "Bookings checklist",
-    "group": { "BOOKINGS": "Bookings", "DOCUMENTS": "Documents", "MONEY": "Money & connectivity" },
+    "group": {
+      "BOOKINGS": "Bookings",
+      "DOCUMENTS": "Documents",
+      "MONEY": "Money & connectivity"
+    },
     "item": {
-      "flight": "Flights", "hotel": "Accommodation", "car": "Car rental",
-      "passport": "Passport", "visa": "Visa", "insurance": "Travel insurance",
-      "currency": "Currency", "sim": "SIM / eSIM"
+      "flight": "Flights",
+      "hotel": "Accommodation",
+      "car": "Car rental",
+      "passport": "Passport",
+      "visa": "Visa",
+      "insurance": "Travel insurance",
+      "currency": "Currency",
+      "sim": "SIM / eSIM"
     }
   },
   "packing": {
@@ -319,15 +439,32 @@
     "category": "Category",
     "add": "Add",
     "templates": "Templates",
-    "tpl": { "essentials": "Essentials", "beach": "Beach", "cold": "Cold weather" },
+    "tpl": {
+      "essentials": "Essentials",
+      "beach": "Beach",
+      "cold": "Cold weather"
+    },
     "empty": "Your bag is empty. Add items or apply a template.",
     "delete": "Delete item",
-    "cat": { "CLOTHES": "Clothes", "ELECTRONICS": "Electronics", "MEDS": "Meds", "DOCS": "Documents" },
+    "cat": {
+      "CLOTHES": "Clothes",
+      "ELECTRONICS": "Electronics",
+      "MEDS": "Meds",
+      "DOCS": "Documents"
+    },
     "items": {
-      "passport": "Passport", "tickets": "Tickets", "charger": "Charger", "meds": "Medications",
-      "toiletries": "Toiletries", "swimwear": "Swimwear", "sunscreen": "Sunscreen",
-      "sunglasses": "Sunglasses", "sandals": "Sandals", "jacket": "Warm jacket",
-      "gloves": "Gloves", "thermal": "Thermal wear"
+      "passport": "Passport",
+      "tickets": "Tickets",
+      "charger": "Charger",
+      "meds": "Medications",
+      "toiletries": "Toiletries",
+      "swimwear": "Swimwear",
+      "sunscreen": "Sunscreen",
+      "sunglasses": "Sunglasses",
+      "sandals": "Sandals",
+      "jacket": "Warm jacket",
+      "gloves": "Gloves",
+      "thermal": "Thermal wear"
     }
   },
   "memories": {
@@ -381,18 +518,34 @@
     "lead": "Find companions for a full trip or a single activity.",
     "create": "Post a request",
     "mode": "Buddy mode",
-    "kind": { "FULL_TRIP": "Full trips", "MEETUP": "Activities" },
+    "kind": {
+      "FULL_TRIP": "Full trips",
+      "MEETUP": "Activities"
+    },
     "city": "City",
     "category": "Category",
     "allCategories": "All categories",
-    "cat": { "GENERAL": "General", "YOUTH": "Youth", "WOMEN": "Women", "FAMILIES": "Families" },
+    "cat": {
+      "GENERAL": "General",
+      "YOUTH": "Youth",
+      "WOMEN": "Women",
+      "FAMILIES": "Families"
+    },
     "budget": "Budget",
     "allBudgets": "Any budget",
-    "bud": { "LOW": "Budget", "MEDIUM": "Moderate", "HIGH": "Premium" },
+    "bud": {
+      "LOW": "Budget",
+      "MEDIUM": "Moderate",
+      "HIGH": "Premium"
+    },
     "flagged": "Reported for moderation. Thank you.",
     "empty": "No requests match your filters yet.",
     "spots": "{{left}} of {{capacity}} spots left",
-    "status": { "OPEN": "Open", "FULL": "Full", "CLOSED": "Closed" },
+    "status": {
+      "OPEN": "Open",
+      "FULL": "Full",
+      "CLOSED": "Closed"
+    },
     "close": "Close request",
     "leave": "Leave",
     "join": "Join",
@@ -409,7 +562,12 @@
     "title": "Explore & Recommendations",
     "lead": "Discover the best places, restaurants, and activities for your destination.",
     "all": "All",
-    "cat": { "RESTAURANTS": "Restaurants & cafés", "LANDMARKS": "Landmarks", "ACTIVITIES": "Activities", "SHOPPING": "Shopping" },
+    "cat": {
+      "RESTAURANTS": "Restaurants & cafés",
+      "LANDMARKS": "Landmarks",
+      "ACTIVITIES": "Activities",
+      "SHOPPING": "Shopping"
+    },
     "search": "Search places…",
     "empty": "No places match your search.",
     "rate": "Rate this place",
@@ -461,16 +619,26 @@
     "email": "Email",
     "role": "Role",
     "status": "Status",
-    "userStatus": { "ACTIVE": "Active", "SUSPENDED": "Suspended" },
+    "userStatus": {
+      "ACTIVE": "Active",
+      "SUSPENDED": "Suspended"
+    },
     "suspend": "Suspend",
     "reactivate": "Reactivate",
     "suspendTitle": "Suspend user",
     "reason": "Reason",
-    "domain": { "REVIEW": "Review", "BUDDY": "Buddy request", "MEMORY": "Memory" },
+    "domain": {
+      "REVIEW": "Review",
+      "BUDDY": "Buddy request",
+      "MEMORY": "Memory"
+    },
     "remove": "Remove",
     "approve": "Approve",
     "removeTitle": "Remove content",
-    "flagStatus": { "REMOVED": "Removed", "APPROVED": "Approved" },
+    "flagStatus": {
+      "REMOVED": "Removed",
+      "APPROVED": "Approved"
+    },
     "noFlags": "No flagged content — all clear.",
     "auditNote": "The audit log is append-only and cannot be edited or deleted.",
     "searchAudit": "Filter audit (actor, action, target)…",

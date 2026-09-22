@@ -11,7 +11,7 @@ export interface NavItem {
 export const BOTTOM_NAV: NavItem[] = [
   { key: 'home', path: '/', icon: 'home', labelKey: 'nav.home' },
   { key: 'explore', path: '/explore', icon: 'explore', labelKey: 'nav.explore' },
-  { key: 'new', path: '/planner?new=1', icon: 'add', labelKey: 'nav.newTrip', cta: true },
+  { key: 'new', path: '/?new=1', icon: 'add', labelKey: 'nav.newTrip', cta: true },
   { key: 'buddies', path: '/buddies', icon: 'diversity_3', labelKey: 'nav.buddies' },
   { key: 'mytrips', path: '/mytrips', icon: 'luggage', labelKey: 'nav.mytrips' },
 ];

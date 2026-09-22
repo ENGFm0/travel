@@ -18,7 +18,7 @@ function Page({ tkey }: { tkey: string }) {
   );
 }
 
-export const HomePage = () => <Page tkey="home" />;
+export { HomePage } from '@/features/home/HomePage';
 export const PlannerPage = () => <Page tkey="planner" />;
 export const MemoriesPage = () => <Page tkey="memories" />;
 export const MyTripsPage = () => <TripsList />;
