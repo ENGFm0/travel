@@ -1,7 +1,7 @@
 // BoardingPass service worker — minimal offline shell for the PWA (US-014).
 // Runtime cache-first for same-origin GET (hashed assets are safe to cache);
 // navigations fall back to the cached app shell when offline.
-const CACHE = 'bp-cache-v1';
+const CACHE = 'bp-cache-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
 

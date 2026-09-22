@@ -16,7 +16,7 @@ export function Header() {
   return (
     <header className="bp-header">
       <div className="bp-header__inner">
-        <Logo markOnly size={40} />
+        <Logo />
         <div className="bp-header__actions">
           <button
             type="button"
