@@ -1,0 +1,8 @@
+{
+  "//": "Root Hosting config for CI: serves the built web app (apps/web/dist) as an SPA (all routes fall back to index.html). Firestore/Storage rules live in firebase/firebase.json and are deployed separately.",
+  "hosting": {
+    "public": "apps/web/dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+  }
+}
