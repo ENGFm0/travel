@@ -8,8 +8,6 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signInAnonymously,
   sendPasswordResetEmail,
   signOut as fbSignOut,
@@ -63,10 +61,6 @@ export function createFirebaseAuthProvider(): AuthProvider {
   const app: FirebaseApp = getApps()[0] ?? initializeApp(firebaseConfig());
   const auth: Auth = getAuth(app);
 
-  // Complete any pending Google redirect sign-in (result also surfaces via
-  // onAuthStateChanged); swallow errors so a normal load never breaks.
-  void getRedirectResult(auth).catch(() => {});
-
   return {
     subscribe(cb) {
       return onAuthStateChanged(auth, (u) => cb(toAuthUser(u)));
@@ -97,18 +91,17 @@ export function createFirebaseAuthProvider(): AuthProvider {
       }
     },
     async signInWithGoogle() {
-      // Redirect is far more reliable than a popup on mobile Safari and inside an
-      // installed PWA (popups are often blocked / silently fail). The page
-      // navigates to Google and back; onAuthStateChanged then fires.
+      // Popup (not redirect): the app is on engfm0.github.io while the OAuth
+      // handler is on <project>.firebaseapp.com, and Safari/PWA storage
+      // partitioning breaks signInWithRedirect across those origins ("missing
+      // initial state"). A popup posts the result back to this window directly,
+      // so it works cross-origin. The user swallows popup-closed as a no-op.
       try {
-        await signInWithRedirect(auth, new GoogleAuthProvider());
+        await signInWithPopup(auth, new GoogleAuthProvider());
       } catch (e) {
-        // Fall back to a popup if the redirect could not start (rare).
-        try {
-          await signInWithPopup(auth, new GoogleAuthProvider());
-        } catch {
-          throw mapError(e);
-        }
+        const code = (e as { code?: string })?.code ?? '';
+        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
+        throw mapError(e);
       }
     },
     async signInAsGuest() {
