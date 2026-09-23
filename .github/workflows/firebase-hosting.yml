@@ -46,10 +46,15 @@ jobs:
         run: npm --workspace apps/web run build
 
       - name: Deploy to Firebase Hosting (live)
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: bordingpass-ae272
-          channelId: live
-          entryPoint: ./firebase
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SA" ]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT secret is empty or not visible to this run."
+            echo "Re-add it: repo Settings -> Secrets and variables -> Actions -> Repository secrets."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          cd firebase
+          npx --yes firebase-tools@latest deploy --only hosting --project bordingpass-ae272 --non-interactive
