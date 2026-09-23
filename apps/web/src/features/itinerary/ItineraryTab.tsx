@@ -9,6 +9,12 @@ import type { CitySeed, CityStop, Day } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
 
+/** Google Maps search deep-link (no API key; opens the Maps web app). */
+function mapsSearch(query: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+type CitySub = 'days' | 'flight' | 'stay' | 'weather';
+
 export function ItineraryTab({ tripId, seed, canEdit }: { tripId: string; seed: CitySeed[]; canEdit: boolean }) {
   const { t } = useTranslation();
   const { board, loading } = useItinerary();
@@ -92,6 +98,14 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, onMoved, onDe
 }) {
   const { t } = useTranslation();
 
+  const [sub, setSub] = useState<CitySub>('days');
+  const TABS: { key: CitySub; icon: string }[] = [
+    { key: 'days', icon: 'calendar_month' },
+    { key: 'flight', icon: 'flight' },
+    { key: 'stay', icon: 'hotel' },
+    { key: 'weather', icon: 'partly_cloudy_day' },
+  ];
+
   async function move(dir: -1 | 1) { await itineraryActions.moveCity(tripId, city.id, dir); onMoved(dir); }
   async function del() {
     if (!window.confirm(t('itinerary.confirmDeleteCity', { name: city.name }))) return;
@@ -118,13 +132,21 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, onMoved, onDe
         )}
       </div>
 
-      <div className="bp-itin-grid">
-        <FlightSection tripId={tripId} city={city} canEdit={canEdit} />
-        <HotelSection tripId={tripId} city={city} canEdit={canEdit} />
-        <WeatherSection city={city} date={city.dateFrom ?? tripStart} />
+      {/* Sub-tabs so each area (schedule / flight / stay / weather) stands alone */}
+      <div className="bp-subtabs" role="tablist" aria-label={city.name}>
+        {TABS.map((tb) => (
+          <button key={tb.key} role="tab" aria-selected={sub === tb.key}
+            className={`bp-subtab ${sub === tb.key ? 'is-on' : ''}`} onClick={() => setSub(tb.key)}>
+            <span className="material-symbols-outlined" aria-hidden="true">{tb.icon}</span>
+            {t(`itinerary.tab.${tb.key}`)}
+          </button>
+        ))}
       </div>
 
-      <DaysSection tripId={tripId} city={city} canEdit={canEdit} />
+      {sub === 'days' && <DaysSection tripId={tripId} city={city} canEdit={canEdit} />}
+      {sub === 'flight' && <FlightSection tripId={tripId} city={city} canEdit={canEdit} />}
+      {sub === 'stay' && <HotelSection tripId={tripId} city={city} canEdit={canEdit} />}
+      {sub === 'weather' && <WeatherSection city={city} date={city.dateFrom ?? tripStart} />}
     </div>
   );
 }
@@ -178,10 +200,16 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
             <input className="bp-input" value={v} placeholder={t('itinerary.hotelPh')} aria-label={t('itinerary.hotel')}
               onChange={(e) => setV(e.target.value)} onBlur={() => v !== (city.hotel ?? '') && save(v)} />
           </label>
-          <Link className="bp-inline-link" to="/explore">
-            <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>
-            {t('itinerary.browseHotels')}
-          </Link>
+          <div className="bp-map-links">
+            <a className="bp-inline-link" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">
+              <span className="material-symbols-outlined" aria-hidden="true">map</span>
+              {t('itinerary.hotelsOnMaps')}
+            </a>
+            <Link className="bp-inline-link" to="/explore">
+              <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>
+              {t('itinerary.browseHotels')}
+            </Link>
+          </div>
         </>
       ) : (
         <p className="bp-itin-sec__val">{city.hotel || '—'}</p>
@@ -248,10 +276,24 @@ function DaysSection({ tripId, city, canEdit }: { tripId: string; city: CityStop
           <span className="material-symbols-outlined bp-itin-sec__icon" aria-hidden="true">calendar_month</span>
           {t('itinerary.daysTitle')}
         </h4>
-        <Link className="bp-inline-link" to="/explore">
-          <span className="material-symbols-outlined" aria-hidden="true">explore</span>
-          {t('itinerary.browsePlaces')}
-        </Link>
+      </div>
+      {/* Discover places to add — Google Maps (broad) + our Explore directory */}
+      <div className="bp-discover">
+        <span className="bp-discover__label">{t('itinerary.discover')}</span>
+        <div className="bp-discover__links">
+          <a className="bp-map-chip" href={mapsSearch(`مطاعم ${city.name}`)} target="_blank" rel="noopener noreferrer">
+            <span className="material-symbols-outlined" aria-hidden="true">restaurant</span>{t('itinerary.mapsRestaurants')}
+          </a>
+          <a className="bp-map-chip" href={mapsSearch(`أنشطة سياحية ${city.name}`)} target="_blank" rel="noopener noreferrer">
+            <span className="material-symbols-outlined" aria-hidden="true">hiking</span>{t('itinerary.mapsActivities')}
+          </a>
+          <a className="bp-map-chip" href={mapsSearch(`معالم سياحية ${city.name}`)} target="_blank" rel="noopener noreferrer">
+            <span className="material-symbols-outlined" aria-hidden="true">attractions</span>{t('itinerary.mapsLandmarks')}
+          </a>
+          <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
+            <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.exploreShort')}
+          </Link>
+        </div>
       </div>
       {city.days.length === 0 ? (
         <div className="bp-empty bp-empty--sm">

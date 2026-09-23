@@ -384,7 +384,19 @@
       "SCARF": "وشاح",
       "UMBRELLA": "مظلة",
       "COMFY_SHOES": "حذاء مريح للمشي"
-    }
+    },
+    "tab": {
+      "days": "الأيام",
+      "flight": "الطيران",
+      "stay": "السكن",
+      "weather": "الطقس"
+    },
+    "hotelsOnMaps": "فنادق على خرائط قوقل",
+    "discover": "اكتشف أماكن للإضافة:",
+    "mapsRestaurants": "مطاعم",
+    "mapsActivities": "أنشطة",
+    "mapsLandmarks": "معالم",
+    "exploreShort": "استكشف"
   },
   "expenses": {
     "kitty": "القطة",
