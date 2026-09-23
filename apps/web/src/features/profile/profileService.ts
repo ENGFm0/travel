@@ -1,6 +1,8 @@
 import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
 import { defaultPrefs, type NotifPrefs, type Profile } from './profileModel';
+import { db, firebaseEnabled } from '@/shared/firebase';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export interface ProfileSeed {
   uid: string;
@@ -94,6 +96,40 @@ export function createApiProfileService(getToken?: () => string | undefined): Pr
   };
 }
 
+/** Firestore-backed profile at users/{uid} (self read/write per rules). uid and
+ *  email are immutable (never written from a patch). */
+export function createFirestoreProfileService(): ProfileService {
+  const ref = (uid: string) => doc(db(), 'users', uid);
+  const readProfile = async (uid: string): Promise<Profile> => {
+    const s = await getDoc(ref(uid));
+    const d = (s.data() ?? {}) as Partial<Profile>;
+    return {
+      uid, firstName: d.firstName ?? '', middleName: d.middleName ?? '', lastName: d.lastName ?? '',
+      email: d.email ?? '', phone: d.phone ?? '', avatarUrl: d.avatarUrl ?? '', notif: d.notif ?? defaultPrefs(),
+    };
+  };
+  return {
+    async getProfile(seed) {
+      const s = await getDoc(ref(seed.uid));
+      if (s.exists()) return readProfile(seed.uid);
+      const { firstName, lastName } = splitName(seed.displayName);
+      const p: Profile = { uid: seed.uid, firstName, middleName: '', lastName, email: seed.email, phone: '', avatarUrl: '', notif: defaultPrefs() };
+      const { uid: _uid, ...rest } = p;
+      await setDoc(ref(seed.uid), rest);
+      return p;
+    },
+    async updateProfile(uid, patch) {
+      const { uid: _u, email: _e, ...rest } = patch; // uid + email immutable
+      await updateDoc(ref(uid), rest);
+      return readProfile(uid);
+    },
+    async updateNotif(uid, notif) { await updateDoc(ref(uid), { notif }); return readProfile(uid); },
+    async uploadAvatar(uid, url) { await updateDoc(ref(uid), { avatarUrl: url }); return readProfile(uid); },
+    async deleteAccount(uid) { await deleteDoc(ref(uid)); },
+  };
+}
+
 export function createProfileService(): ProfileService {
+  if (firebaseEnabled()) return createFirestoreProfileService();
   return import.meta.env.VITE_API_BASE_URL ? createApiProfileService() : createMockProfileService({ persistKey: 'bp.profile.v1' });
 }

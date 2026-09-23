@@ -1,5 +1,7 @@
 import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
+import { db, firebaseEnabled } from '@/shared/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import {
   BOOKING_ITEMS, dedupeAppend, type BookingItem, type PackCategory,
   type Task, type TasksBoard,
@@ -112,7 +114,36 @@ export function createApiTasksService(getToken?: () => string | undefined): Task
   };
 }
 
+/** Firestore-backed tasks board (one doc per trip: trips/{tripId}/tasks/_board).
+ *  Hydrates the mock with the stored board, applies the op, persists. */
+export function createFirestoreTasksService(): TasksService {
+  const ref = (tripId: string) => doc(db(), 'trips', tripId, 'tasks', '_board');
+  async function read(tripId: string): Promise<TasksBoard | null> {
+    const s = await getDoc(ref(tripId));
+    return s.exists() ? (s.data().board as TasksBoard) : null;
+  }
+  async function run(tripId: string, op: (m: TasksService) => Promise<TasksBoard>): Promise<TasksBoard> {
+    const existing = await read(tripId);
+    const mock = createMockTasksService(existing ? { [tripId]: existing } : {});
+    const board = await op(mock);
+    await setDoc(ref(tripId), { board });
+    return board;
+  }
+  return {
+    getBoard: (tripId) => run(tripId, (m) => m.getBoard(tripId)),
+    addTask: (tripId, title, a) => run(tripId, (m) => m.addTask(tripId, title, a)),
+    toggleTask: (tripId, id) => run(tripId, (m) => m.toggleTask(tripId, id)),
+    deleteTask: (tripId, id) => run(tripId, (m) => m.deleteTask(tripId, id)),
+    addPack: (tripId, label, c) => run(tripId, (m) => m.addPack(tripId, label, c)),
+    togglePack: (tripId, id) => run(tripId, (m) => m.togglePack(tripId, id)),
+    deletePack: (tripId, id) => run(tripId, (m) => m.deletePack(tripId, id)),
+    applyTemplate: (tripId, items) => run(tripId, (m) => m.applyTemplate(tripId, items)),
+    toggleBooking: (tripId, id) => run(tripId, (m) => m.toggleBooking(tripId, id)),
+  };
+}
+
 export function createTasksService(): TasksService {
+  if (firebaseEnabled()) return createFirestoreTasksService();
   return import.meta.env.VITE_API_BASE_URL ? createApiTasksService() : createMockTasksService(undefined, 'bp.tasks.v1');
 }
 

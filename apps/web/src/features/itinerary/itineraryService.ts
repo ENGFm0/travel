@@ -1,5 +1,7 @@
 import { createApiClient } from '@boardingpass/core';
 import { loadJSON, persistAfter } from '@/shared/persist';
+import { db, firebaseEnabled } from '@/shared/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export interface Activity {
   id: string;
@@ -151,6 +153,37 @@ export function createApiItineraryService(getToken?: () => string | undefined): 
   };
 }
 
+/** Firestore-backed itinerary. The whole board is one doc
+ *  (trips/{tripId}/cities/_board); each op hydrates the mock with the stored
+ *  board, applies the same logic, and persists the result. */
+export function createFirestoreItineraryService(): ItineraryService {
+  const ref = (tripId: string) => doc(db(), 'trips', tripId, 'cities', '_board');
+  async function read(tripId: string): Promise<Board | null> {
+    const s = await getDoc(ref(tripId));
+    return s.exists() ? (s.data().board as Board) : null;
+  }
+  async function run(tripId: string, seed: CitySeed[], op: (m: ItineraryService) => Promise<Board>): Promise<Board> {
+    const existing = await read(tripId);
+    const mock = createMockItineraryService(existing ? { [tripId]: existing } : {});
+    await mock.getBoard(tripId, seed); // init from seed only when new
+    const board = await op(mock);
+    await setDoc(ref(tripId), { board });
+    return board;
+  }
+  return {
+    getBoard: (tripId, seed) => run(tripId, seed, (m) => m.getBoard(tripId, seed)),
+    addCity: (tripId, name) => run(tripId, [], (m) => m.addCity(tripId, name)),
+    moveCity: (tripId, cityId, dir) => run(tripId, [], (m) => m.moveCity(tripId, cityId, dir)),
+    deleteCity: (tripId, cityId) => run(tripId, [], (m) => m.deleteCity(tripId, cityId)),
+    setCityInfo: (tripId, cityId, info) => run(tripId, [], (m) => m.setCityInfo(tripId, cityId, info)),
+    addDay: (tripId, cityId, title, date) => run(tripId, [], (m) => m.addDay(tripId, cityId, title, date)),
+    deleteDay: (tripId, cityId, dayId) => run(tripId, [], (m) => m.deleteDay(tripId, cityId, dayId)),
+    addActivity: (tripId, cityId, dayId, title, time) => run(tripId, [], (m) => m.addActivity(tripId, cityId, dayId, title, time)),
+    deleteActivity: (tripId, cityId, dayId, activityId) => run(tripId, [], (m) => m.deleteActivity(tripId, cityId, dayId, activityId)),
+  };
+}
+
 export function createItineraryService(): ItineraryService {
+  if (firebaseEnabled()) return createFirestoreItineraryService();
   return import.meta.env.VITE_API_BASE_URL ? createApiItineraryService() : createMockItineraryService(undefined, 'bp.itinerary.v1');
 }
