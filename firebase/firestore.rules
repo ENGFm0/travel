@@ -63,7 +63,15 @@ service cloud.firestore {
         }
       }
 
-      // Kitty: owner sets total / marks paid; members read.
+      // Finance: one shared doc (kitty + group/side expenses, any member writes)
+      // and one self-scoped personal doc per user (personal_<uid>).
+      match /finance/{docId} {
+        allow read: if isTripMember(tripId);
+        allow write: if isTripMember(tripId)
+                     && (docId == 'shared' || docId == ('personal_' + uid()));
+      }
+
+      // Kitty: owner sets total / marks paid; members read. (legacy path)
       match /kitty/{doc} {
         allow read: if isTripMember(tripId);
         allow write: if isTripOwner(tripId);

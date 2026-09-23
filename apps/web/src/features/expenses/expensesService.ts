@@ -1,5 +1,7 @@
 import { createApiClient } from '@boardingpass/core';
 import { loadJSON, persistAfter } from '@/shared/persist';
+import { db, firebaseEnabled, requireUid } from '@/shared/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { Category, Finance, GroupExpense, PersonalExpense, SideKitty } from './finance';
 
 export interface FinanceInit {
@@ -151,6 +153,78 @@ export function createApiExpensesService(getToken?: () => string | undefined): E
   };
 }
 
+/** Firestore-backed expenses. Shared finance (kitty + group/side) lives in one
+ *  member-writable doc (trips/{tripId}/finance/shared); each user's personal
+ *  budget + spend is self-scoped in trips/{tripId}/finance/personal_<uid>. */
+interface SharedFinance {
+  base: string; dest: string; rate: number;
+  kittyTotal: number; paid: Record<string, boolean>;
+  group: GroupExpense[]; sides: SideKitty[];
+}
+interface PersonalDoc { budget: number; items: PersonalExpense[] }
+
+export function createFirestoreExpensesService(): ExpensesService {
+  const sharedRef = (tripId: string) => doc(db(), 'trips', tripId, 'finance', 'shared');
+  const personalRef = (tripId: string, uid: string) => doc(db(), 'trips', tripId, 'finance', `personal_${uid}`);
+
+  async function readShared(tripId: string, init?: FinanceInit): Promise<SharedFinance> {
+    const s = await getDoc(sharedRef(tripId));
+    if (s.exists()) return s.data() as SharedFinance;
+    const fresh: SharedFinance = {
+      base: init?.base ?? 'SAR', dest: init?.dest ?? 'GBP', rate: init?.rate ?? 0.2122,
+      kittyTotal: 0, paid: {}, group: [], sides: [],
+    };
+    await setDoc(sharedRef(tripId), fresh);
+    return fresh;
+  }
+  async function readPersonal(tripId: string, uid: string): Promise<PersonalDoc> {
+    const s = await getDoc(personalRef(tripId, uid));
+    return s.exists() ? (s.data() as PersonalDoc) : { budget: 0, items: [] };
+  }
+  const view = (sh: SharedFinance, p: PersonalDoc): Finance => ({
+    base: sh.base, dest: sh.dest, rate: sh.rate,
+    kittyTotal: sh.kittyTotal, paid: { ...sh.paid },
+    group: sh.group.map((g) => ({ ...g })),
+    sides: sh.sides.map((x) => ({ ...x, participantUids: [...x.participantUids] })),
+    personalBudget: p.budget, personal: p.items.map((i) => ({ ...i })),
+  });
+  async function withShared(tripId: string, mutate: (sh: SharedFinance) => void): Promise<Finance> {
+    const uid = requireUid();
+    const sh = await readShared(tripId);
+    mutate(sh);
+    await setDoc(sharedRef(tripId), sh);
+    return view(sh, await readPersonal(tripId, uid));
+  }
+  async function withPersonal(tripId: string, mutate: (p: PersonalDoc) => void): Promise<Finance> {
+    const uid = requireUid();
+    const p = await readPersonal(tripId, uid);
+    mutate(p);
+    await setDoc(personalRef(tripId, uid), p);
+    return view(await readShared(tripId), p);
+  }
+
+  return {
+    async getFinance(tripId, init, me) {
+      const sh = await readShared(tripId, init);
+      const p = await readPersonal(tripId, me);
+      return view(sh, p);
+    },
+    setKittyTotal: (tripId, total) => withShared(tripId, (sh) => { sh.kittyTotal = Math.max(0, total); }),
+    markPaid: (tripId, u, paid) => withShared(tripId, (sh) => { sh.paid[u] = paid; }),
+    addGroup: (tripId, e) => withShared(tripId, (sh) => { sh.group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid }); }),
+    updateGroup: (tripId, id, e) => withShared(tripId, (sh) => { const g = sh.group.find((x) => x.id === id); if (g) { g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid; } }),
+    deleteGroup: (tripId, id) => withShared(tripId, (sh) => { sh.group = sh.group.filter((g) => g.id !== id); }),
+    addSide: (tripId, x) => withShared(tripId, (sh) => { sh.sides.push({ id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false }); }),
+    deleteSide: (tripId, id) => withShared(tripId, (sh) => { sh.sides = sh.sides.filter((x) => x.id !== id); }),
+    settleSide: (tripId, id) => withShared(tripId, (sh) => { const x = sh.sides.find((y) => y.id === id); if (x) x.settled = true; }),
+    setPersonalBudget: (tripId, amount) => withPersonal(tripId, (p) => { p.budget = Math.max(0, amount); }),
+    addPersonal: (tripId, e) => withPersonal(tripId, (p) => { p.items.push({ id: uid('p'), desc: e.desc.trim(), amount: e.amount }); }),
+    updatePersonal: (tripId, id, e) => withPersonal(tripId, (p) => { const it = p.items.find((x) => x.id === id); if (it) { it.desc = e.desc.trim(); it.amount = e.amount; } }),
+    deletePersonal: (tripId, id) => withPersonal(tripId, (p) => { p.items = p.items.filter((x) => x.id !== id); }),
+  };
+}
+
 export function createExpensesService(): ExpensesService {
+  if (firebaseEnabled()) return createFirestoreExpensesService();
   return import.meta.env.VITE_API_BASE_URL ? createApiExpensesService() : createMockExpensesService(undefined, 'bp.expenses.v1');
 }
