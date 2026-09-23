@@ -35,10 +35,12 @@ jobs:
         # on Safari + installed PWA. Firebase web config is public by design.
         env:
           VITE_FIREBASE_API_KEY: AIzaSyDHgRo-dppxAMa_1JvVrI1Twfu8e1JV4I0
-          # authDomain matches the hosting domain we serve from (web.app) so the
-          # OAuth handler is same-origin with the app — this is what fixes Google
-          # sign-in on Safari and inside the installed PWA.
-          VITE_FIREBASE_AUTH_DOMAIN: bordingpass-ae272.web.app
+          # Use the firebaseapp.com auth domain: it is the OAuth handler URI that
+          # Google's client already has registered (web.app is not, which caused
+          # redirect_uri_mismatch). With signInWithPopup the handler opens as a
+          # first-party window and posts the result back to the app, so this works
+          # even though the app itself is served from web.app.
+          VITE_FIREBASE_AUTH_DOMAIN: bordingpass-ae272.firebaseapp.com
           VITE_FIREBASE_PROJECT_ID: bordingpass-ae272
           VITE_FIREBASE_STORAGE_BUCKET: bordingpass-ae272.firebasestorage.app
           VITE_FIREBASE_MESSAGING_SENDER_ID: "380577603179"
