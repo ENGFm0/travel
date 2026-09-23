@@ -1,6 +1,11 @@
 import { createApiClient } from '@boardingpass/core';
 import type { TripType, TripStatus } from '@boardingpass/types';
 import { loadJSON, saveJSON } from '@/shared/persist';
+import { db, firebaseEnabled, requireUid, currentUser } from '@/shared/firebase';
+import {
+  collection, doc, setDoc, getDoc, getDocs, updateDoc,
+  query, where, serverTimestamp, type DocumentData,
+} from 'firebase/firestore';
 
 export interface TripCity {
   name: string;
@@ -165,6 +170,80 @@ export function demoTrips(): Trip[] {
   ];
 }
 
+/** Firestore-backed trips service (real, shared data). A trip is the tenant
+ *  root; `memberUids` on the doc powers the "my trips" query and the security
+ *  rules. Creating a trip also writes the owner's membership doc. */
+export function createFirestoreTripsService(): TripsService {
+  function toTrip(id: string, d: DocumentData): Trip {
+    return {
+      id,
+      title: d.title,
+      type: d.type,
+      dateFrom: d.dateFrom,
+      dateTo: d.dateTo,
+      cities: (d.cities ?? []) as TripCity[],
+      ownerUid: d.ownerUid,
+      status: d.status,
+      progress: d.progress ?? 0,
+    };
+  }
+
+  return {
+    async createTrip(p) {
+      const uid = requireUid();
+      const me = currentUser();
+      const ref = doc(collection(db(), 'trips'));
+      const data = {
+        title: p.title.trim(),
+        type: p.type,
+        dateFrom: p.dateFrom,
+        dateTo: p.dateTo ?? null,
+        cities: p.cities,
+        ownerUid: uid,
+        memberUids: [uid],
+        status: 'ACTIVE' as TripStatus,
+        progress: 5,
+        createdAt: serverTimestamp(),
+      };
+      await setDoc(ref, data);
+      // Owner membership (rules allow the trip's ownerUid to create members).
+      await setDoc(doc(db(), 'trips', ref.id, 'members', uid), {
+        uid, displayName: me?.name ?? 'أنت', role: 'OWNER', status: 'ACTIVE', joinedAt: serverTimestamp(),
+      });
+      return toTrip(ref.id, { ...data, dateTo: p.dateTo });
+    },
+    async listTrips(scope = 'all') {
+      const uid = requireUid();
+      const snap = await getDocs(query(collection(db(), 'trips'), where('memberUids', 'array-contains', uid)));
+      const today = new Date().toISOString().slice(0, 10);
+      return snap.docs
+        .map((d) => toTrip(d.id, d.data()))
+        .filter((t) => (scope === 'archived' ? t.status === 'ARCHIVED' : t.status === 'ACTIVE'))
+        .filter((t) => {
+          if (scope === 'upcoming') return tripIsUpcoming(t, today);
+          if (scope === 'past') return !tripIsUpcoming(t, today);
+          return true;
+        })
+        .sort((a, b) => a.dateFrom.localeCompare(b.dateFrom));
+    },
+    async getTrip(id) {
+      const s = await getDoc(doc(db(), 'trips', id));
+      if (!s.exists()) return null;
+      const t = toTrip(s.id, s.data());
+      return t.status === 'DELETED' ? null : t;
+    },
+    async updateStatus(id, status) {
+      await updateDoc(doc(db(), 'trips', id), { status });
+      const s = await getDoc(doc(db(), 'trips', id));
+      return toTrip(id, s.data() ?? {});
+    },
+    async deleteTrip(id) {
+      await updateDoc(doc(db(), 'trips', id), { status: 'DELETED' }); // soft-delete
+    },
+  };
+}
+
 export function createTripsService(): TripsService {
+  if (firebaseEnabled()) return createFirestoreTripsService();
   return import.meta.env.VITE_API_BASE_URL ? createApiTripsService() : createMockTripsService(demoTrips(), 'bp.trips.v1');
 }

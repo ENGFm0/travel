@@ -58,4 +58,4 @@ jobs:
           fi
           printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          npx --yes firebase-tools@latest deploy --only hosting --project bordingpass-ae272 --non-interactive
+          npx --yes firebase-tools@latest deploy --only hosting,firestore:rules --project bordingpass-ae272 --non-interactive

@@ -1,6 +1,11 @@
 import { createApiClient } from '@boardingpass/core';
 import type { MemberRole } from '@boardingpass/types';
 import { loadJSON, persistAfter } from '@/shared/persist';
+import { db, firebaseEnabled } from '@/shared/firebase';
+import {
+  collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
+  arrayRemove, serverTimestamp, type DocumentData,
+} from 'firebase/firestore';
 
 export type MemberStatus = 'ACTIVE' | 'PENDING' | 'DECLINED';
 
@@ -178,6 +183,75 @@ export function createApiMembersService(getToken?: () => string | undefined): Me
   };
 }
 
+/** Firestore-backed members service. Members live at trips/{tripId}/members/{id};
+ *  a real member's doc id is their uid (also in the trip's memberUids for access),
+ *  a name-only invite is a PENDING doc with a generated id (display-only until a
+ *  real join flow lands). Owner-only management is enforced by the rules. */
+export function createFirestoreMembersService(): MembersService {
+  const col = (tripId: string) => collection(db(), 'trips', tripId, 'members');
+  const toMember = (id: string, d: DocumentData): Member => ({
+    uid: id,
+    displayName: d.displayName ?? 'مسافر',
+    handle: d.handle,
+    role: d.role ?? 'MEMBER',
+    status: d.status ?? 'ACTIVE',
+  });
+
+  return {
+    async list(tripId) {
+      const snap = await getDocs(col(tripId));
+      return snap.docs.map((d) => toMember(d.id, d.data()));
+    },
+    async invite(tripId, payload) {
+      const handle = payload.handle?.trim();
+      const existing = await getDocs(col(tripId));
+      if (handle && existing.docs.some((d) => d.data().handle === handle)) throw new MembersError('ALREADY_MEMBER');
+      const id = `pending-${crypto.randomUUID()}`;
+      const member = { displayName: payload.name.trim(), handle: handle ?? null, role: 'MEMBER' as MemberRole, status: 'PENDING' as MemberStatus };
+      await setDoc(doc(col(tripId), id), { ...member, invitedAt: serverTimestamp() });
+      return { uid: id, ...member, handle };
+    },
+    async setRole(tripId, uid, role) {
+      const s = await getDoc(doc(col(tripId), uid));
+      if (!s.exists()) throw new MembersError('NOT_FOUND');
+      if (s.data().role === 'OWNER') throw new MembersError('GENERIC');
+      await updateDoc(doc(col(tripId), uid), { role });
+    },
+    async remove(tripId, uid) {
+      await deleteDoc(doc(col(tripId), uid));
+      await updateDoc(doc(db(), 'trips', tripId), { memberUids: arrayRemove(uid) }).catch(() => {});
+    },
+    async transferOwnership(tripId, uid) {
+      const snap = await getDocs(col(tripId));
+      const target = snap.docs.find((d) => d.id === uid && d.data().status === 'ACTIVE');
+      const owner = snap.docs.find((d) => d.data().role === 'OWNER');
+      if (!target) throw new MembersError('NOT_FOUND');
+      if (owner) await updateDoc(doc(col(tripId), owner.id), { role: 'MEMBER' });
+      await updateDoc(doc(col(tripId), uid), { role: 'OWNER' });
+      await updateDoc(doc(db(), 'trips', tripId), { ownerUid: uid }).catch(() => {});
+    },
+    async leave(tripId, uid) {
+      const snap = await getDocs(col(tripId));
+      const me = snap.docs.find((d) => d.id === uid);
+      if (!me) return;
+      const others = snap.docs.filter((d) => d.id !== uid && d.data().status === 'ACTIVE');
+      if (me.data().role === 'OWNER' && others.length > 0) throw new MembersError('OWNER_MUST_TRANSFER');
+      await deleteDoc(doc(col(tripId), uid));
+      await updateDoc(doc(db(), 'trips', tripId), { memberUids: arrayRemove(uid) }).catch(() => {});
+    },
+    async acceptInvite(tripId, uid) {
+      await updateDoc(doc(col(tripId), uid), { status: 'ACTIVE' });
+    },
+    async declineInvite(tripId, uid) {
+      await deleteDoc(doc(col(tripId), uid));
+    },
+    async inviteLink(tripId) {
+      return `${origin()}/join/${tripId}`;
+    },
+  };
+}
+
 export function createMembersService(): MembersService {
+  if (firebaseEnabled()) return createFirestoreMembersService();
   return import.meta.env.VITE_API_BASE_URL ? createApiMembersService() : createMockMembersService(undefined, 'bp.members.v1');
 }
