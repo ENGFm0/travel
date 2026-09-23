@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
 import { flightSummary } from '@/features/flights/flightsModel';
 import type { CitySeed, CityStop, Day } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
+import { estimateWeather, type Clothing } from './weather';
 
 export function ItineraryTab({ tripId, seed, canEdit }: { tripId: string; seed: CitySeed[]; canEdit: boolean }) {
   const { t } = useTranslation();
@@ -23,6 +25,7 @@ export function ItineraryTab({ tripId, seed, canEdit }: { tripId: string; seed: 
   const cities = board?.cities ?? [];
   const activeIdx = Math.min(active, Math.max(0, cities.length - 1));
   const city = cities[activeIdx];
+  const tripStart = useMemo(() => seed.find((s) => s.dateFrom)?.dateFrom, [seed]);
 
   async function addCity() {
     const name = newCity.trim();
@@ -76,15 +79,15 @@ export function ItineraryTab({ tripId, seed, canEdit }: { tripId: string; seed: 
           <p>{t('itinerary.noCities')}</p>
         </div>
       ) : city ? (
-        <CityPanel tripId={tripId} city={city} idx={activeIdx} count={cities.length} canEdit={canEdit}
+        <CityPanel tripId={tripId} city={city} idx={activeIdx} count={cities.length} canEdit={canEdit} tripStart={tripStart}
           onMoved={(dir) => setActive(activeIdx + dir)} onDeleted={() => setActive(0)} />
       ) : null}
     </div>
   );
 }
 
-function CityPanel({ tripId, city, idx, count, canEdit, onMoved, onDeleted }: {
-  tripId: string; city: CityStop; idx: number; count: number; canEdit: boolean;
+function CityPanel({ tripId, city, idx, count, canEdit, tripStart, onMoved, onDeleted }: {
+  tripId: string; city: CityStop; idx: number; count: number; canEdit: boolean; tripStart?: string;
   onMoved: (dir: -1 | 1) => void; onDeleted: () => void;
 }) {
   const { t } = useTranslation();
@@ -115,44 +118,116 @@ function CityPanel({ tripId, city, idx, count, canEdit, onMoved, onDeleted }: {
         )}
       </div>
 
-      <div className="bp-info-cards">
-        <InfoField icon="flight" label={t('itinerary.flight')} value={city.flight ?? ''} canEdit={canEdit}
-          onSave={(v) => itineraryActions.setCityInfo(tripId, city.id, { flight: v })} placeholder={t('itinerary.flightPh')} />
-        <InfoField icon="hotel" label={t('itinerary.hotel')} value={city.hotel ?? ''} canEdit={canEdit}
-          onSave={(v) => itineraryActions.setCityInfo(tripId, city.id, { hotel: v })} placeholder={t('itinerary.hotelPh')} />
-        <div className="bp-info-card">
-          <span className="material-symbols-outlined" aria-hidden="true">partly_cloudy_day</span>
-          <div><span className="bp-info-card__label">{t('itinerary.weather')}</span><span className="bp-info-card__muted">{t('itinerary.weatherSoon')}</span></div>
-        </div>
+      <div className="bp-itin-grid">
+        <FlightSection tripId={tripId} city={city} canEdit={canEdit} />
+        <HotelSection tripId={tripId} city={city} canEdit={canEdit} />
+        <WeatherSection city={city} date={city.dateFrom ?? tripStart} />
       </div>
-
-      {canEdit && (
-        <FlightLookup onFilled={(info) => { void itineraryActions.setCityInfo(tripId, city.id, { flight: flightSummary(info) }); }} />
-      )}
 
       <DaysSection tripId={tripId} city={city} canEdit={canEdit} />
     </div>
   );
 }
 
-function InfoField({ icon, label, value, placeholder, canEdit, onSave }: {
-  icon: string; label: string; value: string; placeholder: string; canEdit: boolean; onSave: (v: string) => void;
-}) {
-  const [v, setV] = useState(value);
-  useEffect(() => setV(value), [value]);
+/** ── Flight section ── */
+function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
+  const { t } = useTranslation();
+  const [v, setV] = useState(city.flight ?? '');
+  useEffect(() => setV(city.flight ?? ''), [city.flight]);
+  const save = (val: string) => itineraryActions.setCityInfo(tripId, city.id, { flight: val });
+
   return (
-    <div className="bp-info-card">
-      <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
-      <div className="bp-info-card__body">
-        <span className="bp-info-card__label">{label}</span>
-        {canEdit ? (
-          <input className="bp-info-input" value={v} placeholder={placeholder} aria-label={label}
-            onChange={(e) => setV(e.target.value)} onBlur={() => v !== value && onSave(v)} />
-        ) : (
-          <span className="bp-info-card__muted">{value || '—'}</span>
-        )}
+    <section className="bp-itin-sec">
+      <div className="bp-itin-sec__head">
+        <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--flight" aria-hidden="true">flight</span>
+        <h4>{t('itinerary.flight')}</h4>
       </div>
-    </div>
+      {canEdit ? (
+        <>
+          <label className="bp-field">
+            <span className="bp-field__label">{t('itinerary.flightNo')}</span>
+            <input className="bp-input" value={v} placeholder={t('itinerary.flightPh')} aria-label={t('itinerary.flight')}
+              onChange={(e) => setV(e.target.value)} onBlur={() => v !== (city.flight ?? '') && save(v)} />
+          </label>
+          <FlightLookup onFilled={(info) => { const s = flightSummary(info); setV(s); void save(s); }} />
+        </>
+      ) : (
+        <p className="bp-itin-sec__val">{city.flight || '—'}</p>
+      )}
+    </section>
+  );
+}
+
+/** ── Hotel / stay section ── */
+function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
+  const { t } = useTranslation();
+  const [v, setV] = useState(city.hotel ?? '');
+  useEffect(() => setV(city.hotel ?? ''), [city.hotel]);
+  const save = (val: string) => itineraryActions.setCityInfo(tripId, city.id, { hotel: val });
+
+  return (
+    <section className="bp-itin-sec">
+      <div className="bp-itin-sec__head">
+        <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--hotel" aria-hidden="true">hotel</span>
+        <h4>{t('itinerary.hotel')}</h4>
+      </div>
+      {canEdit ? (
+        <>
+          <label className="bp-field">
+            <span className="bp-field__label">{t('itinerary.hotelName')}</span>
+            <input className="bp-input" value={v} placeholder={t('itinerary.hotelPh')} aria-label={t('itinerary.hotel')}
+              onChange={(e) => setV(e.target.value)} onBlur={() => v !== (city.hotel ?? '') && save(v)} />
+          </label>
+          <Link className="bp-inline-link" to="/explore">
+            <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>
+            {t('itinerary.browseHotels')}
+          </Link>
+        </>
+      ) : (
+        <p className="bp-itin-sec__val">{city.hotel || '—'}</p>
+      )}
+    </section>
+  );
+}
+
+/** ── Weather (seasonal estimate + clothing) ── */
+const CLOTHING_ICON: Record<Clothing, string> = {
+  LIGHT: 'checkroom', SHORTS: 'checkroom', HAT_SUN: 'wb_sunny', SUNSCREEN: 'wb_sunny',
+  LIGHT_JACKET: 'checkroom', LAYERS: 'layers', JACKET: 'checkroom', COAT: 'checkroom',
+  SCARF: 'checkroom', UMBRELLA: 'umbrella', COMFY_SHOES: 'footprint',
+};
+function WeatherSection({ city, date }: { city: CityStop; date?: string }) {
+  const { t } = useTranslation();
+  const w = useMemo(() => estimateWeather(city.name, date), [city.name, date]);
+  return (
+    <section className="bp-itin-sec bp-itin-sec--weather">
+      <div className="bp-itin-sec__head">
+        <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--weather" aria-hidden="true">partly_cloudy_day</span>
+        <h4>{t('itinerary.weatherTitle')}</h4>
+      </div>
+      <div className="bp-weather">
+        <span className="bp-weather__emoji" aria-hidden="true">{w.emoji}</span>
+        <div className="bp-weather__main">
+          <span className="bp-weather__temp">{w.tempMin}°–{w.tempMax}°</span>
+          <span className="bp-weather__cond">
+            {t(`itinerary.season.${w.season}`)} · {t(`itinerary.cond.${w.condition}`)}
+            {w.humid ? ` · ${t('itinerary.humid')}` : ''}{w.wet ? ` · ${t('itinerary.wet')}` : ''}
+          </span>
+        </div>
+      </div>
+      <div className="bp-clothing">
+        <span className="bp-clothing__label">{t('itinerary.clothingTitle')}</span>
+        <ul className="bp-clothing__list">
+          {w.clothing.map((c) => (
+            <li key={c} className="bp-clothing__chip">
+              <span className="material-symbols-outlined" aria-hidden="true">{CLOTHING_ICON[c]}</span>
+              {t(`itinerary.clothes.${c}`)}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="bp-itin-sec__note">{w.known ? t('itinerary.weatherEstimate') : t('itinerary.weatherGeneric')}</p>
+    </section>
   );
 }
 
@@ -168,6 +243,16 @@ function DaysSection({ tripId, city, canEdit }: { tripId: string; city: CityStop
 
   return (
     <div className="bp-days">
+      <div className="bp-days__head">
+        <h4 className="bp-days__title">
+          <span className="material-symbols-outlined bp-itin-sec__icon" aria-hidden="true">calendar_month</span>
+          {t('itinerary.daysTitle')}
+        </h4>
+        <Link className="bp-inline-link" to="/explore">
+          <span className="material-symbols-outlined" aria-hidden="true">explore</span>
+          {t('itinerary.browsePlaces')}
+        </Link>
+      </div>
       {city.days.length === 0 ? (
         <div className="bp-empty bp-empty--sm">
           <p>{t('itinerary.noDays')}</p>

@@ -347,7 +347,44 @@
     "addActivity": "Add activity",
     "addActivityPh": "Activity…",
     "activityTime": "Time",
-    "deleteActivity": "Delete activity"
+    "deleteActivity": "Delete activity",
+    "flightNo": "Flight number",
+    "hotelName": "Hotel name / address",
+    "browseHotels": "Browse hotels in Explore",
+    "browsePlaces": "Add activities & restaurants from Explore",
+    "daysTitle": "Days & schedule",
+    "weatherTitle": "Expected weather",
+    "weatherEstimate": "Seasonal estimate — may differ from actual.",
+    "weatherGeneric": "General estimate (city not precisely known).",
+    "clothingTitle": "What to pack",
+    "humid": "humid",
+    "wet": "rain likely",
+    "season": {
+      "WINTER": "Winter",
+      "SPRING": "Spring",
+      "SUMMER": "Summer",
+      "AUTUMN": "Autumn"
+    },
+    "cond": {
+      "HOT": "Hot",
+      "WARM": "Warm",
+      "MILD": "Mild",
+      "COOL": "Cool",
+      "COLD": "Cold"
+    },
+    "clothes": {
+      "LIGHT": "Light clothing",
+      "SHORTS": "Summer wear",
+      "HAT_SUN": "Hat & sunglasses",
+      "SUNSCREEN": "Sunscreen",
+      "LIGHT_JACKET": "Light jacket for evenings",
+      "LAYERS": "Layers",
+      "JACKET": "Jacket",
+      "COAT": "Heavy coat",
+      "SCARF": "Scarf",
+      "UMBRELLA": "Umbrella",
+      "COMFY_SHOES": "Comfy walking shoes"
+    }
   },
   "expenses": {
     "kitty": "Kitty",

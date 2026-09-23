@@ -347,7 +347,44 @@
     "addActivity": "أضف نشاطًا",
     "addActivityPh": "نشاط…",
     "activityTime": "الوقت",
-    "deleteActivity": "حذف النشاط"
+    "deleteActivity": "حذف النشاط",
+    "flightNo": "رقم الرحلة",
+    "hotelName": "اسم الفندق / العنوان",
+    "browseHotels": "تصفّح الفنادق في استكشف",
+    "browsePlaces": "أضف فعاليات ومطاعم من استكشف",
+    "daysTitle": "الأيام والجدول",
+    "weatherTitle": "الطقس المتوقع",
+    "weatherEstimate": "تقدير حسب الموسم — قد يختلف عن الواقع.",
+    "weatherGeneric": "تقدير عام (المدينة غير معروفة بدقة).",
+    "clothingTitle": "توصية الملابس",
+    "humid": "رطب",
+    "wet": "أمطار محتملة",
+    "season": {
+      "WINTER": "شتاء",
+      "SPRING": "ربيع",
+      "SUMMER": "صيف",
+      "AUTUMN": "خريف"
+    },
+    "cond": {
+      "HOT": "حار",
+      "WARM": "دافئ",
+      "MILD": "معتدل",
+      "COOL": "بارد نسبيًا",
+      "COLD": "بارد"
+    },
+    "clothes": {
+      "LIGHT": "ملابس خفيفة",
+      "SHORTS": "ملابس صيفية",
+      "HAT_SUN": "قبعة ونظارة شمس",
+      "SUNSCREEN": "واقي شمس",
+      "LIGHT_JACKET": "جاكيت خفيف للمساء",
+      "LAYERS": "طبقات",
+      "JACKET": "جاكيت",
+      "COAT": "معطف ثقيل",
+      "SCARF": "وشاح",
+      "UMBRELLA": "مظلة",
+      "COMFY_SHOES": "حذاء مريح للمشي"
+    }
   },
   "expenses": {
     "kitty": "القطة",
