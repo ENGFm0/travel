@@ -47,15 +47,25 @@ jobs:
           VITE_FIREBASE_APP_ID: "1:380577603179:web:4f1e2e0c35c9f857e41b2e"
         run: npm --workspace apps/web run build
 
-      - name: Deploy to Firebase Hosting (live)
+      - name: Write service account credentials
         env:
           FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           if [ -z "$FIREBASE_SA" ]; then
             echo "::error::FIREBASE_SERVICE_ACCOUNT secret is empty or not visible to this run."
-            echo "Re-add it: repo Settings -> Secrets and variables -> Actions -> Repository secrets."
             exit 1
           fi
           printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          npx --yes firebase-tools@latest deploy --only hosting,firestore:rules --project bordingpass-ae272 --non-interactive
+
+      - name: Deploy to Firebase Hosting (live)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx --yes firebase-tools@latest deploy --only hosting --project bordingpass-ae272 --non-interactive
+
+      - name: Deploy Firestore security rules (best-effort)
+        # Needs the service account to have the "Service Usage Consumer" role;
+        # if it doesn't, this is skipped without failing the hosting deploy.
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx --yes firebase-tools@latest deploy --only firestore:rules --project bordingpass-ae272 --non-interactive
