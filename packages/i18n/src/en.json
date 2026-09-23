@@ -174,7 +174,9 @@
       "RATE_LIMITED": "Too many attempts, try later",
       "REQUIRED": "This field is required",
       "GENERIC": "Could not complete the request, try again"
-    }
+    },
+    "noAccount": "No account? Create one",
+    "haveAccount": "Have an account? Sign in"
   },
   "account": {
     "guardTitle": "Sign in required",

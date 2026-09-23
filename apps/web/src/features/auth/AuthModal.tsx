@@ -60,8 +60,11 @@ export function AuthModal() {
     try {
       const exists = await authActions.checkEmail(email);
       setStep(exists ? 'login' : 'register');
-    } catch (e) {
-      handleError(e);
+    } catch {
+      // Some backends disable email-existence checks (e.g. Firebase email
+      // enumeration protection). Don't block — go to sign-in; the user can
+      // switch to "create account" from there.
+      setStep('login');
     } finally {
       setBusy(false);
     }
@@ -197,6 +200,9 @@ export function AuthModal() {
             <button className="bp-btn bp-btn--primary" disabled={busy} onClick={doLogin}>
               {t('auth.signIn')}
             </button>
+            <button className="bp-link" type="button" onClick={() => { setErrorCode(null); setStep('register'); }}>
+              {t('auth.noAccount')}
+            </button>
           </>
         )}
 
@@ -234,6 +240,9 @@ export function AuthModal() {
             </div>
             <button className="bp-btn bp-btn--primary" disabled={busy} onClick={doRegister}>
               {t('auth.createAccount')}
+            </button>
+            <button className="bp-link" type="button" onClick={() => { setErrorCode(null); setStep('login'); }}>
+              {t('auth.haveAccount')}
             </button>
           </>
         )}
