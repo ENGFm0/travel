@@ -100,6 +100,7 @@ export function CreateTripWizard() {
       setLastCreated(trip);
       setDone(trip);
     } catch (e) {
+      console.error('[createTrip]', e); // surfaced for diagnostics
       setErrorCode(isApiError(e) ? 'GENERIC' : 'GENERIC');
     } finally {
       setBusy(false);

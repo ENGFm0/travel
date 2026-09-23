@@ -1,6 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { initializeFirestore, getFirestore, type Firestore } from 'firebase/firestore';
 
 /** Shared Firebase app/Firestore access for the data services. Config comes from
  *  the (public) VITE_FIREBASE_* build env; when it's absent the app runs on the
@@ -26,8 +26,18 @@ export function getFirebaseApp(): FirebaseApp {
   return getApps()[0] ?? initializeApp(firebaseConfig());
 }
 
+let _db: Firestore | null = null;
 export function db(): Firestore {
-  return getFirestore(getFirebaseApp());
+  if (_db) return _db;
+  const app = getFirebaseApp();
+  try {
+    // ignoreUndefinedProperties so optional fields (e.g. a city's dateFrom/dateTo)
+    // left undefined don't make writes throw.
+    _db = initializeFirestore(app, { ignoreUndefinedProperties: true });
+  } catch {
+    _db = getFirestore(app); // already initialized elsewhere
+  }
+  return _db;
 }
 
 /** The signed-in user's uid, or null. Data services read this at call time so
