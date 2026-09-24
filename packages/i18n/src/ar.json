@@ -430,7 +430,11 @@
     "cityName": "اسم المدينة",
     "viewOnMaps": "عرض على خرائط قوقل",
     "autoMapHint": "المكان يتربط بخرائط قوقل تلقائيًا — بدون رابط.",
-    "cityDates": "تواريخ المدينة"
+    "cityDates": "تواريخ المدينة",
+    "placeSearch": "ابحث عن مكان",
+    "placeSearchPh": "ابحث عن مطعم، فندق، معلم… (قوقل)",
+    "placeSearchErr": "تعذّر البحث، حاول مرة أخرى.",
+    "placeSearchNone": "لا نتائج."
   },
   "expenses": {
     "kitty": "القطة",

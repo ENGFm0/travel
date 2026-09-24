@@ -922,3 +922,20 @@ select.bp-input {
 .bp-citydates__row { display: flex; align-items: center; gap: 8px; }
 .bp-citydates__sep { color: var(--bp-ink-muted); font-weight: 800; }
 .bp-citydates .bp-input--sm { max-inline-size: 170px; }
+
+/* ── In-app Google place search ─────────────────────────────────────────────── */
+.bp-placesearch { position: relative; display: flex; align-items: center; }
+.bp-placesearch__icon { position: absolute; inset-inline-start: 10px; color: var(--bp-ink-muted); font-size: 20px; pointer-events: none; }
+.bp-placesearch__input { padding-inline-start: 38px; }
+.bp-placesearch__busy { position: absolute; inset-inline-end: 12px; color: var(--bp-ink-muted); }
+.bp-placesearch__list { position: absolute; inset-block-start: calc(100% + 4px); inset-inline: 0; z-index: 30;
+  list-style: none; margin: 0; padding: 4px; max-block-size: 280px; overflow-y: auto;
+  background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); box-shadow: var(--bp-shadow-pop); }
+.bp-placesearch__msg { padding: 10px 12px; color: var(--bp-ink-muted); font-size: 13px; }
+.bp-placesearch__opt { display: flex; align-items: center; gap: 8px; inline-size: 100%; text-align: start;
+  padding: 8px 10px; border: 0; background: transparent; border-radius: var(--bp-r-sm); cursor: pointer; font: inherit; color: var(--bp-ink); }
+.bp-placesearch__opt:hover { background: color-mix(in srgb, var(--bp-primary) 8%, transparent); }
+.bp-placesearch__opt .material-symbols-outlined { font-size: 18px; color: var(--bp-primary); flex: 0 0 auto; }
+.bp-placesearch__opt-txt { display: flex; flex-direction: column; min-inline-size: 0; }
+.bp-placesearch__main { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bp-placesearch__sub { font-size: 12px; color: var(--bp-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

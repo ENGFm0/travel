@@ -7,6 +7,8 @@ import { FlightLookup } from '@/features/flights/FlightLookup';
 import { ACTIVITY_KINDS, type ActivityKind, type CitySeed, type CityStop, type Day, type FlightLeg } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
+import { PlaceSearch } from './PlaceSearch';
+import { mapsEnabled } from '@/shared/googleMaps';
 
 /** Google Maps search deep-link (no API key; opens the Maps web app). */
 function mapsSearch(query: string): string {
@@ -541,6 +543,10 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
         </ul>
       ) : (
         <p className="bp-day-card__empty">{t('itinerary.noActivities')}</p>
+      )}
+
+      {canEdit && mapsEnabled() && (
+        <PlaceSearch city={cityName} onPick={(p) => void itineraryActions.addActivity(tripId, cityId, day.id, { title: p.name, note: p.address, kind: p.kind })} />
       )}
 
       {canEdit && (open ? (

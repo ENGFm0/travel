@@ -45,6 +45,9 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: bordingpass-ae272.firebasestorage.app
           VITE_FIREBASE_MESSAGING_SENDER_ID: "380577603179"
           VITE_FIREBASE_APP_ID: "1:380577603179:web:4f1e2e0c35c9f857e41b2e"
+          # Google Maps JS key — public by design, restricted to the web.app
+          # referrer in the Cloud console. Powers in-app place search.
+          VITE_GOOGLE_MAPS_KEY: AIzaSyBaJPU21zfuupnhP6HLIApc7fhb_UkbnPs
         run: npm --workspace apps/web run build
 
       - name: Write service account credentials

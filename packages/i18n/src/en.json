@@ -430,7 +430,11 @@
     "cityName": "City name",
     "viewOnMaps": "View on Google Maps",
     "autoMapHint": "The place is auto-linked to Google Maps — no link needed.",
-    "cityDates": "City dates"
+    "cityDates": "City dates",
+    "placeSearch": "Search a place",
+    "placeSearchPh": "Search a restaurant, hotel, sight… (Google)",
+    "placeSearchErr": "Search failed, try again.",
+    "placeSearchNone": "No results."
   },
   "expenses": {
     "kitty": "Kitty",
