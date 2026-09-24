@@ -4,8 +4,7 @@ import { Link } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
-import { flightSummary } from '@/features/flights/flightsModel';
-import type { CitySeed, CityStop, Day } from './itineraryService';
+import type { CitySeed, CityStop, Day, FlightLeg } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
 
@@ -151,12 +150,88 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, onMoved, onDe
   );
 }
 
-/** ── Flight section ── */
+/** Combine an ISO date + HH:mm into a timestamp (ms), or null. */
+function legDeparture(leg?: FlightLeg, fallbackDate?: string): number | null {
+  const date = leg?.date || fallbackDate;
+  if (!date) return null;
+  const time = leg?.time || '00:00';
+  const ms = new Date(`${date}T${time}`).getTime();
+  return Number.isNaN(ms) ? null : ms;
+}
+
+/** Live countdown to the departure. */
+function Countdown({ target }: { target: number }) {
+  const { t } = useTranslation();
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const diff = target - now;
+  if (diff <= 0) {
+    return <div className="bp-countdown bp-countdown--past"><span className="material-symbols-outlined" aria-hidden="true">flight_takeoff</span>{t('itinerary.departed')}</div>;
+  }
+  const days = Math.floor(diff / 86_400_000);
+  const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+  const mins = Math.floor((diff % 3_600_000) / 60_000);
+  return (
+    <div className="bp-countdown" role="status">
+      <span className="material-symbols-outlined" aria-hidden="true">timer</span>
+      <span className="bp-countdown__label">{t('itinerary.countdown')}</span>
+      <span className="bp-countdown__parts">
+        <b>{days}</b> {t('itinerary.days')} · <b>{hours}</b> {t('itinerary.hours')} · <b>{mins}</b> {t('itinerary.mins')}
+      </span>
+    </div>
+  );
+}
+
+function LegForm({ title, icon, leg, onSave, canEdit }: {
+  title: string; icon: string; leg: FlightLeg | undefined; onSave: (l: FlightLeg) => void; canEdit: boolean;
+}) {
+  const { t } = useTranslation();
+  const [l, setL] = useState<FlightLeg>(leg ?? {});
+  useEffect(() => setL(leg ?? {}), [leg]);
+  const set = (k: keyof FlightLeg, v: string) => setL((p) => ({ ...p, [k]: v || undefined }));
+  const commit = () => onSave(l);
+
+  if (!canEdit) {
+    const has = leg && (leg.airline || leg.no || leg.from || leg.to || leg.date);
+    return (
+      <div className="bp-leg">
+        <div className="bp-leg__head"><span className="material-symbols-outlined" aria-hidden="true">{icon}</span>{title}</div>
+        {has ? (
+          <p className="bp-leg__ro">{[leg?.airline, leg?.no, leg?.from && leg?.to ? `${leg.from}→${leg.to}` : '', [leg?.date, leg?.time].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</p>
+        ) : <p className="bp-itin-sec__val">—</p>}
+      </div>
+    );
+  }
+  return (
+    <div className="bp-leg">
+      <div className="bp-leg__head"><span className="material-symbols-outlined" aria-hidden="true">{icon}</span>{title}</div>
+      <div className="bp-leg__grid">
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.airline')}</span>
+          <input className="bp-input" value={l.airline ?? ''} onChange={(e) => set('airline', e.target.value)} onBlur={commit} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.flightNo')}</span>
+          <input className="bp-input" value={l.no ?? ''} placeholder="SV1020" dir="ltr" onChange={(e) => set('no', e.target.value)} onBlur={commit} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.from')}</span>
+          <input className="bp-input" value={l.from ?? ''} onChange={(e) => set('from', e.target.value)} onBlur={commit} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.to')}</span>
+          <input className="bp-input" value={l.to ?? ''} onChange={(e) => set('to', e.target.value)} onBlur={commit} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.date')}</span>
+          <input className="bp-input" type="date" value={l.date ?? ''} onChange={(e) => set('date', e.target.value)} onBlur={commit} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.time')}</span>
+          <input className="bp-input" type="time" value={l.time ?? ''} onChange={(e) => set('time', e.target.value)} onBlur={commit} /></label>
+      </div>
+    </div>
+  );
+}
+
+/** ── Flight section: outbound + return legs, lookup autofill, countdown ── */
 function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
-  const [v, setV] = useState(city.flight ?? '');
-  useEffect(() => setV(city.flight ?? ''), [city.flight]);
-  const save = (val: string) => itineraryActions.setCityInfo(tripId, city.id, { flight: val });
+  const saveOut = (l: FlightLeg) => itineraryActions.setCityInfo(tripId, city.id, { flightOut: l });
+  const saveBack = (l: FlightLeg) => itineraryActions.setCityInfo(tripId, city.id, { flightReturn: l });
+  const depMs = legDeparture(city.flightOut, city.dateFrom);
 
   return (
     <section className="bp-itin-sec">
@@ -164,18 +239,22 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
         <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--flight" aria-hidden="true">flight</span>
         <h4>{t('itinerary.flight')}</h4>
       </div>
-      {canEdit ? (
-        <>
-          <label className="bp-field">
-            <span className="bp-field__label">{t('itinerary.flightNo')}</span>
-            <input className="bp-input" value={v} placeholder={t('itinerary.flightPh')} aria-label={t('itinerary.flight')}
-              onChange={(e) => setV(e.target.value)} onBlur={() => v !== (city.flight ?? '') && save(v)} />
-          </label>
-          <FlightLookup onFilled={(info) => { const s = flightSummary(info); setV(s); void save(s); }} />
-        </>
-      ) : (
-        <p className="bp-itin-sec__val">{city.flight || '—'}</p>
+
+      {depMs && <Countdown target={depMs} />}
+
+      {canEdit && (
+        <FlightLookup onFilled={(info) => {
+          const dep = info.departure.time ? info.departure.time.slice(0, 16) : undefined;
+          const leg: FlightLeg = {
+            airline: info.airline, no: info.code, from: info.departure.iata, to: info.arrival.iata,
+            date: dep?.slice(0, 10), time: dep?.slice(11, 16),
+          };
+          void saveOut(leg);
+        }} />
       )}
+
+      <LegForm title={t('itinerary.outbound')} icon="flight_takeoff" leg={city.flightOut} onSave={saveOut} canEdit={canEdit} />
+      <LegForm title={t('itinerary.returnLeg')} icon="flight_land" leg={city.flightReturn} onSave={saveBack} canEdit={canEdit} />
     </section>
   );
 }
@@ -183,9 +262,11 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
 /** ── Hotel / stay section ── */
 function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
-  const [v, setV] = useState(city.hotel ?? '');
-  useEffect(() => setV(city.hotel ?? ''), [city.hotel]);
-  const save = (val: string) => itineraryActions.setCityInfo(tripId, city.id, { hotel: val });
+  const [name, setName] = useState(city.hotel ?? '');
+  const [url, setUrl] = useState(city.hotelUrl ?? '');
+  useEffect(() => { setName(city.hotel ?? ''); setUrl(city.hotelUrl ?? ''); }, [city.hotel, city.hotelUrl]);
+  const saveName = () => name !== (city.hotel ?? '') && itineraryActions.setCityInfo(tripId, city.id, { hotel: name });
+  const saveUrl = () => url !== (city.hotelUrl ?? '') && itineraryActions.setCityInfo(tripId, city.id, { hotelUrl: url });
 
   return (
     <section className="bp-itin-sec">
@@ -197,9 +278,15 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
         <>
           <label className="bp-field">
             <span className="bp-field__label">{t('itinerary.hotelName')}</span>
-            <input className="bp-input" value={v} placeholder={t('itinerary.hotelPh')} aria-label={t('itinerary.hotel')}
-              onChange={(e) => setV(e.target.value)} onBlur={() => v !== (city.hotel ?? '') && save(v)} />
+            <input className="bp-input" value={name} placeholder={t('itinerary.hotelPh')} aria-label={t('itinerary.hotel')}
+              onChange={(e) => setName(e.target.value)} onBlur={saveName} />
           </label>
+          <label className="bp-field">
+            <span className="bp-field__label">{t('itinerary.hotelLink')}</span>
+            <input className="bp-input" value={url} placeholder="https://…" dir="ltr" aria-label={t('itinerary.hotelLink')}
+              onChange={(e) => setUrl(e.target.value)} onBlur={saveUrl} />
+          </label>
+          <p className="bp-itin-sec__note">{t('itinerary.hotelHint')}</p>
           <div className="bp-map-links">
             <a className="bp-inline-link" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">
               <span className="material-symbols-outlined" aria-hidden="true">map</span>
@@ -212,7 +299,14 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
           </div>
         </>
       ) : (
-        <p className="bp-itin-sec__val">{city.hotel || '—'}</p>
+        <>
+          <p className="bp-itin-sec__val">{city.hotel || '—'}</p>
+          {city.hotelUrl && (
+            <a className="bp-inline-link" href={city.hotelUrl} target="_blank" rel="noopener noreferrer">
+              <span className="material-symbols-outlined" aria-hidden="true">open_in_new</span>{t('itinerary.openLink')}
+            </a>
+          )}
+        </>
       )}
     </section>
   );

@@ -849,3 +849,20 @@ select.bp-input {
 .bp-map-chip .material-symbols-outlined { font-size: 17px; color: var(--bp-blue, #3a6ea5); }
 .bp-map-chip:hover { border-color: color-mix(in srgb, var(--bp-primary) 45%, var(--bp-border)); transform: translateY(-1px); }
 .bp-map-chip--explore .material-symbols-outlined { color: var(--bp-orange); }
+
+/* ── Flight legs + countdown ────────────────────────────────────────────────── */
+.bp-countdown { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px;
+  border-radius: var(--bp-r-md); background: color-mix(in srgb, var(--bp-orange) 12%, var(--bp-surface));
+  border: 1px solid color-mix(in srgb, var(--bp-orange) 30%, var(--bp-border)); }
+.bp-countdown .material-symbols-outlined { color: var(--bp-orange); font-size: 20px; }
+.bp-countdown__label { font-size: 13px; font-weight: 700; color: var(--bp-ink-muted); }
+.bp-countdown__parts { font-size: 14px; font-weight: 600; }
+.bp-countdown__parts b { font-size: 17px; font-weight: 800; color: var(--bp-orange); }
+.bp-countdown--past { color: var(--bp-ink-muted); }
+.bp-leg { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--bp-border);
+  border-radius: var(--bp-r-md); background: var(--bp-bg); }
+.bp-leg__head { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; }
+.bp-leg__head .material-symbols-outlined { font-size: 19px; color: var(--bp-orange); }
+.bp-leg__ro { margin: 0; color: var(--bp-ink-muted); }
+.bp-leg__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (min-width: 560px) { .bp-leg__grid { grid-template-columns: 1fr 1fr 1fr; } }

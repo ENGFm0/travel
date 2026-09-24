@@ -16,14 +16,36 @@ export interface Day {
   activities: Activity[];
 }
 
+/** One flight leg (outbound or return). All fields optional — filled manually
+ *  or by the flight lookup. */
+export interface FlightLeg {
+  airline?: string;
+  no?: string;    // flight number (e.g. SV1020)
+  from?: string;  // origin airport/city
+  to?: string;    // destination airport/city
+  date?: string;  // ISO date
+  time?: string;  // HH:mm
+}
+
 export interface CityStop {
   id: string;
   name: string;
   dateFrom?: string;
   dateTo?: string;
+  flight?: string;      // legacy one-line summary (kept for back-compat)
+  flightOut?: FlightLeg;
+  flightReturn?: FlightLeg;
+  hotel?: string;
+  hotelUrl?: string;    // optional booking/maps link
+  days: Day[];
+}
+
+export interface CityInfoPatch {
   flight?: string;
   hotel?: string;
-  days: Day[];
+  hotelUrl?: string;
+  flightOut?: FlightLeg;
+  flightReturn?: FlightLeg;
 }
 
 export interface Board {
@@ -43,7 +65,7 @@ export interface ItineraryService {
   addCity(tripId: string, name: string): Promise<Board>;
   moveCity(tripId: string, cityId: string, dir: -1 | 1): Promise<Board>;
   deleteCity(tripId: string, cityId: string): Promise<Board>;
-  setCityInfo(tripId: string, cityId: string, info: { flight?: string; hotel?: string }): Promise<Board>;
+  setCityInfo(tripId: string, cityId: string, info: CityInfoPatch): Promise<Board>;
   addDay(tripId: string, cityId: string, title: string, date?: string): Promise<Board>;
   deleteDay(tripId: string, cityId: string, dayId: string): Promise<Board>;
   addActivity(tripId: string, cityId: string, dayId: string, title: string, time?: string): Promise<Board>;
@@ -103,7 +125,13 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
       await tick();
       const b = board(tripId);
       const c = city(b, cityId);
-      if (c) { if (info.flight !== undefined) c.flight = info.flight; if (info.hotel !== undefined) c.hotel = info.hotel; }
+      if (c) {
+        if (info.flight !== undefined) c.flight = info.flight;
+        if (info.hotel !== undefined) c.hotel = info.hotel;
+        if (info.hotelUrl !== undefined) c.hotelUrl = info.hotelUrl;
+        if (info.flightOut !== undefined) c.flightOut = info.flightOut;
+        if (info.flightReturn !== undefined) c.flightReturn = info.flightReturn;
+      }
       return snap(tripId);
     },
     async addDay(tripId, cityId, title, date) {

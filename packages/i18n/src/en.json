@@ -396,7 +396,22 @@
     "mapsRestaurants": "Restaurants",
     "mapsActivities": "Activities",
     "mapsLandmarks": "Landmarks",
-    "exploreShort": "Explore"
+    "exploreShort": "Explore",
+    "outbound": "Outbound",
+    "returnLeg": "Return",
+    "airline": "Airline",
+    "from": "From",
+    "to": "To",
+    "date": "Date",
+    "time": "Time",
+    "countdown": "Trip in",
+    "days": "d",
+    "hours": "h",
+    "mins": "m",
+    "departed": "Departed ✈️",
+    "hotelLink": "Link (maps/booking) — optional",
+    "hotelHint": "Type the hotel name, or paste its link from Google Maps / a booking site.",
+    "openLink": "Open link"
   },
   "expenses": {
     "kitty": "Kitty",

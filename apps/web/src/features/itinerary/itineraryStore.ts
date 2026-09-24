@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Board, CitySeed, ItineraryService } from './itineraryService';
+import type { Board, CitySeed, CityInfoPatch, ItineraryService } from './itineraryService';
 import { createItineraryService } from './itineraryService';
 
 interface ItineraryStore {
@@ -64,7 +64,7 @@ export const itineraryActions = {
   addCity: (tripId: string, name: string) => apply(() => svc().addCity(tripId, name)),
   moveCity: (tripId: string, cityId: string, dir: -1 | 1) => apply(() => svc().moveCity(tripId, cityId, dir)),
   deleteCity: (tripId: string, cityId: string) => apply(() => svc().deleteCity(tripId, cityId)),
-  setCityInfo: (tripId: string, cityId: string, info: { flight?: string; hotel?: string }) => apply(() => svc().setCityInfo(tripId, cityId, info)),
+  setCityInfo: (tripId: string, cityId: string, info: CityInfoPatch) => apply(() => svc().setCityInfo(tripId, cityId, info)),
   addDay: (tripId: string, cityId: string, title: string, date?: string) => apply(() => svc().addDay(tripId, cityId, title, date)),
   deleteDay: (tripId: string, cityId: string, dayId: string) => apply(() => svc().deleteDay(tripId, cityId, dayId)),
   addActivity: (tripId: string, cityId: string, dayId: string, title: string, time?: string) => apply(() => svc().addActivity(tripId, cityId, dayId, title, time)),

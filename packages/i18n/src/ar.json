@@ -396,7 +396,22 @@
     "mapsRestaurants": "مطاعم",
     "mapsActivities": "أنشطة",
     "mapsLandmarks": "معالم",
-    "exploreShort": "استكشف"
+    "exploreShort": "استكشف",
+    "outbound": "الذهاب",
+    "returnLeg": "العودة",
+    "airline": "شركة الطيران",
+    "from": "من",
+    "to": "إلى",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "countdown": "باقي على الرحلة",
+    "days": "يوم",
+    "hours": "ساعة",
+    "mins": "دقيقة",
+    "departed": "انطلقت الرحلة ✈️",
+    "hotelLink": "رابط (خرائط/حجز) — اختياري",
+    "hotelHint": "اكتب اسم الفندق يدويًا، أو ألصق رابطه من خرائط قوقل/موقع الحجز.",
+    "openLink": "فتح الرابط"
   },
   "expenses": {
     "kitty": "القطة",
