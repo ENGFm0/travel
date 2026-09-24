@@ -268,21 +268,30 @@ export function createItineraryService(): ItineraryService {
   return import.meta.env.VITE_API_BASE_URL ? createApiItineraryService() : createMockItineraryService(undefined, 'bp.itinerary.v1');
 }
 
+/** Load a trip's itinerary board from outside the itinerary page (e.g. the
+ *  Explore "add to plan" modal needs the city's days). */
+export function getItineraryBoard(tripId: string, seed: CitySeed[]): Promise<Board> {
+  return createItineraryService().getBoard(tripId, seed);
+}
+
 /** Add a place (e.g. chosen in Explore) to a trip's itinerary: find/create the
- *  city, ensure it has a day, then append the activity. Best-effort, used from
- *  outside the itinerary page (no open board store). */
+ *  city, add it to the chosen day (or the first/created day), then append the
+ *  activity. Best-effort, used from outside the itinerary page. */
 export async function addPlaceToItinerary(
-  tripId: string, seed: CitySeed[], cityName: string, input: ActivityInput,
+  tripId: string, seed: CitySeed[], cityName: string, input: ActivityInput, dayId?: string,
 ): Promise<void> {
   const svc = createItineraryService();
   let board = await svc.getBoard(tripId, seed);
   let city = board.cities.find((c) => c.name === cityName);
   if (!city) { board = await svc.addCity(tripId, cityName); city = board.cities.find((c) => c.name === cityName); }
   if (!city) return;
-  if (city.days.length === 0) {
-    board = await svc.addDay(tripId, city.id, '');
-    city = board.cities.find((c) => c.id === city!.id);
+  let targetDayId = dayId && city.days.some((d) => d.id === dayId) ? dayId : undefined;
+  if (!targetDayId) {
+    if (city.days.length === 0) {
+      board = await svc.addDay(tripId, city.id, '');
+      city = board.cities.find((c) => c.id === city!.id);
+    }
+    targetDayId = city?.days[0]?.id;
   }
-  const day = city?.days[0];
-  if (city && day) await svc.addActivity(tripId, city.id, day.id, input);
+  if (city && targetDayId) await svc.addActivity(tripId, city.id, targetDayId, input);
 }

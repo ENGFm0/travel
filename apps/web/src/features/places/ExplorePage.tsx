@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatDate } from '@boardingpass/core';
+import { useUIStore } from '@/app/store/uiStore';
 import { useAuth } from '@/features/auth/authStore';
 import { useTripsList, tripsActions } from '@/features/trips/tripsStore';
 import { mapsEnabled, searchPlacesByText, type GmapsPlace } from '@/shared/googleMaps';
-import { addPlaceToItinerary, type ActivityKind } from '@/features/itinerary/itineraryService';
+import {
+  addPlaceToItinerary, getItineraryBoard, type ActivityKind, type Board,
+} from '@/features/itinerary/itineraryService';
 import {
   categoryFromTypes, CATEGORY_QUERY, citiesOf, filterPlaces,
   PLACE_CATEGORIES, type Place, type PlaceCategory,
@@ -15,6 +19,8 @@ import {
 import { partnersActions, usePartners } from '@/features/partners/partnersStore';
 
 type Tab = 'places' | 'partners';
+type PlaceView = 'maps' | 'picks';
+interface TripLite { id: string; title: string; cities: { name: string }[] }
 
 /** PlaceCategory → itinerary ActivityKind (for the real add to the schedule). */
 const KIND: Record<PlaceCategory, ActivityKind> = {
@@ -68,23 +74,34 @@ function PlacesTab() {
   const { isAuthenticated, openAuth } = useAuth();
   const { places, loading } = usePlaces();
   const { trips } = useTripsList();
+  const [tripId, setTripId] = useState('');
   const [category, setCategory] = useState<PlaceCategory | 'ALL'>('ALL');
   const [city, setCity] = useState('');
   const [query, setQuery] = useState('');
+  const [view, setView] = useState<PlaceView>(mapsEnabled() ? 'maps' : 'picks');
   const [addPlace, setAddPlace] = useState<Place | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => { if (trips === null) void tripsActions.load(); }, [trips]);
 
-  const myTrips = useMemo(() => (trips ?? []).filter((tr) => tr.status === 'ACTIVE'), [trips]);
+  const myTrips: TripLite[] = useMemo(
+    () => (trips ?? []).filter((tr) => tr.status === 'ACTIVE').map((tr) => ({ id: tr.id, title: tr.title, cities: tr.cities })),
+    [trips],
+  );
+  const trip = myTrips.find((tr) => tr.id === tripId) ?? myTrips[0];
   const tripCities = useMemo(() => {
     const seen: string[] = [];
-    for (const tr of myTrips) for (const c of tr.cities) if (c.name && !seen.includes(c.name)) seen.push(c.name);
+    for (const c of trip?.cities ?? []) if (c.name && !seen.includes(c.name)) seen.push(c.name);
     return seen;
-  }, [myTrips]);
+  }, [trip]);
 
-  // Default the city to the first trip city, so Google results are useful at once.
-  useEffect(() => { if (!city && tripCities[0]) setCity(tripCities[0]); }, [tripCities, city]);
+  // Explore follows your trips: default to your first trip + its first city.
+  useEffect(() => {
+    if (!tripId && myTrips[0]) {
+      setTripId(myTrips[0].id);
+      setCity(myTrips[0].cities[0]?.name ?? '');
+    }
+  }, [myTrips, tripId]);
 
   const communityCities = useMemo(() => citiesOf(places ?? []), [places]);
   const cityOptions = useMemo(() => {
@@ -98,6 +115,11 @@ function PlacesTab() {
     [places, category, query, city],
   );
 
+  function changeTrip(id: string) {
+    setTripId(id);
+    const tr = myTrips.find((x) => x.id === id);
+    setCity(tr?.cities[0]?.name ?? '');
+  }
   function rate(place: Place, stars: number) {
     if (!isAuthenticated) { openAuth(); return; }
     void placesActions.rate(place.id, stars);
@@ -111,13 +133,13 @@ function PlacesTab() {
   return (
     <>
       <div className="bp-explore__filters">
-        {cityOptions.length > 0 ? (
-          <input className="bp-input bp-input--sm" list="bp-city-opts" value={city} placeholder={t('explorePage.cityPh')}
-            aria-label={t('explorePage.cityLabel')} onChange={(e) => setCity(e.target.value)} />
-        ) : (
-          <input className="bp-input bp-input--sm" value={city} placeholder={t('explorePage.cityPh')}
-            aria-label={t('explorePage.cityLabel')} onChange={(e) => setCity(e.target.value)} />
+        {myTrips.length > 0 && (
+          <select className="bp-input bp-input--sm" value={trip?.id ?? ''} aria-label={t('explorePage.tripLabel')} onChange={(e) => changeTrip(e.target.value)}>
+            {myTrips.map((tr) => <option key={tr.id} value={tr.id}>{tr.title}</option>)}
+          </select>
         )}
+        <input className="bp-input bp-input--sm" list="bp-city-opts" value={city} placeholder={t('explorePage.cityPh')}
+          aria-label={t('explorePage.cityLabel')} onChange={(e) => setCity(e.target.value)} />
         <datalist id="bp-city-opts">{cityOptions.map((c) => <option key={c} value={c} />)}</datalist>
         <input className="bp-input bp-input--sm" value={query} placeholder={t('explorePage.search')} aria-label={t('explorePage.search')} onChange={(e) => setQuery(e.target.value)} />
       </div>
@@ -129,42 +151,56 @@ function PlacesTab() {
         ))}
       </div>
 
+      {/* Two boxes: Google Maps live results / traveller picks */}
+      {mapsEnabled() && (
+        <div className="bp-seg bp-seg--full bp-explore__views" role="tablist" aria-label={t('explorePage.title')}>
+          <button role="tab" className={`bp-seg__btn ${view === 'maps' ? 'is-on' : ''}`} aria-selected={view === 'maps'} onClick={() => setView('maps')}>
+            <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('explorePage.fromMaps')}
+          </button>
+          <button role="tab" className={`bp-seg__btn ${view === 'picks' ? 'is-on' : ''}`} aria-selected={view === 'picks'} onClick={() => setView('picks')}>
+            <span className="material-symbols-outlined" aria-hidden="true">recommend</span>{t('explorePage.recommended')}
+          </button>
+        </div>
+      )}
+
       {toast && <div className="bp-banner bp-banner--ok" role="status">{toast}</div>}
 
-      {/* Live Google Maps results */}
-      {mapsEnabled() && (
+      {/* Google Maps live results */}
+      {mapsEnabled() && view === 'maps' && (
         <GoogleResults city={city} category={category} query={query}
           canAdd={myTrips.length > 0} onAdd={(g) => openAdd(toPlace(g, city))} />
       )}
 
-      {/* Community recommendations — places other travellers added */}
-      <div className="bp-explore__sec">
-        <h2 className="bp-explore__sec-title">
-          <span className="material-symbols-outlined" aria-hidden="true">recommend</span>
-          {t('explorePage.recommended')}
-        </h2>
-        <p className="bp-explore__sec-sub">{t('explorePage.recommendedSub')}</p>
+      {/* Community recommendations */}
+      {(!mapsEnabled() || view === 'picks') && (
+        <div className="bp-explore__sec">
+          <h2 className="bp-explore__sec-title">
+            <span className="material-symbols-outlined" aria-hidden="true">recommend</span>
+            {t('explorePage.recommended')}
+          </h2>
+          <p className="bp-explore__sec-sub">{t('explorePage.recommendedSub')}</p>
 
-        {loading && places === null ? (
-          <p className="bp-page__lead">…</p>
-        ) : recommended.length === 0 ? (
-          <div className="bp-empty bp-empty--sm">
-            <span className="material-symbols-outlined bp-empty__icon" aria-hidden="true">travel_explore</span>
-            <p>{mapsEnabled() ? t('explorePage.recommendedEmpty') : t('explorePage.empty')}</p>
-          </div>
-        ) : (
-          <ul className="bp-place-grid" role="list">
-            {recommended.map((p) => (
-              <li key={p.id}>
-                <PlaceCard place={p} canAdd={myTrips.length > 0} onRate={(s) => rate(p, s)} onAdd={() => openAdd(p)} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+          {loading && places === null ? (
+            <p className="bp-page__lead">…</p>
+          ) : recommended.length === 0 ? (
+            <div className="bp-empty bp-empty--sm">
+              <span className="material-symbols-outlined bp-empty__icon" aria-hidden="true">travel_explore</span>
+              <p>{mapsEnabled() ? t('explorePage.recommendedEmpty') : t('explorePage.empty')}</p>
+            </div>
+          ) : (
+            <ul className="bp-place-grid" role="list">
+              {recommended.map((p) => (
+                <li key={p.id}>
+                  <PlaceCard place={p} canAdd={myTrips.length > 0} onRate={(s) => rate(p, s)} onAdd={() => openAdd(p)} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {addPlace && (
-        <AddToTripModal place={addPlace} trips={myTrips}
+        <AddToTripModal place={addPlace} trips={myTrips} defaultTripId={trip?.id} defaultCity={city}
           onClose={() => setAddPlace(null)}
           onDone={(tripTitle) => { setAddPlace(null); flash(t('explorePage.added', { trip: tripTitle })); }} />
       )}
@@ -362,29 +398,50 @@ function PlaceCard({ place, canAdd, onRate, onAdd }: { place: Place; canAdd: boo
   );
 }
 
-function AddToTripModal({ place, trips, onClose, onDone }: {
-  place: Place; trips: { id: string; title: string; cities: { name: string }[] }[];
+function AddToTripModal({ place, trips, defaultTripId, defaultCity, onClose, onDone }: {
+  place: Place; trips: TripLite[]; defaultTripId?: string; defaultCity?: string;
   onClose: () => void; onDone: (tripTitle: string) => void;
 }) {
   const { t } = useTranslation();
-  const [tripId, setTripId] = useState(trips[0]?.id ?? '');
+  const locale = useUIStore((s) => s.locale);
+  const [tripId, setTripId] = useState(defaultTripId || trips[0]?.id || '');
   const trip = trips.find((tr) => tr.id === tripId) ?? trips[0];
-  const [city, setCity] = useState(trip?.cities[0]?.name ?? place.city ?? '');
+  const [city, setCity] = useState(defaultCity || trip?.cities[0]?.name || place.city || '');
+  const [board, setBoard] = useState<Board | null>(null);
+  const [dayId, setDayId] = useState('');
+  const [time, setTime] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // Load the trip's board so we can offer its days.
+  useEffect(() => {
+    let alive = true;
+    setBoard(null);
+    if (!tripId) return;
+    const seed = (trip?.cities ?? []).map((c) => ({ name: c.name }));
+    getItineraryBoard(tripId, seed).then((b) => { if (alive) setBoard(b); }).catch(() => { /* best-effort */ });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripId]);
+
+  const cityDays = useMemo(() => board?.cities.find((c) => c.name === city)?.days ?? [], [board, city]);
+  useEffect(() => { setDayId(''); }, [city, tripId]);
+
+  function dayLabel(d: { title: string; date?: string }, i: number): string {
+    return d.title?.trim()
+      || (d.date ? formatDate(d.date, locale, { weekday: 'short', day: 'numeric', month: 'short' }) : t('itinerary.dayN', { n: i + 1 }));
+  }
 
   async function confirm() {
     if (!tripId) return;
     setBusy(true);
     try {
       const targetCity = city || place.city || trip?.cities[0]?.name || '';
-      // Real add to the trip's schedule (best-effort — recommendations still record).
+      const seed = (trip?.cities ?? []).map((c) => ({ name: c.name }));
       try {
-        await addPlaceToItinerary(
-          tripId,
-          (trip?.cities ?? []).map((c) => ({ name: c.name })),
-          targetCity,
-          { title: place.name, note: place.area || undefined, kind: KIND[place.category], photoUrl: place.photoUrl, mapsUrl: place.mapsUrl },
-        );
+        await addPlaceToItinerary(tripId, seed, targetCity, {
+          title: place.name, note: place.area || undefined, kind: KIND[place.category],
+          photoUrl: place.photoUrl, mapsUrl: place.mapsUrl, time: time || undefined,
+        }, dayId || undefined);
       } catch { /* itinerary add is best-effort */ }
       await placesActions.record({ ...place, city: targetCity });
       onDone(trip?.title ?? '');
@@ -412,6 +469,19 @@ function AddToTripModal({ place, trips, onClose, onDone }: {
             </select>
           </div>
         )}
+        <div className="bp-add-grid">
+          <div className="bp-field">
+            <label htmlFor="bp-add-day">{t('explorePage.chooseDay')}</label>
+            <select id="bp-add-day" className="bp-input" value={dayId} onChange={(e) => setDayId(e.target.value)}>
+              <option value="">{t('explorePage.dayAuto')}</option>
+              {cityDays.map((d, i) => <option key={d.id} value={d.id}>{dayLabel(d, i)}</option>)}
+            </select>
+          </div>
+          <div className="bp-field">
+            <label htmlFor="bp-add-time">{t('explorePage.chooseTime')}</label>
+            <input id="bp-add-time" className="bp-input" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+          </div>
+        </div>
         <div className="bp-row-between">
           <button className="bp-btn bp-btn--primary" disabled={busy} onClick={confirm}>{t('explorePage.confirmAdd')}</button>
           <button className="bp-btn bp-btn--outline" onClick={onClose}>{t('trips.close')}</button>

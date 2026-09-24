@@ -670,6 +670,10 @@
     "addTitle": "أضف {{name}} إلى رحلة",
     "chooseTrip": "الرحلة",
     "chooseCity": "المدينة",
+    "chooseDay": "اليوم",
+    "dayAuto": "أول يوم متاح",
+    "chooseTime": "الوقت",
+    "tripLabel": "الرحلة",
     "confirmAdd": "إضافة",
     "tabs": {
       "places": "الأماكن",

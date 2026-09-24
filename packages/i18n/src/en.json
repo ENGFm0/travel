@@ -670,6 +670,10 @@
     "addTitle": "Add {{name}} to a trip",
     "chooseTrip": "Trip",
     "chooseCity": "City",
+    "chooseDay": "Day",
+    "dayAuto": "First available day",
+    "chooseTime": "Time",
+    "tripLabel": "Trip",
     "confirmAdd": "Add",
     "tabs": {
       "places": "Places",
