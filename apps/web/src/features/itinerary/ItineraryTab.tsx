@@ -390,22 +390,38 @@ const ACTIVITY_ICON: Record<ActivityKind, string> = {
   SIGHT: 'attractions', TRANSPORT: 'directions_car', ACTIVITY: 'hiking', OTHER: 'push_pin',
 };
 
+/** Add N days to an ISO date. */
+function addDaysIso(iso: string, n: number): string {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
 function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
   tripId: string; city: CityStop; canEdit: boolean; rangeFrom?: string; rangeTo?: string;
 }) {
   const { t } = useTranslation();
   const dates = useMemo(() => datesBetween(rangeFrom, rangeTo), [rangeFrom, rangeTo]);
-  const genOnce = useRef(false);
+  const syncedOnce = useRef(false);
 
-  // Auto-generate a day per trip date the first time (when there are no days yet).
+  // Once per city: make the day list match the date range — add any missing
+  // dates and clear leftover empty dateless days (data from earlier edits).
   useEffect(() => {
-    if (!canEdit || genOnce.current) return;
-    if (city.days.length === 0 && dates.length > 0) {
-      genOnce.current = true;
-      void itineraryActions.generateDays(tripId, city.id, dates);
-    }
+    if (!canEdit || syncedOnce.current || dates.length === 0) return;
+    syncedOnce.current = true;
+    const have = new Set(city.days.filter((d) => d.date).map((d) => d.date));
+    const missing = dates.some((dt) => !have.has(dt));
+    const emptyDateless = city.days.some((d) => !d.date && d.activities.length === 0);
+    if (missing || emptyDateless) void itineraryActions.generateDays(tripId, city.id, dates);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [city.id, city.days.length, dates.length]);
+  }, [city.id]);
+
+  function addDay() {
+    const lastDated = [...city.days].reverse().find((d) => d.date)?.date;
+    const next = lastDated ? addDaysIso(lastDated, 1)
+      : rangeFrom ? addDaysIso(rangeFrom, city.days.length) : undefined;
+    void itineraryActions.addDay(tripId, city.id, '', next);
+  }
 
   return (
     <div className="bp-days">
@@ -415,6 +431,11 @@ function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
           {t('itinerary.daysTitle')}
         </h4>
       </div>
+
+      {canEdit && (
+        <CityDatesEditor tripId={tripId} city={city} />
+      )}
+
       {city.days.length === 0 ? (
         <div className="bp-empty bp-empty--sm"><p>{t('itinerary.noDays')}</p></div>
       ) : (
@@ -426,10 +447,37 @@ function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
       )}
 
       {canEdit && (
-        <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => itineraryActions.addDay(tripId, city.id, '')}>
+        <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={addDay}>
           + {t('itinerary.addDay')}
         </button>
       )}
+    </div>
+  );
+}
+
+/** Small editor for a city's own date range; setting it regenerates its days. */
+function CityDatesEditor({ tripId, city }: { tripId: string; city: CityStop }) {
+  const { t } = useTranslation();
+  const [from, setFrom] = useState(city.dateFrom ?? '');
+  const [to, setTo] = useState(city.dateTo ?? '');
+  useEffect(() => { setFrom(city.dateFrom ?? ''); setTo(city.dateTo ?? ''); }, [city.dateFrom, city.dateTo]);
+
+  async function save() {
+    if (from === (city.dateFrom ?? '') && to === (city.dateTo ?? '')) return;
+    await itineraryActions.setCityInfo(tripId, city.id, { dateFrom: from || undefined, dateTo: to || undefined });
+    if (from) await itineraryActions.generateDays(tripId, city.id, datesBetween(from, to || from));
+  }
+
+  return (
+    <div className="bp-citydates">
+      <span className="bp-field__label">{t('itinerary.cityDates')}</span>
+      <div className="bp-citydates__row">
+        <input className="bp-input bp-input--sm" type="date" value={from} aria-label={t('itinerary.from')}
+          onChange={(e) => setFrom(e.target.value)} onBlur={save} />
+        <span className="bp-citydates__sep">→</span>
+        <input className="bp-input bp-input--sm" type="date" value={to} aria-label={t('itinerary.to')}
+          onChange={(e) => setTo(e.target.value)} onBlur={save} />
+      </div>
     </div>
   );
 }

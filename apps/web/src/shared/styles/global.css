@@ -915,3 +915,10 @@ select.bp-input {
   border: 1px solid var(--bp-border); border-radius: var(--bp-r-lg); background: var(--bp-surface); box-shadow: var(--bp-shadow-sm); }
 .bp-addcity__row { display: grid; grid-template-columns: 1fr; gap: 8px; }
 @media (min-width: 620px) { .bp-addcity__row { grid-template-columns: 2fr 1fr 1fr; } }
+
+/* ── City dates editor (in Days tab) ────────────────────────────────────────── */
+.bp-citydates { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; margin-bottom: 12px;
+  border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-bg); }
+.bp-citydates__row { display: flex; align-items: center; gap: 8px; }
+.bp-citydates__sep { color: var(--bp-ink-muted); font-weight: 800; }
+.bp-citydates .bp-input--sm { max-inline-size: 170px; }

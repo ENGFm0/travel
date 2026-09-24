@@ -429,7 +429,8 @@
     },
     "cityName": "City name",
     "viewOnMaps": "View on Google Maps",
-    "autoMapHint": "The place is auto-linked to Google Maps — no link needed."
+    "autoMapHint": "The place is auto-linked to Google Maps — no link needed.",
+    "cityDates": "City dates"
   },
   "expenses": {
     "kitty": "Kitty",

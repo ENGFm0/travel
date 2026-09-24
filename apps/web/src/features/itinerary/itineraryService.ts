@@ -56,6 +56,8 @@ export interface CityInfoPatch {
   flight?: string;
   hotel?: string;
   hotelUrl?: string;
+  dateFrom?: string;
+  dateTo?: string;
   flightOut?: FlightLeg;
   flightReturn?: FlightLeg;
 }
@@ -146,8 +148,11 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
         if (info.flight !== undefined) c.flight = info.flight;
         if (info.hotel !== undefined) c.hotel = info.hotel;
         if (info.hotelUrl !== undefined) c.hotelUrl = info.hotelUrl;
+        if (info.dateFrom !== undefined) c.dateFrom = info.dateFrom || undefined;
+        if (info.dateTo !== undefined) c.dateTo = info.dateTo || undefined;
         if (info.flightOut !== undefined) c.flightOut = info.flightOut;
         if (info.flightReturn !== undefined) c.flightReturn = info.flightReturn;
+        if (info.dateFrom !== undefined || info.dateTo !== undefined) sortCities(b);
       }
       return snap(tripId);
     },
@@ -162,12 +167,15 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
       const b = board(tripId);
       const c = city(b, cityId);
       if (c) {
+        // Drop leftover empty dateless days (keep any day that has activities).
+        c.days = c.days.filter((d) => d.date || d.activities.length > 0);
         const have = new Set(c.days.map((d) => d.date).filter(Boolean));
         for (const date of dates) {
           if (have.has(date)) continue;
           c.days.push({ id: uid('day'), title: '', date, activities: [] });
         }
-        c.days.sort((x, y) => (x.date ?? '').localeCompare(y.date ?? ''));
+        // dated days first (chronological), any dateless-with-activities last.
+        c.days.sort((x, y) => (x.date ?? '9999-99-99').localeCompare(y.date ?? '9999-99-99'));
       }
       return snap(tripId);
     },
