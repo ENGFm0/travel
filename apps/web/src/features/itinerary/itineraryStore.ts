@@ -61,7 +61,7 @@ export const itineraryActions = {
       useItineraryStore.getState()._set({ loading: false });
     }
   },
-  addCity: (tripId: string, name: string) => apply(() => svc().addCity(tripId, name)),
+  addCity: (tripId: string, name: string, dates?: { dateFrom?: string; dateTo?: string }) => apply(() => svc().addCity(tripId, name, dates)),
   moveCity: (tripId: string, cityId: string, dir: -1 | 1) => apply(() => svc().moveCity(tripId, cityId, dir)),
   deleteCity: (tripId: string, cityId: string) => apply(() => svc().deleteCity(tripId, cityId)),
   setCityInfo: (tripId: string, cityId: string, info: CityInfoPatch) => apply(() => svc().setCityInfo(tripId, cityId, info)),

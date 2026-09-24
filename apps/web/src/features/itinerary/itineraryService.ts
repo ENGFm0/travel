@@ -74,7 +74,7 @@ export interface CitySeed {
 
 export interface ItineraryService {
   getBoard(tripId: string, seed: CitySeed[]): Promise<Board>;
-  addCity(tripId: string, name: string): Promise<Board>;
+  addCity(tripId: string, name: string, dates?: { dateFrom?: string; dateTo?: string }): Promise<Board>;
   moveCity(tripId: string, cityId: string, dir: -1 | 1): Promise<Board>;
   deleteCity(tripId: string, cityId: string): Promise<Board>;
   setCityInfo(tripId: string, cityId: string, info: CityInfoPatch): Promise<Board>;
@@ -109,14 +109,17 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
   }
   const snap = (tripId: string) => structuredClone(boards.get(tripId)!) as Board;
   const city = (b: Board, id: string) => b.cities.find((c) => c.id === id);
+  // Chronological order by start date; undated cities keep their relative order last.
+  const sortCities = (b: Board) => b.cities.sort((a, c) => (a.dateFrom ?? '9999-99').localeCompare(c.dateFrom ?? '9999-99'));
   const day = (b: Board, cid: string, did: string) => city(b, cid)?.days.find((d) => d.id === did);
 
   const base: ItineraryService = {
     async getBoard(tripId, seed) { await tick(); board(tripId, seed); return snap(tripId); },
-    async addCity(tripId, name) {
+    async addCity(tripId, name, dates) {
       await tick();
       const b = board(tripId);
-      b.cities.push({ id: uid('city'), name: name.trim(), days: [] });
+      b.cities.push({ id: uid('city'), name: name.trim(), dateFrom: dates?.dateFrom, dateTo: dates?.dateTo, days: [] });
+      sortCities(b);
       return snap(tripId);
     },
     async moveCity(tripId, cityId, dir) {
@@ -204,7 +207,7 @@ export function createApiItineraryService(getToken?: () => string | undefined): 
   const board = (tripId: string) => client.apiFetch<Board>(`/trips/${tripId}/itinerary`);
   return {
     getBoard: (tripId) => board(tripId),
-    addCity: (tripId, name) => client.apiFetch<Board>(`/trips/${tripId}/cities`, { method: 'POST', body: JSON.stringify({ name }) }),
+    addCity: (tripId, name, dates) => client.apiFetch<Board>(`/trips/${tripId}/cities`, { method: 'POST', body: JSON.stringify({ name, ...dates }) }),
     moveCity: (tripId, cityId, dir) => client.apiFetch<Board>(`/trips/${tripId}/cities/${cityId}/move`, { method: 'PATCH', body: JSON.stringify({ dir }) }),
     deleteCity: async (tripId, cityId) => { await client.apiFetch<void>(`/trips/${tripId}/cities/${cityId}`, { method: 'DELETE' }); return board(tripId); },
     setCityInfo: (tripId, cityId, info) => client.apiFetch<Board>(`/trips/${tripId}/cities/${cityId}`, { method: 'PATCH', body: JSON.stringify(info) }),
@@ -235,7 +238,7 @@ export function createFirestoreItineraryService(): ItineraryService {
   }
   return {
     getBoard: (tripId, seed) => run(tripId, seed, (m) => m.getBoard(tripId, seed)),
-    addCity: (tripId, name) => run(tripId, [], (m) => m.addCity(tripId, name)),
+    addCity: (tripId, name, dates) => run(tripId, [], (m) => m.addCity(tripId, name, dates)),
     moveCity: (tripId, cityId, dir) => run(tripId, [], (m) => m.moveCity(tripId, cityId, dir)),
     deleteCity: (tripId, cityId) => run(tripId, [], (m) => m.deleteCity(tripId, cityId)),
     setCityInfo: (tripId, cityId, info) => run(tripId, [], (m) => m.setCityInfo(tripId, cityId, info)),
