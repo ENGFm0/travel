@@ -82,8 +82,9 @@ describe('Explore tabs UI', () => {
     renderExplore();
 
     await screen.findByText('Najd');
-    const citySelect = screen.getByLabelText('City');
-    await userEvent.selectOptions(citySelect, 'Jeddah');
+    const cityInput = screen.getByLabelText('City');
+    await userEvent.clear(cityInput);
+    await userEvent.type(cityInput, 'Jeddah');
     await waitFor(() => expect(screen.queryByText('Najd')).not.toBeInTheDocument());
     expect(screen.getByText('Corniche')).toBeInTheDocument();
   });

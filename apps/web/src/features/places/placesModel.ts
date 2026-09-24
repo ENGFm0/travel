@@ -1,6 +1,6 @@
-// Pure model + helpers for US-012 (explore & recommendations).
-// NOTE: no Maps/Places API key ever lives in the client (AC6) — place data comes
-// from a backend proxy (keys server-side, cached); the mock stands in for it.
+// Pure model + helpers for Explore & recommendations.
+// Live place data comes from Google Places (searched in-app); "recommendations"
+// are places other travellers added to their trips, stored in Firestore.
 
 export type PlaceCategory = 'RESTAURANTS' | 'LANDMARKS' | 'ACTIVITIES' | 'SHOPPING';
 export const PLACE_CATEGORIES: PlaceCategory[] = ['RESTAURANTS', 'LANDMARKS', 'ACTIVITIES', 'SHOPPING'];
@@ -15,6 +15,26 @@ export interface Place {
   ratingCount: number;
   suggested?: boolean;
   myRating?: number; // the current user's rating, if any
+  photoUrl?: string; // place photo (from Google)
+  mapsUrl?: string;  // Google Maps deep-link
+  adds?: number;     // how many travellers added it (recommendation signal)
+}
+
+/** Arabic search phrase used to pull each category from Google, biased to a city. */
+export const CATEGORY_QUERY: Record<PlaceCategory, string> = {
+  RESTAURANTS: 'مطاعم وكافيهات',
+  LANDMARKS: 'أماكن سياحية ومعالم',
+  ACTIVITIES: 'أنشطة وترفيه',
+  SHOPPING: 'أسواق ومولات',
+};
+
+/** Map Google place types to our four categories. */
+export function categoryFromTypes(types: string[] = []): PlaceCategory {
+  const has = (...t: string[]) => t.some((x) => types.includes(x));
+  if (has('restaurant', 'cafe', 'bar', 'bakery', 'meal_takeaway', 'meal_delivery', 'food')) return 'RESTAURANTS';
+  if (has('shopping_mall', 'store', 'clothing_store', 'supermarket', 'department_store', 'market')) return 'SHOPPING';
+  if (has('amusement_park', 'zoo', 'aquarium', 'park', 'stadium', 'spa', 'movie_theater', 'bowling_alley', 'campground', 'tourist_attraction')) return 'ACTIVITIES';
+  return 'LANDMARKS';
 }
 
 /** Filter by category (or 'ALL') + optional city (or 'ALL') + free-text over

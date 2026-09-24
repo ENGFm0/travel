@@ -647,6 +647,19 @@ select.bp-input {
 .bp-place-card__count { color: var(--bp-ink-muted); font-weight: 500; font-size: 12px; }
 .bp-place-card__title { margin: 2px 0 0; font-size: 16px; }
 .bp-place-card__area { margin: 0; font-size: 13px; color: var(--bp-ink-muted); }
+.bp-place-card__photo img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.bp-place-card__adds { display: inline-flex; align-items: center; gap: 4px; margin: 0; font-size: 12.5px; font-weight: 700; color: var(--bp-primary); }
+.bp-place-card__adds .material-symbols-outlined { font-size: 16px; }
+.bp-place-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.bp-place-card__actions .bp-btn { flex: 1; min-inline-size: 0; }
+.bp-place-card__actions .bp-btn .material-symbols-outlined { font-size: 16px; }
+
+/* Explore sections (From Maps / Traveller picks) */
+.bp-explore__sec { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.bp-explore__sec-title { display: inline-flex; align-items: center; gap: 8px; margin: 6px 0 0; font-size: 18px; font-weight: 800; }
+.bp-explore__sec-title .material-symbols-outlined { font-size: 22px; color: var(--bp-primary); }
+.bp-explore__sec-sub { margin: 0 0 4px; font-size: 13px; color: var(--bp-ink-muted); }
+
 .bp-stars { display: inline-flex; gap: 2px; }
 .bp-star { border: 0; background: none; cursor: pointer; color: var(--bp-gold); padding: 2px; display: inline-flex; }
 .bp-star .material-symbols-outlined { font-size: 22px; }

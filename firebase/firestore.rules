@@ -114,10 +114,13 @@ service cloud.firestore {
       allow update, delete: if (signedIn() && resource.data.ownerUid == uid()) || isAdmin();
     }
 
-    // ── Places (curated) + self reviews ────────────────────────────────────
+    // ── Places (community recommendations) + self reviews ──────────────────
+    // Any signed-in traveller may add/refresh a place they added to a trip
+    // (feeds the "traveller picks" recommendations); admins may curate/remove.
     match /places/{placeId} {
       allow read: if signedIn();
-      allow write: if isAdmin();
+      allow create, update: if signedIn();
+      allow delete: if isAdmin();
       match /reviews/{reviewId} {
         allow read: if signedIn();
         allow write: if signedIn() && uid() == reviewId;

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Place } from './placesModel';
 import type { PlacesService } from './placesService';
 import { createPlacesService } from './placesService';
+export type { Place } from './placesModel';
 
 interface PlacesStore {
   service: PlacesService | null;
@@ -61,4 +62,14 @@ export const placesActions = {
     }
   },
   addToTrip: (placeId: string, tripId: string, city: string) => svc().addToTrip(placeId, tripId, city),
+  /** Record a place add (feeds community recommendations), then refresh the list. */
+  async record(place: Place): Promise<void> {
+    try {
+      await svc().record(place);
+      const places = await svc().list();
+      usePlacesStore.getState()._set({ places });
+    } catch {
+      /* recommendations are best-effort */
+    }
+  },
 };

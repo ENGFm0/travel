@@ -676,7 +676,18 @@
       "partners": "Success Partners"
     },
     "cityLabel": "City",
-    "allCities": "All cities"
+    "allCities": "All cities",
+    "cityPh": "City (e.g. Riyadh)",
+    "fromMaps": "From Google Maps",
+    "fromMapsSub": "Live results — real places, photos and ratings.",
+    "mapsHint": "Pick a city or type to search real places on Google Maps.",
+    "searching": "Searching…",
+    "mapsErr": "Couldn't reach Google Maps, try again.",
+    "onMaps": "On Maps",
+    "recommended": "Traveller picks",
+    "recommendedSub": "Places other travellers added to their trips.",
+    "recommendedEmpty": "No picks yet — be the first to add a place.",
+    "addedByN": "Added by {{n}}"
   },
   "partners": {
     "lead": "Our trusted partners for planning your trip — travel, stays, transport and activities.",

@@ -267,3 +267,22 @@ export function createItineraryService(): ItineraryService {
   if (firebaseEnabled()) return createFirestoreItineraryService();
   return import.meta.env.VITE_API_BASE_URL ? createApiItineraryService() : createMockItineraryService(undefined, 'bp.itinerary.v1');
 }
+
+/** Add a place (e.g. chosen in Explore) to a trip's itinerary: find/create the
+ *  city, ensure it has a day, then append the activity. Best-effort, used from
+ *  outside the itinerary page (no open board store). */
+export async function addPlaceToItinerary(
+  tripId: string, seed: CitySeed[], cityName: string, input: ActivityInput,
+): Promise<void> {
+  const svc = createItineraryService();
+  let board = await svc.getBoard(tripId, seed);
+  let city = board.cities.find((c) => c.name === cityName);
+  if (!city) { board = await svc.addCity(tripId, cityName); city = board.cities.find((c) => c.name === cityName); }
+  if (!city) return;
+  if (city.days.length === 0) {
+    board = await svc.addDay(tripId, city.id, '');
+    city = board.cities.find((c) => c.id === city!.id);
+  }
+  const day = city?.days[0];
+  if (city && day) await svc.addActivity(tripId, city.id, day.id, input);
+}
