@@ -12,6 +12,8 @@ export interface Activity {
   time?: string; // HH:mm
   note?: string; // extra detail (place, address, remarks)
   kind?: ActivityKind;
+  photoUrl?: string; // optional place photo (from Google Places)
+  mapsUrl?: string;  // optional deep-link (from Google Places / Explore)
 }
 
 export interface ActivityInput {
@@ -19,6 +21,8 @@ export interface ActivityInput {
   time?: string;
   note?: string;
   kind?: ActivityKind;
+  photoUrl?: string;
+  mapsUrl?: string;
 }
 
 export interface Day {
@@ -192,6 +196,7 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
       day(b, cityId, dayId)?.activities.push({
         id: uid('act'), title: input.title.trim(), time: input.time || undefined,
         note: input.note?.trim() || undefined, kind: input.kind,
+        photoUrl: input.photoUrl || undefined, mapsUrl: input.mapsUrl || undefined,
       });
       // keep the day's activities ordered by time when present
       const d = day(b, cityId, dayId);

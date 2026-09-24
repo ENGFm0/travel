@@ -824,17 +824,26 @@ select.bp-input {
 .bp-days__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-block: 14px 8px; }
 .bp-days__title { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 15px; font-weight: 800; }
 
-/* ── Itinerary sub-tabs + Google Maps discover links ────────────────────────── */
-.bp-subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin-block: 14px 12px;
+/* ── Itinerary city sub-tabs + Google Maps discover links ───────────────────── */
+.bp-citytabs { display: flex; gap: 6px; flex-wrap: wrap; margin-block: 14px 12px;
   border-bottom: 1px solid var(--bp-border); padding-bottom: 10px; }
-.bp-subtab { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+.bp-citytab { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
   border: 1px solid var(--bp-border); border-radius: var(--bp-r-full); background: var(--bp-surface);
   color: var(--bp-ink-muted); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer;
   -webkit-tap-highlight-color: transparent; transition: all .12s ease; }
-.bp-subtab .material-symbols-outlined { font-size: 18px; }
-.bp-subtab:hover { border-color: color-mix(in srgb, var(--bp-primary) 40%, var(--bp-border)); }
-.bp-subtab.is-on { background: var(--bp-primary); color: var(--bp-on-primary); border-color: var(--bp-primary); }
-.bp-subtab.is-on .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+.bp-citytab .material-symbols-outlined { font-size: 18px; }
+.bp-citytab:hover { border-color: color-mix(in srgb, var(--bp-primary) 40%, var(--bp-border)); }
+.bp-citytab.is-on { background: var(--bp-primary); color: var(--bp-on-primary); border-color: var(--bp-primary); }
+.bp-citytab.is-on .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+
+/* City name + date range in the panel head */
+.bp-city-panel__titles { display: flex; flex-direction: column; gap: 4px; min-inline-size: 0; }
+.bp-city-dates { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.bp-city-dates__ic { font-size: 18px; color: var(--bp-primary); }
+.bp-city-dates__sep { color: var(--bp-ink-muted); font-weight: 800; }
+.bp-city-dates .bp-input--sm { max-inline-size: 160px; }
+.bp-city-dates__ro { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 700; color: var(--bp-ink-muted); }
+.bp-city-dates__ro .material-symbols-outlined { font-size: 17px; color: var(--bp-primary); }
 
 /* single section (no longer a 3-col grid) spans full width */
 .bp-city-panel .bp-itin-sec { max-inline-size: 620px; }
@@ -889,6 +898,8 @@ select.bp-input {
 .bp-tl-item__time { font-size: 12px; font-weight: 800; color: var(--bp-orange); font-variant-numeric: tabular-nums; }
 .bp-tl-item__title { font-weight: 700; }
 .bp-tl-item__note { margin: 2px 0 0; font-size: 13px; color: var(--bp-ink-muted); line-height: 1.4; }
+.bp-tl-item__photo { display: block; margin-top: 8px; inline-size: 100%; max-inline-size: 260px; aspect-ratio: 4 / 3;
+  object-fit: cover; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
 
 .bp-add-activity { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
   border: 1px dashed var(--bp-border); border-radius: var(--bp-r-md); background: transparent; color: var(--bp-primary);
@@ -916,12 +927,18 @@ select.bp-input {
 .bp-addcity__row { display: grid; grid-template-columns: 1fr; gap: 8px; }
 @media (min-width: 620px) { .bp-addcity__row { grid-template-columns: 2fr 1fr 1fr; } }
 
-/* ── City dates editor (in Days tab) ────────────────────────────────────────── */
-.bp-citydates { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; margin-bottom: 12px;
-  border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-bg); }
-.bp-citydates__row { display: flex; align-items: center; gap: 8px; }
-.bp-citydates__sep { color: var(--bp-ink-muted); font-weight: 800; }
-.bp-citydates .bp-input--sm { max-inline-size: 170px; }
+/* ── Browse row (open Google Maps / Explore to add) ─────────────────────────── */
+.bp-browse { display: flex; flex-direction: column; gap: 6px; }
+.bp-browse__label { font-size: 12.5px; font-weight: 700; color: var(--bp-ink-muted); }
+.bp-browse__links { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── Activity add-form photo preview + time field ───────────────────────────── */
+.bp-act-form__photo { position: relative; align-self: flex-start; }
+.bp-act-form__photo img { display: block; inline-size: 100%; max-inline-size: 260px; aspect-ratio: 4 / 3;
+  object-fit: cover; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
+.bp-act-form__photo-rm { position: absolute; inset-block-start: 6px; inset-inline-end: 6px;
+  background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-full); }
+.bp-act-form__time { max-inline-size: 120px; flex: 0 0 auto; }
 
 /* ── In-app Google place search ─────────────────────────────────────────────── */
 .bp-placesearch { position: relative; display: flex; align-items: center; }

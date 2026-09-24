@@ -434,7 +434,11 @@
     "placeSearch": "ابحث عن مكان",
     "placeSearchPh": "ابحث عن مطعم، فندق، معلم… (قوقل)",
     "placeSearchErr": "تعذّر البحث، حاول مرة أخرى.",
-    "placeSearchNone": "لا نتائج."
+    "placeSearchNone": "لا نتائج.",
+    "browseLabel": "ما عندك مكان تضيفه؟ افتح وتصفّح:",
+    "openMaps": "خرائط قوقل",
+    "openExplore": "استكشف",
+    "removePhoto": "حذف الصورة"
   },
   "expenses": {
     "kitty": "القطة",

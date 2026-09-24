@@ -434,7 +434,11 @@
     "placeSearch": "Search a place",
     "placeSearchPh": "Search a restaurant, hotel, sight… (Google)",
     "placeSearchErr": "Search failed, try again.",
-    "placeSearchNone": "No results."
+    "placeSearchNone": "No results.",
+    "browseLabel": "No place to add? Open and browse:",
+    "openMaps": "Google Maps",
+    "openExplore": "Explore",
+    "removePhoto": "Remove photo"
   },
   "expenses": {
     "kitty": "Kitty",

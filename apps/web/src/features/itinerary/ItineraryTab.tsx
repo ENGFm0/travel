@@ -7,7 +7,7 @@ import { FlightLookup } from '@/features/flights/FlightLookup';
 import { ACTIVITY_KINDS, type ActivityKind, type CitySeed, type CityStop, type Day, type FlightLeg } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
-import { PlaceSearch } from './PlaceSearch';
+import { PlaceSearch, type PickedPlace } from './PlaceSearch';
 import { mapsEnabled } from '@/shared/googleMaps';
 
 /** Google Maps search deep-link (no API key; opens the Maps web app). */
@@ -148,7 +148,10 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tri
   return (
     <div className="bp-city-panel">
       <div className="bp-city-panel__head">
-        <h3>{city.name}</h3>
+        <div className="bp-city-panel__titles">
+          <h3>{city.name}</h3>
+          <CityDateRange tripId={tripId} city={city} canEdit={canEdit} />
+        </div>
         {canEdit && (
           <div className="bp-city-panel__ord">
             <button className="bp-icon-btn" aria-label={t('itinerary.moveEarlier')} disabled={idx === 0} onClick={() => move(-1)}>
@@ -165,10 +168,10 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tri
       </div>
 
       {/* Sub-tabs so each area (schedule / flight / stay / weather) stands alone */}
-      <div className="bp-subtabs" role="tablist" aria-label={city.name}>
+      <div className="bp-citytabs" role="tablist" aria-label={city.name}>
         {TABS.map((tb) => (
           <button key={tb.key} role="tab" aria-selected={sub === tb.key}
-            className={`bp-subtab ${sub === tb.key ? 'is-on' : ''}`} onClick={() => setSub(tb.key)}>
+            className={`bp-citytab ${sub === tb.key ? 'is-on' : ''}`} onClick={() => setSub(tb.key)}>
             <span className="material-symbols-outlined" aria-hidden="true">{tb.icon}</span>
             {t(`itinerary.tab.${tb.key}`)}
           </button>
@@ -434,10 +437,6 @@ function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
         </h4>
       </div>
 
-      {canEdit && (
-        <CityDatesEditor tripId={tripId} city={city} />
-      )}
-
       {city.days.length === 0 ? (
         <div className="bp-empty bp-empty--sm"><p>{t('itinerary.noDays')}</p></div>
       ) : (
@@ -457,29 +456,38 @@ function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
   );
 }
 
-/** Small editor for a city's own date range; setting it regenerates its days. */
-function CityDatesEditor({ tripId, city }: { tripId: string; city: CityStop }) {
+/** City date range shown right under the city name. Editing it sets the city's
+ *  dates (so they appear on the stop chip) and regenerates its day list. */
+function CityDateRange({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
   const [from, setFrom] = useState(city.dateFrom ?? '');
   const [to, setTo] = useState(city.dateTo ?? '');
   useEffect(() => { setFrom(city.dateFrom ?? ''); setTo(city.dateTo ?? ''); }, [city.dateFrom, city.dateTo]);
 
-  async function save() {
-    if (from === (city.dateFrom ?? '') && to === (city.dateTo ?? '')) return;
-    await itineraryActions.setCityInfo(tripId, city.id, { dateFrom: from || undefined, dateTo: to || undefined });
-    if (from) await itineraryActions.generateDays(tripId, city.id, datesBetween(from, to || from));
+  async function save(nextFrom = from, nextTo = to) {
+    if (nextFrom === (city.dateFrom ?? '') && nextTo === (city.dateTo ?? '')) return;
+    await itineraryActions.setCityInfo(tripId, city.id, { dateFrom: nextFrom || undefined, dateTo: nextTo || undefined });
+    if (nextFrom) await itineraryActions.generateDays(tripId, city.id, datesBetween(nextFrom, nextTo || nextFrom));
+  }
+
+  if (!canEdit) {
+    if (!city.dateFrom) return null;
+    const opts = { day: 'numeric', month: 'short' } as const;
+    const label = city.dateTo && city.dateTo !== city.dateFrom
+      ? `${formatDate(city.dateFrom, locale, opts)} – ${formatDate(city.dateTo, locale, opts)}`
+      : formatDate(city.dateFrom, locale, opts);
+    return <p className="bp-city-dates__ro"><span className="material-symbols-outlined" aria-hidden="true">event</span>{label}</p>;
   }
 
   return (
-    <div className="bp-citydates">
-      <span className="bp-field__label">{t('itinerary.cityDates')}</span>
-      <div className="bp-citydates__row">
-        <input className="bp-input bp-input--sm" type="date" value={from} aria-label={t('itinerary.from')}
-          onChange={(e) => setFrom(e.target.value)} onBlur={save} />
-        <span className="bp-citydates__sep">→</span>
-        <input className="bp-input bp-input--sm" type="date" value={to} aria-label={t('itinerary.to')}
-          onChange={(e) => setTo(e.target.value)} onBlur={save} />
-      </div>
+    <div className="bp-city-dates">
+      <span className="material-symbols-outlined bp-city-dates__ic" aria-hidden="true">event</span>
+      <input className="bp-input bp-input--sm" type="date" value={from} aria-label={t('itinerary.from')}
+        onChange={(e) => { setFrom(e.target.value); void save(e.target.value, to); }} />
+      <span className="bp-city-dates__sep">→</span>
+      <input className="bp-input bp-input--sm" type="date" value={to} aria-label={t('itinerary.to')}
+        onChange={(e) => { setTo(e.target.value); void save(from, e.target.value); }} />
     </div>
   );
 }
@@ -491,12 +499,32 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const [time, setTime] = useState('');
   const [note, setNote] = useState('');
   const [kind, setKind] = useState<ActivityKind>('ACTIVITY');
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>();
+  const [mapsUrl, setMapsUrl] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
+
+  function reset() {
+    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY');
+    setPhotoUrl(undefined); setMapsUrl(undefined); setOpen(false);
+  }
 
   async function addActivity() {
     if (!title.trim()) return;
-    await itineraryActions.addActivity(tripId, cityId, day.id, { title: title.trim(), time: time || undefined, note: note || undefined, kind });
-    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY'); setOpen(false);
+    await itineraryActions.addActivity(tripId, cityId, day.id, {
+      title: title.trim(), time: time || undefined, note: note || undefined, kind, photoUrl, mapsUrl,
+    });
+    reset();
+  }
+
+  // A place chosen from Google search pre-fills the form (name/address/kind/photo)
+  // and opens it, so the user can set the time / "when I'll go" before saving.
+  function prefillFromPlace(p: PickedPlace) {
+    setTitle(p.name);
+    setNote(p.address ?? '');
+    setKind(p.kind);
+    setPhotoUrl(p.photoUrl);
+    setMapsUrl(p.mapsUrl);
+    setOpen(true);
   }
 
   const heading = day.title?.trim()
@@ -528,8 +556,11 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
                   <span className="bp-tl-item__title">{a.title}</span>
                 </div>
                 {a.note && <p className="bp-tl-item__note">{a.note}</p>}
+                {a.photoUrl && (
+                  <img className="bp-tl-item__photo" src={a.photoUrl} alt={a.title} loading="lazy" />
+                )}
               </div>
-              <a className="bp-icon-btn bp-icon-btn--xs" href={mapsSearch(`${a.title} ${cityName}`)} target="_blank" rel="noopener noreferrer"
+              <a className="bp-icon-btn bp-icon-btn--xs" href={a.mapsUrl ?? mapsSearch(`${a.title} ${cityName}`)} target="_blank" rel="noopener noreferrer"
                 aria-label={t('itinerary.viewOnMaps')} title={t('itinerary.viewOnMaps')}>
                 <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
               </a>
@@ -546,11 +577,33 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
       )}
 
       {canEdit && mapsEnabled() && (
-        <PlaceSearch city={cityName} onPick={(p) => void itineraryActions.addActivity(tripId, cityId, day.id, { title: p.name, note: p.address, kind: p.kind })} />
+        <PlaceSearch city={cityName} onPick={prefillFromPlace} />
+      )}
+
+      {canEdit && (
+        <div className="bp-browse">
+          <span className="bp-browse__label">{t('itinerary.browseLabel')}</span>
+          <div className="bp-browse__links">
+            <a className="bp-map-chip" href={mapsSearch(`اماكن سياحية ${cityName}`)} target="_blank" rel="noopener noreferrer">
+              <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.openMaps')}
+            </a>
+            <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
+              <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.openExplore')}
+            </Link>
+          </div>
+        </div>
       )}
 
       {canEdit && (open ? (
         <div className="bp-act-form">
+          {photoUrl && (
+            <div className="bp-act-form__photo">
+              <img src={photoUrl} alt={title} />
+              <button type="button" className="bp-icon-btn bp-icon-btn--xs bp-act-form__photo-rm" aria-label={t('itinerary.removePhoto')} onClick={() => setPhotoUrl(undefined)}>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
+              </button>
+            </div>
+          )}
           <div className="bp-act-form__kinds" role="group" aria-label={t('itinerary.activityKind')}>
             {ACTIVITY_KINDS.map((k) => (
               <button key={k} type="button" className={`bp-kind ${kind === k ? 'is-on' : ''}`} aria-pressed={kind === k} onClick={() => setKind(k)} title={t(`itinerary.kind.${k}`)}>
@@ -560,16 +613,15 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
             ))}
           </div>
           <div className="bp-act-form__row">
-            <input className="bp-input" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.activityTime')} style={{ maxInlineSize: 120 }} />
+            <input className="bp-input bp-act-form__time" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.activityTime')} />
             <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
               onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
           </div>
           <input className="bp-input" value={note} placeholder={t('itinerary.activityNotePh')} aria-label={t('itinerary.activityNote')}
             onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
-          <p className="bp-itin-sec__note">{t('itinerary.autoMapHint')}</p>
           <div className="bp-row-between">
             <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={addActivity}>{t('itinerary.add')}</button>
-            <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setOpen(false)}>{t('trips.close')}</button>
+            <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={reset}>{t('trips.close')}</button>
           </div>
         </div>
       ) : (
