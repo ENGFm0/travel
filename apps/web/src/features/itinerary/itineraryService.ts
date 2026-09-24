@@ -3,10 +3,22 @@ import { loadJSON, persistAfter } from '@/shared/persist';
 import { db, firebaseEnabled } from '@/shared/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
+export type ActivityKind = 'ARRIVAL' | 'HOTEL' | 'FOOD' | 'SHOPPING' | 'SIGHT' | 'TRANSPORT' | 'ACTIVITY' | 'OTHER';
+export const ACTIVITY_KINDS: ActivityKind[] = ['ARRIVAL', 'HOTEL', 'FOOD', 'SHOPPING', 'SIGHT', 'TRANSPORT', 'ACTIVITY', 'OTHER'];
+
 export interface Activity {
   id: string;
   title: string;
   time?: string; // HH:mm
+  note?: string; // extra detail (place, address, remarks)
+  kind?: ActivityKind;
+}
+
+export interface ActivityInput {
+  title: string;
+  time?: string;
+  note?: string;
+  kind?: ActivityKind;
 }
 
 export interface Day {
@@ -67,8 +79,10 @@ export interface ItineraryService {
   deleteCity(tripId: string, cityId: string): Promise<Board>;
   setCityInfo(tripId: string, cityId: string, info: CityInfoPatch): Promise<Board>;
   addDay(tripId: string, cityId: string, title: string, date?: string): Promise<Board>;
+  /** Auto-create a day per ISO date (skips dates that already have a day). */
+  generateDays(tripId: string, cityId: string, dates: string[]): Promise<Board>;
   deleteDay(tripId: string, cityId: string, dayId: string): Promise<Board>;
-  addActivity(tripId: string, cityId: string, dayId: string, title: string, time?: string): Promise<Board>;
+  addActivity(tripId: string, cityId: string, dayId: string, input: ActivityInput): Promise<Board>;
   deleteActivity(tripId: string, cityId: string, dayId: string, activityId: string): Promise<Board>;
 }
 
@@ -140,6 +154,20 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
       city(b, cityId)?.days.push({ id: uid('day'), title: title.trim(), date, activities: [] });
       return snap(tripId);
     },
+    async generateDays(tripId, cityId, dates) {
+      await tick();
+      const b = board(tripId);
+      const c = city(b, cityId);
+      if (c) {
+        const have = new Set(c.days.map((d) => d.date).filter(Boolean));
+        for (const date of dates) {
+          if (have.has(date)) continue;
+          c.days.push({ id: uid('day'), title: '', date, activities: [] });
+        }
+        c.days.sort((x, y) => (x.date ?? '').localeCompare(y.date ?? ''));
+      }
+      return snap(tripId);
+    },
     async deleteDay(tripId, cityId, dayId) {
       await tick();
       const b = board(tripId);
@@ -147,10 +175,16 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
       if (c) c.days = c.days.filter((d) => d.id !== dayId);
       return snap(tripId);
     },
-    async addActivity(tripId, cityId, dayId, title, time) {
+    async addActivity(tripId, cityId, dayId, input) {
       await tick();
       const b = board(tripId);
-      day(b, cityId, dayId)?.activities.push({ id: uid('act'), title: title.trim(), time: time || undefined });
+      day(b, cityId, dayId)?.activities.push({
+        id: uid('act'), title: input.title.trim(), time: input.time || undefined,
+        note: input.note?.trim() || undefined, kind: input.kind,
+      });
+      // keep the day's activities ordered by time when present
+      const d = day(b, cityId, dayId);
+      if (d) d.activities.sort((a1, a2) => (a1.time ?? '99').localeCompare(a2.time ?? '99'));
       return snap(tripId);
     },
     async deleteActivity(tripId, cityId, dayId, activityId) {
@@ -175,8 +209,9 @@ export function createApiItineraryService(getToken?: () => string | undefined): 
     deleteCity: async (tripId, cityId) => { await client.apiFetch<void>(`/trips/${tripId}/cities/${cityId}`, { method: 'DELETE' }); return board(tripId); },
     setCityInfo: (tripId, cityId, info) => client.apiFetch<Board>(`/trips/${tripId}/cities/${cityId}`, { method: 'PATCH', body: JSON.stringify(info) }),
     addDay: (tripId, cityId, title, date) => client.apiFetch<Board>(`/trips/${tripId}/cities/${cityId}/days`, { method: 'POST', body: JSON.stringify({ title, date }) }),
+    generateDays: (tripId, cityId, dates) => client.apiFetch<Board>(`/trips/${tripId}/cities/${cityId}/days/generate`, { method: 'POST', body: JSON.stringify({ dates }) }),
     deleteDay: async (tripId, cityId, dayId) => { await client.apiFetch<void>(`/trips/${tripId}/cities/${cityId}/days/${dayId}`, { method: 'DELETE' }); return board(tripId); },
-    addActivity: (tripId, cityId, dayId, title, time) => client.apiFetch<Board>(`/trips/${tripId}/cities/${cityId}/days/${dayId}/activities`, { method: 'POST', body: JSON.stringify({ title, time }) }),
+    addActivity: (tripId, cityId, dayId, input) => client.apiFetch<Board>(`/trips/${tripId}/cities/${cityId}/days/${dayId}/activities`, { method: 'POST', body: JSON.stringify(input) }),
     deleteActivity: async (tripId, cityId, dayId, activityId) => { await client.apiFetch<void>(`/trips/${tripId}/cities/${cityId}/days/${dayId}/activities/${activityId}`, { method: 'DELETE' }); return board(tripId); },
   };
 }
@@ -205,8 +240,9 @@ export function createFirestoreItineraryService(): ItineraryService {
     deleteCity: (tripId, cityId) => run(tripId, [], (m) => m.deleteCity(tripId, cityId)),
     setCityInfo: (tripId, cityId, info) => run(tripId, [], (m) => m.setCityInfo(tripId, cityId, info)),
     addDay: (tripId, cityId, title, date) => run(tripId, [], (m) => m.addDay(tripId, cityId, title, date)),
+    generateDays: (tripId, cityId, dates) => run(tripId, [], (m) => m.generateDays(tripId, cityId, dates)),
     deleteDay: (tripId, cityId, dayId) => run(tripId, [], (m) => m.deleteDay(tripId, cityId, dayId)),
-    addActivity: (tripId, cityId, dayId, title, time) => run(tripId, [], (m) => m.addActivity(tripId, cityId, dayId, title, time)),
+    addActivity: (tripId, cityId, dayId, input) => run(tripId, [], (m) => m.addActivity(tripId, cityId, dayId, input)),
     deleteActivity: (tripId, cityId, dayId, activityId) => run(tripId, [], (m) => m.deleteActivity(tripId, cityId, dayId, activityId)),
   };
 }

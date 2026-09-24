@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
-import type { CitySeed, CityStop, Day, FlightLeg } from './itineraryService';
+import { ACTIVITY_KINDS, type ActivityKind, type CitySeed, type CityStop, type Day, type FlightLeg } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
 
@@ -14,7 +14,19 @@ function mapsSearch(query: string): string {
 }
 type CitySub = 'days' | 'flight' | 'stay' | 'weather';
 
-export function ItineraryTab({ tripId, seed, canEdit }: { tripId: string; seed: CitySeed[]; canEdit: boolean }) {
+/** Inclusive list of ISO dates between from..to (capped for safety). */
+function datesBetween(from?: string, to?: string): string[] {
+  if (!from) return [];
+  const start = new Date(from);
+  const end = to ? new Date(to) : start;
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return [from];
+  const out: string[] = [];
+  const d = new Date(start);
+  while (d <= end && out.length < 60) { out.push(d.toISOString().slice(0, 10)); d.setDate(d.getDate() + 1); }
+  return out;
+}
+
+export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo }: { tripId: string; seed: CitySeed[]; canEdit: boolean; tripFrom?: string; tripTo?: string }) {
   const { t } = useTranslation();
   const { board, loading } = useItinerary();
   const [active, setActive] = useState(0);
@@ -84,15 +96,17 @@ export function ItineraryTab({ tripId, seed, canEdit }: { tripId: string; seed: 
           <p>{t('itinerary.noCities')}</p>
         </div>
       ) : city ? (
-        <CityPanel tripId={tripId} city={city} idx={activeIdx} count={cities.length} canEdit={canEdit} tripStart={tripStart}
+        <CityPanel key={city.id} tripId={tripId} city={city} idx={activeIdx} count={cities.length} canEdit={canEdit}
+          tripStart={tripStart} tripFrom={tripFrom} tripTo={tripTo}
           onMoved={(dir) => setActive(activeIdx + dir)} onDeleted={() => setActive(0)} />
       ) : null}
     </div>
   );
 }
 
-function CityPanel({ tripId, city, idx, count, canEdit, tripStart, onMoved, onDeleted }: {
-  tripId: string; city: CityStop; idx: number; count: number; canEdit: boolean; tripStart?: string;
+function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tripTo, onMoved, onDeleted }: {
+  tripId: string; city: CityStop; idx: number; count: number; canEdit: boolean;
+  tripStart?: string; tripFrom?: string; tripTo?: string;
   onMoved: (dir: -1 | 1) => void; onDeleted: () => void;
 }) {
   const { t } = useTranslation();
@@ -142,7 +156,8 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, onMoved, onDe
         ))}
       </div>
 
-      {sub === 'days' && <DaysSection tripId={tripId} city={city} canEdit={canEdit} />}
+      {sub === 'days' && <DaysSection tripId={tripId} city={city} canEdit={canEdit}
+        rangeFrom={city.dateFrom ?? tripFrom} rangeTo={city.dateTo ?? tripTo} />}
       {sub === 'flight' && <FlightSection tripId={tripId} city={city} canEdit={canEdit} />}
       {sub === 'stay' && <HotelSection tripId={tripId} city={city} canEdit={canEdit} />}
       {sub === 'weather' && <WeatherSection city={city} date={city.dateFrom ?? tripStart} />}
@@ -353,15 +368,27 @@ function WeatherSection({ city, date }: { city: CityStop; date?: string }) {
   );
 }
 
-function DaysSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
-  const { t } = useTranslation();
-  const [dayTitle, setDayTitle] = useState('');
+const ACTIVITY_ICON: Record<ActivityKind, string> = {
+  ARRIVAL: 'flight_land', HOTEL: 'hotel', FOOD: 'restaurant', SHOPPING: 'shopping_bag',
+  SIGHT: 'attractions', TRANSPORT: 'directions_car', ACTIVITY: 'hiking', OTHER: 'push_pin',
+};
 
-  async function addDay() {
-    const title = dayTitle.trim() || t('itinerary.dayN', { n: city.days.length + 1 });
-    await itineraryActions.addDay(tripId, city.id, title);
-    setDayTitle('');
-  }
+function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
+  tripId: string; city: CityStop; canEdit: boolean; rangeFrom?: string; rangeTo?: string;
+}) {
+  const { t } = useTranslation();
+  const dates = useMemo(() => datesBetween(rangeFrom, rangeTo), [rangeFrom, rangeTo]);
+  const genOnce = useRef(false);
+
+  // Auto-generate a day per trip date the first time (when there are no days yet).
+  useEffect(() => {
+    if (!canEdit || genOnce.current) return;
+    if (city.days.length === 0 && dates.length > 0) {
+      genOnce.current = true;
+      void itineraryActions.generateDays(tripId, city.id, dates);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [city.id, city.days.length, dates.length]);
 
   return (
     <div className="bp-days">
@@ -370,6 +397,11 @@ function DaysSection({ tripId, city, canEdit }: { tripId: string; city: CityStop
           <span className="material-symbols-outlined bp-itin-sec__icon" aria-hidden="true">calendar_month</span>
           {t('itinerary.daysTitle')}
         </h4>
+        {canEdit && dates.length > 0 && (
+          <button className="bp-inline-link" onClick={() => itineraryActions.generateDays(tripId, city.id, dates)}>
+            <span className="material-symbols-outlined" aria-hidden="true">event_repeat</span>{t('itinerary.genDays')}
+          </button>
+        )}
       </div>
       {/* Discover places to add — Google Maps (broad) + our Explore directory */}
       <div className="bp-discover">
@@ -390,56 +422,69 @@ function DaysSection({ tripId, city, canEdit }: { tripId: string; city: CityStop
         </div>
       </div>
       {city.days.length === 0 ? (
-        <div className="bp-empty bp-empty--sm">
-          <p>{t('itinerary.noDays')}</p>
-        </div>
+        <div className="bp-empty bp-empty--sm"><p>{t('itinerary.noDays')}</p></div>
       ) : (
-        <ul className="bp-day-list" role="list">
-          {city.days.map((d) => (
-            <DayCard key={d.id} tripId={tripId} cityId={city.id} day={d} canEdit={canEdit} />
+        <ol className="bp-day-list" role="list">
+          {city.days.map((d, i) => (
+            <DayCard key={d.id} tripId={tripId} cityId={city.id} day={d} n={i + 1} canEdit={canEdit} />
           ))}
-        </ul>
+        </ol>
       )}
 
       {canEdit && (
-        <div className="bp-add-row">
-          <input className="bp-input" value={dayTitle} placeholder={t('itinerary.addDayPh')}
-            onChange={(e) => setDayTitle(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addDay())} aria-label={t('itinerary.addDay')} />
-          <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={addDay}>+ {t('itinerary.addDay')}</button>
-        </div>
+        <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => itineraryActions.addDay(tripId, city.id, '')}>
+          + {t('itinerary.addDay')}
+        </button>
       )}
     </div>
   );
 }
 
-function DayCard({ tripId, cityId, day, canEdit }: { tripId: string; cityId: string; day: Day; canEdit: boolean }) {
+function DayCard({ tripId, cityId, day, n, canEdit }: { tripId: string; cityId: string; day: Day; n: number; canEdit: boolean }) {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
   const [title, setTitle] = useState('');
   const [time, setTime] = useState('');
+  const [note, setNote] = useState('');
+  const [kind, setKind] = useState<ActivityKind>('ACTIVITY');
+  const [open, setOpen] = useState(false);
 
   async function addActivity() {
     if (!title.trim()) return;
-    await itineraryActions.addActivity(tripId, cityId, day.id, title.trim(), time || undefined);
-    setTitle(''); setTime('');
+    await itineraryActions.addActivity(tripId, cityId, day.id, { title: title.trim(), time: time || undefined, note: note || undefined, kind });
+    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY'); setOpen(false);
   }
+
+  const heading = day.title?.trim()
+    || (day.date ? `${t('itinerary.dayN', { n })} · ${formatDate(day.date, locale, { weekday: 'short', day: 'numeric', month: 'short' })}` : t('itinerary.dayN', { n }));
 
   return (
     <li className="bp-day-card">
       <div className="bp-day-card__head">
-        <h4>{day.title}</h4>
+        <h4 className="bp-day-card__title">
+          <span className="bp-day-card__n">{n}</span>{heading}
+        </h4>
         {canEdit && (
           <button className="bp-icon-btn" aria-label={t('itinerary.deleteDay')} onClick={() => { if (window.confirm(t('itinerary.confirmDeleteDay'))) void itineraryActions.deleteDay(tripId, cityId, day.id); }}>
             <span className="material-symbols-outlined" aria-hidden="true">delete</span>
           </button>
         )}
       </div>
-      {day.activities.length > 0 && (
-        <ul className="bp-activity-list" role="list">
+
+      {day.activities.length > 0 ? (
+        <ul className="bp-timeline-list" role="list">
           {day.activities.map((a) => (
-            <li key={a.id} className="bp-activity">
-              {a.time && <span className="bp-activity__time">{a.time}</span>}
-              <span className="bp-activity__title">{a.title}</span>
+            <li key={a.id} className="bp-tl-item">
+              <span className="bp-tl-item__icon" aria-hidden="true">
+                <span className="material-symbols-outlined">{ACTIVITY_ICON[a.kind ?? 'OTHER']}</span>
+              </span>
+              <div className="bp-tl-item__body">
+                <div className="bp-tl-item__line">
+                  {a.time && <span className="bp-tl-item__time">{a.time}</span>}
+                  <span className="bp-tl-item__title">{a.title}</span>
+                </div>
+                {a.note && <p className="bp-tl-item__note">{a.note}</p>}
+              </div>
               {canEdit && (
                 <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.deleteActivity')} onClick={() => itineraryActions.deleteActivity(tripId, cityId, day.id, a.id)}>
                   <span className="material-symbols-outlined" aria-hidden="true">close</span>
@@ -448,15 +493,37 @@ function DayCard({ tripId, cityId, day, canEdit }: { tripId: string; cityId: str
             </li>
           ))}
         </ul>
+      ) : (
+        <p className="bp-day-card__empty">{t('itinerary.noActivities')}</p>
       )}
-      {canEdit && (
-        <div className="bp-add-row bp-add-row--activity">
-          <input className="bp-input" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.activityTime')} style={{ maxInlineSize: 110 }} />
-          <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} aria-label={t('itinerary.addActivity')} />
-          <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={addActivity}>{t('itinerary.add')}</button>
+
+      {canEdit && (open ? (
+        <div className="bp-act-form">
+          <div className="bp-act-form__kinds" role="group" aria-label={t('itinerary.activityKind')}>
+            {ACTIVITY_KINDS.map((k) => (
+              <button key={k} type="button" className={`bp-kind ${kind === k ? 'is-on' : ''}`} aria-pressed={kind === k} onClick={() => setKind(k)} title={t(`itinerary.kind.${k}`)}>
+                <span className="material-symbols-outlined" aria-hidden="true">{ACTIVITY_ICON[k]}</span>
+                <span className="bp-kind__label">{t(`itinerary.kind.${k}`)}</span>
+              </button>
+            ))}
+          </div>
+          <div className="bp-act-form__row">
+            <input className="bp-input" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.activityTime')} style={{ maxInlineSize: 120 }} />
+            <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
+              onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
+          </div>
+          <input className="bp-input" value={note} placeholder={t('itinerary.activityNotePh')} aria-label={t('itinerary.activityNote')}
+            onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
+          <div className="bp-row-between">
+            <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={addActivity}>{t('itinerary.add')}</button>
+            <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setOpen(false)}>{t('trips.close')}</button>
+          </div>
         </div>
-      )}
+      ) : (
+        <button className="bp-add-activity" onClick={() => setOpen(true)}>
+          <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addActivity')}
+        </button>
+      ))}
     </li>
   );
 }

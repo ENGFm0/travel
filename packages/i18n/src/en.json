@@ -411,7 +411,22 @@
     "departed": "Departed ✈️",
     "hotelLink": "Link (maps/booking) — optional",
     "hotelHint": "Type the hotel name, or paste its link from Google Maps / a booking site.",
-    "openLink": "Open link"
+    "openLink": "Open link",
+    "genDays": "Generate days from dates",
+    "noActivities": "No activities yet — add the first one.",
+    "activityKind": "Activity type",
+    "activityNote": "Details",
+    "activityNotePh": "Extra details (place, address, note)…",
+    "kind": {
+      "ARRIVAL": "Arrival",
+      "HOTEL": "Hotel",
+      "FOOD": "Food",
+      "SHOPPING": "Shopping",
+      "SIGHT": "Sight",
+      "TRANSPORT": "Transport",
+      "ACTIVITY": "Activity",
+      "OTHER": "Other"
+    }
   },
   "expenses": {
     "kitty": "Kitty",

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import '@/shared/i18n';
@@ -70,17 +70,22 @@ describe('US-006 Itinerary dashboard', () => {
     expect(await screen.findByRole('heading', { name: 'الأعضاء', level: 2 })).toBeInTheDocument();
   });
 
-  it('adds a day and an activity', async () => {
+  it('auto-generates days from the trip dates and adds a detailed activity', async () => {
     await signIn();
     seed([OWNER]);
     renderAt('/trips/trip-x');
     await screen.findByRole('heading', { name: 'باريس', level: 3 });
-    expect(screen.getByText('لا توجد أيام بعد. أضف يومًا لبدء التخطيط.')).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText('أضف يومًا'), 'يوم اللوفر{enter}');
-    expect(await screen.findByRole('heading', { name: 'يوم اللوفر', level: 4 })).toBeInTheDocument();
+    // days are generated automatically from the trip date range
+    const firstDay = await waitFor(() => {
+      const el = document.querySelector('.bp-day-card');
+      if (!el) throw new Error('no day yet');
+      return el as HTMLElement;
+    });
 
-    await userEvent.type(screen.getByLabelText('أضف نشاطًا'), 'زيارة متحف اللوفر{enter}');
+    // open the activity form in the first day, then add an activity
+    await userEvent.click(within(firstDay).getByRole('button', { name: 'أضف نشاطًا' }));
+    await userEvent.type(within(firstDay).getByLabelText('أضف نشاطًا'), 'زيارة متحف اللوفر{enter}');
     expect(await screen.findByText('زيارة متحف اللوفر')).toBeInTheDocument();
   });
 
