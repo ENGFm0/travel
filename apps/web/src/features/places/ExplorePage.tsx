@@ -6,8 +6,8 @@ import { useAuth } from '@/features/auth/authStore';
 import { useTripsList, tripsActions } from '@/features/trips/tripsStore';
 import { mapsEnabled, searchPlacesByText, type GmapsPlace } from '@/shared/googleMaps';
 import {
-  addPlaceToItinerary, getItineraryBoard, DAY_PERIODS,
-  type ActivityKind, type Board, type DayPeriod,
+  addPlaceToItinerary, getItineraryBoard, formatTime12, periodFromTime,
+  type ActivityKind, type Board,
 } from '@/features/itinerary/itineraryService';
 import {
   categoryFromTypes, CATEGORY_QUERY, citiesOf, filterPlaces,
@@ -413,7 +413,6 @@ function AddToTripModal({ place, trips, defaultTripId, defaultCity, onClose, onD
   const [city, setCity] = useState(defaultCity || trip?.cities[0]?.name || place.city || '');
   const [board, setBoard] = useState<Board | null>(null);
   const [dayId, setDayId] = useState('');
-  const [period, setPeriod] = useState<DayPeriod | ''>('');
   const [time, setTime] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -445,7 +444,7 @@ function AddToTripModal({ place, trips, defaultTripId, defaultCity, onClose, onD
       try {
         await addPlaceToItinerary(tripId, seed, targetCity, {
           title: place.name, note: place.area || undefined, kind: KIND[place.category],
-          photoUrl: place.photoUrl, mapsUrl: place.mapsUrl, time: time || undefined, period: period || undefined, placeId: place.id,
+          photoUrl: place.photoUrl, mapsUrl: place.mapsUrl, time: time || undefined, period: periodFromTime(time), placeId: place.id,
         }, dayId || undefined);
       } catch { /* itinerary add is best-effort */ }
       await placesActions.record({ ...place, city: targetCity });
@@ -483,17 +482,11 @@ function AddToTripModal({ place, trips, defaultTripId, defaultCity, onClose, onD
             </select>
           </div>
           <div className="bp-field">
-            <label htmlFor="bp-add-when">{t('explorePage.chooseWhen')}</label>
-            <select id="bp-add-when" className="bp-input" value={period} onChange={(e) => setPeriod(e.target.value as DayPeriod | '')}>
-              <option value="">{t('explorePage.whenAny')}</option>
-              {DAY_PERIODS.map((p) => <option key={p} value={p}>{t(`itinerary.period.${p}`)}</option>)}
-            </select>
-          </div>
-          <div className="bp-field">
             <label htmlFor="bp-add-time">{t('explorePage.chooseTime')}</label>
             <input id="bp-add-time" className="bp-input" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           </div>
         </div>
+        {time && <p className="bp-explore__sec-sub">{formatTime12(time, locale)} · {t(`itinerary.period.${periodFromTime(time)}`)}</p>}
         <div className="bp-row-between">
           <button className="bp-btn bp-btn--primary" disabled={busy} onClick={confirm}>{t('explorePage.confirmAdd')}</button>
           <button className="bp-btn bp-btn--outline" onClick={onClose}>{t('trips.close')}</button>

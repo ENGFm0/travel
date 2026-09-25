@@ -62,13 +62,16 @@ export const placesActions = {
     }
   },
   addToTrip: (placeId: string, tripId: string, city: string) => svc().addToTrip(placeId, tripId, city),
-  /** Rate + comment a place; it appears in the community recommendations. */
-  async review(place: Place, rating: number, comment: string): Promise<void> {
+  /** Rate + comment a place; it appears in the community recommendations.
+   *  Returns true on success so the UI can confirm (or surface a failure). */
+  async review(place: Place, rating: number, comment: string): Promise<boolean> {
     try {
       const places = await svc().review(place, rating, comment);
-      usePlacesStore.getState()._set({ places });
+      usePlacesStore.getState()._set({ places, error: null });
+      return true;
     } catch {
       usePlacesStore.getState()._set({ error: 'GENERIC' });
+      return false;
     }
   },
   /** Record a place add (feeds community recommendations), then refresh the list. */

@@ -5,8 +5,8 @@ import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
 import {
-  ACTIVITY_KINDS, DAY_PERIODS, TRAVEL_MODES,
-  type Activity, type ActivityKind, type CitySeed, type CityStop, type Day, type DayPeriod, type FlightLeg, type TravelMode,
+  ACTIVITY_KINDS, TRAVEL_MODES, formatTime12, periodFromTime,
+  type Activity, type ActivityKind, type CitySeed, type CityStop, type Day, type FlightLeg, type TravelMode,
 } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
@@ -239,6 +239,7 @@ function LegForm({ title, icon, leg, onSave, canEdit, mode }: {
   title: string; icon: string; leg: FlightLeg | undefined; onSave: (l: FlightLeg) => void; canEdit: boolean; mode: TravelMode;
 }) {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
   const [l, setL] = useState<FlightLeg>(leg ?? {});
   useEffect(() => setL(leg ?? {}), [leg]);
   const set = (k: keyof FlightLeg, v: string) => setL((p) => ({ ...p, [k]: v || undefined }));
@@ -253,7 +254,7 @@ function LegForm({ title, icon, leg, onSave, canEdit, mode }: {
       <div className="bp-leg">
         <div className="bp-leg__head"><span className="material-symbols-outlined" aria-hidden="true">{icon}</span>{title}</div>
         {has ? (
-          <p className="bp-leg__ro">{[showCarrier ? leg?.airline : '', showCarrier ? leg?.no : '', leg?.from && leg?.to ? `${leg.from}→${leg.to}` : '', [leg?.date, leg?.time].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</p>
+          <p className="bp-leg__ro">{[showCarrier ? leg?.airline : '', showCarrier ? leg?.no : '', leg?.from && leg?.to ? `${leg.from}→${leg.to}` : '', [leg?.date, formatTime12(leg?.time, locale)].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</p>
         ) : <p className="bp-itin-sec__val">—</p>}
       </div>
     );
@@ -543,7 +544,6 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const locale = useUIStore((s) => s.locale);
   const [title, setTitle] = useState('');
   const [time, setTime] = useState('');
-  const [period, setPeriod] = useState<DayPeriod | undefined>();
   const [note, setNote] = useState('');
   const [kind, setKind] = useState<ActivityKind>('ACTIVITY');
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
@@ -552,14 +552,15 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const [open, setOpen] = useState(false);
 
   function reset() {
-    setTitle(''); setTime(''); setPeriod(undefined); setNote(''); setKind('ACTIVITY');
+    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY');
     setPhotoUrl(undefined); setMapsUrl(undefined); setPlaceId(undefined); setOpen(false);
   }
 
   async function addActivity() {
     if (!title.trim()) return;
     await itineraryActions.addActivity(tripId, cityId, day.id, {
-      title: title.trim(), time: time || undefined, period, note: note || undefined, kind, photoUrl, mapsUrl, placeId,
+      // period is derived from the time on display — no manual selection.
+      title: title.trim(), time: time || undefined, period: periodFromTime(time), note: note || undefined, kind, photoUrl, mapsUrl, placeId,
     });
     reset();
   }
@@ -640,17 +641,18 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
           </div>
           <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
             onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
-          <div className="bp-periods" role="group" aria-label={t('itinerary.whenLabel')}>
-            {DAY_PERIODS.map((p) => (
-              <button key={p} type="button" className={`bp-period ${period === p ? 'is-on' : ''}`} aria-pressed={period === p}
-                onClick={() => setPeriod(period === p ? undefined : p)}>{t(`itinerary.period.${p}`)}</button>
-            ))}
-          </div>
           <div className="bp-act-form__row">
-            <input className="bp-input bp-act-form__time" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.exactTime')} placeholder={t('itinerary.exactTime')} />
-            <input className="bp-input" value={note} placeholder={t('itinerary.activityNotePh')} aria-label={t('itinerary.activityNote')}
-              onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
+            <label className="bp-field bp-act-form__time">
+              <span className="bp-field__label">{t('itinerary.whenLabel')}</span>
+              <input className="bp-input" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.whenLabel')} />
+            </label>
+            <label className="bp-field" style={{ flex: 1 }}>
+              <span className="bp-field__label">{t('itinerary.activityNote')}</span>
+              <input className="bp-input" value={note} placeholder={t('itinerary.activityNotePh')} aria-label={t('itinerary.activityNote')}
+                onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
+            </label>
           </div>
+          {time && <p className="bp-act-form__hint">{formatTime12(time, locale)} · {t(`itinerary.period.${periodFromTime(time)}`)}</p>}
           <div className="bp-row-between">
             <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={addActivity}>{t('itinerary.add')}</button>
             <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={reset}>{t('trips.close')}</button>
@@ -671,17 +673,22 @@ function TlItem({ tripId, cityId, cityName, dayId, a, canEdit }: {
   tripId: string; cityId: string; cityName: string; dayId: string; a: Activity; canEdit: boolean;
 }) {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
   const [open, setOpen] = useState(false);
   const [stars, setStars] = useState(0);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  const when = a.time || (a.period ? t(`itinerary.period.${a.period}`) : '');
+  const period = a.period ?? periodFromTime(a.time);
+  const when = a.time
+    ? `${formatTime12(a.time, locale)}${period ? ` · ${t(`itinerary.period.${period}`)}` : ''}`
+    : (period ? t(`itinerary.period.${period}`) : '');
 
   async function save() {
     if (!stars) return;
-    setBusy(true);
+    setBusy(true); setFailed(false);
     try {
       const place: Place = {
         id: a.placeId || placeSlug(a.title, cityName),
@@ -689,8 +696,8 @@ function TlItem({ tripId, cityId, cityName, dayId, a, canEdit }: {
         area: a.note ?? '', city: cityName, rating: 0, ratingCount: 0,
         photoUrl: a.photoUrl, mapsUrl: a.mapsUrl,
       };
-      await placesActions.review(place, stars, comment);
-      setDone(true); setOpen(false);
+      const ok = await placesActions.review(place, stars, comment);
+      if (ok) { setDone(true); setOpen(false); } else { setFailed(true); }
     } finally { setBusy(false); }
   }
 
@@ -725,6 +732,7 @@ function TlItem({ tripId, cityId, cityName, dayId, a, canEdit }: {
             </div>
             <input className="bp-input" value={comment} placeholder={t('itinerary.commentPh')} aria-label={t('itinerary.comment')}
               onChange={(e) => setComment(e.target.value)} />
+            {failed && <p className="bp-rate-box__err">{t('itinerary.rateFailed')}</p>}
             <div className="bp-row-between">
               <button className="bp-btn bp-btn--primary bp-btn--sm" disabled={busy || !stars} onClick={save}>{t('itinerary.publishReview')}</button>
               <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setOpen(false)}>{t('trips.close')}</button>

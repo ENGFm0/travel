@@ -414,6 +414,7 @@
     },
     "ratePlace": "Rate this place",
     "rateThanks": "Thanks! Your review was added to traveller picks",
+    "rateFailed": "Couldn't save the review — check your connection and permissions.",
     "comment": "Your comment",
     "commentPh": "Share your thoughts about this place…",
     "publishReview": "Publish review",

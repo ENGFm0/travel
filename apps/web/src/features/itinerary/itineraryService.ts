@@ -46,6 +46,33 @@ export function activitySortKey(a: { time?: string; period?: DayPeriod }): strin
   return a.time || (a.period ? PERIOD_TIME[a.period] : '') || '99:99';
 }
 
+/** Derive the day period from an "HH:mm" time (Saudi day rhythm). */
+export function periodFromTime(hhmm?: string): DayPeriod | undefined {
+  if (!hhmm) return undefined;
+  const h = parseInt(hhmm.slice(0, 2), 10);
+  if (Number.isNaN(h)) return undefined;
+  if (h < 5) return 'NIGHT';
+  if (h < 11) return 'MORNING';
+  if (h < 15) return 'NOON';
+  if (h < 17) return 'AFTERNOON';
+  if (h < 19) return 'SUNSET';
+  if (h < 22) return 'EVENING';
+  return 'NIGHT';
+}
+
+/** Format an "HH:mm" (24h) time as 12-hour with ص/م (ar) or AM/PM. */
+export function formatTime12(hhmm?: string, locale = 'ar'): string {
+  if (!hhmm) return '';
+  const [hs, ms] = hhmm.split(':');
+  const h = parseInt(hs, 10);
+  if (Number.isNaN(h)) return hhmm;
+  const m = ms ?? '00';
+  const am = h < 12;
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const suffix = locale.startsWith('ar') ? (am ? 'ص' : 'م') : (am ? 'AM' : 'PM');
+  return `${h12}:${m} ${suffix}`;
+}
+
 export interface Day {
   id: string;
   title: string;

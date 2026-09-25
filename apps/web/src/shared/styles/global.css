@@ -957,6 +957,8 @@ select.bp-input {
 .bp-tl-item__thanks .material-symbols-outlined { font-size: 16px; }
 .bp-rate-box { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding: 10px;
   border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-bg); }
+.bp-rate-box__err { margin: 0; font-size: 12.5px; font-weight: 700; color: var(--bp-danger, #d33); }
+.bp-act-form__hint { margin: 0; font-size: 12.5px; font-weight: 700; color: var(--bp-primary); }
 
 /* ── Add-city form (name + dates) ───────────────────────────────────────────── */
 .bp-stop--add { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border: 1px dashed var(--bp-border);
