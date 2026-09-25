@@ -452,6 +452,7 @@
     "savedToSchedule": "تم إضافة {{count}} رحلة للجدول ✓",
     "nothingToSave": "لا توجد رحلات لإضافتها بعد.",
     "flightActivity": "رحلة طيران",
+    "flightPending": "أضف التاريخ والوقت لعرض العدّاد",
     "whenLabel": "الوقت",
     "exactTime": "وقت محدد (اختياري)",
     "period": {

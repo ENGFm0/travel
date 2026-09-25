@@ -452,6 +452,7 @@
     "savedToSchedule": "Added {{count}} flight(s) to the schedule ✓",
     "nothingToSave": "No flights to add yet.",
     "flightActivity": "Flight",
+    "flightPending": "Add the date and time to show the countdown",
     "whenLabel": "Time",
     "exactTime": "Exact time (optional)",
     "period": {

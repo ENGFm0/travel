@@ -320,6 +320,35 @@ function dayForDate(city: CityStop, date?: string): Day | undefined {
   return dated.find((d) => d.date >= date) ?? city.days[0];
 }
 
+/** A saved leg shown as a status card: route with airport icons, times, and a
+ *  live countdown to departure. */
+function FlightCard({ leg, mode }: { leg?: FlightLeg; mode: TravelMode }) {
+  const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
+  if (!leg) return null;
+  const hasRoute = Boolean(leg.from && leg.to);
+  const hasWhen = Boolean(leg.date || leg.time);
+  if (!hasRoute && !hasWhen && !leg.airline && !leg.no) return null;
+  const dep = legDeparture(leg);
+  const carrier = [leg.airline, leg.no].filter(Boolean).join(' · ');
+  const takeoff = mode === 'CRUISE' ? 'directions_boat' : mode === 'CAR' ? 'directions_car' : 'flight_takeoff';
+  const land = mode === 'CRUISE' ? 'directions_boat' : mode === 'CAR' ? 'directions_car' : 'flight_land';
+  return (
+    <div className="bp-flight-card">
+      {carrier && <div className="bp-flight-card__carrier">{carrier}</div>}
+      {hasRoute && (
+        <div className="bp-flight-card__route">
+          <span className="bp-flight-card__ap"><span className="material-symbols-outlined" aria-hidden="true">{takeoff}</span><b>{leg.from}</b></span>
+          <span className="material-symbols-outlined bp-flight-card__plane" aria-hidden="true">{MODE_ICON[mode]}</span>
+          <span className="bp-flight-card__ap"><b>{leg.to}</b><span className="material-symbols-outlined" aria-hidden="true">{land}</span></span>
+        </div>
+      )}
+      {hasWhen && <div className="bp-flight-card__when">{[leg.date, formatTime12(leg.time, locale)].filter(Boolean).join(' · ')}</div>}
+      {dep ? <Countdown target={dep} /> : <div className="bp-flight-card__pending">{t('itinerary.flightPending')}</div>}
+    </div>
+  );
+}
+
 /** ── Travel section: mode (plane/car/cruise) + kind (one-way/round/multi) ── */
 function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
@@ -345,8 +374,10 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
       if (!day) continue;
       const title = [leg.airline, leg.no].filter(Boolean).join(' ') || t('itinerary.flightActivity');
       const route = leg.from && leg.to ? `${leg.from} → ${leg.to}` : undefined;
-      const pid = `flight-${leg.no ?? ''}-${leg.date ?? ''}`;
-      if (day.activities.some((a) => a.placeId === pid)) continue;
+      // Stable identity per leg (number + route + date) — dedupe across ALL days
+      // so re-saving or a same-number round-trip never duplicates.
+      const pid = `flight:${(leg.no ?? '').toUpperCase()}:${leg.from ?? ''}>${leg.to ?? ''}:${leg.date ?? ''}`;
+      if (city.days.some((d) => d.activities.some((a) => a.placeId === pid))) continue;
       await itineraryActions.addActivity(tripId, city.id, day.id, {
         title, note: route, time: leg.time, period: periodFromTime(leg.time), kind: 'ARRIVAL', placeId: pid,
       });
@@ -355,7 +386,6 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
     setSavedMsg(added > 0 ? t('itinerary.savedToSchedule', { count: added }) : t('itinerary.nothingToSave'));
     window.setTimeout(() => setSavedMsg(null), 3000);
   }
-  const depMs = legDeparture(kind === 'MULTI' ? legs[0] : city.flightOut, city.dateFrom);
   const goTitle = mode === 'PLANE' ? t('itinerary.outbound') : t('itinerary.legGo');
   const backTitle = mode === 'PLANE' ? t('itinerary.returnLeg') : t('itinerary.legBack');
 
@@ -399,12 +429,11 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
         </div>
       )}
 
-      {depMs && <Countdown target={depMs} />}
-
       {kind === 'MULTI' ? (
         <>
           {legs.map((l, i) => (
             <div key={i} className="bp-leg-wrap">
+              <FlightCard leg={l} mode={mode} />
               <LegForm title={t('itinerary.legN', { n: i + 1 })} icon={LEG_ICON[mode].go} leg={l} onSave={(x) => saveLeg(i, x)} canEdit={canEdit} mode={mode} />
               {canEdit && <button className="bp-icon-btn bp-icon-btn--xs bp-leg-rm" aria-label={t('itinerary.removeLeg')} onClick={() => removeLeg(i)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
             </div>
@@ -414,8 +443,12 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
         </>
       ) : (
         <>
+          <FlightCard leg={city.flightOut} mode={mode} />
           <LegForm title={goTitle} icon={LEG_ICON[mode].go} leg={outLeg} onSave={saveOut} canEdit={canEdit} mode={mode} />
-          {kind === 'ROUND' && <LegForm title={backTitle} icon={LEG_ICON[mode].back} leg={backLeg} onSave={saveBack} canEdit={canEdit} mode={mode} />}
+          {kind === 'ROUND' && <>
+            <FlightCard leg={city.flightReturn} mode={mode} />
+            <LegForm title={backTitle} icon={LEG_ICON[mode].back} leg={backLeg} onSave={saveBack} canEdit={canEdit} mode={mode} />
+          </>}
         </>
       )}
 
