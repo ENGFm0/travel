@@ -376,6 +376,11 @@ select.bp-input {
 .bp-check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
 .bp-add-btn { width: 100%; padding: 10px; border: 2px dashed var(--bp-primary); border-radius: var(--bp-r-md);
   background: transparent; color: var(--bp-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.bp-wizard-progress { margin: 0; font-size: 12.5px; font-weight: 800; color: var(--bp-primary); }
+.bp-wizard-hint { margin: 0; font-size: 14px; color: var(--bp-ink); font-weight: 600; }
+.bp-wizard-note { margin: 0; font-size: 12.5px; color: var(--bp-ink-muted); }
+.bp-wizard-city { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--bp-border);
+  border-radius: var(--bp-r-md); background: var(--bp-surface-2); }
 .bp-success { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 8px 0; }
 .bp-success__ring { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
   background: color-mix(in srgb, var(--bp-success) 15%, transparent); color: var(--bp-success); }

@@ -4,10 +4,22 @@ import { useNavigate } from 'react-router-dom';
 import { createTripSchema } from '@boardingpass/validation';
 import { isApiError } from '@boardingpass/core';
 import type { TripType } from '@boardingpass/types';
-import type { Trip, TripCity } from './tripsService';
+import type { Trip, TripCity, TripTravelMode, TripState } from './tripsService';
 import { useTripsWizard, tripsActions, useTripsStore } from './tripsStore';
 
-type Row = { name: string; dateFrom: string; dateTo: string };
+type Row = { name: string; dateFrom: string; dateTo: string; hotel: string };
+
+const STEPS = 5;
+const MODES: { key: TripTravelMode; icon: string }[] = [
+  { key: 'PLANE', icon: 'flight' },
+  { key: 'CAR', icon: 'directions_car' },
+  { key: 'CRUISE', icon: 'directions_boat' },
+];
+const STATES: { key: TripState; icon: string }[] = [
+  { key: 'PLANNING', icon: 'edit_calendar' },
+  { key: 'CONFIRMED', icon: 'task_alt' },
+  { key: 'DONE', icon: 'verified' },
+];
 
 export function CreateTripWizard() {
   const { t } = useTranslation();
@@ -20,8 +32,9 @@ export function CreateTripWizard() {
   const [type, setType] = useState<TripType | ''>('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [multi, setMulti] = useState(false);
-  const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '' }]);
+  const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]);
+  const [travelMode, setTravelMode] = useState<TripTravelMode>('PLANE');
+  const [state, setState] = useState<TripState>('PLANNING');
   const [inviteInput, setInviteInput] = useState('');
   const [invitees, setInvitees] = useState<string[]>([]);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -33,7 +46,7 @@ export function CreateTripWizard() {
   useEffect(() => {
     if (wizardOpen) {
       setStep(1); setTitle(''); setType(''); setDateFrom(''); setDateTo('');
-      setMulti(false); setRows([{ name: '', dateFrom: '', dateTo: '' }]);
+      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTravelMode('PLANE'); setState('PLANNING');
       setInviteInput(''); setInvitees([]); setErrorCode(null); setBusy(false); setDone(null);
     }
   }, [wizardOpen]);
@@ -49,6 +62,7 @@ export function CreateTripWizard() {
   if (!wizardOpen) return null;
 
   const err = errorCode ? t(`trips.errors.${errorCode}`, t('trips.errors.GENERIC')) : null;
+  const namedCities = rows.filter((r) => r.name.trim());
 
   function validateStep1(): boolean {
     if (title.trim().length < 2) { setErrorCode('TITLE_REQUIRED'); return false; }
@@ -66,14 +80,14 @@ export function CreateTripWizard() {
     setErrorCode(null);
     if (step === 1 && !validateStep1()) return;
     if (step === 2 && !validateStep2()) return;
-    setStep((s) => Math.min(3, s + 1));
+    setStep((s) => Math.min(STEPS, s + 1));
   }
   function back() { setErrorCode(null); setStep((s) => Math.max(1, s - 1)); }
 
   function toRow(field: keyof Row, i: number, v: string) {
     setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, [field]: v } : r)));
   }
-  function addRow() { setRows((rs) => [...rs, { name: '', dateFrom: '', dateTo: '' }]); }
+  function addRow() { setRows((rs) => [...rs, { name: '', dateFrom: '', dateTo: '', hotel: '' }]); }
   function removeRow(i: number) { setRows((rs) => rs.filter((_, idx) => idx !== i)); }
 
   function addInvitee() {
@@ -85,8 +99,14 @@ export function CreateTripWizard() {
     setErrorCode(null);
     const cities: TripCity[] = rows
       .filter((r) => r.name.trim())
-      .map((r) => ({ name: r.name.trim(), dateFrom: multi && r.dateFrom ? r.dateFrom : undefined, dateTo: multi && r.dateTo ? r.dateTo : undefined }));
-    const payload = { title: title.trim(), type: type as TripType, dateFrom, dateTo: dateTo || undefined, cities };
+      .map((r) => ({
+        name: r.name.trim(),
+        dateFrom: r.dateFrom || undefined,
+        dateTo: r.dateTo || undefined,
+        hotel: r.hotel.trim() || undefined,
+        travelMode,
+      }));
+    const payload = { title: title.trim(), type: type as TripType, dateFrom, dateTo: dateTo || undefined, cities, travelMode, state, invitees };
     const parsed = createTripSchema.safeParse(payload);
     if (!parsed.success) {
       const p = parsed.error.issues[0]?.path[0];
@@ -96,11 +116,11 @@ export function CreateTripWizard() {
     }
     setBusy(true);
     try {
-      const trip = await tripsActions.create({ ...payload, invitees });
+      const trip = await tripsActions.create(payload);
       setLastCreated(trip);
       setDone(trip);
     } catch (e) {
-      console.error('[createTrip]', e); // surfaced for diagnostics
+      console.error('[createTrip]', e);
       setErrorCode(isApiError(e) ? 'GENERIC' : 'GENERIC');
     } finally {
       setBusy(false);
@@ -108,6 +128,8 @@ export function CreateTripWizard() {
   }
 
   function goto(path: string) { closeWizard(); navigate(path); }
+
+  const stepLabels = ['trips.stepBasics', 'trips.stepDestinations', 'trips.stepTravel', 'trips.stepHotels', 'trips.stepPeople'];
 
   return (
     <div className="bp-scrim" onMouseDown={(e) => e.target === e.currentTarget && closeWizard()}>
@@ -133,22 +155,12 @@ export function CreateTripWizard() {
           </div>
         ) : (
           <>
-            {/* Stepper */}
-            <div className="bp-stepper" aria-hidden="true">
-              {[1, 2, 3].map((n, i) => (
-                <div className="bp-step" key={n} style={{ flex: i < 2 ? '1' : '0 0 auto' }}>
-                  <span className={`bp-step ${step >= n ? 'is-on' : ''}`.trim()} style={{ display: 'contents' }}>
-                    <span className={`bp-step__dot ${step >= n ? '' : ''}`} data-on={step >= n}>{n}</span>
-                  </span>
-                  <span className="bp-step__label">{t(n === 1 ? 'trips.stepBasics' : n === 2 ? 'trips.stepDestinations' : 'trips.stepInvite')}</span>
-                  {i < 2 && <span className="bp-step__line" />}
-                </div>
-              ))}
-            </div>
+            {/* Compact progress */}
+            <p className="bp-wizard-progress">{t('trips.stepOf', { n: step, total: STEPS })} · {t(stepLabels[step - 1])}</p>
 
             {err && <div className="bp-banner" role="alert">{err}</div>}
 
-            {/* Step 1 */}
+            {/* Step 1 — basics */}
             {step === 1 && (
               <>
                 <div className="bp-field">
@@ -179,52 +191,84 @@ export function CreateTripWizard() {
               </>
             )}
 
-            {/* Step 2 */}
+            {/* Step 2 — cities + per-city dates */}
             {step === 2 && (
               <>
-                <div className="bp-row-between">
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{t('trips.stepDestinations')}</span>
-                  <label className="bp-check">
-                    <input type="checkbox" checked={multi} onChange={(e) => setMulti(e.target.checked)} />
-                    {t('trips.multiCity')}
-                  </label>
-                </div>
+                <p className="bp-wizard-hint">{t('trips.citiesHint')}</p>
                 {rows.map((r, i) => (
-                  <div className="bp-city-row" key={i}>
-                    <div className="bp-field">
-                      <label htmlFor={`bp-city-${i}`}>{t('trips.cityName')}</label>
-                      <input id={`bp-city-${i}`} ref={i === 0 ? firstRef : undefined} className="bp-input" value={r.name} placeholder={t('trips.cityNamePlaceholder')} onChange={(e) => toRow('name', i, e.target.value)} />
-                    </div>
-                    {multi && (
-                      <div className="bp-field" style={{ maxWidth: 150 }}>
-                        <label htmlFor={`bp-cd-${i}`}>{t('trips.cityDates')}</label>
-                        <input id={`bp-cd-${i}`} className="bp-input" type="date" value={r.dateFrom} onChange={(e) => toRow('dateFrom', i, e.target.value)} />
+                  <div className="bp-wizard-city" key={i}>
+                    <div className="bp-row-between">
+                      <div className="bp-field" style={{ flex: 1 }}>
+                        <label htmlFor={`bp-city-${i}`}>{t('trips.cityName')}</label>
+                        <input id={`bp-city-${i}`} ref={i === 0 ? firstRef : undefined} className="bp-input" value={r.name} placeholder={t('trips.cityNamePlaceholder')} onChange={(e) => toRow('name', i, e.target.value)} />
                       </div>
-                    )}
-                    {i > 0 && (
-                      <button type="button" className="bp-icon-btn" aria-label={t('trips.removeCity')} onClick={() => removeRow(i)}>
-                        <span className="material-symbols-outlined" aria-hidden="true">delete</span>
-                      </button>
-                    )}
+                      {i > 0 && (
+                        <button type="button" className="bp-icon-btn" aria-label={t('trips.removeCity')} onClick={() => removeRow(i)}>
+                          <span className="material-symbols-outlined" aria-hidden="true">delete</span>
+                        </button>
+                      )}
+                    </div>
+                    <div className="bp-grid-2">
+                      <div className="bp-field">
+                        <label htmlFor={`bp-cf-${i}`}>{t('trips.fromLabel')}</label>
+                        <input id={`bp-cf-${i}`} className="bp-input" type="date" value={r.dateFrom} onChange={(e) => toRow('dateFrom', i, e.target.value)} />
+                      </div>
+                      <div className="bp-field">
+                        <label htmlFor={`bp-ct-${i}`}>{t('trips.toLabel')}</label>
+                        <input id={`bp-ct-${i}`} className="bp-input" type="date" value={r.dateTo} onChange={(e) => toRow('dateTo', i, e.target.value)} />
+                      </div>
+                    </div>
                   </div>
                 ))}
-                {multi && (
-                  <button type="button" className="bp-add-btn" onClick={addRow}>+ {t('trips.addCity')}</button>
+                <button type="button" className="bp-add-btn" onClick={addRow}>+ {t('trips.addCity')}</button>
+              </>
+            )}
+
+            {/* Step 3 — travel mode */}
+            {step === 3 && (
+              <>
+                <p className="bp-wizard-hint">{t('trips.travelHint')}</p>
+                <div className="bp-modes" role="group" aria-label={t('trips.stepTravel')}>
+                  {MODES.map((m) => (
+                    <button key={m.key} type="button" className={`bp-mode ${travelMode === m.key ? 'is-on' : ''}`} aria-pressed={travelMode === m.key} onClick={() => setTravelMode(m.key)}>
+                      <span className="material-symbols-outlined" aria-hidden="true">{m.icon}</span>
+                      {t(`itinerary.mode.${m.key}`)}
+                    </button>
+                  ))}
+                </div>
+                <p className="bp-wizard-note">{t('trips.travelNote')}</p>
+              </>
+            )}
+
+            {/* Step 4 — hotels per city */}
+            {step === 4 && (
+              <>
+                <p className="bp-wizard-hint">{t('trips.hotelsHint')}</p>
+                {namedCities.length === 0 ? (
+                  <p className="bp-wizard-note">{t('trips.noCitiesYet')}</p>
+                ) : (
+                  rows.map((r, i) => (r.name.trim() ? (
+                    <div className="bp-field" key={i}>
+                      <label htmlFor={`bp-hotel-${i}`}>{t('trips.hotelForCity', { city: r.name.trim() })}</label>
+                      <input id={`bp-hotel-${i}`} className="bp-input" value={r.hotel} placeholder={t('trips.hotelPlaceholder')} onChange={(e) => toRow('hotel', i, e.target.value)} />
+                    </div>
+                  ) : null))
                 )}
               </>
             )}
 
-            {/* Step 3 */}
-            {step === 3 && (
+            {/* Step 5 — people + status */}
+            {step === 5 && (
               <>
-                <p style={{ margin: 0, color: 'var(--bp-ink-muted)', fontSize: 14 }}>{t('trips.inviteLead')}</p>
+                <p className="bp-wizard-hint">{t('trips.peopleHint')}</p>
                 <div className="bp-city-row">
-                  <div className="bp-field">
+                  <div className="bp-field" style={{ flex: 1 }}>
                     <label htmlFor="bp-inv">{t('trips.stepInvite')}</label>
                     <input id="bp-inv" ref={firstRef} className="bp-input" value={inviteInput} placeholder={t('trips.inviteePlaceholder')} onChange={(e) => setInviteInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInvitee())} />
                   </div>
                   <button type="button" className="bp-btn bp-btn--outline" style={{ height: 44, paddingInline: 16 }} onClick={addInvitee}>{t('trips.addInvitee')}</button>
                 </div>
+                <p className="bp-wizard-note">{t('trips.peopleCount', { count: invitees.length + 1 })}</p>
                 {invitees.length > 0 && (
                   <div className="bp-chips">
                     {invitees.map((v, i) => (
@@ -237,13 +281,25 @@ export function CreateTripWizard() {
                     ))}
                   </div>
                 )}
+
+                <div className="bp-field">
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{t('trips.stateLabel')}</span>
+                  <div className="bp-modes" role="group" aria-label={t('trips.stateLabel')}>
+                    {STATES.map((s) => (
+                      <button key={s.key} type="button" className={`bp-mode ${state === s.key ? 'is-on' : ''}`} aria-pressed={state === s.key} onClick={() => setState(s.key)}>
+                        <span className="material-symbols-outlined" aria-hidden="true">{s.icon}</span>
+                        {t(`trips.state.${s.key}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
 
             {/* Footer nav */}
             <div className="bp-footer-nav">
               <button className="bp-btn bp-btn--outline" style={{ visibility: step === 1 ? 'hidden' : 'visible', paddingInline: 18 }} onClick={back}>{t('trips.back')}</button>
-              {step < 3 ? (
+              {step < STEPS ? (
                 <button className="bp-btn bp-btn--primary" style={{ paddingInline: 24 }} onClick={next}>{t('trips.next')}</button>
               ) : (
                 <button className="bp-btn bp-btn--primary" style={{ paddingInline: 24 }} disabled={busy} onClick={create}>{t('trips.create')}</button>

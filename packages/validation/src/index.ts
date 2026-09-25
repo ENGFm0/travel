@@ -34,6 +34,9 @@ export const registerSchema = z
 // ── Trip basics (US-003) ──────────────────────────────────────────────────────
 export const tripTypeSchema = z.enum(['DOMESTIC', 'INTERNATIONAL']);
 
+export const travelModeSchema = z.enum(['PLANE', 'CAR', 'CRUISE']);
+export const tripStateSchema = z.enum(['PLANNING', 'CONFIRMED', 'DONE']);
+
 export const createTripSchema = z
   .object({
     title: z.string().trim().min(2).max(80),
@@ -46,9 +49,14 @@ export const createTripSchema = z
           name: z.string().trim().min(2).max(60),
           dateFrom: z.string().optional(),
           dateTo: z.string().optional(),
+          hotel: z.string().trim().max(120).optional(),
+          travelMode: travelModeSchema.optional(),
         }),
       )
       .min(1, 'AT_LEAST_ONE_CITY'),
+    travelMode: travelModeSchema.optional(),
+    state: tripStateSchema.optional(),
+    invitees: z.array(z.string()).optional(),
   })
   .refine((d) => !d.dateTo || d.dateTo >= d.dateFrom, {
     path: ['dateTo'],

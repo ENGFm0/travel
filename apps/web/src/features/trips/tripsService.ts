@@ -7,10 +7,16 @@ import {
   query, where, serverTimestamp, type DocumentData,
 } from 'firebase/firestore';
 
+export type TripTravelMode = 'PLANE' | 'CAR' | 'CRUISE';
+/** Planning state chosen at setup, editable later. */
+export type TripState = 'PLANNING' | 'CONFIRMED' | 'DONE';
+
 export interface TripCity {
   name: string;
   dateFrom?: string;
   dateTo?: string;
+  hotel?: string;
+  travelMode?: TripTravelMode;
 }
 
 export interface Trip {
@@ -22,6 +28,8 @@ export interface Trip {
   cities: TripCity[];
   ownerUid: string;
   status: TripStatus;
+  travelMode?: TripTravelMode;
+  state?: TripState;
   /** 0–100 planning completeness (server-computed; BR-005-001). */
   progress?: number;
 }
@@ -32,6 +40,8 @@ export interface CreateTripPayload {
   dateFrom: string;
   dateTo?: string;
   cities: TripCity[];
+  travelMode?: TripTravelMode;
+  state?: TripState;
   invitees?: string[];
 }
 
@@ -68,6 +78,8 @@ export function createMockTripsService(seed?: Trip[], persistKey?: string): Trip
         cities: p.cities,
         ownerUid: CURRENT_UID,
         status: 'ACTIVE',
+        travelMode: p.travelMode,
+        state: p.state ?? 'PLANNING',
         progress: 5,
       };
       trips.unshift(trip);
@@ -184,6 +196,8 @@ export function createFirestoreTripsService(): TripsService {
       cities: (d.cities ?? []) as TripCity[],
       ownerUid: d.ownerUid,
       status: d.status,
+      travelMode: d.travelMode ?? undefined,
+      state: d.state ?? undefined,
       progress: d.progress ?? 0,
     };
   }
@@ -202,6 +216,8 @@ export function createFirestoreTripsService(): TripsService {
         ownerUid: uid,
         memberUids: [uid],
         status: 'ACTIVE' as TripStatus,
+        travelMode: p.travelMode ?? null,
+        state: p.state ?? 'PLANNING',
         progress: 5,
         createdAt: serverTimestamp(),
       };

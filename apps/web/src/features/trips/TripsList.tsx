@@ -136,6 +136,7 @@ function TripCard({ trip, today, locale, isPast }: { trip: Trip; today: string; 
         <span className={`bp-badge ${domestic ? 'bp-badge--green' : 'bp-badge--blue'}`}>
           {t(domestic ? 'trips.domestic' : 'trips.international')}
         </span>
+        {trip.state && <span className="bp-badge bp-badge--gold">{t(`trips.state.${trip.state}`)}</span>}
         {!isPast && days >= 0 && (
           <span className="bp-countdown">
             {days === 0 ? t('trips.startsToday') : t('trips.inDays', { count: days })}
