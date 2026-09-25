@@ -13,6 +13,8 @@ export interface PickedPlace {
   photoUrls?: string[];   // all available photos (browsable gallery)
   mapsUrl?: string;
   placeId?: string;
+  lat?: number;           // location (used to bias nested searches, e.g. hotels)
+  lng?: number;
 }
 
 /** Map Google place types to our activity kinds. */
@@ -31,10 +33,11 @@ function guessKind(types: string[] = []): ActivityKind {
  *  render in a dropdown → click adds. Bias toward the city when provided.
  *  Controlled mode: pass `value`/`onValueChange` to bind the input to an
  *  external field (e.g. the hotel name), so the field IS the search box. */
-export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeholder, ariaLabel, citiesOnly, regionCode }: {
+export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeholder, ariaLabel, citiesOnly, regionCode, biasLat, biasLng }: {
   city?: string; onPick: (p: PickedPlace) => void;
   value?: string; onValueChange?: (v: string) => void; onBlur?: () => void; placeholder?: string; ariaLabel?: string;
   citiesOnly?: boolean; regionCode?: string;
+  biasLat?: number; biasLng?: number; // anchor results to a city's coordinates
 }) {
   const { t } = useTranslation();
   const controlled = value !== undefined;
@@ -70,6 +73,8 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
     timer.current = window.setTimeout(() => void search(v.trim()), 250);
   }
 
+  const hasBias = typeof biasLat === 'number' && typeof biasLng === 'number';
+
   async function search(input: string) {
     try {
       setBusy(true); setErr(false);
@@ -77,16 +82,20 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
       const fetchFor = async (q: string) => {
         const req: any = { input: q, sessionToken: token.current };
         if (citiesOnly) req.includedPrimaryTypes = ['(cities)']; // world cities only
-        // Keep results in the destination's country (so a fallback query never
-        // defaults back to the home region).
+        // Anchor to the city's actual coordinates when we have them (works for
+        // any city worldwide, unlike a country code). Else keep results in the
+        // destination country so a fallback never defaults to the home region.
+        else if (hasBias) req.locationBias = { center: { lat: biasLat, lng: biasLng }, radius: 40000 };
         else if (regionCode) req.includedRegionCodes = [regionCode.toLowerCase()];
         const { suggestions } = await p.AutocompleteSuggestion.fetchAutocompleteSuggestions(req);
         return (suggestions ?? []) as any[];
       };
-      // Bias to the city; if that yields nothing, fall back to the raw text so
-      // the user always gets whatever Google Maps matches.
-      let items = await fetchFor(city ? `${input} ${city}` : input);
-      if (items.length === 0 && city) items = await fetchFor(input);
+      // With coordinates, the bias does the locating — search the raw text. Else
+      // append the city name; if that yields nothing, fall back to raw text.
+      const cityMain = city ? city.split(/[،,]/)[0].trim() : '';
+      const primary = hasBias ? input : cityMain ? `${input} ${cityMain}` : input;
+      let items = await fetchFor(primary);
+      if (items.length === 0 && primary !== input) items = await fetchFor(input);
       setItems(items);
       setOpen(true);
     } catch {
@@ -101,7 +110,17 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
       const main = pred?.mainText?.text ?? pred?.text?.text ?? text;
       const sec = pred?.secondaryText?.text ?? '';
       const label = sec ? `${main}، ${sec}` : main;
-      onPick({ name: label, address: sec || undefined, kind: 'OTHER', placeId: pred?.placeId });
+      // Resolve the city's coordinates so a later hotel/place search can be
+      // anchored to it (accurate wherever the city is in the world).
+      let lat: number | undefined, lng: number | undefined;
+      try {
+        const place = pred.toPlace();
+        await place.fetchFields({ fields: ['location'] });
+        const loc = place.location;
+        lat = typeof loc?.lat === 'function' ? loc.lat() : loc?.lat;
+        lng = typeof loc?.lng === 'function' ? loc.lng() : loc?.lng;
+      } catch { /* coords optional */ }
+      onPick({ name: label, address: sec || undefined, kind: 'OTHER', placeId: pred?.placeId, lat, lng });
       if (controlled) onValueChange?.(label); else setQ('');
       setItems([]); setOpen(false);
       token.current = places.current ? new places.current.AutocompleteSessionToken() : null;
@@ -110,7 +129,7 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
     try {
       const pred = s.placePrediction;
       const place = pred.toPlace();
-      await place.fetchFields({ fields: ['id', 'displayName', 'formattedAddress', 'types', 'photos', 'googleMapsURI'] });
+      await place.fetchFields({ fields: ['id', 'displayName', 'formattedAddress', 'types', 'photos', 'googleMapsURI', 'location'] });
       let photoUrls: string[] | undefined;
       try {
         // Grab all available photos (capped) at a large size so they can be
@@ -123,6 +142,7 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
       const name = place.displayName ?? pred.text?.text ?? text;
       const mapsUrl: string | undefined = place.googleMapsURI
         ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+      const loc = place.location;
       onPick({
         name,
         address: place.formattedAddress ?? undefined,
@@ -131,6 +151,8 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
         photoUrls,
         mapsUrl,
         placeId: place.id ?? pred.placeId ?? undefined,
+        lat: typeof loc?.lat === 'function' ? loc.lat() : loc?.lat,
+        lng: typeof loc?.lng === 'function' ? loc.lng() : loc?.lng,
       });
     } catch {
       // fall back to the prediction's text

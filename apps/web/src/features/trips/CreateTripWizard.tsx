@@ -23,7 +23,7 @@ function bookingHotelSearch(city: string, checkin?: string, checkout?: string): 
   return `https://www.booking.com/searchresults.html?${p.toString()}`;
 }
 
-type Row = { name: string; days: string; hotel: string; hotelUrl: string };
+type Row = { name: string; days: string; hotel: string; hotelUrl: string; lat?: number; lng?: number };
 
 /** Add N days to an ISO date. */
 function addDaysIso(iso: string, n: number): string {
@@ -135,6 +135,9 @@ export function CreateTripWizard() {
 
   function toRow(field: keyof Row, i: number, v: string) {
     setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, [field]: v } : r)));
+  }
+  function setRowCity(i: number, name: string, lat?: number, lng?: number) {
+    setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, name, lat, lng } : r)));
   }
   function addRow() { setRows((rs) => [...rs, { name: '', days: '', hotel: '', hotelUrl: '' }]); }
   function removeRow(i: number) { setRows((rs) => rs.filter((_, idx) => idx !== i)); }
@@ -283,7 +286,7 @@ export function CreateTripWizard() {
                       <div className="bp-field" style={{ flex: 1 }}>
                         <label htmlFor={`bp-city-${i}`}>{t('trips.cityName')}</label>
                         {mapsEnabled() ? (
-                          <PlaceSearch citiesOnly value={r.name} onValueChange={(v) => toRow('name', i, v)} onPick={(p) => toRow('name', i, p.name)}
+                          <PlaceSearch citiesOnly value={r.name} onValueChange={(v) => toRow('name', i, v)} onPick={(p) => setRowCity(i, p.name, p.lat, p.lng)}
                             placeholder={t('trips.cityNamePlaceholder')} ariaLabel={t('trips.cityName')} />
                         ) : (
                           <input id={`bp-city-${i}`} ref={i === 0 ? firstRef : undefined} className="bp-input" value={r.name} placeholder={t('trips.cityNamePlaceholder')} onChange={(e) => toRow('name', i, e.target.value)} />
@@ -361,7 +364,7 @@ export function CreateTripWizard() {
                       <div className="bp-field">
                         <label htmlFor={`bp-hotel-${i}`}>{t('trips.hotelForCity', { city: r.name.trim() })}</label>
                         {mapsEnabled() ? (
-                          <PlaceSearch city={r.name.trim()} regionCode={guessCountry(r.name)?.code} value={r.hotel}
+                          <PlaceSearch city={r.name.trim()} regionCode={guessCountry(r.name)?.code} biasLat={r.lat} biasLng={r.lng} value={r.hotel}
                             onValueChange={(v) => toRow('hotel', i, v)} placeholder={t('trips.hotelPlaceholder')} ariaLabel={t('trips.hotelForCity', { city: r.name.trim() })}
                             onPick={(p) => { toRow('hotel', i, p.name); toRow('hotelUrl', i, p.mapsUrl ?? ''); }} />
                         ) : (
