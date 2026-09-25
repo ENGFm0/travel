@@ -447,6 +447,11 @@
     "addLeg": "Add a leg",
     "removeLeg": "Remove leg",
     "noLegs": "Add your legs (destination after destination).",
+    "saveToSchedule": "Save to schedule",
+    "saveToScheduleHint": "Adds your flights to the day schedule by each flight's date.",
+    "savedToSchedule": "Added {{count}} flight(s) to the schedule ✓",
+    "nothingToSave": "No flights to add yet.",
+    "flightActivity": "Flight",
     "whenLabel": "Time",
     "exactTime": "Exact time (optional)",
     "period": {

@@ -306,15 +306,55 @@ function LegForm({ title, icon, leg, onSave, canEdit, mode }: {
   );
 }
 
+/** Find the day whose date matches a leg's date; fall back to the nearest
+ *  (before-all → first, after-all → last) so a flight always lands sensibly. */
+function dayForDate(city: CityStop, date?: string): Day | undefined {
+  if (city.days.length === 0) return undefined;
+  const dated = city.days.filter((d) => d.date) as (Day & { date: string })[];
+  if (!date || dated.length === 0) return city.days[0];
+  const exact = dated.find((d) => d.date === date);
+  if (exact) return exact;
+  if (date < dated[0].date) return dated[0];
+  const last = dated[dated.length - 1];
+  if (date > last.date) return last;
+  return dated.find((d) => d.date >= date) ?? city.days[0];
+}
+
 /** ── Travel section: mode (plane/car/cruise) + kind (one-way/round/multi) ── */
 function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
   const mode: TravelMode = city.travelMode ?? 'PLANE';
   const kind: TripKind = city.tripKind ?? 'ROUND';
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const set = (patch: Parameters<typeof itineraryActions.setCityInfo>[2]) => itineraryActions.setCityInfo(tripId, city.id, patch);
   const saveOut = (l: FlightLeg) => set({ flightOut: l });
   const saveBack = (l: FlightLeg) => set({ flightReturn: l });
   const legs = city.legs ?? [];
+
+  // Publish the travel legs into the day schedule, each on the day matching its
+  // date (departure → its day, return → its day), ordered by time.
+  async function saveToSchedule() {
+    const toPublish: FlightLeg[] = kind === 'MULTI'
+      ? legs
+      : (kind === 'ONE_WAY' ? [city.flightOut ?? {}] : [city.flightOut ?? {}, city.flightReturn ?? {}]);
+    let added = 0;
+    for (const leg of toPublish) {
+      const has = leg && (leg.airline || leg.no || leg.from || leg.to || leg.date);
+      if (!has) continue;
+      const day = dayForDate(city, leg.date);
+      if (!day) continue;
+      const title = [leg.airline, leg.no].filter(Boolean).join(' ') || t('itinerary.flightActivity');
+      const route = leg.from && leg.to ? `${leg.from} → ${leg.to}` : undefined;
+      const pid = `flight-${leg.no ?? ''}-${leg.date ?? ''}`;
+      if (day.activities.some((a) => a.placeId === pid)) continue;
+      await itineraryActions.addActivity(tripId, city.id, day.id, {
+        title, note: route, time: leg.time, period: periodFromTime(leg.time), kind: 'ARRIVAL', placeId: pid,
+      });
+      added += 1;
+    }
+    setSavedMsg(added > 0 ? t('itinerary.savedToSchedule', { count: added }) : t('itinerary.nothingToSave'));
+    window.setTimeout(() => setSavedMsg(null), 3000);
+  }
   const depMs = legDeparture(kind === 'MULTI' ? legs[0] : city.flightOut, city.dateFrom);
   const goTitle = mode === 'PLANE' ? t('itinerary.outbound') : t('itinerary.legGo');
   const backTitle = mode === 'PLANE' ? t('itinerary.returnLeg') : t('itinerary.legBack');
@@ -378,6 +418,17 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
           {kind === 'ROUND' && <LegForm title={backTitle} icon={LEG_ICON[mode].back} leg={backLeg} onSave={saveBack} canEdit={canEdit} mode={mode} />}
         </>
       )}
+
+      {canEdit && (
+        <div className="bp-save-row">
+          <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={saveToSchedule}>
+            <span className="material-symbols-outlined" aria-hidden="true">event_available</span>
+            {t('itinerary.saveToSchedule')}
+          </button>
+          {savedMsg && <span className="bp-save-row__msg">{savedMsg}</span>}
+        </div>
+      )}
+      <p className="bp-itin-sec__note">{t('itinerary.saveToScheduleHint')}</p>
     </section>
   );
 }

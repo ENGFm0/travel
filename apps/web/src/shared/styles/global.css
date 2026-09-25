@@ -959,6 +959,9 @@ select.bp-input {
 .bp-mode .material-symbols-outlined { font-size: 18px; }
 .bp-mode.is-on { background: var(--bp-primary); color: var(--bp-on-primary); border-color: var(--bp-primary); }
 .bp-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.bp-save-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.bp-save-row .bp-btn .material-symbols-outlined { font-size: 17px; }
+.bp-save-row__msg { font-size: 13px; font-weight: 700; color: var(--bp-success); }
 .bp-leg-wrap { position: relative; }
 .bp-leg-rm { position: absolute; inset-block-start: 8px; inset-inline-end: 8px; background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-full); }
 

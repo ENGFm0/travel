@@ -447,6 +447,11 @@
     "addLeg": "أضف رحلة",
     "removeLeg": "حذف الرحلة",
     "noLegs": "أضف رحلاتك المتعددة (وجهة تلو الأخرى).",
+    "saveToSchedule": "حفظ في الجدول",
+    "saveToScheduleHint": "يضيف رحلاتك لأيام الجدول حسب تاريخ كل رحلة.",
+    "savedToSchedule": "تم إضافة {{count}} رحلة للجدول ✓",
+    "nothingToSave": "لا توجد رحلات لإضافتها بعد.",
+    "flightActivity": "رحلة طيران",
     "whenLabel": "الوقت",
     "exactTime": "وقت محدد (اختياري)",
     "period": {
