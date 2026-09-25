@@ -102,14 +102,14 @@ describe('US-003 wizard flow', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('اكتب عنوان الرحلة');
   });
 
-  it('shows per-city date inputs and lets you add another city', async () => {
+  it('shows a per-city days field and lets you add another city', async () => {
     await signIn();
     renderAt('/planner?new=1');
     await screen.findByTestId('trip-wizard');
     await fillStep1();
     await screen.findByLabelText('المدينة');
-    // per-city dates are always available on the cities step
-    expect(screen.getByLabelText('من')).toBeInTheDocument();
+    // cities are scheduled by number of days, not manual dates
+    expect(screen.getByLabelText('عدد الأيام')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /أضف مدينة/ }));
     expect((await screen.findAllByLabelText('المدينة')).length).toBe(2);
   });

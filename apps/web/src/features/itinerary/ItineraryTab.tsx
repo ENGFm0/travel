@@ -71,11 +71,11 @@ function datesBetween(from?: string, to?: string): string[] {
 
 export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = 'plan' }: { tripId: string; seed: CitySeed[]; canEdit: boolean; tripFrom?: string; tripTo?: string; view?: 'plan' | 'travel' }) {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
   const { board, loading } = useItinerary();
   const [active, setActive] = useState(0);
   const [newCity, setNewCity] = useState('');
-  const [newFrom, setNewFrom] = useState('');
-  const [newTo, setNewTo] = useState('');
+  const [newDays, setNewDays] = useState('');
   const [showAdd, setShowAdd] = useState(false);
 
   useEffect(() => {
@@ -90,11 +90,21 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
   const city = cities[activeIdx];
   const tripStart = useMemo(() => seed.find((s) => s.dateFrom)?.dateFrom, [seed]);
 
+  // The new city continues the sequence: it starts the day after the latest
+  // dated city ends, else at the trip start.
+  const nextCityStart = useMemo(() => {
+    const ends = cities.map((c) => c.dateTo ?? c.dateFrom).filter(Boolean) as string[];
+    if (ends.length) return addDaysIso(ends.sort()[ends.length - 1], 1);
+    return tripStart ?? tripFrom;
+  }, [cities, tripStart, tripFrom]);
+  const newFrom = newDays && nextCityStart ? nextCityStart : undefined;
+  const newTo = newFrom ? addDaysIso(newFrom, Math.max(1, Number(newDays) || 1) - 1) : undefined;
+
   async function addCity() {
     const name = newCity.trim();
     if (!name) return;
-    await itineraryActions.addCity(tripId, name, { dateFrom: newFrom || undefined, dateTo: newTo || undefined });
-    setNewCity(''); setNewFrom(''); setNewTo(''); setShowAdd(false);
+    await itineraryActions.addCity(tripId, name, { dateFrom: newFrom, dateTo: newTo });
+    setNewCity(''); setNewDays(''); setShowAdd(false);
   }
 
   if (loading && board === null) {
@@ -116,7 +126,7 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
             <span className="bp-stop__n">{i + 1}</span>
             <span className="bp-stop__name">{c.name}</span>
             {dayCount(c.dateFrom, c.dateTo) > 0 && (
-              <span className="bp-stop__date">{daysLabel(dayCount(c.dateFrom, c.dateTo), useUIStore.getState().locale)}</span>
+              <span className="bp-stop__date">{daysLabel(dayCount(c.dateFrom, c.dateTo), locale)}</span>
             )}
           </button>
         ))}
@@ -141,15 +151,18 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
                   onChange={(e) => setNewCity(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addCity())} autoFocus />
               )}
             </div>
-            <label className="bp-field">
-              <span className="bp-field__label">{t('itinerary.from')}</span>
-              <input className="bp-input" type="date" value={newFrom} onChange={(e) => setNewFrom(e.target.value)} />
-            </label>
-            <label className="bp-field">
-              <span className="bp-field__label">{t('itinerary.to')}</span>
-              <input className="bp-input" type="date" value={newTo} onChange={(e) => setNewTo(e.target.value)} />
+            <label className="bp-field" style={{ maxInlineSize: 140 }}>
+              <span className="bp-field__label">{t('trips.daysCount')}</span>
+              <input className="bp-input" type="number" inputMode="numeric" min="1" value={newDays} placeholder="2"
+                onChange={(e) => setNewDays(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addCity())} />
             </label>
           </div>
+          {newFrom && newTo && (
+            <p className="bp-city-sched">
+              <span className="material-symbols-outlined" aria-hidden="true">event</span>
+              {formatDate(newFrom, locale, { day: 'numeric', month: 'short' })} – {formatDate(newTo, locale, { day: 'numeric', month: 'short' })}
+            </p>
+          )}
           <div className="bp-row-between">
             <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={addCity}>{t('itinerary.addCity')}</button>
             <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setShowAdd(false)}>{t('trips.close')}</button>

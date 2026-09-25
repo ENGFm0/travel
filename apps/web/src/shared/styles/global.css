@@ -381,6 +381,8 @@ select.bp-input {
 .bp-wizard-note { margin: 0; font-size: 12.5px; color: var(--bp-ink-muted); }
 .bp-wizard-city { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--bp-border);
   border-radius: var(--bp-r-md); background: var(--bp-surface-2); }
+.bp-city-sched { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 800; color: var(--bp-primary); }
+.bp-city-sched .material-symbols-outlined { font-size: 16px; }
 .bp-wizard-flight { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--bp-border);
   border-radius: var(--bp-r-md); background: var(--bp-surface-2); }
 .bp-cur-auto { display: inline-flex; align-items: center; gap: 8px; min-block-size: 44px; }

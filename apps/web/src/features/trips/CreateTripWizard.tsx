@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { createTripSchema } from '@boardingpass/validation';
-import { isApiError } from '@boardingpass/core';
+import { formatDate, isApiError } from '@boardingpass/core';
+import { useUIStore } from '@/app/store/uiStore';
 import type { TripType } from '@boardingpass/types';
 import type { Trip, TripCity, TripTravelMode, TripState } from './tripsService';
 import { useTripsWizard, tripsActions, useTripsStore } from './tripsStore';
@@ -22,7 +23,14 @@ function bookingHotelSearch(city: string, checkin?: string, checkout?: string): 
   return `https://www.booking.com/searchresults.html?${p.toString()}`;
 }
 
-type Row = { name: string; dateFrom: string; dateTo: string; hotel: string; hotelUrl: string };
+type Row = { name: string; days: string; hotel: string; hotelUrl: string };
+
+/** Add N days to an ISO date. */
+function addDaysIso(iso: string, n: number): string {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
 
 const STEPS = 6;
 const STATES: { key: TripState; icon: string }[] = [
@@ -37,6 +45,7 @@ export function CreateTripWizard() {
   const { wizardOpen, closeWizard } = useTripsWizard();
   const setLastCreated = useTripsStore((s) => s.setLastCreated);
   const { profile } = useProfile();
+  const locale = useUIStore((s) => s.locale);
   const homeCurrency = currencyOf(profile?.country) ?? 'SAR';
 
   const [step, setStep] = useState(1);
@@ -44,7 +53,7 @@ export function CreateTripWizard() {
   const [type, setType] = useState<TripType | ''>('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '', hotel: '', hotelUrl: '' }]);
+  const [rows, setRows] = useState<Row[]>([{ name: '', days: '', hotel: '', hotelUrl: '' }]);
   const travelMode: TripTravelMode = 'PLANE';
   const [tripKind, setTripKind] = useState<TripKind>('ROUND');
   const [flight, setFlight] = useState<FlightLeg>({});
@@ -63,7 +72,7 @@ export function CreateTripWizard() {
   useEffect(() => {
     if (wizardOpen) {
       setStep(1); setTitle(''); setType(''); setDateFrom(''); setDateTo('');
-      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '', hotelUrl: '' }]); setTripKind('ROUND');
+      setRows([{ name: '', days: '', hotel: '', hotelUrl: '' }]); setTripKind('ROUND');
       setFlight({}); setFlightBack({}); setLegs([{}]); setState('PLANNING');
       setBudget('');
       setInviteInput(''); setInvitees([]); setErrorCode(null); setBusy(false); setDone(null);
@@ -82,6 +91,21 @@ export function CreateTripWizard() {
 
   const err = errorCode ? t(`trips.errors.${errorCode}`, t('trips.errors.GENERIC')) : null;
   const namedCities = rows.filter((r) => r.name.trim());
+
+  // Auto-assign each city's dates sequentially from the trip start, by the number
+  // of days entered — city 2 begins the day after city 1 ends, and so on.
+  function citySchedule(): { from?: string; to?: string; days: number }[] {
+    let cursor = dateFrom;
+    return rows.map((r) => {
+      const days = Math.max(1, Number(r.days) || (r.name.trim() ? 1 : 0));
+      if (!r.name.trim() || !cursor || days === 0) return { days };
+      const from = cursor;
+      const to = addDaysIso(cursor, days - 1);
+      cursor = addDaysIso(to, 1);
+      return { from, to, days };
+    });
+  }
+  const schedule = citySchedule();
   // Currency is automatic: your currency from your country; the destination
   // currency guessed from the cities (international trips only).
   const destCountry = namedCities.map((r) => guessCountry(r.name)).find(Boolean);
@@ -91,17 +115,13 @@ export function CreateTripWizard() {
   function validateStep1(): boolean {
     if (title.trim().length < 2) { setErrorCode('TITLE_REQUIRED'); return false; }
     if (!type) { setErrorCode('TYPE_REQUIRED'); return false; }
-    // Dates are optional here — they can be entered per city in the next step.
-    if (dateFrom && dateTo && dateTo < dateFrom) { setErrorCode('END_BEFORE_START'); return false; }
+    // Trip start is required (cities are auto-scheduled by days from it).
+    if (!dateFrom) { setErrorCode('DATE_REQUIRED'); return false; }
+    if (dateTo && dateTo < dateFrom) { setErrorCode('END_BEFORE_START'); return false; }
     return true;
   }
   function validateStep2(): boolean {
     if (!rows[0]?.name.trim()) { setErrorCode('CITY_REQUIRED'); return false; }
-    // A trip needs a date somewhere: either the overall range, or a city's own.
-    const hasCityDate = rows.some((r) => r.dateFrom.trim());
-    if (!dateFrom && !hasCityDate) { setErrorCode('DATE_REQUIRED'); return false; }
-    // Per-city end must not precede its start.
-    if (rows.some((r) => r.dateFrom && r.dateTo && r.dateTo < r.dateFrom)) { setErrorCode('END_BEFORE_START'); return false; }
     return true;
   }
 
@@ -116,7 +136,7 @@ export function CreateTripWizard() {
   function toRow(field: keyof Row, i: number, v: string) {
     setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, [field]: v } : r)));
   }
-  function addRow() { setRows((rs) => [...rs, { name: '', dateFrom: '', dateTo: '', hotel: '', hotelUrl: '' }]); }
+  function addRow() { setRows((rs) => [...rs, { name: '', days: '', hotel: '', hotelUrl: '' }]); }
   function removeRow(i: number) { setRows((rs) => rs.filter((_, idx) => idx !== i)); }
 
   function addInvitee() {
@@ -128,12 +148,14 @@ export function CreateTripWizard() {
     setErrorCode(null);
     const hasLeg = (l: FlightLeg) => Boolean(l.airline || l.no || l.from || l.to || l.date || l.time);
     const multiLegs = legs.filter(hasLeg);
+    const sched = citySchedule(); // aligned with rows
     const cities: TripCity[] = rows
-      .filter((r) => r.name.trim())
-      .map((r, i) => ({
+      .map((r, idx) => ({ r, s: sched[idx] }))
+      .filter(({ r }) => r.name.trim())
+      .map(({ r, s }, i) => ({
         name: r.name.trim(),
-        dateFrom: r.dateFrom || undefined,
-        dateTo: r.dateTo || undefined,
+        dateFrom: s.from,
+        dateTo: s.to,
         hotel: r.hotel.trim() || undefined,
         hotelUrl: r.hotelUrl || undefined,
         travelMode,
@@ -143,11 +165,10 @@ export function CreateTripWizard() {
         flightReturn: i === 0 && tripKind === 'ROUND' && hasLeg(flightBack) ? flightBack : undefined,
         legs: i === 0 && tripKind === 'MULTI' && multiLegs.length ? multiLegs : undefined,
       }));
-    // Overall trip range: what the user typed, else derived from the cities'
-    // own dates (earliest start → latest end) — we never invent dates.
-    const froms = cities.map((c) => c.dateFrom).filter(Boolean) as string[];
+    // Overall trip range: the trip start, and the end = latest city end (or the
+    // trip end if the user set one).
     const tos = cities.map((c) => c.dateTo ?? c.dateFrom).filter(Boolean) as string[];
-    const finalFrom = dateFrom || froms.sort()[0] || '';
+    const finalFrom = dateFrom;
     const finalTo = dateTo || (tos.length ? tos.sort()[tos.length - 1] : undefined);
     const budgetNum = budget.trim() ? Number(budget) : undefined;
     const payload = {
@@ -274,19 +295,20 @@ export function CreateTripWizard() {
                         </button>
                       )}
                     </div>
-                    <div className="bp-grid-2">
-                      <div className="bp-field">
-                        <label htmlFor={`bp-cf-${i}`}>{t('trips.fromLabel')}</label>
-                        <input id={`bp-cf-${i}`} className="bp-input" type="date" value={r.dateFrom} min={dateFrom || undefined} max={dateTo || undefined} onChange={(e) => toRow('dateFrom', i, e.target.value)} />
-                      </div>
-                      <div className="bp-field">
-                        <label htmlFor={`bp-ct-${i}`}>{t('trips.toLabel')}</label>
-                        <input id={`bp-ct-${i}`} className="bp-input" type="date" value={r.dateTo} min={r.dateFrom || dateFrom || undefined} max={dateTo || undefined} onChange={(e) => toRow('dateTo', i, e.target.value)} />
-                      </div>
+                    <div className="bp-field" style={{ maxWidth: 200 }}>
+                      <label htmlFor={`bp-cd-${i}`}>{t('trips.daysCount')}</label>
+                      <input id={`bp-cd-${i}`} className="bp-input" type="number" inputMode="numeric" min="1" value={r.days} placeholder="2" onChange={(e) => toRow('days', i, e.target.value)} />
                     </div>
+                    {r.name.trim() && schedule[i]?.from && (
+                      <p className="bp-city-sched">
+                        <span className="material-symbols-outlined" aria-hidden="true">event</span>
+                        {formatDate(schedule[i].from!, locale, { day: 'numeric', month: 'short' })} – {formatDate(schedule[i].to!, locale, { day: 'numeric', month: 'short' })}
+                      </p>
+                    )}
                   </div>
                 ))}
                 <button type="button" className="bp-add-btn" onClick={addRow}>+ {t('trips.addCity')}</button>
+                <p className="bp-wizard-note">{t('trips.daysSeqHint')}</p>
               </>
             )}
 
@@ -350,7 +372,7 @@ export function CreateTripWizard() {
                         <a className="bp-map-chip" href={mapsHotelSearch(r.name.trim())} target="_blank" rel="noopener noreferrer">
                           <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.hotelsOnMaps')}
                         </a>
-                        <a className="bp-map-chip" href={bookingHotelSearch(r.name.trim(), r.dateFrom, r.dateTo)} target="_blank" rel="noopener noreferrer">
+                        <a className="bp-map-chip" href={bookingHotelSearch(r.name.trim(), schedule[i]?.from, schedule[i]?.to)} target="_blank" rel="noopener noreferrer">
                           <span className="material-symbols-outlined" aria-hidden="true">hotel</span>{t('itinerary.hotelsOnBooking')}
                         </a>
                         <Link className="bp-map-chip bp-map-chip--explore" to="/explore" onClick={closeWizard}>
