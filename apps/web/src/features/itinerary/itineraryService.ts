@@ -18,6 +18,10 @@ export const PERIOD_TIME: Record<DayPeriod, string> = {
 export type TravelMode = 'PLANE' | 'CAR' | 'CRUISE';
 export const TRAVEL_MODES: TravelMode[] = ['PLANE', 'CAR', 'CRUISE'];
 
+/** Trip shape for the travel legs: one-way, round-trip, or multi-leg. */
+export type TripKind = 'ONE_WAY' | 'ROUND' | 'MULTI';
+export const TRIP_KINDS: TripKind[] = ['ONE_WAY', 'ROUND', 'MULTI'];
+
 export interface Activity {
   id: string;
   title: string;
@@ -99,6 +103,8 @@ export interface CityStop {
   flight?: string;      // legacy one-line summary (kept for back-compat)
   flightOut?: FlightLeg;
   flightReturn?: FlightLeg;
+  tripKind?: TripKind;
+  legs?: FlightLeg[];   // used when tripKind === 'MULTI'
   hotel?: string;
   hotelUrl?: string;    // optional booking/maps link
   travelMode?: TravelMode;
@@ -113,6 +119,8 @@ export interface CityInfoPatch {
   dateTo?: string;
   flightOut?: FlightLeg;
   flightReturn?: FlightLeg;
+  tripKind?: TripKind;
+  legs?: FlightLeg[];
   travelMode?: TravelMode;
 }
 
@@ -208,6 +216,8 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
         if (info.dateTo !== undefined) c.dateTo = info.dateTo || undefined;
         if (info.flightOut !== undefined) c.flightOut = info.flightOut;
         if (info.flightReturn !== undefined) c.flightReturn = info.flightReturn;
+        if (info.tripKind !== undefined) c.tripKind = info.tripKind;
+        if (info.legs !== undefined) c.legs = info.legs;
         if (info.travelMode !== undefined) c.travelMode = info.travelMode;
         if (info.dateFrom !== undefined || info.dateTo !== undefined) sortCities(b);
       }

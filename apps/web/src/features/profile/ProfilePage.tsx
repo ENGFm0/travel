@@ -6,6 +6,7 @@ import { useUIStore } from '@/app/store/uiStore';
 import { useAuth, authActions } from '@/features/auth/authStore';
 import { NOTIF_KEYS, validateAvatar, validateName, type NotifPrefs } from './profileModel';
 import { profileActions, useProfile } from './profileStore';
+import { COUNTRIES } from '@/shared/countries';
 
 export function ProfilePage() {
   const { t } = useTranslation();
@@ -46,11 +47,13 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function ProfileForm() {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
   const { profile } = useProfile();
   const [first, setFirst] = useState(profile?.firstName ?? '');
   const [middle, setMiddle] = useState(profile?.middleName ?? '');
   const [last, setLast] = useState(profile?.lastName ?? '');
   const [phone, setPhone] = useState(profile?.phone ?? '');
+  const [country, setCountry] = useState(profile?.country ?? '');
   const [errCode, setErrCode] = useState<string | null>(null);
   const [avatarErr, setAvatarErr] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -61,7 +64,7 @@ function ProfileForm() {
     const nameErr = validateName(first, last);
     if (nameErr) { setErrCode(nameErr); return; }
     setErrCode(null);
-    const ok = await profileActions.update({ firstName: first, middleName: middle, lastName: last, phone });
+    const ok = await profileActions.update({ firstName: first, middleName: middle, lastName: last, phone, country: country || undefined });
     if (ok) { setSaved(true); window.setTimeout(() => setSaved(false), 2000); }
   }
 
@@ -97,6 +100,13 @@ function ProfileForm() {
         <div className="bp-field"><label htmlFor="bp-p-middle">{t('auth.middleName')}</label><input id="bp-p-middle" className="bp-input" value={middle} onChange={(e) => setMiddle(e.target.value)} /></div>
         <div className="bp-field"><label htmlFor="bp-p-last">{t('auth.lastName')}</label><input id="bp-p-last" className="bp-input" value={last} onChange={(e) => setLast(e.target.value)} /></div>
         <div className="bp-field"><label htmlFor="bp-p-phone">{t('auth.phone')}</label><input id="bp-p-phone" className="bp-input" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+        <div className="bp-field">
+          <label htmlFor="bp-p-country">{t('account.country')}</label>
+          <select id="bp-p-country" className="bp-input" value={country} onChange={(e) => setCountry(e.target.value)}>
+            <option value="">{t('account.countryNone')}</option>
+            {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{locale.startsWith('ar') ? c.ar : c.en} ({c.currency})</option>)}
+          </select>
+        </div>
       </div>
       <div className="bp-field">
         <label htmlFor="bp-p-email">{t('auth.emailLabel')}</label>

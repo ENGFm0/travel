@@ -20,6 +20,7 @@ export interface Profile {
   lastName: string;
   email: string; // immutable identity anchor (BR-002-001)
   phone: string;
+  country?: string; // ISO 3166-1 alpha-2 home country (drives default currency)
   avatarUrl: string;
   notif: NotifPrefs;
 }

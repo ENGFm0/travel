@@ -193,6 +193,8 @@
       "SIZE": "يجب ألا يتجاوز حجم الصورة 5 ميجابايت"
     },
     "emailImmutable": "لا يمكن تغيير البريد من هنا.",
+    "country": "الدولة",
+    "countryNone": "اختر دولتك…",
     "nameErrors": {
       "REQUIRED": "الاسم الأول والأخير مطلوبان",
       "TOO_LONG": "الاسم طويل جدًا (50 حرفًا كحد أقصى)"
@@ -222,7 +224,16 @@
     "stepInvite": "الأصدقاء",
     "stepTravel": "التنقّل",
     "stepHotels": "الفنادق",
+    "stepBudget": "الميزانية",
     "stepPeople": "المرافقون والحالة",
+    "budgetHint": "حدد ميزانية الرحلة وعملتها (اختياري).",
+    "budgetLabel": "الميزانية",
+    "currencyLabel": "العملة",
+    "destCurrencyLabel": "عملة الوجهة",
+    "destCurrencyNone": "بدون",
+    "destCurrencyNote": "عملة الدولة اللي بتسافر لها — تظهر بجانب عملتك.",
+    "currencyDomesticNote": "رحلة داخلية — العملة {{cur}} حسب دولتك.",
+    "currencyIntlNote": "رحلة خارجية — تقدر تحدد عملتك وعملة الوجهة.",
     "stepOf": "خطوة {{n}} من {{total}}",
     "datesOptionalHint": "التواريخ اختيارية هنا — تقدر تحدد تاريخ كل مدينة في الخطوة التالية (مثال: إيطاليا أسبوع ثم النمسا).",
     "citiesHint": "أضف المدن/الدول مع تواريخ كل وجهة (مثال: إيطاليا من–إلى، ثم النمسا من–إلى).",
@@ -422,6 +433,16 @@
     "shipName": "اسم السفينة",
     "legGo": "الذهاب",
     "legBack": "العودة",
+    "tripKindLabel": "نوع الرحلة",
+    "tripKind": {
+      "ONE_WAY": "ذهاب فقط",
+      "ROUND": "ذهاب وعودة",
+      "MULTI": "متعددة"
+    },
+    "legN": "الرحلة {{n}}",
+    "addLeg": "أضف رحلة",
+    "removeLeg": "حذف الرحلة",
+    "noLegs": "أضف رحلاتك المتعددة (وجهة تلو الأخرى).",
     "whenLabel": "الوقت",
     "exactTime": "وقت محدد (اختياري)",
     "period": {
@@ -439,6 +460,7 @@
     "commentPh": "اكتب رأيك عن المكان…",
     "publishReview": "نشر التقييم",
     "hotelsOnMaps": "فنادق على خرائط قوقل",
+    "hotelsOnBooking": "فنادق على Booking",
     "discover": "اكتشف أماكن للإضافة:",
     "mapsRestaurants": "مطاعم",
     "mapsActivities": "أنشطة",

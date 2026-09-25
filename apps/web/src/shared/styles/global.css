@@ -952,6 +952,9 @@ select.bp-input {
   border-radius: var(--bp-r-full); background: var(--bp-surface); color: var(--bp-ink-muted); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }
 .bp-mode .material-symbols-outlined { font-size: 18px; }
 .bp-mode.is-on { background: var(--bp-primary); color: var(--bp-on-primary); border-color: var(--bp-primary); }
+.bp-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.bp-leg-wrap { position: relative; }
+.bp-leg-rm { position: absolute; inset-block-start: 8px; inset-inline-end: 8px; background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-full); }
 
 /* Rate & comment inside a timeline item */
 .bp-tl-item__rate-btn { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 5px 10px;

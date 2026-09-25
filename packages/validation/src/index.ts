@@ -56,6 +56,9 @@ export const createTripSchema = z
       .min(1, 'AT_LEAST_ONE_CITY'),
     travelMode: travelModeSchema.optional(),
     state: tripStateSchema.optional(),
+    budget: z.number().nonnegative().optional(),
+    currency: z.string().trim().max(8).optional(),
+    destCurrency: z.string().trim().max(8).optional(),
     invitees: z.array(z.string()).optional(),
   })
   .refine((d) => !d.dateTo || d.dateTo >= d.dateFrom, {

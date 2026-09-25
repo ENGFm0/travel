@@ -5,8 +5,8 @@ import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
 import {
-  ACTIVITY_KINDS, TRAVEL_MODES, formatTime12, periodFromTime,
-  type Activity, type ActivityKind, type CitySeed, type CityStop, type Day, type FlightLeg, type TravelMode,
+  ACTIVITY_KINDS, TRAVEL_MODES, TRIP_KINDS, formatTime12, periodFromTime,
+  type Activity, type ActivityKind, type CitySeed, type CityStop, type Day, type FlightLeg, type TravelMode, type TripKind,
 } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
@@ -18,6 +18,14 @@ import type { Place, PlaceCategory } from '@/features/places/placesModel';
 /** Google Maps search deep-link (no API key; opens the Maps web app). */
 function mapsSearch(query: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+/** Booking.com search deep-link for a city, with check-in/out when known. */
+function bookingSearch(city: string, checkin?: string, checkout?: string): string {
+  const p = new URLSearchParams({ ss: city });
+  if (checkin) p.set('checkin', checkin);
+  if (checkout) p.set('checkout', checkout);
+  return `https://www.booking.com/searchresults.html?${p.toString()}`;
 }
 type CitySub = 'days' | 'flight' | 'stay' | 'weather';
 
@@ -288,16 +296,30 @@ function LegForm({ title, icon, leg, onSave, canEdit, mode }: {
   );
 }
 
-/** ── Travel section: mode (plane/car/cruise) + go/return legs + countdown ── */
+/** ── Travel section: mode (plane/car/cruise) + kind (one-way/round/multi) ── */
 function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
   const mode: TravelMode = city.travelMode ?? 'PLANE';
-  const saveOut = (l: FlightLeg) => itineraryActions.setCityInfo(tripId, city.id, { flightOut: l });
-  const saveBack = (l: FlightLeg) => itineraryActions.setCityInfo(tripId, city.id, { flightReturn: l });
-  const setMode = (m: TravelMode) => itineraryActions.setCityInfo(tripId, city.id, { travelMode: m });
-  const depMs = legDeparture(city.flightOut, city.dateFrom);
+  const kind: TripKind = city.tripKind ?? 'ROUND';
+  const set = (patch: Parameters<typeof itineraryActions.setCityInfo>[2]) => itineraryActions.setCityInfo(tripId, city.id, patch);
+  const saveOut = (l: FlightLeg) => set({ flightOut: l });
+  const saveBack = (l: FlightLeg) => set({ flightReturn: l });
+  const legs = city.legs ?? [];
+  const depMs = legDeparture(kind === 'MULTI' ? legs[0] : city.flightOut, city.dateFrom);
   const goTitle = mode === 'PLANE' ? t('itinerary.outbound') : t('itinerary.legGo');
   const backTitle = mode === 'PLANE' ? t('itinerary.returnLeg') : t('itinerary.legBack');
+
+  // Prefill the leg's date from the city's dates so it's based on the trip.
+  const outLeg: FlightLeg = city.flightOut ?? { date: city.dateFrom };
+  const backLeg: FlightLeg = city.flightReturn ?? { date: city.dateTo };
+
+  function saveLeg(i: number, l: FlightLeg) {
+    const next = [...legs];
+    next[i] = l;
+    set({ legs: next });
+  }
+  function addLeg() { set({ legs: [...legs, { date: legs.length === 0 ? city.dateFrom : undefined }] }); }
+  function removeLeg(i: number) { set({ legs: legs.filter((_, idx) => idx !== i) }); }
 
   return (
     <section className="bp-itin-sec">
@@ -309,9 +331,19 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
       {canEdit && (
         <div className="bp-modes" role="group" aria-label={t('itinerary.travelMode')}>
           {TRAVEL_MODES.map((m) => (
-            <button key={m} type="button" className={`bp-mode ${mode === m ? 'is-on' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
+            <button key={m} type="button" className={`bp-mode ${mode === m ? 'is-on' : ''}`} aria-pressed={mode === m} onClick={() => set({ travelMode: m })}>
               <span className="material-symbols-outlined" aria-hidden="true">{MODE_ICON[m]}</span>
               {t(`itinerary.mode.${m}`)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {canEdit && (
+        <div className="bp-kinds" role="group" aria-label={t('itinerary.tripKindLabel')}>
+          {TRIP_KINDS.map((k) => (
+            <button key={k} type="button" className={`bp-chip bp-chip--btn ${kind === k ? 'is-on' : ''}`} aria-pressed={kind === k} onClick={() => set({ tripKind: k })}>
+              {t(`itinerary.tripKind.${k}`)}
             </button>
           ))}
         </div>
@@ -326,12 +358,27 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
             airline: info.airline, no: info.code, from: info.departure.iata, to: info.arrival.iata,
             date: dep?.slice(0, 10), time: dep?.slice(11, 16),
           };
-          void saveOut(leg);
+          if (kind === 'MULTI') saveLeg(legs.length ? 0 : 0, leg); else void saveOut(leg);
         }} />
       )}
 
-      <LegForm title={goTitle} icon={LEG_ICON[mode].go} leg={city.flightOut} onSave={saveOut} canEdit={canEdit} mode={mode} />
-      <LegForm title={backTitle} icon={LEG_ICON[mode].back} leg={city.flightReturn} onSave={saveBack} canEdit={canEdit} mode={mode} />
+      {kind === 'MULTI' ? (
+        <>
+          {legs.map((l, i) => (
+            <div key={i} className="bp-leg-wrap">
+              <LegForm title={t('itinerary.legN', { n: i + 1 })} icon={LEG_ICON[mode].go} leg={l} onSave={(x) => saveLeg(i, x)} canEdit={canEdit} mode={mode} />
+              {canEdit && <button className="bp-icon-btn bp-icon-btn--xs bp-leg-rm" aria-label={t('itinerary.removeLeg')} onClick={() => removeLeg(i)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
+            </div>
+          ))}
+          {legs.length === 0 && <p className="bp-itin-sec__note">{t('itinerary.noLegs')}</p>}
+          {canEdit && <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={addLeg}>+ {t('itinerary.addLeg')}</button>}
+        </>
+      ) : (
+        <>
+          <LegForm title={goTitle} icon={LEG_ICON[mode].go} leg={outLeg} onSave={saveOut} canEdit={canEdit} mode={mode} />
+          {kind === 'ROUND' && <LegForm title={backTitle} icon={LEG_ICON[mode].back} leg={backLeg} onSave={saveBack} canEdit={canEdit} mode={mode} />}
+        </>
+      )}
     </section>
   );
 }
@@ -363,13 +410,22 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
             <input className="bp-input" value={url} placeholder="https://…" dir="ltr" aria-label={t('itinerary.hotelLink')}
               onChange={(e) => setUrl(e.target.value)} onBlur={saveUrl} />
           </label>
+          {mapsEnabled() && (
+            <PlaceSearch city={`فنادق ${city.name}`} onPick={(p) => {
+              itineraryActions.setCityInfo(tripId, city.id, { hotel: p.name, hotelUrl: p.mapsUrl });
+            }} />
+          )}
           <p className="bp-itin-sec__note">{t('itinerary.hotelHint')}</p>
           <div className="bp-map-links">
-            <a className="bp-inline-link" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">
+            <a className="bp-map-chip" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">
               <span className="material-symbols-outlined" aria-hidden="true">map</span>
               {t('itinerary.hotelsOnMaps')}
             </a>
-            <Link className="bp-inline-link" to="/explore">
+            <a className="bp-map-chip" href={bookingSearch(city.name, city.dateFrom, city.dateTo)} target="_blank" rel="noopener noreferrer">
+              <span className="material-symbols-outlined" aria-hidden="true">hotel</span>
+              {t('itinerary.hotelsOnBooking')}
+            </a>
+            <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
               <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>
               {t('itinerary.browseHotels')}
             </Link>

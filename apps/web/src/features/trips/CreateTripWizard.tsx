@@ -6,10 +6,12 @@ import { isApiError } from '@boardingpass/core';
 import type { TripType } from '@boardingpass/types';
 import type { Trip, TripCity, TripTravelMode, TripState } from './tripsService';
 import { useTripsWizard, tripsActions, useTripsStore } from './tripsStore';
+import { useProfile } from '@/features/profile/profileStore';
+import { CURRENCIES, currencyOf, guessCountry } from '@/shared/countries';
 
 type Row = { name: string; dateFrom: string; dateTo: string; hotel: string };
 
-const STEPS = 5;
+const STEPS = 6;
 const MODES: { key: TripTravelMode; icon: string }[] = [
   { key: 'PLANE', icon: 'flight' },
   { key: 'CAR', icon: 'directions_car' },
@@ -26,6 +28,8 @@ export function CreateTripWizard() {
   const navigate = useNavigate();
   const { wizardOpen, closeWizard } = useTripsWizard();
   const setLastCreated = useTripsStore((s) => s.setLastCreated);
+  const { profile } = useProfile();
+  const homeCurrency = currencyOf(profile?.country) ?? 'SAR';
 
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
@@ -35,6 +39,9 @@ export function CreateTripWizard() {
   const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]);
   const [travelMode, setTravelMode] = useState<TripTravelMode>('PLANE');
   const [state, setState] = useState<TripState>('PLANNING');
+  const [budget, setBudget] = useState('');
+  const [currency, setCurrency] = useState('');
+  const [destCurrency, setDestCurrency] = useState('');
   const [inviteInput, setInviteInput] = useState('');
   const [invitees, setInvitees] = useState<string[]>([]);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -47,9 +54,22 @@ export function CreateTripWizard() {
     if (wizardOpen) {
       setStep(1); setTitle(''); setType(''); setDateFrom(''); setDateTo('');
       setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTravelMode('PLANE'); setState('PLANNING');
+      setBudget(''); setCurrency(''); setDestCurrency('');
       setInviteInput(''); setInvitees([]); setErrorCode(null); setBusy(false); setDone(null);
     }
   }, [wizardOpen]);
+
+  // On the budget step, default the currency to the user's home currency, and
+  // for international trips guess the destination currency from the cities.
+  useEffect(() => {
+    if (step !== 5) return;
+    if (!currency) setCurrency(homeCurrency);
+    if (type === 'INTERNATIONAL' && !destCurrency) {
+      const g = rows.map((r) => guessCountry(r.name)).find(Boolean);
+      if (g) setDestCurrency(g.currency);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   useEffect(() => {
     if (!wizardOpen) return;
@@ -117,7 +137,14 @@ export function CreateTripWizard() {
     const tos = cities.map((c) => c.dateTo ?? c.dateFrom).filter(Boolean) as string[];
     const finalFrom = dateFrom || froms.sort()[0] || '';
     const finalTo = dateTo || (tos.length ? tos.sort()[tos.length - 1] : undefined);
-    const payload = { title: title.trim(), type: type as TripType, dateFrom: finalFrom, dateTo: finalTo, cities, travelMode, state, invitees };
+    const budgetNum = budget.trim() ? Number(budget) : undefined;
+    const payload = {
+      title: title.trim(), type: type as TripType, dateFrom: finalFrom, dateTo: finalTo, cities, travelMode, state,
+      budget: Number.isFinite(budgetNum) ? budgetNum : undefined,
+      currency: currency || undefined,
+      destCurrency: type === 'INTERNATIONAL' ? (destCurrency || undefined) : undefined,
+      invitees,
+    };
     const parsed = createTripSchema.safeParse(payload);
     if (!parsed.success) {
       const p = parsed.error.issues[0]?.path[0];
@@ -140,7 +167,7 @@ export function CreateTripWizard() {
 
   function goto(path: string) { closeWizard(); navigate(path); }
 
-  const stepLabels = ['trips.stepBasics', 'trips.stepDestinations', 'trips.stepTravel', 'trips.stepHotels', 'trips.stepPeople'];
+  const stepLabels = ['trips.stepBasics', 'trips.stepDestinations', 'trips.stepTravel', 'trips.stepHotels', 'trips.stepBudget', 'trips.stepPeople'];
 
   return (
     <div className="bp-scrim" onMouseDown={(e) => e.target === e.currentTarget && closeWizard()}>
@@ -223,11 +250,11 @@ export function CreateTripWizard() {
                     <div className="bp-grid-2">
                       <div className="bp-field">
                         <label htmlFor={`bp-cf-${i}`}>{t('trips.fromLabel')}</label>
-                        <input id={`bp-cf-${i}`} className="bp-input" type="date" value={r.dateFrom} onChange={(e) => toRow('dateFrom', i, e.target.value)} />
+                        <input id={`bp-cf-${i}`} className="bp-input" type="date" value={r.dateFrom} min={dateFrom || undefined} max={dateTo || undefined} onChange={(e) => toRow('dateFrom', i, e.target.value)} />
                       </div>
                       <div className="bp-field">
                         <label htmlFor={`bp-ct-${i}`}>{t('trips.toLabel')}</label>
-                        <input id={`bp-ct-${i}`} className="bp-input" type="date" value={r.dateTo} onChange={(e) => toRow('dateTo', i, e.target.value)} />
+                        <input id={`bp-ct-${i}`} className="bp-input" type="date" value={r.dateTo} min={r.dateFrom || dateFrom || undefined} max={dateTo || undefined} onChange={(e) => toRow('dateTo', i, e.target.value)} />
                       </div>
                     </div>
                   </div>
@@ -269,8 +296,40 @@ export function CreateTripWizard() {
               </>
             )}
 
-            {/* Step 5 — people + status */}
+            {/* Step 5 — budget + currency */}
             {step === 5 && (
+              <>
+                <p className="bp-wizard-hint">{t('trips.budgetHint')}</p>
+                <div className="bp-grid-2">
+                  <div className="bp-field">
+                    <label htmlFor="bp-budget">{t('trips.budgetLabel')}</label>
+                    <input id="bp-budget" className="bp-input" type="number" inputMode="decimal" min="0" value={budget} placeholder="0" onChange={(e) => setBudget(e.target.value)} />
+                  </div>
+                  <div className="bp-field">
+                    <label htmlFor="bp-cur">{t('trips.currencyLabel')}</label>
+                    <select id="bp-cur" className="bp-input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                      {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {type === 'INTERNATIONAL' && (
+                  <div className="bp-field">
+                    <label htmlFor="bp-destcur">{t('trips.destCurrencyLabel')}</label>
+                    <select id="bp-destcur" className="bp-input" value={destCurrency} onChange={(e) => setDestCurrency(e.target.value)}>
+                      <option value="">{t('trips.destCurrencyNone')}</option>
+                      {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <span className="bp-note">{t('trips.destCurrencyNote')}</span>
+                  </div>
+                )}
+                <p className="bp-wizard-note">
+                  {type === 'DOMESTIC' ? t('trips.currencyDomesticNote', { cur: currency || homeCurrency }) : t('trips.currencyIntlNote')}
+                </p>
+              </>
+            )}
+
+            {/* Step 6 — people + status */}
+            {step === 6 && (
               <>
                 <p className="bp-wizard-hint">{t('trips.peopleHint')}</p>
                 <div className="bp-city-row">

@@ -77,7 +77,10 @@ describe('US-003 wizard flow', () => {
     // Step 4: hotels → next
     await userEvent.type(await screen.findByLabelText('فندق باريس'), 'فندق لطيف');
     await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
-    // Step 5: people + status → create
+    // Step 5: budget → next
+    await userEvent.type(await screen.findByLabelText('الميزانية'), '5000');
+    await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
+    // Step 6: people + status → create
     await userEvent.click(await screen.findByRole('button', { name: 'إنشاء الرحلة' }));
 
     expect(await screen.findByRole('heading', { name: /تم إنشاء رحلتك/ })).toBeInTheDocument();

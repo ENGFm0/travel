@@ -153,6 +153,12 @@ function TripCard({ trip, today, locale, isPast }: { trip: Trip; today: string; 
         <span className="material-symbols-outlined" aria-hidden="true">event</span>
         {range}
       </p>
+      {typeof trip.budget === 'number' && trip.budget > 0 && (
+        <p className="bp-trip-card__meta">
+          <span className="material-symbols-outlined" aria-hidden="true">payments</span>
+          {trip.budget.toLocaleString()} {trip.currency || ''}{trip.destCurrency ? ` · ${trip.destCurrency}` : ''}
+        </p>
+      )}
 
       <div className="bp-progress" aria-label={t('trips.progress')}>
         <div className="bp-progress__bar" style={{ inlineSize: `${progress}%` }} />

@@ -30,6 +30,9 @@ export interface Trip {
   status: TripStatus;
   travelMode?: TripTravelMode;
   state?: TripState;
+  budget?: number;
+  currency?: string;      // home / primary currency
+  destCurrency?: string;  // destination currency (international trips)
   /** 0–100 planning completeness (server-computed; BR-005-001). */
   progress?: number;
 }
@@ -42,6 +45,9 @@ export interface CreateTripPayload {
   cities: TripCity[];
   travelMode?: TripTravelMode;
   state?: TripState;
+  budget?: number;
+  currency?: string;
+  destCurrency?: string;
   invitees?: string[];
 }
 
@@ -80,6 +86,9 @@ export function createMockTripsService(seed?: Trip[], persistKey?: string): Trip
         status: 'ACTIVE',
         travelMode: p.travelMode,
         state: p.state ?? 'PLANNING',
+        budget: p.budget,
+        currency: p.currency,
+        destCurrency: p.destCurrency,
         progress: 5,
       };
       trips.unshift(trip);
@@ -198,6 +207,9 @@ export function createFirestoreTripsService(): TripsService {
       status: d.status,
       travelMode: d.travelMode ?? undefined,
       state: d.state ?? undefined,
+      budget: d.budget ?? undefined,
+      currency: d.currency ?? undefined,
+      destCurrency: d.destCurrency ?? undefined,
       progress: d.progress ?? 0,
     };
   }
@@ -218,6 +230,9 @@ export function createFirestoreTripsService(): TripsService {
         status: 'ACTIVE' as TripStatus,
         travelMode: p.travelMode ?? null,
         state: p.state ?? 'PLANNING',
+        budget: p.budget ?? null,
+        currency: p.currency ?? null,
+        destCurrency: p.destCurrency ?? null,
         progress: 5,
         createdAt: serverTimestamp(),
       };

@@ -105,7 +105,8 @@ export function createFirestoreProfileService(): ProfileService {
     const d = (s.data() ?? {}) as Partial<Profile>;
     return {
       uid, firstName: d.firstName ?? '', middleName: d.middleName ?? '', lastName: d.lastName ?? '',
-      email: d.email ?? '', phone: d.phone ?? '', avatarUrl: d.avatarUrl ?? '', notif: d.notif ?? defaultPrefs(),
+      email: d.email ?? '', phone: d.phone ?? '', country: d.country ?? undefined,
+      avatarUrl: d.avatarUrl ?? '', notif: d.notif ?? defaultPrefs(),
     };
   };
   return {

@@ -193,6 +193,8 @@
       "SIZE": "Image must be 5 MB or smaller"
     },
     "emailImmutable": "Email can't be changed here.",
+    "country": "Country",
+    "countryNone": "Choose your country…",
     "nameErrors": {
       "REQUIRED": "First and last name are required",
       "TOO_LONG": "Name is too long (max 50)"
@@ -222,7 +224,16 @@
     "stepInvite": "Friends",
     "stepTravel": "Travel",
     "stepHotels": "Hotels",
+    "stepBudget": "Budget",
     "stepPeople": "People & status",
+    "budgetHint": "Set the trip budget and its currency (optional).",
+    "budgetLabel": "Budget",
+    "currencyLabel": "Currency",
+    "destCurrencyLabel": "Destination currency",
+    "destCurrencyNone": "None",
+    "destCurrencyNote": "The currency of the country you're visiting — shown next to yours.",
+    "currencyDomesticNote": "Domestic trip — currency {{cur}} from your country.",
+    "currencyIntlNote": "International trip — set your currency and the destination's.",
     "stepOf": "Step {{n}} of {{total}}",
     "datesOptionalHint": "Dates are optional here — you can set each city's dates in the next step (e.g. Italy for a week, then Austria).",
     "citiesHint": "Add cities/countries with each destination's dates (e.g. Italy from–to, then Austria from–to).",
@@ -422,6 +433,16 @@
     "shipName": "Ship name",
     "legGo": "Outbound",
     "legBack": "Return",
+    "tripKindLabel": "Trip type",
+    "tripKind": {
+      "ONE_WAY": "One-way",
+      "ROUND": "Round-trip",
+      "MULTI": "Multi-leg"
+    },
+    "legN": "Leg {{n}}",
+    "addLeg": "Add a leg",
+    "removeLeg": "Remove leg",
+    "noLegs": "Add your legs (destination after destination).",
     "whenLabel": "Time",
     "exactTime": "Exact time (optional)",
     "period": {
@@ -439,6 +460,7 @@
     "commentPh": "Share your thoughts about this place…",
     "publishReview": "Publish review",
     "hotelsOnMaps": "Hotels on Google Maps",
+    "hotelsOnBooking": "Hotels on Booking",
     "discover": "Discover places to add:",
     "mapsRestaurants": "Restaurants",
     "mapsActivities": "Activities",
