@@ -191,8 +191,12 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tri
         ))}
       </div>
 
+      {/* A city with its own dates always uses them. Only the first stop may
+          borrow the trip's overall range, so multi-city stops don't each
+          duplicate the whole trip — later stops follow the dates you entered. */}
       {sub === 'days' && <DaysSection tripId={tripId} city={city} canEdit={canEdit}
-        rangeFrom={city.dateFrom ?? tripFrom} rangeTo={city.dateTo ?? tripTo} />}
+        rangeFrom={city.dateFrom ?? (idx === 0 ? tripFrom : undefined)}
+        rangeTo={city.dateTo ?? (idx === 0 ? tripTo : undefined)} />}
       {sub === 'flight' && <FlightSection tripId={tripId} city={city} canEdit={canEdit} />}
       {sub === 'stay' && <HotelSection tripId={tripId} city={city} canEdit={canEdit} />}
       {sub === 'weather' && <WeatherSection city={city} date={city.dateFrom ?? tripStart} />}

@@ -67,12 +67,17 @@ export function CreateTripWizard() {
   function validateStep1(): boolean {
     if (title.trim().length < 2) { setErrorCode('TITLE_REQUIRED'); return false; }
     if (!type) { setErrorCode('TYPE_REQUIRED'); return false; }
-    if (!dateFrom) { setErrorCode('DATE_REQUIRED'); return false; }
-    if (dateTo && dateTo < dateFrom) { setErrorCode('END_BEFORE_START'); return false; }
+    // Dates are optional here — they can be entered per city in the next step.
+    if (dateFrom && dateTo && dateTo < dateFrom) { setErrorCode('END_BEFORE_START'); return false; }
     return true;
   }
   function validateStep2(): boolean {
     if (!rows[0]?.name.trim()) { setErrorCode('CITY_REQUIRED'); return false; }
+    // A trip needs a date somewhere: either the overall range, or a city's own.
+    const hasCityDate = rows.some((r) => r.dateFrom.trim());
+    if (!dateFrom && !hasCityDate) { setErrorCode('DATE_REQUIRED'); return false; }
+    // Per-city end must not precede its start.
+    if (rows.some((r) => r.dateFrom && r.dateTo && r.dateTo < r.dateFrom)) { setErrorCode('END_BEFORE_START'); return false; }
     return true;
   }
 
@@ -106,7 +111,13 @@ export function CreateTripWizard() {
         hotel: r.hotel.trim() || undefined,
         travelMode,
       }));
-    const payload = { title: title.trim(), type: type as TripType, dateFrom, dateTo: dateTo || undefined, cities, travelMode, state, invitees };
+    // Overall trip range: what the user typed, else derived from the cities'
+    // own dates (earliest start → latest end) — we never invent dates.
+    const froms = cities.map((c) => c.dateFrom).filter(Boolean) as string[];
+    const tos = cities.map((c) => c.dateTo ?? c.dateFrom).filter(Boolean) as string[];
+    const finalFrom = dateFrom || froms.sort()[0] || '';
+    const finalTo = dateTo || (tos.length ? tos.sort()[tos.length - 1] : undefined);
+    const payload = { title: title.trim(), type: type as TripType, dateFrom: finalFrom, dateTo: finalTo, cities, travelMode, state, invitees };
     const parsed = createTripSchema.safeParse(payload);
     if (!parsed.success) {
       const p = parsed.error.issues[0]?.path[0];
@@ -188,6 +199,7 @@ export function CreateTripWizard() {
                     <input id="bp-t-to" className="bp-input" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                   </div>
                 </div>
+                <p className="bp-wizard-note">{t('trips.datesOptionalHint')}</p>
               </>
             )}
 
