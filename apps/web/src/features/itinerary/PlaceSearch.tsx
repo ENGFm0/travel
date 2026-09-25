@@ -9,7 +9,8 @@ export interface PickedPlace {
   name: string;
   address?: string;
   kind: ActivityKind;
-  photoUrl?: string;
+  photoUrl?: string;      // first photo (back-compat)
+  photoUrls?: string[];   // all available photos (browsable gallery)
   mapsUrl?: string;
   placeId?: string;
 }
@@ -110,11 +111,15 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
       const pred = s.placePrediction;
       const place = pred.toPlace();
       await place.fetchFields({ fields: ['id', 'displayName', 'formattedAddress', 'types', 'photos', 'googleMapsURI'] });
-      let photoUrl: string | undefined;
+      let photoUrls: string[] | undefined;
       try {
-        const photo = place.photos?.[0];
-        if (photo?.getURI) photoUrl = photo.getURI({ maxWidth: 480, maxHeight: 360 });
+        // Grab all available photos (capped) at a large size so they can be
+        // browsed full-screen, not just a tiny thumbnail.
+        const photos = (place.photos ?? []).slice(0, 10);
+        const urls = photos.map((ph: any) => ph?.getURI?.({ maxWidth: 1280, maxHeight: 960 })).filter(Boolean) as string[];
+        if (urls.length) photoUrls = urls;
       } catch { /* photos optional */ }
+      const photoUrl = photoUrls?.[0];
       const name = place.displayName ?? pred.text?.text ?? text;
       const mapsUrl: string | undefined = place.googleMapsURI
         ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
@@ -123,6 +128,7 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
         address: place.formattedAddress ?? undefined,
         kind: guessKind(place.types ?? []),
         photoUrl,
+        photoUrls,
         mapsUrl,
         placeId: place.id ?? pred.placeId ?? undefined,
       });

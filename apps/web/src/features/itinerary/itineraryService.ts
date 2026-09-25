@@ -34,7 +34,8 @@ export interface Activity {
   note?: string;       // extra detail (place, address, remarks)
   kind?: ActivityKind;
   cost?: number;       // optional price → recorded as a shared expense
-  photoUrl?: string;   // optional place photo (from Google Places)
+  photoUrl?: string;   // optional place photo (from Google Places) — first of photoUrls
+  photoUrls?: string[]; // all place photos (from Google Places) — browsable gallery
   mapsUrl?: string;    // optional deep-link (from Google Places / Explore)
   placeId?: string;    // links to a community place (for rating/recommendations)
 }
@@ -47,6 +48,7 @@ export interface ActivityInput {
   kind?: ActivityKind;
   cost?: number;
   photoUrl?: string;
+  photoUrls?: string[];
   mapsUrl?: string;
   placeId?: string;
 }
@@ -108,6 +110,7 @@ export interface Stay {
   id: string;
   name: string;
   photoUrl?: string;
+  photoUrls?: string[]; // all place photos — browsable gallery
   mapsUrl?: string;
   checkIn?: string;   // ISO date
   checkOut?: string;  // ISO date
@@ -315,7 +318,8 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
         id: uid('act'), title: input.title.trim(), time: input.time || undefined,
         period: input.period, note: input.note?.trim() || undefined, kind: input.kind,
         cost: input.cost || undefined,
-        photoUrl: input.photoUrl || undefined, mapsUrl: input.mapsUrl || undefined,
+        photoUrl: input.photoUrl || undefined, photoUrls: input.photoUrls?.length ? input.photoUrls : undefined,
+        mapsUrl: input.mapsUrl || undefined,
         placeId: input.placeId || undefined,
       });
       // keep the day's activities ordered by time-of-day

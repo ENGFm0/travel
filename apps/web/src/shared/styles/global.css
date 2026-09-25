@@ -942,11 +942,9 @@ select.bp-input {
   object-fit: cover; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
 
 /* Stay (accommodation) card — rich hotel entry inside the Stay sub-tab */
-.bp-stay-card { display: flex; gap: 12px; padding: 10px; border: 1px solid var(--bp-border);
+.bp-stay-card { display: flex; padding: 10px; border: 1px solid var(--bp-border);
   border-radius: var(--bp-r-lg); background: var(--bp-surface); }
-.bp-stay-card__photo { flex: 0 0 auto; inline-size: 92px; block-size: 92px; object-fit: cover;
-  border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
-.bp-stay-card__body { flex: 1 1 auto; min-inline-size: 0; display: flex; flex-direction: column; gap: 6px; }
+.bp-stay-card__body { flex: 1 1 auto; min-inline-size: 0; display: flex; flex-direction: column; gap: 8px; }
 .bp-stay-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .bp-stay-card__name { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.3; word-break: break-word; }
 .bp-stay-card__ops { flex: 0 0 auto; display: inline-flex; gap: 2px; }
@@ -954,7 +952,45 @@ select.bp-input {
   color: var(--bp-ink-muted); }
 .bp-stay-card__meta .material-symbols-outlined { font-size: 15px; }
 .bp-stay-card__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.bp-stay-card__rate { display: inline-flex; align-items: center; gap: 8px; }
+.bp-stay-card__rate .bp-field__label { margin: 0; }
 .bp-stay-rate { display: flex; align-items: center; gap: 10px; }
+
+/* Photo gallery — hero + thumbnail strip, opening a full-screen lightbox */
+.bp-gallery { display: flex; flex-direction: column; gap: 6px; margin: 2px 0; }
+.bp-gallery__hero { position: relative; display: block; padding: 0; border: 1px solid var(--bp-border);
+  border-radius: var(--bp-r-md); background: var(--bp-surface-2, #0000000a); cursor: pointer; overflow: hidden; }
+.bp-gallery--md .bp-gallery__hero { block-size: 200px; }
+.bp-gallery--sm .bp-gallery__hero { block-size: 140px; }
+.bp-gallery__hero img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.bp-gallery__count { position: absolute; inset-block-end: 8px; inset-inline-end: 8px; display: inline-flex; align-items: center;
+  gap: 4px; padding: 3px 8px; border-radius: 999px; background: #000000a6; color: #fff; font-size: 12px; font-weight: 700; }
+.bp-gallery__count .material-symbols-outlined { font-size: 15px; }
+.bp-gallery__strip { display: flex; gap: 6px; overflow-x: auto; }
+.bp-gallery__thumb { position: relative; flex: 0 0 auto; inline-size: 64px; block-size: 48px; padding: 0; cursor: pointer;
+  border: 1px solid var(--bp-border); border-radius: var(--bp-r-sm, 8px); overflow: hidden; background: none; }
+.bp-gallery__thumb img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.bp-gallery__more { position: absolute; inset: 0; display: grid; place-items: center; background: #000000a6;
+  color: #fff; font-size: 13px; font-weight: 800; }
+
+.bp-lightbox { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+  background: #000000e6; padding: 24px; }
+.bp-lightbox__stage { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; max-inline-size: 92vw; }
+.bp-lightbox__img { max-inline-size: 92vw; max-block-size: 82vh; object-fit: contain; border-radius: var(--bp-r-md);
+  box-shadow: 0 12px 48px #0009; }
+.bp-lightbox__count { color: #fff; font-size: 13px; font-weight: 700; }
+.bp-lightbox__close { position: fixed; inset-block-start: 16px; inset-inline-end: 16px; inline-size: 44px; block-size: 44px;
+  display: grid; place-items: center; border: 0; border-radius: 999px; background: #ffffff1f; color: #fff; cursor: pointer; }
+.bp-lightbox__close:hover { background: #ffffff33; }
+.bp-lightbox__nav { position: fixed; inset-block-start: 50%; transform: translateY(-50%); inline-size: 48px; block-size: 48px;
+  display: grid; place-items: center; border: 0; border-radius: 999px; background: #ffffff1f; color: #fff; cursor: pointer; }
+.bp-lightbox__nav:hover { background: #ffffff33; }
+.bp-lightbox__nav--prev { inset-inline-start: 16px; }
+.bp-lightbox__nav--next { inset-inline-end: 16px; }
+.bp-lightbox__nav .material-symbols-outlined,
+.bp-lightbox__close .material-symbols-outlined { font-size: 28px; }
+/* Chevrons are direction-agnostic glyphs; flip for RTL so prev/next feel right. */
+[dir="rtl"] .bp-lightbox__nav .material-symbols-outlined { transform: scaleX(-1); }
 
 .bp-add-activity { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
   border: 1px dashed var(--bp-border); border-radius: var(--bp-r-md); background: transparent; color: var(--bp-primary);
@@ -1031,9 +1067,11 @@ select.bp-input {
 .bp-browse__links { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ── Activity add-form photo preview + time field ───────────────────────────── */
-.bp-act-form__photo { position: relative; align-self: flex-start; }
+.bp-act-form__photo { position: relative; align-self: flex-start; inline-size: 100%; max-inline-size: 320px; }
 .bp-act-form__photo img { display: block; inline-size: 100%; max-inline-size: 260px; aspect-ratio: 4 / 3;
   object-fit: cover; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
+/* Gallery inside the add form owns its own sizing — neutralise the legacy img rule. */
+.bp-act-form__photo .bp-gallery img { max-inline-size: none; aspect-ratio: auto; border: 0; border-radius: 0; }
 .bp-act-form__photo-rm { position: absolute; inset-block-start: 6px; inset-inline-end: 6px;
   background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-full); }
 .bp-act-form__time { max-inline-size: 120px; flex: 0 0 auto; }
