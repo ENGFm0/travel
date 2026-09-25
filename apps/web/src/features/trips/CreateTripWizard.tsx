@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createTripSchema } from '@boardingpass/validation';
 import { isApiError } from '@boardingpass/core';
 import type { TripType } from '@boardingpass/types';
@@ -10,9 +10,19 @@ import { useProfile } from '@/features/profile/profileStore';
 import { currencyOf, guessCountry } from '@/shared/countries';
 import { getItineraryBoard, TRIP_KINDS, type FlightLeg, type TripKind } from '@/features/itinerary/itineraryService';
 import { LegForm } from '@/features/itinerary/ItineraryTab';
+import { PlaceSearch } from '@/features/itinerary/PlaceSearch';
+import { mapsEnabled } from '@/shared/googleMaps';
 import { setTripKitty } from '@/features/expenses/expensesService';
 
-type Row = { name: string; dateFrom: string; dateTo: string; hotel: string };
+const mapsHotelSearch = (city: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`فنادق ${city}`)}`;
+function bookingHotelSearch(city: string, checkin?: string, checkout?: string): string {
+  const p = new URLSearchParams({ ss: city });
+  if (checkin) p.set('checkin', checkin);
+  if (checkout) p.set('checkout', checkout);
+  return `https://www.booking.com/searchresults.html?${p.toString()}`;
+}
+
+type Row = { name: string; dateFrom: string; dateTo: string; hotel: string; hotelUrl: string };
 
 const STEPS = 6;
 const STATES: { key: TripState; icon: string }[] = [
@@ -34,7 +44,7 @@ export function CreateTripWizard() {
   const [type, setType] = useState<TripType | ''>('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]);
+  const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '', hotel: '', hotelUrl: '' }]);
   const travelMode: TripTravelMode = 'PLANE';
   const [tripKind, setTripKind] = useState<TripKind>('ROUND');
   const [flight, setFlight] = useState<FlightLeg>({});
@@ -53,7 +63,7 @@ export function CreateTripWizard() {
   useEffect(() => {
     if (wizardOpen) {
       setStep(1); setTitle(''); setType(''); setDateFrom(''); setDateTo('');
-      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTripKind('ROUND');
+      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '', hotelUrl: '' }]); setTripKind('ROUND');
       setFlight({}); setFlightBack({}); setLegs([{}]); setState('PLANNING');
       setBudget('');
       setInviteInput(''); setInvitees([]); setErrorCode(null); setBusy(false); setDone(null);
@@ -106,7 +116,7 @@ export function CreateTripWizard() {
   function toRow(field: keyof Row, i: number, v: string) {
     setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, [field]: v } : r)));
   }
-  function addRow() { setRows((rs) => [...rs, { name: '', dateFrom: '', dateTo: '', hotel: '' }]); }
+  function addRow() { setRows((rs) => [...rs, { name: '', dateFrom: '', dateTo: '', hotel: '', hotelUrl: '' }]); }
   function removeRow(i: number) { setRows((rs) => rs.filter((_, idx) => idx !== i)); }
 
   function addInvitee() {
@@ -125,6 +135,7 @@ export function CreateTripWizard() {
         dateFrom: r.dateFrom || undefined,
         dateTo: r.dateTo || undefined,
         hotel: r.hotel.trim() || undefined,
+        hotelUrl: r.hotelUrl || undefined,
         travelMode,
         // attach the entered flight(s) to the first stop
         tripKind: i === 0 ? tripKind : undefined,
@@ -160,7 +171,7 @@ export function CreateTripWizard() {
       // the flight all show up in the trip immediately (not only lazily later).
       try {
         await getItineraryBoard(trip.id, cities.map((c) => ({
-          name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, travelMode: c.travelMode,
+          name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, hotelUrl: c.hotelUrl, travelMode: c.travelMode,
           flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind,
         })));
       } catch { /* best-effort seed */ }
@@ -319,9 +330,25 @@ export function CreateTripWizard() {
                   <p className="bp-wizard-note">{t('trips.noCitiesYet')}</p>
                 ) : (
                   rows.map((r, i) => (r.name.trim() ? (
-                    <div className="bp-field" key={i}>
-                      <label htmlFor={`bp-hotel-${i}`}>{t('trips.hotelForCity', { city: r.name.trim() })}</label>
-                      <input id={`bp-hotel-${i}`} className="bp-input" value={r.hotel} placeholder={t('trips.hotelPlaceholder')} onChange={(e) => toRow('hotel', i, e.target.value)} />
+                    <div className="bp-wizard-city" key={i}>
+                      <div className="bp-field">
+                        <label htmlFor={`bp-hotel-${i}`}>{t('trips.hotelForCity', { city: r.name.trim() })}</label>
+                        <input id={`bp-hotel-${i}`} className="bp-input" value={r.hotel} placeholder={t('trips.hotelPlaceholder')} onChange={(e) => toRow('hotel', i, e.target.value)} />
+                      </div>
+                      {mapsEnabled() && (
+                        <PlaceSearch city={`فنادق ${r.name.trim()}`} onPick={(p) => { toRow('hotel', i, p.name); toRow('hotelUrl', i, p.mapsUrl ?? ''); }} />
+                      )}
+                      <div className="bp-browse__links">
+                        <a className="bp-map-chip" href={mapsHotelSearch(r.name.trim())} target="_blank" rel="noopener noreferrer">
+                          <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.hotelsOnMaps')}
+                        </a>
+                        <a className="bp-map-chip" href={bookingHotelSearch(r.name.trim(), r.dateFrom, r.dateTo)} target="_blank" rel="noopener noreferrer">
+                          <span className="material-symbols-outlined" aria-hidden="true">hotel</span>{t('itinerary.hotelsOnBooking')}
+                        </a>
+                        <Link className="bp-map-chip bp-map-chip--explore" to="/explore" onClick={closeWizard}>
+                          <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.browseHotels')}
+                        </Link>
+                      </div>
                     </div>
                   ) : null))
                 )}

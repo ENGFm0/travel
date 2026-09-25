@@ -148,6 +148,7 @@ export interface CitySeed {
   dateFrom?: string;
   dateTo?: string;
   hotel?: string;
+  hotelUrl?: string;
   travelMode?: TravelMode;
   flightOut?: FlightLeg;
   flightReturn?: FlightLeg;
@@ -184,7 +185,7 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
     if (!b) {
       b = {
         tripId,
-        cities: seed.map((c) => ({ id: uid('city'), name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, travelMode: c.travelMode, flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind, days: [] })),
+        cities: seed.map((c) => ({ id: uid('city'), name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, hotelUrl: c.hotelUrl, travelMode: c.travelMode, flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind, days: [] })),
       };
       boards.set(tripId, b);
     }

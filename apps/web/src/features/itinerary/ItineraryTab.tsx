@@ -115,10 +115,7 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
             <span className="bp-stop__n">{i + 1}</span>
             <span className="bp-stop__name">{c.name}</span>
             {dayCount(c.dateFrom, c.dateTo) > 0 && (
-              <span className="bp-stop__date">
-                {c.dateFrom ? `${formatDate(c.dateFrom, useUIStore.getState().locale, { month: 'short', day: 'numeric' })} · ` : ''}
-                {daysLabel(dayCount(c.dateFrom, c.dateTo), useUIStore.getState().locale)}
-              </span>
+              <span className="bp-stop__date">{daysLabel(dayCount(c.dateFrom, c.dateTo), useUIStore.getState().locale)}</span>
             )}
           </button>
         ))}
@@ -857,21 +854,15 @@ function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo }: { tripId: st
   }
 
   const count = dayCount(city.dateFrom, city.dateTo);
-  const dateText = city.dateFrom
-    ? (city.dateTo && city.dateTo !== city.dateFrom
-        ? `${formatDate(city.dateFrom, locale, { day: 'numeric', month: 'short' })} – ${formatDate(city.dateTo, locale, { day: 'numeric', month: 'short' })}`
-        : formatDate(city.dateFrom, locale, { day: 'numeric', month: 'short' }))
-    : '';
 
-  // Compact summary: a "N days" pill (+ the range in small text), with a small
-  // edit button that reveals the date pickers only when needed.
+  // Compact summary: a "N days" pill only (no dates shown here), with a small
+  // edit button that reveals the date pickers when needed.
   if (!editing) {
     return (
       <div className="bp-city-dur">
         {count > 0 ? (
           <span className="bp-city-dur__pill"><span className="material-symbols-outlined" aria-hidden="true">event</span>{daysLabel(count, locale)}</span>
         ) : <span className="bp-city-dur__none">{t('itinerary.noDatesYet')}</span>}
-        {dateText && <span className="bp-city-dur__range">{dateText}</span>}
         {canEdit && (
           <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.editDates')} onClick={() => setEditing(true)}>
             <span className="material-symbols-outlined" aria-hidden="true">edit_calendar</span>

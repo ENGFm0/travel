@@ -17,6 +17,7 @@ export interface TripCity {
   dateFrom?: string;
   dateTo?: string;
   hotel?: string;
+  hotelUrl?: string;
   travelMode?: TripTravelMode;
   flightOut?: FlightLeg;
   flightReturn?: FlightLeg;
