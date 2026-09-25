@@ -48,6 +48,9 @@ jobs:
           # Google Maps JS key — public by design, restricted to the web.app
           # referrer in the Cloud console. Powers in-app place search.
           VITE_GOOGLE_MAPS_KEY: AIzaSyBaJPU21zfuupnhP6HLIApc7fhb_UkbnPs
+          # AeroDataBox (RapidAPI) key — public build key; powers real flight
+          # lookup by number (schedule, route, times). Cap usage in RapidAPI.
+          VITE_AERODATABOX_KEY: 9a96884d93msh090851587a6ad34p1144ddjsn5267546350f1
         run: npm --workspace apps/web run build
 
       - name: Write service account credentials
