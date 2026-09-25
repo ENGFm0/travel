@@ -11,6 +11,7 @@ export interface PickedPlace {
   kind: ActivityKind;
   photoUrl?: string;
   mapsUrl?: string;
+  placeId?: string;
 }
 
 /** Map Google place types to our activity kinds. */
@@ -78,7 +79,7 @@ export function PlaceSearch({ city, onPick }: { city?: string; onPick: (p: Picke
     try {
       const pred = s.placePrediction;
       const place = pred.toPlace();
-      await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'types', 'photos', 'googleMapsURI'] });
+      await place.fetchFields({ fields: ['id', 'displayName', 'formattedAddress', 'types', 'photos', 'googleMapsURI'] });
       let photoUrl: string | undefined;
       try {
         const photo = place.photos?.[0];
@@ -93,6 +94,7 @@ export function PlaceSearch({ city, onPick }: { city?: string; onPick: (p: Picke
         kind: guessKind(place.types ?? []),
         photoUrl,
         mapsUrl,
+        placeId: place.id ?? pred.placeId ?? undefined,
       });
     } catch {
       // fall back to the prediction's text

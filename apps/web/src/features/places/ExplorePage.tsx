@@ -6,7 +6,8 @@ import { useAuth } from '@/features/auth/authStore';
 import { useTripsList, tripsActions } from '@/features/trips/tripsStore';
 import { mapsEnabled, searchPlacesByText, type GmapsPlace } from '@/shared/googleMaps';
 import {
-  addPlaceToItinerary, getItineraryBoard, type ActivityKind, type Board,
+  addPlaceToItinerary, getItineraryBoard, DAY_PERIODS,
+  type ActivityKind, type Board, type DayPeriod,
 } from '@/features/itinerary/itineraryService';
 import {
   categoryFromTypes, CATEGORY_QUERY, citiesOf, filterPlaces,
@@ -391,6 +392,9 @@ function PlaceCard({ place, canAdd, onRate, onAdd }: { place: Place; canAdd: boo
         {typeof place.adds === 'number' && place.adds > 0 && (
           <p className="bp-place-card__adds"><span className="material-symbols-outlined" aria-hidden="true">group</span>{t('explorePage.addedByN', { n: place.adds })}</p>
         )}
+        {place.comment && (
+          <p className="bp-place-card__comment">“{place.comment}”{place.commentBy ? <span className="bp-place-card__comment-by"> — {place.commentBy}</span> : null}</p>
+        )}
         <Stars value={place.myRating ?? 0} onRate={onRate} />
         {canAdd && <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={onAdd}>{t('explorePage.addToTrip')}</button>}
       </div>
@@ -409,6 +413,7 @@ function AddToTripModal({ place, trips, defaultTripId, defaultCity, onClose, onD
   const [city, setCity] = useState(defaultCity || trip?.cities[0]?.name || place.city || '');
   const [board, setBoard] = useState<Board | null>(null);
   const [dayId, setDayId] = useState('');
+  const [period, setPeriod] = useState<DayPeriod | ''>('');
   const [time, setTime] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -440,7 +445,7 @@ function AddToTripModal({ place, trips, defaultTripId, defaultCity, onClose, onD
       try {
         await addPlaceToItinerary(tripId, seed, targetCity, {
           title: place.name, note: place.area || undefined, kind: KIND[place.category],
-          photoUrl: place.photoUrl, mapsUrl: place.mapsUrl, time: time || undefined,
+          photoUrl: place.photoUrl, mapsUrl: place.mapsUrl, time: time || undefined, period: period || undefined, placeId: place.id,
         }, dayId || undefined);
       } catch { /* itinerary add is best-effort */ }
       await placesActions.record({ ...place, city: targetCity });
@@ -475,6 +480,13 @@ function AddToTripModal({ place, trips, defaultTripId, defaultCity, onClose, onD
             <select id="bp-add-day" className="bp-input" value={dayId} onChange={(e) => setDayId(e.target.value)}>
               <option value="">{t('explorePage.dayAuto')}</option>
               {cityDays.map((d, i) => <option key={d.id} value={d.id}>{dayLabel(d, i)}</option>)}
+            </select>
+          </div>
+          <div className="bp-field">
+            <label htmlFor="bp-add-when">{t('explorePage.chooseWhen')}</label>
+            <select id="bp-add-when" className="bp-input" value={period} onChange={(e) => setPeriod(e.target.value as DayPeriod | '')}>
+              <option value="">{t('explorePage.whenAny')}</option>
+              {DAY_PERIODS.map((p) => <option key={p} value={p}>{t(`itinerary.period.${p}`)}</option>)}
             </select>
           </div>
           <div className="bp-field">

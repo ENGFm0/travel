@@ -18,6 +18,8 @@ export interface Place {
   photoUrl?: string; // place photo (from Google)
   mapsUrl?: string;  // Google Maps deep-link
   adds?: number;     // how many travellers added it (recommendation signal)
+  comment?: string;   // latest traveller comment
+  commentBy?: string; // who wrote it
 }
 
 /** Arabic search phrase used to pull each category from Google, biased to a city. */

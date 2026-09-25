@@ -4,17 +4,30 @@ import { Link } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
-import { ACTIVITY_KINDS, type ActivityKind, type CitySeed, type CityStop, type Day, type FlightLeg } from './itineraryService';
+import {
+  ACTIVITY_KINDS, DAY_PERIODS, TRAVEL_MODES,
+  type Activity, type ActivityKind, type CitySeed, type CityStop, type Day, type DayPeriod, type FlightLeg, type TravelMode,
+} from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
 import { PlaceSearch, type PickedPlace } from './PlaceSearch';
 import { mapsEnabled } from '@/shared/googleMaps';
+import { placesActions } from '@/features/places/placesStore';
+import type { Place, PlaceCategory } from '@/features/places/placesModel';
 
 /** Google Maps search deep-link (no API key; opens the Maps web app). */
 function mapsSearch(query: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 type CitySub = 'days' | 'flight' | 'stay' | 'weather';
+
+/** Icon per travel mode (also used for the "flight" sub-tab). */
+const MODE_ICON: Record<TravelMode, string> = { PLANE: 'flight', CAR: 'directions_car', CRUISE: 'directions_boat' };
+const LEG_ICON: Record<TravelMode, { go: string; back: string }> = {
+  PLANE: { go: 'flight_takeoff', back: 'flight_land' },
+  CAR: { go: 'directions_car', back: 'directions_car' },
+  CRUISE: { go: 'directions_boat', back: 'directions_boat' },
+};
 
 /** Inclusive list of ISO dates between from..to (capped for safety). */
 function datesBetween(from?: string, to?: string): string[] {
@@ -133,7 +146,7 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tri
   const [sub, setSub] = useState<CitySub>('days');
   const TABS: { key: CitySub; icon: string }[] = [
     { key: 'days', icon: 'calendar_month' },
-    { key: 'flight', icon: 'flight' },
+    { key: 'flight', icon: MODE_ICON[city.travelMode ?? 'PLANE'] },
     { key: 'stay', icon: 'hotel' },
     { key: 'weather', icon: 'partly_cloudy_day' },
   ];
@@ -222,14 +235,17 @@ function Countdown({ target }: { target: number }) {
   );
 }
 
-function LegForm({ title, icon, leg, onSave, canEdit }: {
-  title: string; icon: string; leg: FlightLeg | undefined; onSave: (l: FlightLeg) => void; canEdit: boolean;
+function LegForm({ title, icon, leg, onSave, canEdit, mode }: {
+  title: string; icon: string; leg: FlightLeg | undefined; onSave: (l: FlightLeg) => void; canEdit: boolean; mode: TravelMode;
 }) {
   const { t } = useTranslation();
   const [l, setL] = useState<FlightLeg>(leg ?? {});
   useEffect(() => setL(leg ?? {}), [leg]);
   const set = (k: keyof FlightLeg, v: string) => setL((p) => ({ ...p, [k]: v || undefined }));
   const commit = () => onSave(l);
+  const carrierLabel = mode === 'CRUISE' ? t('itinerary.cruiseLine') : t('itinerary.airline');
+  const noLabel = mode === 'CRUISE' ? t('itinerary.shipName') : t('itinerary.flightNo');
+  const showCarrier = mode !== 'CAR';
 
   if (!canEdit) {
     const has = leg && (leg.airline || leg.no || leg.from || leg.to || leg.date);
@@ -237,7 +253,7 @@ function LegForm({ title, icon, leg, onSave, canEdit }: {
       <div className="bp-leg">
         <div className="bp-leg__head"><span className="material-symbols-outlined" aria-hidden="true">{icon}</span>{title}</div>
         {has ? (
-          <p className="bp-leg__ro">{[leg?.airline, leg?.no, leg?.from && leg?.to ? `${leg.from}→${leg.to}` : '', [leg?.date, leg?.time].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</p>
+          <p className="bp-leg__ro">{[showCarrier ? leg?.airline : '', showCarrier ? leg?.no : '', leg?.from && leg?.to ? `${leg.from}→${leg.to}` : '', [leg?.date, leg?.time].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</p>
         ) : <p className="bp-itin-sec__val">—</p>}
       </div>
     );
@@ -246,10 +262,14 @@ function LegForm({ title, icon, leg, onSave, canEdit }: {
     <div className="bp-leg">
       <div className="bp-leg__head"><span className="material-symbols-outlined" aria-hidden="true">{icon}</span>{title}</div>
       <div className="bp-leg__grid">
-        <label className="bp-field"><span className="bp-field__label">{t('itinerary.airline')}</span>
-          <input className="bp-input" value={l.airline ?? ''} onChange={(e) => set('airline', e.target.value)} onBlur={commit} /></label>
-        <label className="bp-field"><span className="bp-field__label">{t('itinerary.flightNo')}</span>
-          <input className="bp-input" value={l.no ?? ''} placeholder="SV1020" dir="ltr" onChange={(e) => set('no', e.target.value)} onBlur={commit} /></label>
+        {showCarrier && (
+          <label className="bp-field"><span className="bp-field__label">{carrierLabel}</span>
+            <input className="bp-input" value={l.airline ?? ''} onChange={(e) => set('airline', e.target.value)} onBlur={commit} /></label>
+        )}
+        {showCarrier && (
+          <label className="bp-field"><span className="bp-field__label">{noLabel}</span>
+            <input className="bp-input" value={l.no ?? ''} dir={mode === 'PLANE' ? 'ltr' : undefined} onChange={(e) => set('no', e.target.value)} onBlur={commit} /></label>
+        )}
         <label className="bp-field"><span className="bp-field__label">{t('itinerary.from')}</span>
           <input className="bp-input" value={l.from ?? ''} onChange={(e) => set('from', e.target.value)} onBlur={commit} /></label>
         <label className="bp-field"><span className="bp-field__label">{t('itinerary.to')}</span>
@@ -263,23 +283,38 @@ function LegForm({ title, icon, leg, onSave, canEdit }: {
   );
 }
 
-/** ── Flight section: outbound + return legs, lookup autofill, countdown ── */
+/** ── Travel section: mode (plane/car/cruise) + go/return legs + countdown ── */
 function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
+  const mode: TravelMode = city.travelMode ?? 'PLANE';
   const saveOut = (l: FlightLeg) => itineraryActions.setCityInfo(tripId, city.id, { flightOut: l });
   const saveBack = (l: FlightLeg) => itineraryActions.setCityInfo(tripId, city.id, { flightReturn: l });
+  const setMode = (m: TravelMode) => itineraryActions.setCityInfo(tripId, city.id, { travelMode: m });
   const depMs = legDeparture(city.flightOut, city.dateFrom);
+  const goTitle = mode === 'PLANE' ? t('itinerary.outbound') : t('itinerary.legGo');
+  const backTitle = mode === 'PLANE' ? t('itinerary.returnLeg') : t('itinerary.legBack');
 
   return (
     <section className="bp-itin-sec">
       <div className="bp-itin-sec__head">
-        <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--flight" aria-hidden="true">flight</span>
-        <h4>{t('itinerary.flight')}</h4>
+        <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--flight" aria-hidden="true">{MODE_ICON[mode]}</span>
+        <h4>{t('itinerary.travel')}</h4>
       </div>
+
+      {canEdit && (
+        <div className="bp-modes" role="group" aria-label={t('itinerary.travelMode')}>
+          {TRAVEL_MODES.map((m) => (
+            <button key={m} type="button" className={`bp-mode ${mode === m ? 'is-on' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
+              <span className="material-symbols-outlined" aria-hidden="true">{MODE_ICON[m]}</span>
+              {t(`itinerary.mode.${m}`)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {depMs && <Countdown target={depMs} />}
 
-      {canEdit && (
+      {canEdit && mode === 'PLANE' && (
         <FlightLookup onFilled={(info) => {
           const dep = info.departure.time ? info.departure.time.slice(0, 16) : undefined;
           const leg: FlightLeg = {
@@ -290,8 +325,8 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
         }} />
       )}
 
-      <LegForm title={t('itinerary.outbound')} icon="flight_takeoff" leg={city.flightOut} onSave={saveOut} canEdit={canEdit} />
-      <LegForm title={t('itinerary.returnLeg')} icon="flight_land" leg={city.flightReturn} onSave={saveBack} canEdit={canEdit} />
+      <LegForm title={goTitle} icon={LEG_ICON[mode].go} leg={city.flightOut} onSave={saveOut} canEdit={canEdit} mode={mode} />
+      <LegForm title={backTitle} icon={LEG_ICON[mode].back} leg={city.flightReturn} onSave={saveBack} canEdit={canEdit} mode={mode} />
     </section>
   );
 }
@@ -395,6 +430,17 @@ const ACTIVITY_ICON: Record<ActivityKind, string> = {
   SIGHT: 'attractions', TRANSPORT: 'directions_car', ACTIVITY: 'hiking', OTHER: 'push_pin',
 };
 
+/** Activity kind → Explore place category (for rating → recommendations). */
+const KIND_TO_CAT: Record<ActivityKind, PlaceCategory> = {
+  FOOD: 'RESTAURANTS', SHOPPING: 'SHOPPING', SIGHT: 'LANDMARKS', ARRIVAL: 'LANDMARKS',
+  ACTIVITY: 'ACTIVITIES', TRANSPORT: 'ACTIVITIES', HOTEL: 'ACTIVITIES', OTHER: 'ACTIVITIES',
+};
+
+/** Stable community-place id from a name + city (Arabic kept; slashes stripped). */
+function placeSlug(name: string, city: string): string {
+  return `${name} ${city}`.trim().replace(/[/\s]+/g, '-').slice(0, 200);
+}
+
 /** Add N days to an ISO date. */
 function addDaysIso(iso: string, n: number): string {
   const d = new Date(iso);
@@ -497,21 +543,23 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const locale = useUIStore((s) => s.locale);
   const [title, setTitle] = useState('');
   const [time, setTime] = useState('');
+  const [period, setPeriod] = useState<DayPeriod | undefined>();
   const [note, setNote] = useState('');
   const [kind, setKind] = useState<ActivityKind>('ACTIVITY');
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
   const [mapsUrl, setMapsUrl] = useState<string | undefined>();
+  const [placeId, setPlaceId] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
 
   function reset() {
-    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY');
-    setPhotoUrl(undefined); setMapsUrl(undefined); setOpen(false);
+    setTitle(''); setTime(''); setPeriod(undefined); setNote(''); setKind('ACTIVITY');
+    setPhotoUrl(undefined); setMapsUrl(undefined); setPlaceId(undefined); setOpen(false);
   }
 
   async function addActivity() {
     if (!title.trim()) return;
     await itineraryActions.addActivity(tripId, cityId, day.id, {
-      title: title.trim(), time: time || undefined, note: note || undefined, kind, photoUrl, mapsUrl,
+      title: title.trim(), time: time || undefined, period, note: note || undefined, kind, photoUrl, mapsUrl, placeId,
     });
     reset();
   }
@@ -524,6 +572,7 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
     setKind(p.kind);
     setPhotoUrl(p.photoUrl);
     setMapsUrl(p.mapsUrl);
+    setPlaceId(p.placeId);
     setOpen(true);
   }
 
@@ -546,30 +595,7 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
       {day.activities.length > 0 ? (
         <ul className="bp-timeline-list" role="list">
           {day.activities.map((a) => (
-            <li key={a.id} className="bp-tl-item">
-              <span className="bp-tl-item__icon" aria-hidden="true">
-                <span className="material-symbols-outlined">{ACTIVITY_ICON[a.kind ?? 'OTHER']}</span>
-              </span>
-              <div className="bp-tl-item__body">
-                <div className="bp-tl-item__line">
-                  {a.time && <span className="bp-tl-item__time">{a.time}</span>}
-                  <span className="bp-tl-item__title">{a.title}</span>
-                </div>
-                {a.note && <p className="bp-tl-item__note">{a.note}</p>}
-                {a.photoUrl && (
-                  <img className="bp-tl-item__photo" src={a.photoUrl} alt={a.title} loading="lazy" />
-                )}
-              </div>
-              <a className="bp-icon-btn bp-icon-btn--xs" href={a.mapsUrl ?? mapsSearch(`${a.title} ${cityName}`)} target="_blank" rel="noopener noreferrer"
-                aria-label={t('itinerary.viewOnMaps')} title={t('itinerary.viewOnMaps')}>
-                <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
-              </a>
-              {canEdit && (
-                <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.deleteActivity')} onClick={() => itineraryActions.deleteActivity(tripId, cityId, day.id, a.id)}>
-                  <span className="material-symbols-outlined" aria-hidden="true">close</span>
-                </button>
-              )}
-            </li>
+            <TlItem key={a.id} tripId={tripId} cityId={cityId} cityName={cityName} dayId={day.id} a={a} canEdit={canEdit} />
           ))}
         </ul>
       ) : (
@@ -612,13 +638,19 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
               </button>
             ))}
           </div>
-          <div className="bp-act-form__row">
-            <input className="bp-input bp-act-form__time" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.activityTime')} />
-            <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
-              onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
+          <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
+            onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
+          <div className="bp-periods" role="group" aria-label={t('itinerary.whenLabel')}>
+            {DAY_PERIODS.map((p) => (
+              <button key={p} type="button" className={`bp-period ${period === p ? 'is-on' : ''}`} aria-pressed={period === p}
+                onClick={() => setPeriod(period === p ? undefined : p)}>{t(`itinerary.period.${p}`)}</button>
+            ))}
           </div>
-          <input className="bp-input" value={note} placeholder={t('itinerary.activityNotePh')} aria-label={t('itinerary.activityNote')}
-            onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
+          <div className="bp-act-form__row">
+            <input className="bp-input bp-act-form__time" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.exactTime')} placeholder={t('itinerary.exactTime')} />
+            <input className="bp-input" value={note} placeholder={t('itinerary.activityNotePh')} aria-label={t('itinerary.activityNote')}
+              onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
+          </div>
           <div className="bp-row-between">
             <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={addActivity}>{t('itinerary.add')}</button>
             <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={reset}>{t('trips.close')}</button>
@@ -629,6 +661,86 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
           <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addActivity')}
         </button>
       ))}
+    </li>
+  );
+}
+
+/** One timeline row + an inline "rate & comment" form that promotes the place
+ *  into the community recommendations (اختيارات المسافرين). */
+function TlItem({ tripId, cityId, cityName, dayId, a, canEdit }: {
+  tripId: string; cityId: string; cityName: string; dayId: string; a: Activity; canEdit: boolean;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [stars, setStars] = useState(0);
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const when = a.time || (a.period ? t(`itinerary.period.${a.period}`) : '');
+
+  async function save() {
+    if (!stars) return;
+    setBusy(true);
+    try {
+      const place: Place = {
+        id: a.placeId || placeSlug(a.title, cityName),
+        name: a.title, category: KIND_TO_CAT[a.kind ?? 'OTHER'],
+        area: a.note ?? '', city: cityName, rating: 0, ratingCount: 0,
+        photoUrl: a.photoUrl, mapsUrl: a.mapsUrl,
+      };
+      await placesActions.review(place, stars, comment);
+      setDone(true); setOpen(false);
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <li className="bp-tl-item">
+      <span className="bp-tl-item__icon" aria-hidden="true">
+        <span className="material-symbols-outlined">{ACTIVITY_ICON[a.kind ?? 'OTHER']}</span>
+      </span>
+      <div className="bp-tl-item__body">
+        <div className="bp-tl-item__line">
+          {when && <span className="bp-tl-item__time">{when}</span>}
+          <span className="bp-tl-item__title">{a.title}</span>
+        </div>
+        {a.note && <p className="bp-tl-item__note">{a.note}</p>}
+        {a.photoUrl && <img className="bp-tl-item__photo" src={a.photoUrl} alt={a.title} loading="lazy" />}
+
+        {canEdit && !done && (
+          <button className="bp-tl-item__rate-btn" onClick={() => setOpen((v) => !v)}>
+            <span className="material-symbols-outlined" aria-hidden="true">rate_review</span>{t('itinerary.ratePlace')}
+          </button>
+        )}
+        {done && <p className="bp-tl-item__thanks"><span className="material-symbols-outlined" aria-hidden="true">check_circle</span>{t('itinerary.rateThanks')}</p>}
+
+        {open && (
+          <div className="bp-rate-box">
+            <div className="bp-stars" role="group" aria-label={t('itinerary.ratePlace')}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button key={n} type="button" className="bp-star" aria-label={t('explorePage.rateN', { n })} aria-pressed={n <= stars} onClick={() => setStars(n)}>
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: n <= stars ? "'FILL' 1" : "'FILL' 0" }} aria-hidden="true">star</span>
+                </button>
+              ))}
+            </div>
+            <input className="bp-input" value={comment} placeholder={t('itinerary.commentPh')} aria-label={t('itinerary.comment')}
+              onChange={(e) => setComment(e.target.value)} />
+            <div className="bp-row-between">
+              <button className="bp-btn bp-btn--primary bp-btn--sm" disabled={busy || !stars} onClick={save}>{t('itinerary.publishReview')}</button>
+              <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setOpen(false)}>{t('trips.close')}</button>
+            </div>
+          </div>
+        )}
+      </div>
+      <a className="bp-icon-btn bp-icon-btn--xs" href={a.mapsUrl ?? mapsSearch(`${a.title} ${cityName}`)} target="_blank" rel="noopener noreferrer"
+        aria-label={t('itinerary.viewOnMaps')} title={t('itinerary.viewOnMaps')}>
+        <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
+      </a>
+      {canEdit && (
+        <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.deleteActivity')} onClick={() => itineraryActions.deleteActivity(tripId, cityId, dayId, a.id)}>
+          <span className="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      )}
     </li>
   );
 }

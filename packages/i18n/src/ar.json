@@ -387,10 +387,36 @@
     },
     "tab": {
       "days": "الأيام",
-      "flight": "الطيران",
+      "flight": "التنقّل",
       "stay": "السكن",
       "weather": "الطقس"
     },
+    "travel": "التنقّل",
+    "travelMode": "وسيلة التنقّل",
+    "mode": {
+      "PLANE": "طيران",
+      "CAR": "بالسيارة",
+      "CRUISE": "سفينة/كروز"
+    },
+    "cruiseLine": "شركة الرحلة",
+    "shipName": "اسم السفينة",
+    "legGo": "الذهاب",
+    "legBack": "العودة",
+    "whenLabel": "الوقت",
+    "exactTime": "وقت محدد (اختياري)",
+    "period": {
+      "MORNING": "صباحًا",
+      "NOON": "ظهرًا",
+      "AFTERNOON": "عصرًا",
+      "SUNSET": "مغربًا",
+      "EVENING": "عشاءً",
+      "NIGHT": "ليلًا"
+    },
+    "ratePlace": "قيّم المكان",
+    "rateThanks": "شكرًا! أُضيف تقييمك لاختيارات المسافرين",
+    "comment": "تعليقك",
+    "commentPh": "اكتب رأيك عن المكان…",
+    "publishReview": "نشر التقييم",
     "hotelsOnMaps": "فنادق على خرائط قوقل",
     "discover": "اكتشف أماكن للإضافة:",
     "mapsRestaurants": "مطاعم",
@@ -672,7 +698,9 @@
     "chooseCity": "المدينة",
     "chooseDay": "اليوم",
     "dayAuto": "أول يوم متاح",
-    "chooseTime": "الوقت",
+    "chooseWhen": "متى",
+    "whenAny": "أي وقت",
+    "chooseTime": "وقت محدد",
     "tripLabel": "الرحلة",
     "confirmAdd": "إضافة",
     "tabs": {

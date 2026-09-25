@@ -387,10 +387,36 @@
     },
     "tab": {
       "days": "Days",
-      "flight": "Flight",
+      "flight": "Travel",
       "stay": "Stay",
       "weather": "Weather"
     },
+    "travel": "Travel",
+    "travelMode": "Travel mode",
+    "mode": {
+      "PLANE": "Flight",
+      "CAR": "By car",
+      "CRUISE": "Ship / cruise"
+    },
+    "cruiseLine": "Cruise line",
+    "shipName": "Ship name",
+    "legGo": "Outbound",
+    "legBack": "Return",
+    "whenLabel": "Time",
+    "exactTime": "Exact time (optional)",
+    "period": {
+      "MORNING": "Morning",
+      "NOON": "Noon",
+      "AFTERNOON": "Afternoon",
+      "SUNSET": "Sunset",
+      "EVENING": "Evening",
+      "NIGHT": "Night"
+    },
+    "ratePlace": "Rate this place",
+    "rateThanks": "Thanks! Your review was added to traveller picks",
+    "comment": "Your comment",
+    "commentPh": "Share your thoughts about this place…",
+    "publishReview": "Publish review",
     "hotelsOnMaps": "Hotels on Google Maps",
     "discover": "Discover places to add:",
     "mapsRestaurants": "Restaurants",
@@ -672,7 +698,9 @@
     "chooseCity": "City",
     "chooseDay": "Day",
     "dayAuto": "First available day",
-    "chooseTime": "Time",
+    "chooseWhen": "When",
+    "whenAny": "Any time",
+    "chooseTime": "Exact time",
     "tripLabel": "Trip",
     "confirmAdd": "Add",
     "tabs": {

@@ -6,23 +6,44 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 export type ActivityKind = 'ARRIVAL' | 'HOTEL' | 'FOOD' | 'SHOPPING' | 'SIGHT' | 'TRANSPORT' | 'ACTIVITY' | 'OTHER';
 export const ACTIVITY_KINDS: ActivityKind[] = ['ARRIVAL', 'HOTEL', 'FOOD', 'SHOPPING', 'SIGHT', 'TRANSPORT', 'ACTIVITY', 'OTHER'];
 
+/** Named times of day (morning → night). Used instead of a raw clock time. */
+export type DayPeriod = 'MORNING' | 'NOON' | 'AFTERNOON' | 'SUNSET' | 'EVENING' | 'NIGHT';
+export const DAY_PERIODS: DayPeriod[] = ['MORNING', 'NOON', 'AFTERNOON', 'SUNSET', 'EVENING', 'NIGHT'];
+/** Representative clock time for each period — used only to sort the timeline. */
+export const PERIOD_TIME: Record<DayPeriod, string> = {
+  MORNING: '09:00', NOON: '12:00', AFTERNOON: '15:00', SUNSET: '18:00', EVENING: '20:00', NIGHT: '23:00',
+};
+
+/** How a stop is reached / travelled. */
+export type TravelMode = 'PLANE' | 'CAR' | 'CRUISE';
+export const TRAVEL_MODES: TravelMode[] = ['PLANE', 'CAR', 'CRUISE'];
+
 export interface Activity {
   id: string;
   title: string;
-  time?: string; // HH:mm
-  note?: string; // extra detail (place, address, remarks)
+  time?: string;       // HH:mm (exact, optional)
+  period?: DayPeriod;  // named time of day
+  note?: string;       // extra detail (place, address, remarks)
   kind?: ActivityKind;
-  photoUrl?: string; // optional place photo (from Google Places)
-  mapsUrl?: string;  // optional deep-link (from Google Places / Explore)
+  photoUrl?: string;   // optional place photo (from Google Places)
+  mapsUrl?: string;    // optional deep-link (from Google Places / Explore)
+  placeId?: string;    // links to a community place (for rating/recommendations)
 }
 
 export interface ActivityInput {
   title: string;
   time?: string;
+  period?: DayPeriod;
   note?: string;
   kind?: ActivityKind;
   photoUrl?: string;
   mapsUrl?: string;
+  placeId?: string;
+}
+
+/** Sort key for an activity: exact time, else the period's representative time. */
+export function activitySortKey(a: { time?: string; period?: DayPeriod }): string {
+  return a.time || (a.period ? PERIOD_TIME[a.period] : '') || '99:99';
 }
 
 export interface Day {
@@ -53,6 +74,7 @@ export interface CityStop {
   flightReturn?: FlightLeg;
   hotel?: string;
   hotelUrl?: string;    // optional booking/maps link
+  travelMode?: TravelMode;
   days: Day[];
 }
 
@@ -64,6 +86,7 @@ export interface CityInfoPatch {
   dateTo?: string;
   flightOut?: FlightLeg;
   flightReturn?: FlightLeg;
+  travelMode?: TravelMode;
 }
 
 export interface Board {
@@ -156,6 +179,7 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
         if (info.dateTo !== undefined) c.dateTo = info.dateTo || undefined;
         if (info.flightOut !== undefined) c.flightOut = info.flightOut;
         if (info.flightReturn !== undefined) c.flightReturn = info.flightReturn;
+        if (info.travelMode !== undefined) c.travelMode = info.travelMode;
         if (info.dateFrom !== undefined || info.dateTo !== undefined) sortCities(b);
       }
       return snap(tripId);
@@ -195,12 +219,13 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
       const b = board(tripId);
       day(b, cityId, dayId)?.activities.push({
         id: uid('act'), title: input.title.trim(), time: input.time || undefined,
-        note: input.note?.trim() || undefined, kind: input.kind,
+        period: input.period, note: input.note?.trim() || undefined, kind: input.kind,
         photoUrl: input.photoUrl || undefined, mapsUrl: input.mapsUrl || undefined,
+        placeId: input.placeId || undefined,
       });
-      // keep the day's activities ordered by time when present
+      // keep the day's activities ordered by time-of-day
       const d = day(b, cityId, dayId);
-      if (d) d.activities.sort((a1, a2) => (a1.time ?? '99').localeCompare(a2.time ?? '99'));
+      if (d) d.activities.sort((a1, a2) => activitySortKey(a1).localeCompare(activitySortKey(a2)));
       return snap(tripId);
     },
     async deleteActivity(tripId, cityId, dayId, activityId) {
