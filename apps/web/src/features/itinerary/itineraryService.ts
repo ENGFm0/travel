@@ -22,6 +22,10 @@ export const TRAVEL_MODES: TravelMode[] = ['PLANE', 'CAR', 'CRUISE'];
 export type TripKind = 'ONE_WAY' | 'ROUND' | 'MULTI';
 export const TRIP_KINDS: TripKind[] = ['ONE_WAY', 'ROUND', 'MULTI'];
 
+/** Ground transport: a rental or the traveller's own car. */
+export type CarKind = 'RENTAL' | 'OWN';
+export const CAR_KINDS: CarKind[] = ['RENTAL', 'OWN'];
+
 export interface Activity {
   id: string;
   title: string;
@@ -105,6 +109,9 @@ export interface CityStop {
   flightReturn?: FlightLeg;
   tripKind?: TripKind;
   legs?: FlightLeg[];   // used when tripKind === 'MULTI'
+  car?: FlightLeg;      // ground transport (company→airline, pickup→from, …)
+  carKind?: CarKind;
+  cruise?: FlightLeg;   // cruise/ship leg
   hotel?: string;
   hotelUrl?: string;    // optional booking/maps link
   travelMode?: TravelMode;
@@ -121,6 +128,9 @@ export interface CityInfoPatch {
   flightReturn?: FlightLeg;
   tripKind?: TripKind;
   legs?: FlightLeg[];
+  car?: FlightLeg;
+  carKind?: CarKind;
+  cruise?: FlightLeg;
   travelMode?: TravelMode;
 }
 
@@ -222,6 +232,9 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
         if (info.flightReturn !== undefined) c.flightReturn = info.flightReturn;
         if (info.tripKind !== undefined) c.tripKind = info.tripKind;
         if (info.legs !== undefined) c.legs = info.legs;
+        if (info.car !== undefined) c.car = info.car;
+        if (info.carKind !== undefined) c.carKind = info.carKind;
+        if (info.cruise !== undefined) c.cruise = info.cruise;
         if (info.travelMode !== undefined) c.travelMode = info.travelMode;
         if (info.dateFrom !== undefined || info.dateTo !== undefined) sortCities(b);
       }

@@ -5,8 +5,8 @@ import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
 import {
-  ACTIVITY_KINDS, TRAVEL_MODES, TRIP_KINDS, formatTime12, periodFromTime,
-  type Activity, type ActivityKind, type CitySeed, type CityStop, type Day, type FlightLeg, type TravelMode, type TripKind,
+  ACTIVITY_KINDS, TRIP_KINDS, CAR_KINDS, formatTime12, periodFromTime,
+  type Activity, type ActivityKind, type CarKind, type CitySeed, type CityStop, type Day, type FlightLeg, type TravelMode, type TripKind,
 } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
@@ -31,11 +31,6 @@ type CitySub = 'days' | 'flight' | 'stay' | 'weather';
 
 /** Icon per travel mode (also used for the "flight" sub-tab). */
 const MODE_ICON: Record<TravelMode, string> = { PLANE: 'flight', CAR: 'directions_car', CRUISE: 'directions_boat' };
-const LEG_ICON: Record<TravelMode, { go: string; back: string }> = {
-  PLANE: { go: 'flight_takeoff', back: 'flight_land' },
-  CAR: { go: 'directions_car', back: 'directions_car' },
-  CRUISE: { go: 'directions_boat', back: 'directions_boat' },
-};
 
 /** Inclusive list of ISO dates between from..to (capped for safety). */
 function datesBetween(from?: string, to?: string): string[] {
@@ -426,10 +421,20 @@ function LegEditor({ title, icon, leg, onSave, canEdit, mode }: {
   );
 }
 
-/** ── Travel section: mode (plane/car/cruise) + kind (one-way/round/multi) ── */
+/** ── Travel: separate Flight, Car and Cruise sections (all can coexist) ── */
 function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
+  return (
+    <div className="bp-travel">
+      <FlightBlock tripId={tripId} city={city} canEdit={canEdit} />
+      <CarBlock tripId={tripId} city={city} canEdit={canEdit} />
+      <CruiseBlock tripId={tripId} city={city} canEdit={canEdit} />
+    </div>
+  );
+}
+
+/** Flights: one-way / round / multi-leg + save-to-schedule. */
+function FlightBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
-  const mode: TravelMode = city.travelMode ?? 'PLANE';
   const kind: TripKind = city.tripKind ?? 'ROUND';
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const set = (patch: Parameters<typeof itineraryActions.setCityInfo>[2]) => itineraryActions.setCityInfo(tripId, city.id, patch);
@@ -437,12 +442,11 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
   const saveBack = (l: FlightLeg) => set({ flightReturn: l });
   const legs = city.legs ?? [];
 
-  // Publish the travel legs into the day schedule, each on the day matching its
-  // date (departure → its day, return → its day), ordered by time.
   async function saveToSchedule() {
-    const toPublish: FlightLeg[] = kind === 'MULTI'
-      ? legs
-      : (kind === 'ONE_WAY' ? [city.flightOut ?? {}] : [city.flightOut ?? {}, city.flightReturn ?? {}]);
+    const toPublish: FlightLeg[] = [
+      ...(kind === 'MULTI' ? legs : kind === 'ONE_WAY' ? [city.flightOut ?? {}] : [city.flightOut ?? {}, city.flightReturn ?? {}]),
+      city.car ?? {}, city.cruise ?? {},
+    ];
     let added = 0;
     for (const leg of toPublish) {
       const has = leg && (leg.airline || leg.no || leg.from || leg.to || leg.date);
@@ -451,8 +455,6 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
       if (!day) continue;
       const title = [leg.airline, leg.no].filter(Boolean).join(' ') || t('itinerary.flightActivity');
       const route = leg.from && leg.to ? `${leg.from} → ${leg.to}` : undefined;
-      // Stable identity per leg (number + route + date) — dedupe across ALL days
-      // so re-saving or a same-number round-trip never duplicates.
       const pid = `flight:${(leg.no ?? '').toUpperCase()}:${leg.from ?? ''}>${leg.to ?? ''}:${leg.date ?? ''}`;
       if (city.days.some((d) => d.activities.some((a) => a.placeId === pid))) continue;
       await itineraryActions.addActivity(tripId, city.id, day.id, {
@@ -463,34 +465,17 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
     setSavedMsg(added > 0 ? t('itinerary.savedToSchedule', { count: added }) : t('itinerary.nothingToSave'));
     window.setTimeout(() => setSavedMsg(null), 3000);
   }
-  const goTitle = mode === 'PLANE' ? t('itinerary.outbound') : t('itinerary.legGo');
-  const backTitle = mode === 'PLANE' ? t('itinerary.returnLeg') : t('itinerary.legBack');
 
-  function saveLeg(i: number, l: FlightLeg) {
-    const next = [...legs];
-    next[i] = l;
-    set({ legs: next });
-  }
+  function saveLeg(i: number, l: FlightLeg) { const next = [...legs]; next[i] = l; set({ legs: next }); }
   function addLeg() { set({ legs: [...legs, { date: legs.length === 0 ? city.dateFrom : undefined }] }); }
   function removeLeg(i: number) { set({ legs: legs.filter((_, idx) => idx !== i) }); }
 
   return (
     <section className="bp-itin-sec">
       <div className="bp-itin-sec__head">
-        <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--flight" aria-hidden="true">{MODE_ICON[mode]}</span>
-        <h4>{t('itinerary.travel')}</h4>
+        <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--flight" aria-hidden="true">flight</span>
+        <h4>{t('itinerary.mode.PLANE')}</h4>
       </div>
-
-      {canEdit && (
-        <div className="bp-modes" role="group" aria-label={t('itinerary.travelMode')}>
-          {TRAVEL_MODES.map((m) => (
-            <button key={m} type="button" className={`bp-mode ${mode === m ? 'is-on' : ''}`} aria-pressed={mode === m} onClick={() => set({ travelMode: m })}>
-              <span className="material-symbols-outlined" aria-hidden="true">{MODE_ICON[m]}</span>
-              {t(`itinerary.mode.${m}`)}
-            </button>
-          ))}
-        </div>
-      )}
 
       {canEdit && (
         <div className="bp-kinds" role="group" aria-label={t('itinerary.tripKindLabel')}>
@@ -506,7 +491,7 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
         <>
           {legs.map((l, i) => (
             <div key={i} className="bp-leg-wrap">
-              <LegEditor title={t('itinerary.legN', { n: i + 1 })} icon={LEG_ICON[mode].go} leg={l} onSave={(x) => saveLeg(i, x)} canEdit={canEdit} mode={mode} />
+              <LegEditor title={t('itinerary.legN', { n: i + 1 })} icon="flight_takeoff" leg={l} onSave={(x) => saveLeg(i, x)} canEdit={canEdit} mode="PLANE" />
               {canEdit && <button className="bp-icon-btn bp-icon-btn--xs bp-leg-rm" aria-label={t('itinerary.removeLeg')} onClick={() => removeLeg(i)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
             </div>
           ))}
@@ -515,9 +500,9 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
         </>
       ) : (
         <>
-          <LegEditor title={goTitle} icon={LEG_ICON[mode].go} leg={city.flightOut} onSave={saveOut} canEdit={canEdit} mode={mode} />
+          <LegEditor title={t('itinerary.outbound')} icon="flight_takeoff" leg={city.flightOut} onSave={saveOut} canEdit={canEdit} mode="PLANE" />
           {kind === 'ROUND' && (
-            <LegEditor title={backTitle} icon={LEG_ICON[mode].back} leg={city.flightReturn} onSave={saveBack} canEdit={canEdit} mode={mode} />
+            <LegEditor title={t('itinerary.returnLeg')} icon="flight_land" leg={city.flightReturn} onSave={saveBack} canEdit={canEdit} mode="PLANE" />
           )}
         </>
       )}
@@ -532,6 +517,89 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
         </div>
       )}
       <p className="bp-itin-sec__note">{t('itinerary.saveToScheduleHint')}</p>
+    </section>
+  );
+}
+
+/** Ground transport: rental or own car, pickup/dropoff + times. */
+function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
+  const { t } = useTranslation();
+  const car = city.car;
+  const [editing, setEditing] = useState(false);
+  const [ckind, setCkind] = useState<CarKind>(city.carKind ?? 'RENTAL');
+  const [draft, setDraft] = useState<FlightLeg>(car ?? {});
+  useEffect(() => { setDraft(car ?? {}); setCkind(city.carKind ?? 'RENTAL'); }, [car, city.carKind]);
+  const has = Boolean(car && (car.airline || car.from || car.to || car.date || car.time));
+  const set = (k: keyof FlightLeg, v: string) => setDraft((p) => ({ ...p, [k]: v || undefined }));
+
+  return (
+    <section className="bp-itin-sec">
+      <div className="bp-itin-sec__head">
+        <span className="material-symbols-outlined bp-itin-sec__icon" aria-hidden="true">directions_car</span>
+        <h4>{t('itinerary.mode.CAR')}</h4>
+      </div>
+
+      {!canEdit ? (
+        has ? (<><span className="bp-cur-badge bp-cur-badge--dest">{t(`itinerary.carKind.${city.carKind ?? 'RENTAL'}`)}</span><FlightCard leg={car} mode="CAR" /></>) : <p className="bp-itin-sec__val">—</p>
+      ) : !editing ? (
+        has ? (
+          <>
+            <span className="bp-cur-badge bp-cur-badge--dest">{t(`itinerary.carKind.${city.carKind ?? 'RENTAL'}`)}</span>
+            <FlightCard leg={car} mode="CAR" />
+            <button className="bp-btn bp-btn--outline bp-btn--sm bp-leg-slot__edit" onClick={() => setEditing(true)}>
+              <span className="material-symbols-outlined" aria-hidden="true">edit</span>{t('itinerary.editLeg')}
+            </button>
+          </>
+        ) : (
+          <button className="bp-add-activity" onClick={() => setEditing(true)}>
+            <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addCar')}
+          </button>
+        )
+      ) : (
+        <div className="bp-leg">
+          <div className="bp-kinds" role="group" aria-label={t('itinerary.carKindLabel')}>
+            {CAR_KINDS.map((k) => (
+              <button key={k} type="button" className={`bp-chip bp-chip--btn ${ckind === k ? 'is-on' : ''}`} aria-pressed={ckind === k} onClick={() => setCkind(k)}>
+                {t(`itinerary.carKind.${k}`)}
+              </button>
+            ))}
+          </div>
+          <div className="bp-leg__grid">
+            {ckind === 'RENTAL' && (
+              <label className="bp-field"><span className="bp-field__label">{t('itinerary.rentalCompany')}</span>
+                <input className="bp-input" value={draft.airline ?? ''} onChange={(e) => set('airline', e.target.value)} /></label>
+            )}
+            <label className="bp-field"><span className="bp-field__label">{t('itinerary.pickup')}</span>
+              <input className="bp-input" value={draft.from ?? ''} onChange={(e) => set('from', e.target.value)} /></label>
+            <label className="bp-field"><span className="bp-field__label">{t('itinerary.dropoff')}</span>
+              <input className="bp-input" value={draft.to ?? ''} onChange={(e) => set('to', e.target.value)} /></label>
+            <label className="bp-field"><span className="bp-field__label">{t('itinerary.date')}</span>
+              <input className="bp-input" type="date" value={draft.date ?? ''} onChange={(e) => set('date', e.target.value)} /></label>
+            <label className="bp-field"><span className="bp-field__label">{t('itinerary.time')}</span>
+              <input className="bp-input" type="time" value={draft.time ?? ''} onChange={(e) => set('time', e.target.value)} /></label>
+          </div>
+          <input className="bp-input" value={draft.no ?? ''} placeholder={t('itinerary.carNotePh')} onChange={(e) => set('no', e.target.value)} />
+          <div className="bp-row-between">
+            <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => { itineraryActions.setCityInfo(tripId, city.id, { car: draft, carKind: ckind }); setEditing(false); }}>{t('itinerary.saveLeg')}</button>
+            <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => { setDraft(car ?? {}); setEditing(false); }}>{t('trips.close')}</button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Cruise / ship leg. */
+function CruiseBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <section className="bp-itin-sec">
+      <div className="bp-itin-sec__head">
+        <span className="material-symbols-outlined bp-itin-sec__icon" aria-hidden="true">directions_boat</span>
+        <h4>{t('itinerary.mode.CRUISE')}</h4>
+      </div>
+      <LegEditor title={t('itinerary.cruiseLeg')} icon="directions_boat" leg={city.cruise} canEdit={canEdit} mode="CRUISE"
+        onSave={(l) => itineraryActions.setCityInfo(tripId, city.id, { cruise: l })} />
     </section>
   );
 }

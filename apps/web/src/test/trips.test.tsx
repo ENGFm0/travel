@@ -71,8 +71,8 @@ describe('US-003 wizard flow', () => {
     // Step 2: cities
     await userEvent.type(await screen.findByLabelText('المدينة'), 'باريس');
     await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
-    // Step 3: travel mode → next
-    await userEvent.click(await screen.findByRole('button', { name: /بالسيارة/ }));
+    // Step 3: travel (flight) → next
+    await screen.findByRole('button', { name: /ذهاب وعودة/ });
     await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
     // Step 4: hotels → next
     await userEvent.type(await screen.findByLabelText('فندق باريس'), 'فندق لطيف');
@@ -90,7 +90,7 @@ describe('US-003 wizard flow', () => {
       expect(t?.type).toBe('DOMESTIC');
       expect(t?.cities[0]?.name).toBe('باريس');
       expect(t?.cities[0]?.hotel).toBe('فندق لطيف');
-      expect(t?.travelMode).toBe('CAR');
+      expect(t?.travelMode).toBe('PLANE');
     });
   });
 

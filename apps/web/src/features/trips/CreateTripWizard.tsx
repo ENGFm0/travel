@@ -14,11 +14,6 @@ import { LegForm } from '@/features/itinerary/ItineraryTab';
 type Row = { name: string; dateFrom: string; dateTo: string; hotel: string };
 
 const STEPS = 6;
-const MODES: { key: TripTravelMode; icon: string }[] = [
-  { key: 'PLANE', icon: 'flight' },
-  { key: 'CAR', icon: 'directions_car' },
-  { key: 'CRUISE', icon: 'directions_boat' },
-];
 const STATES: { key: TripState; icon: string }[] = [
   { key: 'PLANNING', icon: 'edit_calendar' },
   { key: 'CONFIRMED', icon: 'task_alt' },
@@ -39,7 +34,7 @@ export function CreateTripWizard() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]);
-  const [travelMode, setTravelMode] = useState<TripTravelMode>('PLANE');
+  const travelMode: TripTravelMode = 'PLANE';
   const [tripKind, setTripKind] = useState<TripKind>('ROUND');
   const [flight, setFlight] = useState<FlightLeg>({});
   const [flightBack, setFlightBack] = useState<FlightLeg>({});
@@ -57,7 +52,7 @@ export function CreateTripWizard() {
   useEffect(() => {
     if (wizardOpen) {
       setStep(1); setTitle(''); setType(''); setDateFrom(''); setDateTo('');
-      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTravelMode('PLANE'); setTripKind('ROUND');
+      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTripKind('ROUND');
       setFlight({}); setFlightBack({}); setLegs([{}]); setState('PLANNING');
       setBudget('');
       setInviteInput(''); setInvitees([]); setErrorCode(null); setBusy(false); setDone(null);
@@ -279,15 +274,7 @@ export function CreateTripWizard() {
             {/* Step 3 — travel mode */}
             {step === 3 && (
               <>
-                <p className="bp-wizard-hint">{t('trips.travelHint')}</p>
-                <div className="bp-modes" role="group" aria-label={t('trips.stepTravel')}>
-                  {MODES.map((m) => (
-                    <button key={m.key} type="button" className={`bp-mode ${travelMode === m.key ? 'is-on' : ''}`} aria-pressed={travelMode === m.key} onClick={() => setTravelMode(m.key)}>
-                      <span className="material-symbols-outlined" aria-hidden="true">{m.icon}</span>
-                      {t(`itinerary.mode.${m.key}`)}
-                    </button>
-                  ))}
-                </div>
+                <p className="bp-wizard-hint">{t('trips.flightHint')}</p>
                 <div className="bp-kinds" role="group" aria-label={t('itinerary.tripKindLabel')}>
                   {TRIP_KINDS.map((k) => (
                     <button key={k} type="button" className={`bp-chip bp-chip--btn ${tripKind === k ? 'is-on' : ''}`} aria-pressed={tripKind === k} onClick={() => setTripKind(k)}>
