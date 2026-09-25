@@ -27,10 +27,17 @@ function guessKind(types: string[] = []): ActivityKind {
 }
 
 /** In-app place search powered by Google Places (new API). Type → suggestions
- *  render in a dropdown → click adds. Bias toward the city when provided. */
-export function PlaceSearch({ city, onPick }: { city?: string; onPick: (p: PickedPlace) => void }) {
+ *  render in a dropdown → click adds. Bias toward the city when provided.
+ *  Controlled mode: pass `value`/`onValueChange` to bind the input to an
+ *  external field (e.g. the hotel name), so the field IS the search box. */
+export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeholder, ariaLabel }: {
+  city?: string; onPick: (p: PickedPlace) => void;
+  value?: string; onValueChange?: (v: string) => void; onBlur?: () => void; placeholder?: string; ariaLabel?: string;
+}) {
   const { t } = useTranslation();
+  const controlled = value !== undefined;
   const [q, setQ] = useState('');
+  const text = controlled ? (value ?? '') : q;
   const [items, setItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -55,7 +62,7 @@ export function PlaceSearch({ city, onPick }: { city?: string; onPick: (p: Picke
   }
 
   function change(v: string) {
-    setQ(v);
+    if (controlled) onValueChange?.(v); else setQ(v);
     window.clearTimeout(timer.current);
     if (!v.trim()) { setItems([]); setOpen(false); return; }
     timer.current = window.setTimeout(() => void search(v.trim()), 250);
@@ -85,7 +92,7 @@ export function PlaceSearch({ city, onPick }: { city?: string; onPick: (p: Picke
         const photo = place.photos?.[0];
         if (photo?.getURI) photoUrl = photo.getURI({ maxWidth: 480, maxHeight: 360 });
       } catch { /* photos optional */ }
-      const name = place.displayName ?? pred.text?.text ?? q;
+      const name = place.displayName ?? pred.text?.text ?? text;
       const mapsUrl: string | undefined = place.googleMapsURI
         ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
       onPick({
@@ -98,9 +105,12 @@ export function PlaceSearch({ city, onPick }: { city?: string; onPick: (p: Picke
       });
     } catch {
       // fall back to the prediction's text
-      onPick({ name: s.placePrediction?.text?.text ?? q, kind: 'ACTIVITY' });
+      onPick({ name: s.placePrediction?.text?.text ?? text, kind: 'ACTIVITY' });
     } finally {
-      setQ(''); setItems([]); setOpen(false);
+      // Uncontrolled clears the box; controlled keeps the value (parent's onPick
+      // sets it from the picked place).
+      if (!controlled) setQ('');
+      setItems([]); setOpen(false);
       token.current = places.current ? new places.current.AutocompleteSessionToken() : null;
     }
   }
@@ -110,10 +120,11 @@ export function PlaceSearch({ city, onPick }: { city?: string; onPick: (p: Picke
       <span className="material-symbols-outlined bp-placesearch__icon" aria-hidden="true">search</span>
       <input
         className="bp-input bp-placesearch__input"
-        value={q}
-        placeholder={t('itinerary.placeSearchPh')}
-        aria-label={t('itinerary.placeSearch')}
+        value={text}
+        placeholder={placeholder ?? t('itinerary.placeSearchPh')}
+        aria-label={ariaLabel ?? t('itinerary.placeSearch')}
         onChange={(e) => change(e.target.value)}
+        onBlur={onBlur}
         onFocus={() => items.length && setOpen(true)}
       />
       {busy && <span className="bp-placesearch__busy" aria-hidden="true">…</span>}

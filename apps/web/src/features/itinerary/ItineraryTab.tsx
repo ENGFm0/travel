@@ -668,21 +668,22 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
       </div>
       {canEdit ? (
         <>
-          <label className="bp-field">
+          <div className="bp-field">
             <span className="bp-field__label">{t('itinerary.hotelName')}</span>
-            <input className="bp-input" value={name} placeholder={t('itinerary.hotelPh')} aria-label={t('itinerary.hotel')}
-              onChange={(e) => setName(e.target.value)} onBlur={saveName} />
-          </label>
+            {mapsEnabled() ? (
+              <PlaceSearch city={`فنادق ${city.name}`} value={name} onValueChange={setName} onBlur={saveName}
+                placeholder={t('itinerary.hotelPh')} ariaLabel={t('itinerary.hotel')}
+                onPick={(p) => { setName(p.name); setUrl(p.mapsUrl ?? ''); itineraryActions.setCityInfo(tripId, city.id, { hotel: p.name, hotelUrl: p.mapsUrl }); }} />
+            ) : (
+              <input className="bp-input" value={name} placeholder={t('itinerary.hotelPh')} aria-label={t('itinerary.hotel')}
+                onChange={(e) => setName(e.target.value)} onBlur={saveName} />
+            )}
+          </div>
           <label className="bp-field">
             <span className="bp-field__label">{t('itinerary.hotelLink')}</span>
             <input className="bp-input" value={url} placeholder="https://…" dir="ltr" aria-label={t('itinerary.hotelLink')}
               onChange={(e) => setUrl(e.target.value)} onBlur={saveUrl} />
           </label>
-          {mapsEnabled() && (
-            <PlaceSearch city={`فنادق ${city.name}`} onPick={(p) => {
-              itineraryActions.setCityInfo(tripId, city.id, { hotel: p.name, hotelUrl: p.mapsUrl });
-            }} />
-          )}
           <p className="bp-itin-sec__note">{t('itinerary.hotelHint')}</p>
           <div className="bp-map-links">
             <a className="bp-map-chip" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">

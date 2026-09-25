@@ -333,11 +333,14 @@ export function CreateTripWizard() {
                     <div className="bp-wizard-city" key={i}>
                       <div className="bp-field">
                         <label htmlFor={`bp-hotel-${i}`}>{t('trips.hotelForCity', { city: r.name.trim() })}</label>
-                        <input id={`bp-hotel-${i}`} className="bp-input" value={r.hotel} placeholder={t('trips.hotelPlaceholder')} onChange={(e) => toRow('hotel', i, e.target.value)} />
+                        {mapsEnabled() ? (
+                          <PlaceSearch city={`فنادق ${r.name.trim()}`} value={r.hotel}
+                            onValueChange={(v) => toRow('hotel', i, v)} placeholder={t('trips.hotelPlaceholder')} ariaLabel={t('trips.hotelForCity', { city: r.name.trim() })}
+                            onPick={(p) => { toRow('hotel', i, p.name); toRow('hotelUrl', i, p.mapsUrl ?? ''); }} />
+                        ) : (
+                          <input id={`bp-hotel-${i}`} className="bp-input" value={r.hotel} placeholder={t('trips.hotelPlaceholder')} onChange={(e) => toRow('hotel', i, e.target.value)} />
+                        )}
                       </div>
-                      {mapsEnabled() && (
-                        <PlaceSearch city={`فنادق ${r.name.trim()}`} onPick={(p) => { toRow('hotel', i, p.name); toRow('hotelUrl', i, p.mapsUrl ?? ''); }} />
-                      )}
                       <div className="bp-browse__links">
                         <a className="bp-map-chip" href={mapsHotelSearch(r.name.trim())} target="_blank" rel="noopener noreferrer">
                           <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.hotelsOnMaps')}
