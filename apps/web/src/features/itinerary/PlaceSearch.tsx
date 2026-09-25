@@ -30,10 +30,10 @@ function guessKind(types: string[] = []): ActivityKind {
  *  render in a dropdown → click adds. Bias toward the city when provided.
  *  Controlled mode: pass `value`/`onValueChange` to bind the input to an
  *  external field (e.g. the hotel name), so the field IS the search box. */
-export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeholder, ariaLabel, citiesOnly }: {
+export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeholder, ariaLabel, citiesOnly, regionCode }: {
   city?: string; onPick: (p: PickedPlace) => void;
   value?: string; onValueChange?: (v: string) => void; onBlur?: () => void; placeholder?: string; ariaLabel?: string;
-  citiesOnly?: boolean;
+  citiesOnly?: boolean; regionCode?: string;
 }) {
   const { t } = useTranslation();
   const controlled = value !== undefined;
@@ -76,6 +76,9 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
       const fetchFor = async (q: string) => {
         const req: any = { input: q, sessionToken: token.current };
         if (citiesOnly) req.includedPrimaryTypes = ['(cities)']; // world cities only
+        // Keep results in the destination's country (so a fallback query never
+        // defaults back to the home region).
+        else if (regionCode) req.includedRegionCodes = [regionCode.toLowerCase()];
         const { suggestions } = await p.AutocompleteSuggestion.fetchAutocompleteSuggestions(req);
         return (suggestions ?? []) as any[];
       };

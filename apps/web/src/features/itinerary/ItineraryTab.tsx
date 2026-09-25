@@ -16,6 +16,7 @@ import { placesActions } from '@/features/places/placesStore';
 import type { Place, PlaceCategory } from '@/features/places/placesModel';
 import { recordTripExpense } from '@/features/expenses/expensesService';
 import type { Category } from '@/features/expenses/finance';
+import { guessCountry } from '@/shared/countries';
 
 /** Google Maps search deep-link (no API key; opens the Maps web app). */
 function mapsSearch(query: string): string {
@@ -676,7 +677,7 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
           <div className="bp-field">
             <span className="bp-field__label">{t('itinerary.hotelName')}</span>
             {mapsEnabled() ? (
-              <PlaceSearch city={city.name} value={name} onValueChange={setName} onBlur={saveName}
+              <PlaceSearch city={city.name} regionCode={guessCountry(city.name)?.code} value={name} onValueChange={setName} onBlur={saveName}
                 placeholder={t('itinerary.hotelPh')} ariaLabel={t('itinerary.hotel')}
                 onPick={(p) => { setName(p.name); setUrl(p.mapsUrl ?? ''); itineraryActions.setCityInfo(tripId, city.id, { hotel: p.name, hotelUrl: p.mapsUrl }); }} />
             ) : (
@@ -964,7 +965,7 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
       )}
 
       {canEdit && mapsEnabled() && (
-        <PlaceSearch city={cityName} onPick={prefillFromPlace} />
+        <PlaceSearch city={cityName} regionCode={guessCountry(cityName)?.code} onPick={prefillFromPlace} />
       )}
 
       {canEdit && (

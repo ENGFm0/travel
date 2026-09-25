@@ -191,6 +191,23 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
     }
     return b;
   }
+  // Fill any city info the board is missing from the trip seed (matched by name),
+  // without overwriting existing edits — so wizard/trip data always shows up.
+  function mergeSeed(b: Board, seed: CitySeed[]) {
+    for (const s of seed) {
+      const c = b.cities.find((x) => x.name === s.name);
+      if (!c) continue;
+      if (c.dateFrom === undefined && s.dateFrom) c.dateFrom = s.dateFrom;
+      if (c.dateTo === undefined && s.dateTo) c.dateTo = s.dateTo;
+      if (c.hotel === undefined && s.hotel) c.hotel = s.hotel;
+      if (c.hotelUrl === undefined && s.hotelUrl) c.hotelUrl = s.hotelUrl;
+      if (c.travelMode === undefined && s.travelMode) c.travelMode = s.travelMode;
+      if (c.flightOut === undefined && s.flightOut) c.flightOut = s.flightOut;
+      if (c.flightReturn === undefined && s.flightReturn) c.flightReturn = s.flightReturn;
+      if (c.legs === undefined && s.legs) c.legs = s.legs;
+      if (c.tripKind === undefined && s.tripKind) c.tripKind = s.tripKind;
+    }
+  }
   const snap = (tripId: string) => structuredClone(boards.get(tripId)!) as Board;
   const city = (b: Board, id: string) => b.cities.find((c) => c.id === id);
   // Chronological order by start date; undated cities keep their relative order last.
@@ -198,7 +215,7 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
   const day = (b: Board, cid: string, did: string) => city(b, cid)?.days.find((d) => d.id === did);
 
   const base: ItineraryService = {
-    async getBoard(tripId, seed) { await tick(); board(tripId, seed); return snap(tripId); },
+    async getBoard(tripId, seed) { await tick(); board(tripId, seed); if (seed?.length) mergeSeed(boards.get(tripId)!, seed); return snap(tripId); },
     async addCity(tripId, name, dates) {
       await tick();
       const b = board(tripId);
