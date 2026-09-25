@@ -10,6 +10,7 @@ import { useProfile } from '@/features/profile/profileStore';
 import { currencyOf, guessCountry } from '@/shared/countries';
 import { getItineraryBoard, TRIP_KINDS, type FlightLeg, type TripKind } from '@/features/itinerary/itineraryService';
 import { LegForm } from '@/features/itinerary/ItineraryTab';
+import { setTripKitty } from '@/features/expenses/expensesService';
 
 type Row = { name: string; dateFrom: string; dateTo: string; hotel: string };
 
@@ -163,6 +164,8 @@ export function CreateTripWizard() {
           flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind,
         })));
       } catch { /* best-effort seed */ }
+      // Reflect the trip budget into the shared kitty total.
+      if (payload.budget && payload.budget > 0) { try { await setTripKitty(trip.id, payload.budget); } catch { /* best-effort */ } }
       setLastCreated(trip);
       setDone(trip);
     } catch (e) {

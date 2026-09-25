@@ -1,6 +1,6 @@
 import { createApiClient } from '@boardingpass/core';
 import { loadJSON, persistAfter } from '@/shared/persist';
-import { db, firebaseEnabled, requireUid } from '@/shared/firebase';
+import { currentUid, db, firebaseEnabled, requireUid } from '@/shared/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { Category, Finance, GroupExpense, PersonalExpense, SideKitty } from './finance';
 
@@ -227,4 +227,19 @@ export function createFirestoreExpensesService(): ExpensesService {
 export function createExpensesService(): ExpensesService {
   if (firebaseEnabled()) return createFirestoreExpensesService();
   return import.meta.env.VITE_API_BASE_URL ? createApiExpensesService() : createMockExpensesService(undefined, 'bp.expenses.v1');
+}
+
+/** Record a shared (group) expense from outside the Expenses tab — e.g. a flight
+ *  or activity cost added in the itinerary. Best-effort; no-op for zero amounts. */
+export async function recordTripExpense(
+  tripId: string, e: { desc: string; category: Category; amount: number },
+): Promise<void> {
+  if (!e.amount || e.amount <= 0) return;
+  const payerUid = currentUid() ?? 'me';
+  await createExpensesService().addGroup(tripId, { desc: e.desc.trim() || '—', category: e.category, amount: e.amount, payerUid });
+}
+
+/** Set the shared kitty total from outside the Expenses tab (e.g. the wizard). */
+export async function setTripKitty(tripId: string, total: number): Promise<void> {
+  await createExpensesService().setKittyTotal(tripId, Math.max(0, total));
 }

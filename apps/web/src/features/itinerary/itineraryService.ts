@@ -33,6 +33,7 @@ export interface Activity {
   period?: DayPeriod;  // named time of day
   note?: string;       // extra detail (place, address, remarks)
   kind?: ActivityKind;
+  cost?: number;       // optional price → recorded as a shared expense
   photoUrl?: string;   // optional place photo (from Google Places)
   mapsUrl?: string;    // optional deep-link (from Google Places / Explore)
   placeId?: string;    // links to a community place (for rating/recommendations)
@@ -44,6 +45,7 @@ export interface ActivityInput {
   period?: DayPeriod;
   note?: string;
   kind?: ActivityKind;
+  cost?: number;
   photoUrl?: string;
   mapsUrl?: string;
   placeId?: string;
@@ -97,6 +99,7 @@ export interface FlightLeg {
   to?: string;    // destination airport/city
   date?: string;  // ISO date
   time?: string;  // HH:mm
+  cost?: number;  // optional price → recorded as a shared expense
 }
 
 export interface CityStop {
@@ -276,6 +279,7 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
       day(b, cityId, dayId)?.activities.push({
         id: uid('act'), title: input.title.trim(), time: input.time || undefined,
         period: input.period, note: input.note?.trim() || undefined, kind: input.kind,
+        cost: input.cost || undefined,
         photoUrl: input.photoUrl || undefined, mapsUrl: input.mapsUrl || undefined,
         placeId: input.placeId || undefined,
       });

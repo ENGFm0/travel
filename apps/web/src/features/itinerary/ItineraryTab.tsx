@@ -14,6 +14,8 @@ import { PlaceSearch, type PickedPlace } from './PlaceSearch';
 import { mapsEnabled } from '@/shared/googleMaps';
 import { placesActions } from '@/features/places/placesStore';
 import type { Place, PlaceCategory } from '@/features/places/placesModel';
+import { recordTripExpense } from '@/features/expenses/expensesService';
+import type { Category } from '@/features/expenses/finance';
 
 /** Google Maps search deep-link (no API key; opens the Maps web app). */
 function mapsSearch(query: string): string {
@@ -412,7 +414,10 @@ function LegEditor({ title, icon, leg, onSave, canEdit, mode }: {
           <input className="bp-input" type="date" value={draft.date ?? ''} onChange={(e) => set('date', e.target.value)} /></label>
         <label className="bp-field"><span className="bp-field__label">{t('itinerary.time')}</span>
           <input className="bp-input" type="time" value={draft.time ?? ''} onChange={(e) => set('time', e.target.value)} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.cost')}</span>
+          <input className="bp-input" type="number" inputMode="decimal" min="0" value={draft.cost ?? ''} placeholder="0" onChange={(e) => setDraft((p) => ({ ...p, cost: e.target.value ? Number(e.target.value) : undefined }))} /></label>
       </div>
+      <p className="bp-itin-sec__note">{t('itinerary.costHint')}</p>
       <div className="bp-row-between">
         <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => { onSave(draft); setEditing(false); }}>{t('itinerary.saveLeg')}</button>
         <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => { setDraft(leg ?? {}); setEditing(false); }}>{t('trips.close')}</button>
@@ -421,13 +426,28 @@ function LegEditor({ title, icon, leg, onSave, canEdit, mode }: {
   );
 }
 
-/** ── Travel: separate Flight, Car and Cruise sections (all can coexist) ── */
+/** ── Travel: Flight / Car / Cruise as switchable sections (data coexists) ── */
+type TravelSeg = 'flight' | 'car' | 'cruise';
 function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
+  const { t } = useTranslation();
+  const [seg, setSeg] = useState<TravelSeg>('flight');
+  const SEGS: { k: TravelSeg; icon: string; label: string }[] = [
+    { k: 'flight', icon: 'flight', label: 'itinerary.mode.PLANE' },
+    { k: 'car', icon: 'directions_car', label: 'itinerary.mode.CAR' },
+    { k: 'cruise', icon: 'directions_boat', label: 'itinerary.mode.CRUISE' },
+  ];
   return (
     <div className="bp-travel">
-      <FlightBlock tripId={tripId} city={city} canEdit={canEdit} />
-      <CarBlock tripId={tripId} city={city} canEdit={canEdit} />
-      <CruiseBlock tripId={tripId} city={city} canEdit={canEdit} />
+      <div className="bp-modes" role="tablist" aria-label={t('itinerary.travel')}>
+        {SEGS.map((s) => (
+          <button key={s.k} role="tab" aria-selected={seg === s.k} className={`bp-mode ${seg === s.k ? 'is-on' : ''}`} onClick={() => setSeg(s.k)}>
+            <span className="material-symbols-outlined" aria-hidden="true">{s.icon}</span>{t(s.label)}
+          </button>
+        ))}
+      </div>
+      {seg === 'flight' && <FlightBlock tripId={tripId} city={city} canEdit={canEdit} />}
+      {seg === 'car' && <CarBlock tripId={tripId} city={city} canEdit={canEdit} />}
+      {seg === 'cruise' && <CruiseBlock tripId={tripId} city={city} canEdit={canEdit} />}
     </div>
   );
 }
@@ -458,8 +478,9 @@ function FlightBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop
       const pid = `flight:${(leg.no ?? '').toUpperCase()}:${leg.from ?? ''}>${leg.to ?? ''}:${leg.date ?? ''}`;
       if (city.days.some((d) => d.activities.some((a) => a.placeId === pid))) continue;
       await itineraryActions.addActivity(tripId, city.id, day.id, {
-        title, note: route, time: leg.time, period: periodFromTime(leg.time), kind: 'ARRIVAL', placeId: pid,
+        title, note: route, time: leg.time, period: periodFromTime(leg.time), kind: 'ARRIVAL', placeId: pid, cost: leg.cost,
       });
+      if (leg.cost) { try { await recordTripExpense(tripId, { desc: title, category: 'TRANSPORT', amount: leg.cost }); } catch { /* best-effort */ } }
       added += 1;
     }
     setSavedMsg(added > 0 ? t('itinerary.savedToSchedule', { count: added }) : t('itinerary.nothingToSave'));
@@ -577,6 +598,8 @@ function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; c
               <input className="bp-input" type="date" value={draft.date ?? ''} onChange={(e) => set('date', e.target.value)} /></label>
             <label className="bp-field"><span className="bp-field__label">{t('itinerary.time')}</span>
               <input className="bp-input" type="time" value={draft.time ?? ''} onChange={(e) => set('time', e.target.value)} /></label>
+            <label className="bp-field"><span className="bp-field__label">{t('itinerary.cost')}</span>
+              <input className="bp-input" type="number" inputMode="decimal" min="0" value={draft.cost ?? ''} placeholder="0" onChange={(e) => setDraft((p) => ({ ...p, cost: e.target.value ? Number(e.target.value) : undefined }))} /></label>
           </div>
           <input className="bp-input" value={draft.no ?? ''} placeholder={t('itinerary.carNotePh')} onChange={(e) => set('no', e.target.value)} />
           <div className="bp-row-between">
@@ -718,6 +741,12 @@ const KIND_TO_CAT: Record<ActivityKind, PlaceCategory> = {
   ACTIVITY: 'ACTIVITIES', TRANSPORT: 'ACTIVITIES', HOTEL: 'ACTIVITIES', OTHER: 'ACTIVITIES',
 };
 
+/** Activity kind → expenses category (for the cost → shared expense link). */
+const KIND_TO_EXP_CAT: Record<ActivityKind, Category> = {
+  FOOD: 'FOOD', HOTEL: 'HOUSING', ARRIVAL: 'TRANSPORT', TRANSPORT: 'TRANSPORT',
+  SHOPPING: 'OTHER', SIGHT: 'OTHER', ACTIVITY: 'OTHER', OTHER: 'OTHER',
+};
+
 /** Stable community-place id from a name + city (Arabic kept; slashes stripped). */
 function placeSlug(name: string, city: string): string {
   return `${name} ${city}`.trim().replace(/[/\s]+/g, '-').slice(0, 200);
@@ -829,22 +858,27 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const [time, setTime] = useState('');
   const [note, setNote] = useState('');
   const [kind, setKind] = useState<ActivityKind>('ACTIVITY');
+  const [cost, setCost] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
   const [mapsUrl, setMapsUrl] = useState<string | undefined>();
   const [placeId, setPlaceId] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
 
   function reset() {
-    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY');
+    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY'); setCost('');
     setPhotoUrl(undefined); setMapsUrl(undefined); setPlaceId(undefined); setOpen(false);
   }
 
   async function addActivity() {
     if (!title.trim()) return;
+    const costNum = cost ? Number(cost) : undefined;
     await itineraryActions.addActivity(tripId, cityId, day.id, {
       // period is derived from the time on display — no manual selection.
-      title: title.trim(), time: time || undefined, period: periodFromTime(time), note: note || undefined, kind, photoUrl, mapsUrl, placeId,
+      title: title.trim(), time: time || undefined, period: periodFromTime(time), note: note || undefined, kind,
+      cost: costNum, photoUrl, mapsUrl, placeId,
     });
+    // Any added item with a value is reflected in the shared expenses (kitty).
+    if (costNum && costNum > 0) { try { await recordTripExpense(tripId, { desc: title.trim(), category: KIND_TO_EXP_CAT[kind], amount: costNum }); } catch { /* best-effort */ } }
     reset();
   }
 
@@ -934,6 +968,11 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
               <input className="bp-input" value={note} placeholder={t('itinerary.activityNotePh')} aria-label={t('itinerary.activityNote')}
                 onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
             </label>
+            <label className="bp-field bp-act-form__time">
+              <span className="bp-field__label">{t('itinerary.cost')}</span>
+              <input className="bp-input" type="number" inputMode="decimal" min="0" value={cost} placeholder="0" aria-label={t('itinerary.cost')}
+                onChange={(e) => setCost(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
+            </label>
           </div>
           {time && <p className="bp-act-form__hint">{formatTime12(time, locale)} · {t(`itinerary.period.${periodFromTime(time)}`)}</p>}
           <div className="bp-row-between">
@@ -995,6 +1034,9 @@ function TlItem({ tripId, cityId, cityName, dayId, a, canEdit }: {
           <span className="bp-tl-item__title">{a.title}</span>
         </div>
         {a.note && <p className="bp-tl-item__note">{a.note}</p>}
+        {typeof a.cost === 'number' && a.cost > 0 && (
+          <p className="bp-tl-item__cost"><span className="material-symbols-outlined" aria-hidden="true">payments</span>{a.cost.toLocaleString()}</p>
+        )}
         {a.photoUrl && <img className="bp-tl-item__photo" src={a.photoUrl} alt={a.title} loading="lazy" />}
 
         {canEdit && !done && (

@@ -928,6 +928,8 @@ select.bp-input {
 .bp-tl-item__time { font-size: 12px; font-weight: 800; color: var(--bp-orange); font-variant-numeric: tabular-nums; }
 .bp-tl-item__title { font-weight: 700; }
 .bp-tl-item__note { margin: 2px 0 0; font-size: 13px; color: var(--bp-ink-muted); line-height: 1.4; }
+.bp-tl-item__cost { display: inline-flex; align-items: center; gap: 4px; margin: 3px 0 0; font-size: 12.5px; font-weight: 800; color: var(--bp-success); }
+.bp-tl-item__cost .material-symbols-outlined { font-size: 15px; }
 .bp-tl-item__photo { display: block; margin-top: 8px; inline-size: 100%; max-inline-size: 260px; aspect-ratio: 4 / 3;
   object-fit: cover; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
 
