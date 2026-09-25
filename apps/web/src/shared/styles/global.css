@@ -941,6 +941,21 @@ select.bp-input {
 .bp-tl-item__photo { display: block; margin-top: 8px; inline-size: 100%; max-inline-size: 260px; aspect-ratio: 4 / 3;
   object-fit: cover; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
 
+/* Stay (accommodation) card — rich hotel entry inside the Stay sub-tab */
+.bp-stay-card { display: flex; gap: 12px; padding: 10px; border: 1px solid var(--bp-border);
+  border-radius: var(--bp-r-lg); background: var(--bp-surface); }
+.bp-stay-card__photo { flex: 0 0 auto; inline-size: 92px; block-size: 92px; object-fit: cover;
+  border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
+.bp-stay-card__body { flex: 1 1 auto; min-inline-size: 0; display: flex; flex-direction: column; gap: 6px; }
+.bp-stay-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.bp-stay-card__name { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.3; word-break: break-word; }
+.bp-stay-card__ops { flex: 0 0 auto; display: inline-flex; gap: 2px; }
+.bp-stay-card__meta { display: inline-flex; align-items: center; gap: 5px; margin: 0; font-size: 12.5px;
+  color: var(--bp-ink-muted); }
+.bp-stay-card__meta .material-symbols-outlined { font-size: 15px; }
+.bp-stay-card__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.bp-stay-rate { display: flex; align-items: center; gap: 10px; }
+
 .bp-add-activity { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
   border: 1px dashed var(--bp-border); border-radius: var(--bp-r-md); background: transparent; color: var(--bp-primary);
   font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }

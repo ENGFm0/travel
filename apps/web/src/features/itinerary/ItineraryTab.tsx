@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
-import { useUIStore } from '@/app/store/uiStore';
+import { useUIStore, type Locale } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
 import {
   ACTIVITY_KINDS, TRIP_KINDS, CAR_KINDS, formatTime12, periodFromTime,
-  type Activity, type ActivityKind, type CarKind, type CitySeed, type CityStop, type Day, type FlightLeg, type TravelMode, type TripKind,
+  type Activity, type ActivityKind, type CarKind, type CitySeed, type CityStop, type Day, type FlightLeg, type Stay, type TravelMode, type TripKind,
 } from './itineraryService';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
@@ -670,14 +670,52 @@ function CruiseBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop
   );
 }
 
-/** ── Hotel / stay section ── */
+/** Nights between check-in and check-out. */
+function nightsCount(inD?: string, outD?: string): number {
+  if (!inD || !outD) return 0;
+  const n = dayCount(inD, outD) - 1;
+  return n > 0 ? n : 0;
+}
+function nightsLabel(n: number, locale: string): string {
+  const ar = locale.startsWith('ar');
+  const nn = n.toLocaleString(ar ? 'ar-EG' : 'en-US');
+  if (ar) { if (n === 1) return 'ليلة'; if (n === 2) return 'ليلتان'; if (n >= 3 && n <= 10) return `${nn} ليالٍ`; return `${nn} ليلة`; }
+  return `${nn} ${n === 1 ? 'night' : 'nights'}`;
+}
+
+/** Small star rating (read/edit). */
+function StarRow({ value, onRate }: { value: number; onRate?: (n: number) => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="bp-stars" role="group" aria-label={t('explorePage.rate')}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button key={n} type="button" className="bp-star" aria-label={t('explorePage.rateN', { n })} aria-pressed={n <= value}
+          disabled={!onRate} onClick={() => onRate?.(n)}>
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: n <= value ? "'FILL' 1" : "'FILL' 0" }} aria-hidden="true">star</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** ── Stay (accommodation) section: multiple hotels, each rich ── */
 function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
-  const [name, setName] = useState(city.hotel ?? '');
-  const [url, setUrl] = useState(city.hotelUrl ?? '');
-  useEffect(() => { setName(city.hotel ?? ''); setUrl(city.hotelUrl ?? ''); }, [city.hotel, city.hotelUrl]);
-  const saveName = () => name !== (city.hotel ?? '') && itineraryActions.setCityInfo(tripId, city.id, { hotel: name });
-  const saveUrl = () => url !== (city.hotelUrl ?? '') && itineraryActions.setCityInfo(tripId, city.id, { hotelUrl: url });
+  const locale = useUIStore((s) => s.locale);
+  const [editId, setEditId] = useState<string | null>(null);
+
+  // Prefer the rich stays list; fall back to the legacy single hotel for display.
+  const stays: Stay[] = city.stays ?? (city.hotel ? [{ id: 'legacy', name: city.hotel, mapsUrl: city.hotelUrl }] : []);
+
+  function persist(next: Stay[]) {
+    itineraryActions.setCityInfo(tripId, city.id, { stays: next, hotel: next[0]?.name, hotelUrl: next[0]?.mapsUrl });
+  }
+  function saveStay(s: Stay) {
+    const next = stays.some((x) => x.id === s.id) ? stays.map((x) => (x.id === s.id ? s : x)) : [...stays, s];
+    persist(next); setEditId(null);
+  }
+  function removeStay(id: string) { persist(stays.filter((x) => x.id !== id)); }
+  function rate(id: string, r: number) { persist(stays.map((x) => (x.id === id ? { ...x, rating: r } : x))); }
 
   return (
     <section className="bp-itin-sec">
@@ -685,51 +723,118 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
         <span className="material-symbols-outlined bp-itin-sec__icon bp-itin-sec__icon--hotel" aria-hidden="true">hotel</span>
         <h4>{t('itinerary.hotel')}</h4>
       </div>
-      {canEdit ? (
-        <>
-          <div className="bp-field">
-            <span className="bp-field__label">{t('itinerary.hotelName')}</span>
-            {mapsEnabled() ? (
-              <PlaceSearch city={city.name} regionCode={guessCountry(city.name)?.code} value={name} onValueChange={setName} onBlur={saveName}
-                placeholder={t('itinerary.hotelPh')} ariaLabel={t('itinerary.hotel')}
-                onPick={(p) => { setName(p.name); setUrl(p.mapsUrl ?? ''); itineraryActions.setCityInfo(tripId, city.id, { hotel: p.name, hotelUrl: p.mapsUrl }); }} />
-            ) : (
-              <input className="bp-input" value={name} placeholder={t('itinerary.hotelPh')} aria-label={t('itinerary.hotel')}
-                onChange={(e) => setName(e.target.value)} onBlur={saveName} />
-            )}
-          </div>
-          <label className="bp-field">
-            <span className="bp-field__label">{t('itinerary.hotelLink')}</span>
-            <input className="bp-input" value={url} placeholder="https://…" dir="ltr" aria-label={t('itinerary.hotelLink')}
-              onChange={(e) => setUrl(e.target.value)} onBlur={saveUrl} />
-          </label>
-          <p className="bp-itin-sec__note">{t('itinerary.hotelHint')}</p>
-          <div className="bp-map-links">
-            <a className="bp-map-chip" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined" aria-hidden="true">map</span>
-              {t('itinerary.hotelsOnMaps')}
-            </a>
-            <a className="bp-map-chip" href={bookingSearch(city.name, city.dateFrom, city.dateTo)} target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined" aria-hidden="true">hotel</span>
-              {t('itinerary.hotelsOnBooking')}
-            </a>
-            <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
-              <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>
-              {t('itinerary.browseHotels')}
-            </Link>
-          </div>
-        </>
+
+      {stays.map((s) => (editId === s.id ? (
+        <StayEditor key={s.id} stay={s} city={city} onSave={saveStay} onCancel={() => setEditId(null)} />
       ) : (
-        <>
-          <p className="bp-itin-sec__val">{city.hotel || '—'}</p>
-          {city.hotelUrl && (
-            <a className="bp-inline-link" href={city.hotelUrl} target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined" aria-hidden="true">open_in_new</span>{t('itinerary.openLink')}
-            </a>
-          )}
-        </>
+        <StayCard key={s.id} stay={s} canEdit={canEdit} locale={locale}
+          onEdit={() => setEditId(s.id)} onRemove={() => removeStay(s.id)} onRate={(r) => rate(s.id, r)} />
+      )))}
+
+      {editId === 'new' && (
+        <StayEditor stay={{ id: `stay-${crypto.randomUUID()}`, name: '', checkIn: city.dateFrom, checkOut: city.dateTo }} city={city}
+          onSave={saveStay} onCancel={() => setEditId(null)} />
       )}
+
+      {canEdit && editId !== 'new' && (
+        <button className="bp-add-activity" onClick={() => setEditId('new')}>
+          <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addStay')}
+        </button>
+      )}
+
+      <div className="bp-map-links">
+        <a className="bp-map-chip" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">
+          <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.hotelsOnMaps')}
+        </a>
+        <a className="bp-map-chip" href={bookingSearch(city.name, city.dateFrom, city.dateTo)} target="_blank" rel="noopener noreferrer">
+          <span className="material-symbols-outlined" aria-hidden="true">hotel</span>{t('itinerary.hotelsOnBooking')}
+        </a>
+        <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
+          <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.browseHotels')}
+        </Link>
+      </div>
     </section>
+  );
+}
+
+function StayCard({ stay, canEdit, locale, onEdit, onRemove, onRate }: {
+  stay: Stay; canEdit: boolean; locale: Locale; onEdit: () => void; onRemove: () => void; onRate: (n: number) => void;
+}) {
+  const { t } = useTranslation();
+  const nights = nightsCount(stay.checkIn, stay.checkOut);
+  const dates = stay.checkIn
+    ? (stay.checkOut && stay.checkOut !== stay.checkIn
+        ? `${formatDate(stay.checkIn, locale, { day: 'numeric', month: 'short' })} – ${formatDate(stay.checkOut, locale, { day: 'numeric', month: 'short' })}`
+        : formatDate(stay.checkIn, locale, { day: 'numeric', month: 'short' }))
+    : '';
+  const maps = stay.mapsUrl ?? mapsSearch(stay.name);
+  return (
+    <div className="bp-stay-card">
+      {stay.photoUrl && <img className="bp-stay-card__photo" src={stay.photoUrl} alt={stay.name} loading="lazy" />}
+      <div className="bp-stay-card__body">
+        <div className="bp-stay-card__top">
+          <h5 className="bp-stay-card__name">{stay.name || '—'}</h5>
+          {canEdit && (
+            <div className="bp-stay-card__ops">
+              <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.editLeg')} onClick={onEdit}><span className="material-symbols-outlined" aria-hidden="true">edit</span></button>
+              <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.deleteActivity')} onClick={onRemove}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>
+            </div>
+          )}
+        </div>
+        {(dates || nights > 0) && (
+          <p className="bp-stay-card__meta">
+            <span className="material-symbols-outlined" aria-hidden="true">event</span>
+            {dates}{nights > 0 ? ` · ${nightsLabel(nights, locale)}` : ''}{stay.time ? ` · ${formatTime12(stay.time, locale)}` : ''}
+          </p>
+        )}
+        <div className="bp-stay-card__row">
+          <StarRow value={stay.rating ?? 0} onRate={canEdit ? onRate : undefined} />
+          <a className="bp-inline-link" href={maps} target="_blank" rel="noopener noreferrer">
+            <span className="material-symbols-outlined" aria-hidden="true">location_on</span>{t('itinerary.viewOnMaps')}
+          </a>
+        </div>
+        {stay.note && <p className="bp-tl-item__note">{stay.note}</p>}
+      </div>
+    </div>
+  );
+}
+
+function StayEditor({ stay, city, onSave, onCancel }: { stay: Stay; city: CityStop; onSave: (s: Stay) => void; onCancel: () => void }) {
+  const { t } = useTranslation();
+  const [d, setD] = useState<Stay>(stay);
+  const set = <K extends keyof Stay>(k: K, v: Stay[K]) => setD((p) => ({ ...p, [k]: v }));
+  return (
+    <div className="bp-leg">
+      <div className="bp-field">
+        <span className="bp-field__label">{t('itinerary.hotelName')}</span>
+        {mapsEnabled() ? (
+          <PlaceSearch city={city.name} regionCode={guessCountry(city.name)?.code} value={d.name}
+            onValueChange={(v) => set('name', v)} placeholder={t('itinerary.hotelPh')} ariaLabel={t('itinerary.hotel')}
+            onPick={(p) => setD((prev) => ({ ...prev, name: p.name, mapsUrl: p.mapsUrl, photoUrl: p.photoUrl ?? prev.photoUrl }))} />
+        ) : (
+          <input className="bp-input" value={d.name} placeholder={t('itinerary.hotelPh')} onChange={(e) => set('name', e.target.value)} />
+        )}
+      </div>
+      <div className="bp-leg__grid">
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.checkIn')}</span>
+          <input className="bp-input" type="date" value={d.checkIn ?? ''} onChange={(e) => set('checkIn', e.target.value || undefined)} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.checkOut')}</span>
+          <input className="bp-input" type="date" value={d.checkOut ?? ''} min={d.checkIn || undefined} onChange={(e) => set('checkOut', e.target.value || undefined)} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.checkInTime')}</span>
+          <input className="bp-input" type="time" value={d.time ?? ''} onChange={(e) => set('time', e.target.value || undefined)} /></label>
+        <label className="bp-field"><span className="bp-field__label">{t('itinerary.hotelLink')}</span>
+          <input className="bp-input" value={d.mapsUrl ?? ''} placeholder="https://…" dir="ltr" onChange={(e) => set('mapsUrl', e.target.value || undefined)} /></label>
+      </div>
+      <div className="bp-stay-rate">
+        <span className="bp-field__label">{t('itinerary.rating')}</span>
+        <StarRow value={d.rating ?? 0} onRate={(n) => set('rating', n)} />
+      </div>
+      <input className="bp-input" value={d.note ?? ''} placeholder={t('itinerary.activityNotePh')} onChange={(e) => set('note', e.target.value || undefined)} />
+      <div className="bp-row-between">
+        <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => d.name.trim() && onSave({ ...d, name: d.name.trim() })}>{t('itinerary.saveLeg')}</button>
+        <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={onCancel}>{t('trips.close')}</button>
+      </div>
+    </div>
   );
 }
 

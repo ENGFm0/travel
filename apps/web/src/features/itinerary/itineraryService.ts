@@ -102,6 +102,20 @@ export interface FlightLeg {
   cost?: number;  // optional price → recorded as a shared expense
 }
 
+/** A place to stay: hotel/apartment with photo, dates (→ nights), location and
+ *  an optional rating. A city can have several (you may switch hotels). */
+export interface Stay {
+  id: string;
+  name: string;
+  photoUrl?: string;
+  mapsUrl?: string;
+  checkIn?: string;   // ISO date
+  checkOut?: string;  // ISO date
+  time?: string;      // check-in time HH:mm
+  rating?: number;    // 1–5
+  note?: string;
+}
+
 export interface CityStop {
   id: string;
   name: string;
@@ -116,7 +130,8 @@ export interface CityStop {
   carKind?: CarKind;
   cruise?: FlightLeg;   // cruise/ship leg
   hotel?: string;
-  hotelUrl?: string;    // optional booking/maps link
+  hotelUrl?: string;    // optional booking/maps link (legacy single hotel)
+  stays?: Stay[];       // rich, multiple accommodations
   travelMode?: TravelMode;
   days: Day[];
 }
@@ -125,6 +140,7 @@ export interface CityInfoPatch {
   flight?: string;
   hotel?: string;
   hotelUrl?: string;
+  stays?: Stay[];
   dateFrom?: string;
   dateTo?: string;
   flightOut?: FlightLeg;
@@ -247,6 +263,7 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
         if (info.flight !== undefined) c.flight = info.flight;
         if (info.hotel !== undefined) c.hotel = info.hotel;
         if (info.hotelUrl !== undefined) c.hotelUrl = info.hotelUrl;
+        if (info.stays !== undefined) c.stays = info.stays;
         if (info.dateFrom !== undefined) c.dateFrom = info.dateFrom || undefined;
         if (info.dateTo !== undefined) c.dateTo = info.dateTo || undefined;
         if (info.flightOut !== undefined) c.flightOut = info.flightOut;

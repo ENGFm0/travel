@@ -2,7 +2,7 @@
 // HTML navigations are network-first (so updated markup + icon refs propagate
 // without a hard refresh, falling back to cache offline); other same-origin GETs
 // are stale-while-revalidate (hashed assets are safe to cache).
-const CACHE = 'bp-cache-v35';
+const CACHE = 'bp-cache-v36';
 
 self.addEventListener('install', () => self.skipWaiting());
 
