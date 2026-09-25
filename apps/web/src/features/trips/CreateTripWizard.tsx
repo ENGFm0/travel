@@ -8,8 +8,8 @@ import type { Trip, TripCity, TripTravelMode, TripState } from './tripsService';
 import { useTripsWizard, tripsActions, useTripsStore } from './tripsStore';
 import { useProfile } from '@/features/profile/profileStore';
 import { currencyOf, guessCountry } from '@/shared/countries';
-import { getItineraryBoard, type FlightLeg } from '@/features/itinerary/itineraryService';
-import { FlightLookup } from '@/features/flights/FlightLookup';
+import { getItineraryBoard, TRIP_KINDS, type FlightLeg, type TripKind } from '@/features/itinerary/itineraryService';
+import { LegForm } from '@/features/itinerary/ItineraryTab';
 
 type Row = { name: string; dateFrom: string; dateTo: string; hotel: string };
 
@@ -40,7 +40,10 @@ export function CreateTripWizard() {
   const [dateTo, setDateTo] = useState('');
   const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]);
   const [travelMode, setTravelMode] = useState<TripTravelMode>('PLANE');
+  const [tripKind, setTripKind] = useState<TripKind>('ROUND');
   const [flight, setFlight] = useState<FlightLeg>({});
+  const [flightBack, setFlightBack] = useState<FlightLeg>({});
+  const [legs, setLegs] = useState<FlightLeg[]>([{}]);
   const [state, setState] = useState<TripState>('PLANNING');
   const [budget, setBudget] = useState('');
   const [inviteInput, setInviteInput] = useState('');
@@ -54,7 +57,8 @@ export function CreateTripWizard() {
   useEffect(() => {
     if (wizardOpen) {
       setStep(1); setTitle(''); setType(''); setDateFrom(''); setDateTo('');
-      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTravelMode('PLANE'); setFlight({}); setState('PLANNING');
+      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTravelMode('PLANE'); setTripKind('ROUND');
+      setFlight({}); setFlightBack({}); setLegs([{}]); setState('PLANNING');
       setBudget('');
       setInviteInput(''); setInvitees([]); setErrorCode(null); setBusy(false); setDone(null);
     }
@@ -116,7 +120,8 @@ export function CreateTripWizard() {
 
   async function create() {
     setErrorCode(null);
-    const flightSet = Boolean(flight.airline || flight.no || flight.from || flight.to || flight.date || flight.time);
+    const hasLeg = (l: FlightLeg) => Boolean(l.airline || l.no || l.from || l.to || l.date || l.time);
+    const multiLegs = legs.filter(hasLeg);
     const cities: TripCity[] = rows
       .filter((r) => r.name.trim())
       .map((r, i) => ({
@@ -125,8 +130,11 @@ export function CreateTripWizard() {
         dateTo: r.dateTo || undefined,
         hotel: r.hotel.trim() || undefined,
         travelMode,
-        // attach the entered flight to the first stop
-        flightOut: i === 0 && travelMode === 'PLANE' && flightSet ? flight : undefined,
+        // attach the entered flight(s) to the first stop
+        tripKind: i === 0 ? tripKind : undefined,
+        flightOut: i === 0 && tripKind !== 'MULTI' && hasLeg(flight) ? flight : undefined,
+        flightReturn: i === 0 && tripKind === 'ROUND' && hasLeg(flightBack) ? flightBack : undefined,
+        legs: i === 0 && tripKind === 'MULTI' && multiLegs.length ? multiLegs : undefined,
       }));
     // Overall trip range: what the user typed, else derived from the cities'
     // own dates (earliest start → latest end) — we never invent dates.
@@ -156,7 +164,8 @@ export function CreateTripWizard() {
       // the flight all show up in the trip immediately (not only lazily later).
       try {
         await getItineraryBoard(trip.id, cities.map((c) => ({
-          name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, travelMode: c.travelMode, flightOut: c.flightOut,
+          name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, travelMode: c.travelMode,
+          flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind,
         })));
       } catch { /* best-effort seed */ }
       setLastCreated(trip);
@@ -279,28 +288,35 @@ export function CreateTripWizard() {
                     </button>
                   ))}
                 </div>
-                {travelMode === 'PLANE' && (
-                  <div className="bp-wizard-flight">
-                    <span className="bp-field__label">{t('trips.flightOutbound')}</span>
-                    <FlightLookup onFilled={(info) => {
-                      const dep = info.departure.time;
-                      setFlight({
-                        airline: info.airline, no: info.code, from: info.departure.iata, to: info.arrival.iata,
-                        date: dep?.slice(0, 10), time: dep?.slice(11, 16),
-                      });
-                    }} />
-                    <div className="bp-grid-2">
-                      <div className="bp-field"><label htmlFor="bp-fa">{t('itinerary.airline')}</label>
-                        <input id="bp-fa" className="bp-input" value={flight.airline ?? ''} onChange={(e) => setFlight((f) => ({ ...f, airline: e.target.value || undefined }))} /></div>
-                      <div className="bp-field"><label htmlFor="bp-fn">{t('itinerary.flightNo')}</label>
-                        <input id="bp-fn" className="bp-input" value={flight.no ?? ''} placeholder="SV1020" dir="ltr" onChange={(e) => setFlight((f) => ({ ...f, no: e.target.value || undefined }))} /></div>
-                      <div className="bp-field"><label htmlFor="bp-fd">{t('itinerary.date')}</label>
-                        <input id="bp-fd" className="bp-input" type="date" value={flight.date ?? ''} min={dateFrom || rows[0]?.dateFrom || undefined} max={dateTo || undefined} onChange={(e) => setFlight((f) => ({ ...f, date: e.target.value || undefined }))} /></div>
-                      <div className="bp-field"><label htmlFor="bp-ft">{t('itinerary.time')}</label>
-                        <input id="bp-ft" className="bp-input" type="time" value={flight.time ?? ''} onChange={(e) => setFlight((f) => ({ ...f, time: e.target.value || undefined }))} /></div>
-                    </div>
-                  </div>
-                )}
+                <div className="bp-kinds" role="group" aria-label={t('itinerary.tripKindLabel')}>
+                  {TRIP_KINDS.map((k) => (
+                    <button key={k} type="button" className={`bp-chip bp-chip--btn ${tripKind === k ? 'is-on' : ''}`} aria-pressed={tripKind === k} onClick={() => setTripKind(k)}>
+                      {t(`itinerary.tripKind.${k}`)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="bp-wizard-flight">
+                  {tripKind === 'MULTI' ? (
+                    <>
+                      {legs.map((l, i) => (
+                        <div key={i} className="bp-leg-wrap">
+                          <LegForm title={t('itinerary.legN', { n: i + 1 })} icon="flight_takeoff" leg={l} mode={travelMode} canEdit
+                            onSave={(x) => setLegs((arr) => arr.map((it, idx) => (idx === i ? x : it)))} />
+                          {legs.length > 1 && <button type="button" className="bp-icon-btn bp-icon-btn--xs bp-leg-rm" aria-label={t('itinerary.removeLeg')} onClick={() => setLegs((arr) => arr.filter((_, idx) => idx !== i))}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
+                        </div>
+                      ))}
+                      <button type="button" className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setLegs((arr) => [...arr, {}])}>+ {t('itinerary.addLeg')}</button>
+                    </>
+                  ) : (
+                    <>
+                      <LegForm title={travelMode === 'PLANE' ? t('itinerary.outbound') : t('itinerary.legGo')} icon="flight_takeoff" leg={flight} mode={travelMode} canEdit onSave={setFlight} />
+                      {tripKind === 'ROUND' && (
+                        <LegForm title={travelMode === 'PLANE' ? t('itinerary.returnLeg') : t('itinerary.legBack')} icon="flight_land" leg={flightBack} mode={travelMode} canEdit onSave={setFlightBack} />
+                      )}
+                    </>
+                  )}
+                </div>
                 <p className="bp-wizard-note">{t('trips.travelNote')}</p>
               </>
             )}

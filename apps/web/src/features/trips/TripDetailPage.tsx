@@ -118,7 +118,7 @@ export function TripDetailPage() {
       <div className="bp-tabpanel" role="tabpanel">
         {tab === 'itinerary' && (
           <ItineraryTab tripId={trip.id} canEdit={canEdit} tripFrom={trip.dateFrom} tripTo={trip.dateTo}
-            seed={trip.cities.map((c) => ({ name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, travelMode: c.travelMode ?? trip.travelMode, flightOut: c.flightOut }))} />
+            seed={trip.cities.map((c) => ({ name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, travelMode: c.travelMode ?? trip.travelMode, flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind }))} />
         )}
         {tab === 'expenses' && <ExpensesTab tripId={trip.id} canEdit={canEdit} isOwner={myRole === 'OWNER'} />}
         {tab === 'tasks' && <TasksTab tripId={trip.id} canEdit={canEdit} />}

@@ -247,7 +247,7 @@ function Countdown({ target }: { target: number }) {
   );
 }
 
-function LegForm({ title, icon, leg, onSave, canEdit, mode }: {
+export function LegForm({ title, icon, leg, onSave, canEdit, mode }: {
   title: string; icon: string; leg: FlightLeg | undefined; onSave: (l: FlightLeg) => void; canEdit: boolean; mode: TravelMode;
 }) {
   const { t } = useTranslation();
