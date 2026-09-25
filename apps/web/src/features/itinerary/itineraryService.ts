@@ -109,6 +109,7 @@ export interface FlightLeg {
 export interface Stay {
   id: string;
   name: string;
+  placeId?: string;     // Google place id → live photo gallery
   photoUrl?: string;
   photoUrls?: string[]; // all place photos — browsable gallery
   mapsUrl?: string;

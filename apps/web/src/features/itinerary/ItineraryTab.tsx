@@ -738,7 +738,7 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
       {stays.map((s) => (editId === s.id ? (
         <StayEditor key={s.id} stay={s} city={city} onSave={saveStay} onCancel={() => setEditId(null)} />
       ) : (
-        <StayCard key={s.id} stay={s} canEdit={canEdit} locale={locale}
+        <StayCard key={s.id} stay={s} cityName={city.name} canEdit={canEdit} locale={locale}
           onEdit={() => setEditId(s.id)} onRemove={() => removeStay(s.id)} onRate={(r) => rate(s.id, r)} />
       )))}
 
@@ -768,8 +768,8 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
   );
 }
 
-function StayCard({ stay, canEdit, locale, onEdit, onRemove, onRate }: {
-  stay: Stay; canEdit: boolean; locale: Locale; onEdit: () => void; onRemove: () => void; onRate: (n: number) => void;
+function StayCard({ stay, cityName, canEdit, locale, onEdit, onRemove, onRate }: {
+  stay: Stay; cityName: string; canEdit: boolean; locale: Locale; onEdit: () => void; onRemove: () => void; onRate: (n: number) => void;
 }) {
   const { t } = useTranslation();
   const nights = nightsCount(stay.checkIn, stay.checkOut);
@@ -780,6 +780,7 @@ function StayCard({ stay, canEdit, locale, onEdit, onRemove, onRate }: {
     : '';
   const maps = stay.mapsUrl ?? mapsSearch(stay.name);
   const photos = stay.photoUrls ?? (stay.photoUrl ? [stay.photoUrl] : []);
+  const galleryQuery = stay.name ? `${stay.name} ${cityName}` : undefined;
   // You rate at the END: the rating appears only once the stay is over
   // (check-out has passed), or once a rating already exists.
   const canRate = isPast(stay.checkOut ?? stay.checkIn);
@@ -796,7 +797,9 @@ function StayCard({ stay, canEdit, locale, onEdit, onRemove, onRate }: {
             </div>
           )}
         </div>
-        {photos.length > 0 && <PhotoGallery photos={photos} alt={stay.name || t('itinerary.hotel')} />}
+        {(photos.length > 0 || stay.placeId) && (
+          <PhotoGallery photos={photos} placeId={stay.placeId} query={galleryQuery} alt={stay.name || t('itinerary.hotel')} />
+        )}
         {(dates || nights > 0) && (
           <p className="bp-stay-card__meta">
             <span className="material-symbols-outlined" aria-hidden="true">event</span>
@@ -831,7 +834,7 @@ function StayEditor({ stay, city, onSave, onCancel }: { stay: Stay; city: CitySt
         {mapsEnabled() ? (
           <PlaceSearch city={city.name} regionCode={guessCountry(city.name)?.code} value={d.name}
             onValueChange={(v) => set('name', v)} placeholder={t('itinerary.hotelPh')} ariaLabel={t('itinerary.hotel')}
-            onPick={(p) => setD((prev) => ({ ...prev, name: p.name, mapsUrl: p.mapsUrl, photoUrl: p.photoUrl ?? prev.photoUrl, photoUrls: p.photoUrls ?? prev.photoUrls }))} />
+            onPick={(p) => setD((prev) => ({ ...prev, name: p.name, mapsUrl: p.mapsUrl, placeId: p.placeId ?? prev.placeId, photoUrl: p.photoUrl ?? prev.photoUrl, photoUrls: p.photoUrls ?? prev.photoUrls }))} />
         ) : (
           <input className="bp-input" value={d.name} placeholder={t('itinerary.hotelPh')} onChange={(e) => set('name', e.target.value)} />
         )}
@@ -846,7 +849,7 @@ function StayEditor({ stay, city, onSave, onCancel }: { stay: Stay; city: CitySt
         <label className="bp-field"><span className="bp-field__label">{t('itinerary.hotelLink')}</span>
           <input className="bp-input" value={d.mapsUrl ?? ''} placeholder="https://…" dir="ltr" onChange={(e) => set('mapsUrl', e.target.value || undefined)} /></label>
       </div>
-      {(d.photoUrls?.length ?? 0) > 0 && <PhotoGallery photos={d.photoUrls!} alt={d.name || t('itinerary.hotel')} size="sm" />}
+      {((d.photoUrls?.length ?? 0) > 0 || d.placeId) && <PhotoGallery photos={d.photoUrls ?? (d.photoUrl ? [d.photoUrl] : [])} placeId={d.placeId} alt={d.name || t('itinerary.hotel')} size="sm" />}
       <input className="bp-input" value={d.note ?? ''} placeholder={t('itinerary.activityNotePh')} onChange={(e) => set('note', e.target.value || undefined)} />
       <div className="bp-row-between">
         <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => d.name.trim() && onSave({ ...d, name: d.name.trim() })}>{t('itinerary.saveLeg')}</button>
@@ -1124,7 +1127,7 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
         <div className="bp-act-form">
           {photoUrl && (
             <div className="bp-act-form__photo">
-              <PhotoGallery photos={photoUrls ?? [photoUrl]} alt={title || t('itinerary.addActivity')} size="sm" />
+              <PhotoGallery photos={photoUrls ?? [photoUrl]} placeId={placeId} alt={title || t('itinerary.addActivity')} size="sm" />
               <button type="button" className="bp-icon-btn bp-icon-btn--xs bp-act-form__photo-rm" aria-label={t('itinerary.removePhoto')} onClick={() => { setPhotoUrl(undefined); setPhotoUrls(undefined); }}>
                 <span className="material-symbols-outlined" aria-hidden="true">close</span>
               </button>
@@ -1222,7 +1225,9 @@ function TlItem({ tripId, cityId, cityName, dayId, dayDate, a, canEdit }: {
         {typeof a.cost === 'number' && a.cost > 0 && (
           <p className="bp-tl-item__cost"><span className="material-symbols-outlined" aria-hidden="true">payments</span>{a.cost.toLocaleString()}</p>
         )}
-        {photos.length > 0 && <PhotoGallery photos={photos} alt={a.title} />}
+        {(photos.length > 0 || a.placeId) && (
+          <PhotoGallery photos={photos} placeId={a.placeId} query={`${a.title} ${cityName}`} alt={a.title} />
+        )}
 
         {canEdit && canRate && !done && (
           <button className="bp-tl-item__rate-btn" onClick={() => setOpen((v) => !v)}>

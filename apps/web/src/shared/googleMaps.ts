@@ -38,6 +38,31 @@ export async function loadPlaces(): Promise<G> {
   return g.maps.importLibrary('places');
 }
 
+/** All available photos for a place (new API caps this at ~10), at a large
+ *  size so they can be browsed full-screen. Empty when no key / no photos. */
+export async function fetchPlacePhotos(placeId: string, max = 10): Promise<string[]> {
+  if (!mapsEnabled() || !placeId) return [];
+  const lib = await loadPlaces();
+  const place = new lib.Place({ id: placeId });
+  await place.fetchFields({ fields: ['photos'] });
+  const photos = (place.photos ?? []).slice(0, max);
+  return photos.map((ph: any) => ph?.getURI?.({ maxWidth: 1280, maxHeight: 960 })).filter(Boolean) as string[];
+}
+
+/** Resolve a free-text place (name + city) to its top match and return all its
+ *  photos. Used to fill galleries for entries saved without a place id. */
+export async function resolvePlacePhotos(query: string, max = 10): Promise<string[]> {
+  if (!mapsEnabled() || !query.trim()) return [];
+  const lib = await loadPlaces();
+  const { places } = await lib.Place.searchByText({
+    textQuery: query, fields: ['id', 'photos'], language: 'ar', region: 'SA', maxResultCount: 1,
+  });
+  const p = places?.[0];
+  if (!p) return [];
+  const photos = (p.photos ?? []).slice(0, max);
+  return photos.map((ph: any) => ph?.getURI?.({ maxWidth: 1280, maxHeight: 960 })).filter(Boolean) as string[];
+}
+
 /** A place returned by a Google text search, normalised for our UI. */
 export interface GmapsPlace {
   id: string;

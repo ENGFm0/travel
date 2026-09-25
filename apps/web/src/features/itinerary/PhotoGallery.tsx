@@ -1,14 +1,33 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { fetchPlacePhotos, resolvePlacePhotos, mapsEnabled } from '@/shared/googleMaps';
 
 /** A place's photos: a large hero image + thumbnail strip, opening a
- *  full-screen lightbox you can browse (prev/next, keyboard, swipe-friendly). */
-export function PhotoGallery({ photos, alt, size = 'md' }: { photos: string[]; alt: string; size?: 'sm' | 'md' }) {
+ *  full-screen lightbox you can browse (prev/next, keyboard, swipe-friendly).
+ *  When we don't already hold a full set, it pulls all photos (up to ~10) live
+ *  from Google — by `placeId`, or by resolving `query` (name + city) — so even
+ *  old entries fill up like Google Maps. */
+export function PhotoGallery({ photos, alt, size = 'md', placeId, query }: { photos: string[]; alt: string; size?: 'sm' | 'md'; placeId?: string; query?: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [i, setI] = useState(0);
-  const list = photos.filter(Boolean);
+  const [live, setLive] = useState<string[] | null>(null);
+
+  // Enrich when we don't already hold a full set. Query-by-name is used only
+  // when a photo already exists (proof it's a real place) — never for a plain
+  // hand-typed entry, so we don't waste calls or pull unrelated photos.
+  useEffect(() => {
+    let alive = true;
+    const stored = photos.filter(Boolean).length;
+    if (mapsEnabled() && stored <= 1) {
+      const p = placeId ? fetchPlacePhotos(placeId) : (query && stored >= 1) ? resolvePlacePhotos(query) : null;
+      p?.then((urls) => { if (alive && urls.length > 1) setLive(urls); }).catch(() => {});
+    }
+    return () => { alive = false; };
+  }, [placeId, query, photos]);
+
+  const list = (live ?? photos).filter(Boolean);
   const n = list.length;
 
   const go = useCallback((d: number) => setI((v) => (n ? (v + d + n) % n : 0)), [n]);
