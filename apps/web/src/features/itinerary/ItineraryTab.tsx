@@ -274,6 +274,16 @@ function LegForm({ title, icon, leg, onSave, canEdit, mode }: {
   return (
     <div className="bp-leg">
       <div className="bp-leg__head"><span className="material-symbols-outlined" aria-hidden="true">{icon}</span>{title}</div>
+      {mode === 'PLANE' && (
+        <FlightLookup onFilled={(info) => {
+          const dep = info.departure.time;
+          const filled: FlightLeg = {
+            ...l, airline: info.airline, no: info.code, from: info.departure.iata, to: info.arrival.iata,
+            date: dep?.slice(0, 10), time: dep?.slice(11, 16),
+          };
+          setL(filled); onSave(filled);
+        }} />
+      )}
       <div className="bp-leg__grid">
         {showCarrier && (
           <label className="bp-field"><span className="bp-field__label">{carrierLabel}</span>
@@ -350,17 +360,6 @@ function FlightSection({ tripId, city, canEdit }: { tripId: string; city: CitySt
       )}
 
       {depMs && <Countdown target={depMs} />}
-
-      {canEdit && mode === 'PLANE' && (
-        <FlightLookup onFilled={(info) => {
-          const dep = info.departure.time ? info.departure.time.slice(0, 16) : undefined;
-          const leg: FlightLeg = {
-            airline: info.airline, no: info.code, from: info.departure.iata, to: info.arrival.iata,
-            date: dep?.slice(0, 10), time: dep?.slice(11, 16),
-          };
-          if (kind === 'MULTI') saveLeg(legs.length ? 0 : 0, leg); else void saveOut(leg);
-        }} />
-      )}
 
       {kind === 'MULTI' ? (
         <>

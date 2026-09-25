@@ -9,6 +9,7 @@ import { useTripsWizard, tripsActions, useTripsStore } from './tripsStore';
 import { useProfile } from '@/features/profile/profileStore';
 import { currencyOf, guessCountry } from '@/shared/countries';
 import { getItineraryBoard, type FlightLeg } from '@/features/itinerary/itineraryService';
+import { FlightLookup } from '@/features/flights/FlightLookup';
 
 type Row = { name: string; dateFrom: string; dateTo: string; hotel: string };
 
@@ -281,6 +282,13 @@ export function CreateTripWizard() {
                 {travelMode === 'PLANE' && (
                   <div className="bp-wizard-flight">
                     <span className="bp-field__label">{t('trips.flightOutbound')}</span>
+                    <FlightLookup onFilled={(info) => {
+                      const dep = info.departure.time;
+                      setFlight({
+                        airline: info.airline, no: info.code, from: info.departure.iata, to: info.arrival.iata,
+                        date: dep?.slice(0, 10), time: dep?.slice(11, 16),
+                      });
+                    }} />
                     <div className="bp-grid-2">
                       <div className="bp-field"><label htmlFor="bp-fa">{t('itinerary.airline')}</label>
                         <input id="bp-fa" className="bp-input" value={flight.airline ?? ''} onChange={(e) => setFlight((f) => ({ ...f, airline: e.target.value || undefined }))} /></div>

@@ -15,9 +15,10 @@ export interface FlightInfo {
   arrival: Airport;
 }
 
-/** Normalize to uppercase, no spaces (FR-004-001). */
+/** Normalize to uppercase, stripping spaces, hyphens and dots so boarding-pass
+ *  formats like "F3-56" or "sv 1903" become "F356" / "SV1903" (FR-004-001). */
 export function normalizeCode(code: string): string {
-  return code.trim().toUpperCase().replace(/\s+/g, '');
+  return code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
 /** IATA flight code: 2 letters/digits + 1–4 digits (VR-004-001). */
