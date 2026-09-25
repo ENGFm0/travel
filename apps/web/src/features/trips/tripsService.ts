@@ -1,5 +1,6 @@
 import { createApiClient } from '@boardingpass/core';
 import type { TripType, TripStatus } from '@boardingpass/types';
+import type { FlightLeg } from '@/features/itinerary/itineraryService';
 import { loadJSON, saveJSON } from '@/shared/persist';
 import { db, firebaseEnabled, requireUid, currentUser } from '@/shared/firebase';
 import {
@@ -17,6 +18,7 @@ export interface TripCity {
   dateTo?: string;
   hotel?: string;
   travelMode?: TripTravelMode;
+  flightOut?: FlightLeg;
 }
 
 export interface Trip {

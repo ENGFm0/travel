@@ -7,7 +7,8 @@ import type { TripType } from '@boardingpass/types';
 import type { Trip, TripCity, TripTravelMode, TripState } from './tripsService';
 import { useTripsWizard, tripsActions, useTripsStore } from './tripsStore';
 import { useProfile } from '@/features/profile/profileStore';
-import { CURRENCIES, currencyOf, guessCountry } from '@/shared/countries';
+import { currencyOf, guessCountry } from '@/shared/countries';
+import { getItineraryBoard, type FlightLeg } from '@/features/itinerary/itineraryService';
 
 type Row = { name: string; dateFrom: string; dateTo: string; hotel: string };
 
@@ -38,10 +39,9 @@ export function CreateTripWizard() {
   const [dateTo, setDateTo] = useState('');
   const [rows, setRows] = useState<Row[]>([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]);
   const [travelMode, setTravelMode] = useState<TripTravelMode>('PLANE');
+  const [flight, setFlight] = useState<FlightLeg>({});
   const [state, setState] = useState<TripState>('PLANNING');
   const [budget, setBudget] = useState('');
-  const [currency, setCurrency] = useState('');
-  const [destCurrency, setDestCurrency] = useState('');
   const [inviteInput, setInviteInput] = useState('');
   const [invitees, setInvitees] = useState<string[]>([]);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -53,23 +53,11 @@ export function CreateTripWizard() {
   useEffect(() => {
     if (wizardOpen) {
       setStep(1); setTitle(''); setType(''); setDateFrom(''); setDateTo('');
-      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTravelMode('PLANE'); setState('PLANNING');
-      setBudget(''); setCurrency(''); setDestCurrency('');
+      setRows([{ name: '', dateFrom: '', dateTo: '', hotel: '' }]); setTravelMode('PLANE'); setFlight({}); setState('PLANNING');
+      setBudget('');
       setInviteInput(''); setInvitees([]); setErrorCode(null); setBusy(false); setDone(null);
     }
   }, [wizardOpen]);
-
-  // On the budget step, default the currency to the user's home currency, and
-  // for international trips guess the destination currency from the cities.
-  useEffect(() => {
-    if (step !== 5) return;
-    if (!currency) setCurrency(homeCurrency);
-    if (type === 'INTERNATIONAL' && !destCurrency) {
-      const g = rows.map((r) => guessCountry(r.name)).find(Boolean);
-      if (g) setDestCurrency(g.currency);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
 
   useEffect(() => {
     if (!wizardOpen) return;
@@ -83,6 +71,11 @@ export function CreateTripWizard() {
 
   const err = errorCode ? t(`trips.errors.${errorCode}`, t('trips.errors.GENERIC')) : null;
   const namedCities = rows.filter((r) => r.name.trim());
+  // Currency is automatic: your currency from your country; the destination
+  // currency guessed from the cities (international trips only).
+  const destCountry = namedCities.map((r) => guessCountry(r.name)).find(Boolean);
+  const autoCurrency = homeCurrency;
+  const autoDest = type === 'INTERNATIONAL' ? (destCountry?.currency ?? '') : '';
 
   function validateStep1(): boolean {
     if (title.trim().length < 2) { setErrorCode('TITLE_REQUIRED'); return false; }
@@ -122,14 +115,17 @@ export function CreateTripWizard() {
 
   async function create() {
     setErrorCode(null);
+    const flightSet = Boolean(flight.airline || flight.no || flight.from || flight.to || flight.date || flight.time);
     const cities: TripCity[] = rows
       .filter((r) => r.name.trim())
-      .map((r) => ({
+      .map((r, i) => ({
         name: r.name.trim(),
         dateFrom: r.dateFrom || undefined,
         dateTo: r.dateTo || undefined,
         hotel: r.hotel.trim() || undefined,
         travelMode,
+        // attach the entered flight to the first stop
+        flightOut: i === 0 && travelMode === 'PLANE' && flightSet ? flight : undefined,
       }));
     // Overall trip range: what the user typed, else derived from the cities'
     // own dates (earliest start → latest end) — we never invent dates.
@@ -141,8 +137,8 @@ export function CreateTripWizard() {
     const payload = {
       title: title.trim(), type: type as TripType, dateFrom: finalFrom, dateTo: finalTo, cities, travelMode, state,
       budget: Number.isFinite(budgetNum) ? budgetNum : undefined,
-      currency: currency || undefined,
-      destCurrency: type === 'INTERNATIONAL' ? (destCurrency || undefined) : undefined,
+      currency: autoCurrency || undefined,
+      destCurrency: autoDest || undefined,
       invitees,
     };
     const parsed = createTripSchema.safeParse(payload);
@@ -155,6 +151,13 @@ export function CreateTripWizard() {
     setBusy(true);
     try {
       const trip = await tripsActions.create(payload);
+      // Seed the itinerary board now so cities, dates, hotels, travel mode and
+      // the flight all show up in the trip immediately (not only lazily later).
+      try {
+        await getItineraryBoard(trip.id, cities.map((c) => ({
+          name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, travelMode: c.travelMode, flightOut: c.flightOut,
+        })));
+      } catch { /* best-effort seed */ }
       setLastCreated(trip);
       setDone(trip);
     } catch (e) {
@@ -275,6 +278,21 @@ export function CreateTripWizard() {
                     </button>
                   ))}
                 </div>
+                {travelMode === 'PLANE' && (
+                  <div className="bp-wizard-flight">
+                    <span className="bp-field__label">{t('trips.flightOutbound')}</span>
+                    <div className="bp-grid-2">
+                      <div className="bp-field"><label htmlFor="bp-fa">{t('itinerary.airline')}</label>
+                        <input id="bp-fa" className="bp-input" value={flight.airline ?? ''} onChange={(e) => setFlight((f) => ({ ...f, airline: e.target.value || undefined }))} /></div>
+                      <div className="bp-field"><label htmlFor="bp-fn">{t('itinerary.flightNo')}</label>
+                        <input id="bp-fn" className="bp-input" value={flight.no ?? ''} placeholder="SV1020" dir="ltr" onChange={(e) => setFlight((f) => ({ ...f, no: e.target.value || undefined }))} /></div>
+                      <div className="bp-field"><label htmlFor="bp-fd">{t('itinerary.date')}</label>
+                        <input id="bp-fd" className="bp-input" type="date" value={flight.date ?? ''} min={dateFrom || rows[0]?.dateFrom || undefined} max={dateTo || undefined} onChange={(e) => setFlight((f) => ({ ...f, date: e.target.value || undefined }))} /></div>
+                      <div className="bp-field"><label htmlFor="bp-ft">{t('itinerary.time')}</label>
+                        <input id="bp-ft" className="bp-input" type="time" value={flight.time ?? ''} onChange={(e) => setFlight((f) => ({ ...f, time: e.target.value || undefined }))} /></div>
+                    </div>
+                  </div>
+                )}
                 <p className="bp-wizard-note">{t('trips.travelNote')}</p>
               </>
             )}
@@ -303,27 +321,20 @@ export function CreateTripWizard() {
                 <div className="bp-grid-2">
                   <div className="bp-field">
                     <label htmlFor="bp-budget">{t('trips.budgetLabel')}</label>
-                    <input id="bp-budget" className="bp-input" type="number" inputMode="decimal" min="0" value={budget} placeholder="0" onChange={(e) => setBudget(e.target.value)} />
+                    <input id="bp-budget" className="bp-input" type="number" inputMode="decimal" min="0" value={budget} placeholder="0" onChange={(e) => setBudget(e.target.value)} autoFocus />
                   </div>
                   <div className="bp-field">
-                    <label htmlFor="bp-cur">{t('trips.currencyLabel')}</label>
-                    <select id="bp-cur" className="bp-input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                      {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <span className="bp-field__label">{t('trips.currencyLabel')}</span>
+                    <div className="bp-cur-auto">
+                      <span className="bp-cur-badge">{autoCurrency}</span>
+                      {autoDest && autoDest !== autoCurrency && <><span className="bp-city-dates__sep">+</span><span className="bp-cur-badge bp-cur-badge--dest">{autoDest}</span></>}
+                    </div>
                   </div>
                 </div>
-                {type === 'INTERNATIONAL' && (
-                  <div className="bp-field">
-                    <label htmlFor="bp-destcur">{t('trips.destCurrencyLabel')}</label>
-                    <select id="bp-destcur" className="bp-input" value={destCurrency} onChange={(e) => setDestCurrency(e.target.value)}>
-                      <option value="">{t('trips.destCurrencyNone')}</option>
-                      {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <span className="bp-note">{t('trips.destCurrencyNote')}</span>
-                  </div>
-                )}
                 <p className="bp-wizard-note">
-                  {type === 'DOMESTIC' ? t('trips.currencyDomesticNote', { cur: currency || homeCurrency }) : t('trips.currencyIntlNote')}
+                  {type === 'DOMESTIC'
+                    ? t('trips.currencyAutoDomestic', { cur: autoCurrency })
+                    : (autoDest ? t('trips.currencyAutoIntl', { home: autoCurrency, dest: autoDest }) : t('trips.currencyAutoIntlUnknown', { home: autoCurrency }))}
                 </p>
               </>
             )}

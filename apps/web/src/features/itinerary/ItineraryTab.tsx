@@ -171,7 +171,7 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tri
       <div className="bp-city-panel__head">
         <div className="bp-city-panel__titles">
           <h3>{city.name}</h3>
-          <CityDateRange tripId={tripId} city={city} canEdit={canEdit} />
+          <CityDateRange tripId={tripId} city={city} canEdit={canEdit} tripFrom={tripFrom} tripTo={tripTo} />
         </div>
         {canEdit && (
           <div className="bp-city-panel__ord">
@@ -565,7 +565,7 @@ function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
 
 /** City date range shown right under the city name. Editing it sets the city's
  *  dates (so they appear on the stop chip) and regenerates its day list. */
-function CityDateRange({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
+function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo }: { tripId: string; city: CityStop; canEdit: boolean; tripFrom?: string; tripTo?: string }) {
   const { t } = useTranslation();
   const locale = useUIStore((s) => s.locale);
   const [from, setFrom] = useState(city.dateFrom ?? '');
@@ -591,9 +591,11 @@ function CityDateRange({ tripId, city, canEdit }: { tripId: string; city: CitySt
     <div className="bp-city-dates">
       <span className="material-symbols-outlined bp-city-dates__ic" aria-hidden="true">event</span>
       <input className="bp-input bp-input--sm" type="date" value={from} aria-label={t('itinerary.from')}
+        min={tripFrom || undefined} max={to || tripTo || undefined}
         onChange={(e) => { setFrom(e.target.value); void save(e.target.value, to); }} />
       <span className="bp-city-dates__sep">→</span>
       <input className="bp-input bp-input--sm" type="date" value={to} aria-label={t('itinerary.to')}
+        min={from || tripFrom || undefined} max={tripTo || undefined}
         onChange={(e) => { setTo(e.target.value); void save(from, e.target.value); }} />
     </div>
   );
