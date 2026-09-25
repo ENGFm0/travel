@@ -130,11 +130,16 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
       {canEdit && showAdd && (
         <div className="bp-addcity">
           <div className="bp-addcity__row">
-            <label className="bp-field bp-addcity__name">
+            <div className="bp-field bp-addcity__name">
               <span className="bp-field__label">{t('itinerary.cityName')}</span>
-              <input className="bp-input" value={newCity} placeholder={t('itinerary.addCityPh')} aria-label={t('itinerary.addCity')}
-                onChange={(e) => setNewCity(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addCity())} autoFocus />
-            </label>
+              {mapsEnabled() ? (
+                <PlaceSearch citiesOnly value={newCity} onValueChange={setNewCity} onPick={(p) => setNewCity(p.name)}
+                  placeholder={t('itinerary.addCityPh')} ariaLabel={t('itinerary.addCity')} />
+              ) : (
+                <input className="bp-input" value={newCity} placeholder={t('itinerary.addCityPh')} aria-label={t('itinerary.addCity')}
+                  onChange={(e) => setNewCity(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addCity())} autoFocus />
+              )}
+            </div>
             <label className="bp-field">
               <span className="bp-field__label">{t('itinerary.from')}</span>
               <input className="bp-input" type="date" value={newFrom} onChange={(e) => setNewFrom(e.target.value)} />

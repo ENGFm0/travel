@@ -261,7 +261,12 @@ export function CreateTripWizard() {
                     <div className="bp-row-between">
                       <div className="bp-field" style={{ flex: 1 }}>
                         <label htmlFor={`bp-city-${i}`}>{t('trips.cityName')}</label>
-                        <input id={`bp-city-${i}`} ref={i === 0 ? firstRef : undefined} className="bp-input" value={r.name} placeholder={t('trips.cityNamePlaceholder')} onChange={(e) => toRow('name', i, e.target.value)} />
+                        {mapsEnabled() ? (
+                          <PlaceSearch citiesOnly value={r.name} onValueChange={(v) => toRow('name', i, v)} onPick={(p) => toRow('name', i, p.name)}
+                            placeholder={t('trips.cityNamePlaceholder')} ariaLabel={t('trips.cityName')} />
+                        ) : (
+                          <input id={`bp-city-${i}`} ref={i === 0 ? firstRef : undefined} className="bp-input" value={r.name} placeholder={t('trips.cityNamePlaceholder')} onChange={(e) => toRow('name', i, e.target.value)} />
+                        )}
                       </div>
                       {i > 0 && (
                         <button type="button" className="bp-icon-btn" aria-label={t('trips.removeCity')} onClick={() => removeRow(i)}>

@@ -30,9 +30,10 @@ function guessKind(types: string[] = []): ActivityKind {
  *  render in a dropdown → click adds. Bias toward the city when provided.
  *  Controlled mode: pass `value`/`onValueChange` to bind the input to an
  *  external field (e.g. the hotel name), so the field IS the search box. */
-export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeholder, ariaLabel }: {
+export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeholder, ariaLabel, citiesOnly }: {
   city?: string; onPick: (p: PickedPlace) => void;
   value?: string; onValueChange?: (v: string) => void; onBlur?: () => void; placeholder?: string; ariaLabel?: string;
+  citiesOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const controlled = value !== undefined;
@@ -73,7 +74,9 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
       setBusy(true); setErr(false);
       const p = await ensure();
       const fetchFor = async (q: string) => {
-        const { suggestions } = await p.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: q, sessionToken: token.current });
+        const req: any = { input: q, sessionToken: token.current };
+        if (citiesOnly) req.includedPrimaryTypes = ['(cities)']; // world cities only
+        const { suggestions } = await p.AutocompleteSuggestion.fetchAutocompleteSuggestions(req);
         return (suggestions ?? []) as any[];
       };
       // Bias to the city; if that yields nothing, fall back to the raw text so
@@ -88,6 +91,18 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
   }
 
   async function pick(s: any) {
+    // Cities: use the prediction text directly (City، Country) — no place details.
+    if (citiesOnly) {
+      const pred = s.placePrediction;
+      const main = pred?.mainText?.text ?? pred?.text?.text ?? text;
+      const sec = pred?.secondaryText?.text ?? '';
+      const label = sec ? `${main}، ${sec}` : main;
+      onPick({ name: label, address: sec || undefined, kind: 'OTHER', placeId: pred?.placeId });
+      if (controlled) onValueChange?.(label); else setQ('');
+      setItems([]); setOpen(false);
+      token.current = places.current ? new places.current.AutocompleteSessionToken() : null;
+      return;
+    }
     try {
       const pred = s.placePrediction;
       const place = pred.toPlace();
