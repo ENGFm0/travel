@@ -873,6 +873,12 @@ select.bp-input {
 .bp-city-dates__sep { color: var(--bp-ink-muted); font-weight: 800; }
 .bp-city-dates .bp-input--sm { max-inline-size: 160px; }
 .bp-city-dates__ro { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 700; color: var(--bp-ink-muted); }
+.bp-city-dur { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bp-city-dur__pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--bp-r-full);
+  background: color-mix(in srgb, var(--bp-primary) 12%, transparent); color: var(--bp-primary); font-size: 12.5px; font-weight: 800; }
+.bp-city-dur__pill .material-symbols-outlined { font-size: 15px; }
+.bp-city-dur__none { font-size: 12.5px; font-weight: 700; color: var(--bp-ink-muted); }
+.bp-city-dur__range { font-size: 12px; color: var(--bp-ink-muted); }
 .bp-city-dates__ro .material-symbols-outlined { font-size: 17px; color: var(--bp-primary); }
 
 /* single section (no longer a 3-col grid) spans full width */

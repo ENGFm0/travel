@@ -464,6 +464,8 @@
     "cruiseLeg": "Cruise trip",
     "cost": "Cost",
     "costHint": "The cost is added to the trip's shared expenses (kitty) automatically.",
+    "noDatesYet": "No dates",
+    "editDates": "Edit city dates",
     "saveToSchedule": "Save to schedule",
     "saveToScheduleHint": "Adds your flights to the day schedule by each flight's date.",
     "savedToSchedule": "Added {{count}} flight(s) to the schedule ✓",

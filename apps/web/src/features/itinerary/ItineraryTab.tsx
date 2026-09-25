@@ -34,6 +34,28 @@ type CitySub = 'days' | 'flight' | 'stay' | 'weather';
 /** Icon per travel mode (also used for the "flight" sub-tab). */
 const MODE_ICON: Record<TravelMode, string> = { PLANE: 'flight', CAR: 'directions_car', CRUISE: 'directions_boat' };
 
+/** Inclusive day count for a date range (no dates → 0, single date → 1). */
+function dayCount(from?: string, to?: string): number {
+  if (!from) return 0;
+  if (!to || to === from) return 1;
+  const a = new Date(from), b = new Date(to);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime()) || b < a) return 1;
+  return Math.round((b.getTime() - a.getTime()) / 86_400_000) + 1;
+}
+
+/** Localised "N days" label (Arabic dual/plural aware). */
+function daysLabel(n: number, locale: string): string {
+  const ar = locale.startsWith('ar');
+  const nn = n.toLocaleString(ar ? 'ar-EG' : 'en-US');
+  if (ar) {
+    if (n === 1) return 'يوم';
+    if (n === 2) return 'يومان';
+    if (n >= 3 && n <= 10) return `${nn} أيام`;
+    return `${nn} يومًا`;
+  }
+  return `${nn} ${n === 1 ? 'day' : 'days'}`;
+}
+
 /** Inclusive list of ISO dates between from..to (capped for safety). */
 function datesBetween(from?: string, to?: string): string[] {
   if (!from) return [];
@@ -92,7 +114,12 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
           >
             <span className="bp-stop__n">{i + 1}</span>
             <span className="bp-stop__name">{c.name}</span>
-            {c.dateFrom && <span className="bp-stop__date">{formatDate(c.dateFrom, useUIStore.getState().locale, { month: 'short', day: 'numeric' })}</span>}
+            {dayCount(c.dateFrom, c.dateTo) > 0 && (
+              <span className="bp-stop__date">
+                {c.dateFrom ? `${formatDate(c.dateFrom, useUIStore.getState().locale, { month: 'short', day: 'numeric' })} · ` : ''}
+                {daysLabel(dayCount(c.dateFrom, c.dateTo), useUIStore.getState().locale)}
+              </span>
+            )}
           </button>
         ))}
         {canEdit && (
@@ -820,6 +847,7 @@ function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo }: { tripId: st
   const locale = useUIStore((s) => s.locale);
   const [from, setFrom] = useState(city.dateFrom ?? '');
   const [to, setTo] = useState(city.dateTo ?? '');
+  const [editing, setEditing] = useState(false);
   useEffect(() => { setFrom(city.dateFrom ?? ''); setTo(city.dateTo ?? ''); }, [city.dateFrom, city.dateTo]);
 
   async function save(nextFrom = from, nextTo = to) {
@@ -828,18 +856,33 @@ function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo }: { tripId: st
     if (nextFrom) await itineraryActions.generateDays(tripId, city.id, datesBetween(nextFrom, nextTo || nextFrom));
   }
 
-  if (!canEdit) {
-    if (!city.dateFrom) return null;
-    const opts = { day: 'numeric', month: 'short' } as const;
-    const label = city.dateTo && city.dateTo !== city.dateFrom
-      ? `${formatDate(city.dateFrom, locale, opts)} – ${formatDate(city.dateTo, locale, opts)}`
-      : formatDate(city.dateFrom, locale, opts);
-    return <p className="bp-city-dates__ro"><span className="material-symbols-outlined" aria-hidden="true">event</span>{label}</p>;
+  const count = dayCount(city.dateFrom, city.dateTo);
+  const dateText = city.dateFrom
+    ? (city.dateTo && city.dateTo !== city.dateFrom
+        ? `${formatDate(city.dateFrom, locale, { day: 'numeric', month: 'short' })} – ${formatDate(city.dateTo, locale, { day: 'numeric', month: 'short' })}`
+        : formatDate(city.dateFrom, locale, { day: 'numeric', month: 'short' }))
+    : '';
+
+  // Compact summary: a "N days" pill (+ the range in small text), with a small
+  // edit button that reveals the date pickers only when needed.
+  if (!editing) {
+    return (
+      <div className="bp-city-dur">
+        {count > 0 ? (
+          <span className="bp-city-dur__pill"><span className="material-symbols-outlined" aria-hidden="true">event</span>{daysLabel(count, locale)}</span>
+        ) : <span className="bp-city-dur__none">{t('itinerary.noDatesYet')}</span>}
+        {dateText && <span className="bp-city-dur__range">{dateText}</span>}
+        {canEdit && (
+          <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.editDates')} onClick={() => setEditing(true)}>
+            <span className="material-symbols-outlined" aria-hidden="true">edit_calendar</span>
+          </button>
+        )}
+      </div>
+    );
   }
 
   return (
     <div className="bp-city-dates">
-      <span className="material-symbols-outlined bp-city-dates__ic" aria-hidden="true">event</span>
       <input className="bp-input bp-input--sm" type="date" value={from} aria-label={t('itinerary.from')}
         min={tripFrom || undefined} max={to || tripTo || undefined}
         onChange={(e) => { setFrom(e.target.value); void save(e.target.value, to); }} />
@@ -847,6 +890,9 @@ function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo }: { tripId: st
       <input className="bp-input bp-input--sm" type="date" value={to} aria-label={t('itinerary.to')}
         min={from || tripFrom || undefined} max={tripTo || undefined}
         onChange={(e) => { setTo(e.target.value); void save(from, e.target.value); }} />
+      <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('trips.close')} onClick={() => setEditing(false)}>
+        <span className="material-symbols-outlined" aria-hidden="true">check</span>
+      </button>
     </div>
   );
 }
