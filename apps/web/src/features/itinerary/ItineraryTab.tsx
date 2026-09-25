@@ -671,7 +671,7 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
           <div className="bp-field">
             <span className="bp-field__label">{t('itinerary.hotelName')}</span>
             {mapsEnabled() ? (
-              <PlaceSearch city={`فنادق ${city.name}`} value={name} onValueChange={setName} onBlur={saveName}
+              <PlaceSearch city={city.name} value={name} onValueChange={setName} onBlur={saveName}
                 placeholder={t('itinerary.hotelPh')} ariaLabel={t('itinerary.hotel')}
                 onPick={(p) => { setName(p.name); setUrl(p.mapsUrl ?? ''); itineraryActions.setCityInfo(tripId, city.id, { hotel: p.name, hotelUrl: p.mapsUrl }); }} />
             ) : (

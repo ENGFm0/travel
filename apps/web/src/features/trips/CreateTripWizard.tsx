@@ -334,7 +334,7 @@ export function CreateTripWizard() {
                       <div className="bp-field">
                         <label htmlFor={`bp-hotel-${i}`}>{t('trips.hotelForCity', { city: r.name.trim() })}</label>
                         {mapsEnabled() ? (
-                          <PlaceSearch city={`فنادق ${r.name.trim()}`} value={r.hotel}
+                          <PlaceSearch city={r.name.trim()} value={r.hotel}
                             onValueChange={(v) => toRow('hotel', i, v)} placeholder={t('trips.hotelPlaceholder')} ariaLabel={t('trips.hotelForCity', { city: r.name.trim() })}
                             onPick={(p) => { toRow('hotel', i, p.name); toRow('hotelUrl', i, p.mapsUrl ?? ''); }} />
                         ) : (

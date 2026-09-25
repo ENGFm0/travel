@@ -72,10 +72,15 @@ export function PlaceSearch({ city, onPick, value, onValueChange, onBlur, placeh
     try {
       setBusy(true); setErr(false);
       const p = await ensure();
-      const req: any = { input, sessionToken: token.current };
-      if (city) req.input = `${input} ${city}`;
-      const { suggestions } = await p.AutocompleteSuggestion.fetchAutocompleteSuggestions(req);
-      setItems(suggestions ?? []);
+      const fetchFor = async (q: string) => {
+        const { suggestions } = await p.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: q, sessionToken: token.current });
+        return (suggestions ?? []) as any[];
+      };
+      // Bias to the city; if that yields nothing, fall back to the raw text so
+      // the user always gets whatever Google Maps matches.
+      let items = await fetchFor(city ? `${input} ${city}` : input);
+      if (items.length === 0 && city) items = await fetchFor(input);
+      setItems(items);
       setOpen(true);
     } catch {
       setErr(true); setItems([]); setOpen(true);
