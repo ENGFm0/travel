@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
+import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { MembersPanel } from '@/features/members/MembersPanel';
 import { CURRENT_UID } from '@/features/members/membersService';
 import { membersActions, useMembers } from '@/features/members/membersStore';
@@ -87,7 +88,10 @@ export function TripDetailPage() {
   const range = trip.dateTo
     ? `${formatDate(trip.dateFrom, locale)} – ${formatDate(trip.dateTo, locale)}`
     : formatDate(trip.dateFrom, locale);
-  const myRole = members?.find((m) => m.uid === CURRENT_UID)?.role;
+  // The current user's uid: real Firebase uid when configured, else the mock's.
+  const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
+  const myRole = members?.find((m) => m.uid === meUid)?.role;
+  const isOwner = myRole === 'OWNER';
   const canEdit = myRole !== 'VIEWER'; // UX gate; server enforces (BR-006-003)
   const activeCount = members?.filter((m) => m.status === 'ACTIVE').length ?? 0;
 
@@ -125,11 +129,11 @@ export function TripDetailPage() {
           <ItineraryTab tripId={trip.id} canEdit={canEdit} view="travel" tripFrom={trip.dateFrom} tripTo={trip.dateTo}
             seed={trip.cities.map((c) => ({ name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, travelMode: c.travelMode ?? trip.travelMode, flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind }))} />
         )}
-        {tab === 'expenses' && <ExpensesTab tripId={trip.id} canEdit={canEdit} isOwner={myRole === 'OWNER'} />}
+        {tab === 'expenses' && <ExpensesTab tripId={trip.id} canEdit={canEdit} isOwner={isOwner} />}
         {tab === 'tasks' && <TasksTab tripId={trip.id} canEdit={canEdit} />}
         {tab === 'members' && <MembersPanel tripId={trip.id} />}
         {tab === 'memories' && (
-          <MemoriesTab tripId={trip.id} canEdit={canEdit} isOwner={myRole === 'OWNER'}
+          <MemoriesTab tripId={trip.id} canEdit={canEdit} isOwner={isOwner}
             places={trip.cities.map((c) => c.name).filter(Boolean)} tripTitle={trip.title} memberCount={activeCount} />
         )}
       </div>

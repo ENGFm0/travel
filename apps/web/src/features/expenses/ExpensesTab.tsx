@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatCurrency } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
+import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { CURRENT_UID } from '@/features/members/membersService';
+import { setMockCurrentUser } from './expensesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
   CATEGORIES, convert, distribution, kittyCollected, myNetBalance, perMemberDue,
@@ -34,10 +36,12 @@ export function ExpensesTab({ tripId, canEdit, isOwner }: { tripId: string; canE
     return (uid: string) => map[uid] ?? uid;
   }, [active]);
 
+  const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
   const uidsKey = memberUids.join(',');
   useEffect(() => {
     if (memberUids.length === 0) return;
-    void expensesActions.load(tripId, { memberUids, base: 'SAR', dest: 'GBP', rate: 0.2122 }, CURRENT_UID);
+    setMockCurrentUser(tripId, meUid); // self-scoped personal writes (mock)
+    void expensesActions.load(tripId, { memberUids, base: 'SAR', dest: 'GBP', rate: 0.2122 }, meUid);
     return () => expensesActions.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId, uidsKey]);
