@@ -596,16 +596,30 @@ function FlightBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop
   );
 }
 
-/** Ground transport: rental or own car, pickup/dropoff + times. */
+/** Ground transport. Rental → company + pickup/return dates + rental cost.
+ *  Own car → just the fuel cost (everything else dropped). */
 function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; canEdit: boolean }) {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
   const car = city.car;
+  const carKind: CarKind = city.carKind ?? 'RENTAL';
   const [editing, setEditing] = useState(false);
-  const [ckind, setCkind] = useState<CarKind>(city.carKind ?? 'RENTAL');
+  const [ckind, setCkind] = useState<CarKind>(carKind);
   const [draft, setDraft] = useState<FlightLeg>(car ?? {});
   useEffect(() => { setDraft(car ?? {}); setCkind(city.carKind ?? 'RENTAL'); }, [car, city.carKind]);
-  const has = Boolean(car && (car.airline || car.from || car.to || car.date || car.time));
+  const has = Boolean(car && (car.airline || car.date || car.dateEnd || car.no || typeof car.cost === 'number'));
   const set = (k: keyof FlightLeg, v: string) => setDraft((p) => ({ ...p, [k]: v || undefined }));
+  const setCost = (v: string) => setDraft((p) => ({ ...p, cost: v ? Number(v) : undefined }));
+
+  function save() {
+    // Keep only the fields that belong to the chosen kind, so switching type
+    // never leaves stale data behind.
+    const clean: FlightLeg = ckind === 'RENTAL'
+      ? { airline: draft.airline, date: draft.date, dateEnd: draft.dateEnd, cost: draft.cost, no: draft.no }
+      : { cost: draft.cost, no: draft.no };
+    itineraryActions.setCityInfo(tripId, city.id, { car: clean, carKind: ckind });
+    setEditing(false);
+  }
 
   return (
     <section className="bp-itin-sec">
@@ -614,22 +628,22 @@ function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; c
         <h4>{t('itinerary.mode.CAR')}</h4>
       </div>
 
-      {!canEdit ? (
-        has ? (<><span className="bp-cur-badge bp-cur-badge--dest">{t(`itinerary.carKind.${city.carKind ?? 'RENTAL'}`)}</span><FlightCard leg={car} mode="CAR" /></>) : <p className="bp-itin-sec__val">—</p>
-      ) : !editing ? (
+      {(!canEdit || !editing) ? (
         has ? (
           <>
-            <span className="bp-cur-badge bp-cur-badge--dest">{t(`itinerary.carKind.${city.carKind ?? 'RENTAL'}`)}</span>
-            <FlightCard leg={car} mode="CAR" />
-            <button className="bp-btn bp-btn--outline bp-btn--sm bp-leg-slot__edit" onClick={() => setEditing(true)}>
-              <span className="material-symbols-outlined" aria-hidden="true">edit</span>{t('itinerary.editLeg')}
-            </button>
+            <span className="bp-cur-badge bp-cur-badge--dest">{t(`itinerary.carKind.${carKind}`)}</span>
+            <CarSummary car={car!} kind={carKind} locale={locale} />
+            {canEdit && (
+              <button className="bp-btn bp-btn--outline bp-btn--sm bp-leg-slot__edit" onClick={() => setEditing(true)}>
+                <span className="material-symbols-outlined" aria-hidden="true">edit</span>{t('itinerary.editLeg')}
+              </button>
+            )}
           </>
-        ) : (
+        ) : (canEdit ? (
           <button className="bp-add-activity" onClick={() => setEditing(true)}>
             <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addCar')}
           </button>
-        )
+        ) : <p className="bp-itin-sec__val">—</p>)
       ) : (
         <div className="bp-leg">
           <div className="bp-kinds" role="group" aria-label={t('itinerary.carKindLabel')}>
@@ -639,30 +653,65 @@ function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; c
               </button>
             ))}
           </div>
-          <div className="bp-leg__grid">
-            {ckind === 'RENTAL' && (
-              <label className="bp-field"><span className="bp-field__label">{t('itinerary.rentalCompany')}</span>
-                <input className="bp-input" value={draft.airline ?? ''} onChange={(e) => set('airline', e.target.value)} /></label>
-            )}
-            <label className="bp-field"><span className="bp-field__label">{t('itinerary.pickup')}</span>
-              <input className="bp-input" value={draft.from ?? ''} onChange={(e) => set('from', e.target.value)} /></label>
-            <label className="bp-field"><span className="bp-field__label">{t('itinerary.dropoff')}</span>
-              <input className="bp-input" value={draft.to ?? ''} onChange={(e) => set('to', e.target.value)} /></label>
-            <label className="bp-field"><span className="bp-field__label">{t('itinerary.date')}</span>
-              <input className="bp-input" type="date" value={draft.date ?? ''} onChange={(e) => set('date', e.target.value)} /></label>
-            <label className="bp-field"><span className="bp-field__label">{t('itinerary.time')}</span>
-              <input className="bp-input" type="time" value={draft.time ?? ''} onChange={(e) => set('time', e.target.value)} /></label>
-            <label className="bp-field"><span className="bp-field__label">{t('itinerary.cost')}</span>
-              <input className="bp-input" type="number" inputMode="decimal" min="0" value={draft.cost ?? ''} placeholder="0" onChange={(e) => setDraft((p) => ({ ...p, cost: e.target.value ? Number(e.target.value) : undefined }))} /></label>
-          </div>
-          <input className="bp-input" value={draft.no ?? ''} placeholder={t('itinerary.carNotePh')} onChange={(e) => set('no', e.target.value)} />
+          {ckind === 'RENTAL' ? (
+            <>
+              <div className="bp-leg__grid">
+                <label className="bp-field"><span className="bp-field__label">{t('itinerary.rentalCompany')}</span>
+                  <input className="bp-input" value={draft.airline ?? ''} onChange={(e) => set('airline', e.target.value)} /></label>
+                <label className="bp-field"><span className="bp-field__label">{t('itinerary.pickupDate')}</span>
+                  <input className="bp-input" type="date" value={draft.date ?? ''} onChange={(e) => set('date', e.target.value)} /></label>
+                <label className="bp-field"><span className="bp-field__label">{t('itinerary.returnDate')}</span>
+                  <input className="bp-input" type="date" value={draft.dateEnd ?? ''} min={draft.date || undefined} onChange={(e) => set('dateEnd', e.target.value)} /></label>
+                <label className="bp-field"><span className="bp-field__label">{t('itinerary.rentalCost')}</span>
+                  <input className="bp-input" type="number" inputMode="decimal" min="0" value={draft.cost ?? ''} placeholder="0" onChange={(e) => setCost(e.target.value)} /></label>
+              </div>
+              <input className="bp-input" value={draft.no ?? ''} placeholder={t('itinerary.carNotePh')} onChange={(e) => set('no', e.target.value)} />
+            </>
+          ) : (
+            <>
+              <label className="bp-field"><span className="bp-field__label">{t('itinerary.fuelCost')}</span>
+                <input className="bp-input" type="number" inputMode="decimal" min="0" value={draft.cost ?? ''} placeholder="0" onChange={(e) => setCost(e.target.value)} /></label>
+              <input className="bp-input" value={draft.no ?? ''} placeholder={t('itinerary.carNotePh')} onChange={(e) => set('no', e.target.value)} />
+            </>
+          )}
           <div className="bp-row-between">
-            <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => { itineraryActions.setCityInfo(tripId, city.id, { car: draft, carKind: ckind }); setEditing(false); }}>{t('itinerary.saveLeg')}</button>
-            <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => { setDraft(car ?? {}); setEditing(false); }}>{t('trips.close')}</button>
+            <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={save}>{t('itinerary.saveLeg')}</button>
+            <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => { setDraft(car ?? {}); setCkind(carKind); setEditing(false); }}>{t('trips.close')}</button>
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+/** Read-only car summary — rental (company, pickup→return dates, cost) or own (fuel). */
+function CarSummary({ car, kind, locale }: { car: FlightLeg; kind: CarKind; locale: Locale }) {
+  const { t } = useTranslation();
+  const money = (n?: number) => (typeof n === 'number' ? n.toLocaleString(locale.startsWith('ar') ? 'ar-EG' : 'en-US') : '');
+  if (kind === 'OWN') {
+    return (
+      <div className="bp-car-card">
+        {typeof car.cost === 'number' && (
+          <p className="bp-car-card__line"><span className="material-symbols-outlined" aria-hidden="true">local_gas_station</span>{t('itinerary.fuelCost')}: {money(car.cost)}</p>
+        )}
+        {car.no && <p className="bp-tl-item__note">{car.no}</p>}
+      </div>
+    );
+  }
+  const d = (iso?: string) => (iso ? formatDate(iso, locale, { day: 'numeric', month: 'short' }) : '');
+  return (
+    <div className="bp-car-card">
+      {car.airline && <p className="bp-car-card__line"><span className="material-symbols-outlined" aria-hidden="true">car_rental</span>{car.airline}</p>}
+      {(car.date || car.dateEnd) && (
+        <p className="bp-car-card__line"><span className="material-symbols-outlined" aria-hidden="true">event</span>
+          {t('itinerary.pickup')}: {d(car.date) || '—'} · {t('itinerary.dropoff')}: {d(car.dateEnd) || '—'}
+        </p>
+      )}
+      {typeof car.cost === 'number' && (
+        <p className="bp-car-card__line"><span className="material-symbols-outlined" aria-hidden="true">payments</span>{t('itinerary.rentalCost')}: {money(car.cost)}</p>
+      )}
+      {car.no && <p className="bp-tl-item__note">{car.no}</p>}
+    </div>
   );
 }
 

@@ -99,7 +99,8 @@ export interface FlightLeg {
   no?: string;    // flight number (e.g. SV1020)
   from?: string;  // origin airport/city
   to?: string;    // destination airport/city
-  date?: string;  // ISO date
+  date?: string;  // ISO date (departure / rental pickup)
+  dateEnd?: string; // ISO date (rental return) — car rentals only
   time?: string;  // HH:mm
   cost?: number;  // optional price → recorded as a shared expense
 }
