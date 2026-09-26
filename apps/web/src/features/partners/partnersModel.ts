@@ -23,6 +23,8 @@ export interface Partner {
   coverage: string;
   tagline: string;
   url?: string;
+  /** WhatsApp number in international format (digits only, e.g. 9665…). */
+  whatsapp?: string;
   featured?: boolean;
 }
 

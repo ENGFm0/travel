@@ -355,10 +355,19 @@ function PartnerCard({ partner }: { partner: Partner }) {
           <span className="material-symbols-outlined" aria-hidden="true">location_on</span>{coverage}
         </p>
         <p className="bp-partner-card__tag">{partner.tagline}</p>
-        {partner.url && (
-          <a className="bp-partner-card__link" href={partner.url} target="_blank" rel="noopener noreferrer">
-            <span className="material-symbols-outlined" aria-hidden="true">open_in_new</span>{t('partners.visit')}
-          </a>
+        {(partner.url || partner.whatsapp) && (
+          <div className="bp-partner-card__actions">
+            {partner.url && (
+              <a className="bp-partner-card__link" href={partner.url} target="_blank" rel="noopener noreferrer">
+                <span className="material-symbols-outlined" aria-hidden="true">open_in_new</span>{t('partners.visit')}
+              </a>
+            )}
+            {partner.whatsapp && (
+              <a className="bp-partner-card__link bp-partner-card__link--wa" href={`https://wa.me/${partner.whatsapp}`} target="_blank" rel="noopener noreferrer">
+                <span className="material-symbols-outlined" aria-hidden="true">chat</span>{t('partners.whatsapp')}
+              </a>
+            )}
+          </div>
         )}
       </div>
     </article>
