@@ -566,6 +566,12 @@
     "summary": "Summary",
     "currency": "Display currency",
     "needMembers": "Add members to start splitting expenses.",
+    "potType": "Kitty type",
+    "pot": {
+      "SHARED": "Shared",
+      "PAIR": "Two people",
+      "PERSONAL": "Personal"
+    },
     "kittyTotal": "Kitty total",
     "setTotal": "Set total",
     "total": "Total",

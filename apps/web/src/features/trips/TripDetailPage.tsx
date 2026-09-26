@@ -129,7 +129,7 @@ export function TripDetailPage() {
           <ItineraryTab tripId={trip.id} canEdit={canEdit} view="travel" tripFrom={trip.dateFrom} tripTo={trip.dateTo}
             seed={trip.cities.map((c) => ({ name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, hotelUrl: c.hotelUrl, travelMode: c.travelMode ?? trip.travelMode, flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind }))} />
         )}
-        {tab === 'expenses' && <ExpensesTab tripId={trip.id} canEdit={canEdit} isOwner={isOwner} />}
+        {tab === 'expenses' && <ExpensesTab tripId={trip.id} canEdit={canEdit} isOwner={isOwner} base={trip.currency} dest={trip.destCurrency} />}
         {tab === 'tasks' && <TasksTab tripId={trip.id} canEdit={canEdit} />}
         {tab === 'members' && <MembersPanel tripId={trip.id} />}
         {tab === 'memories' && (

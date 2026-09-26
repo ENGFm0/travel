@@ -531,6 +531,10 @@ select.bp-input {
 .bp-exp__by { font-size: 13px; color: var(--bp-ink-muted); }
 .bp-exp__amt { font-weight: 800; }
 .bp-chip--cat { background: var(--bp-surface-2); font-size: 12px; }
+.bp-addexp { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 10px;
+  border: 1px dashed var(--bp-border); border-radius: var(--bp-r-lg);
+  background: color-mix(in srgb, var(--bp-primary) 3%, var(--bp-surface)); }
+.bp-addexp .bp-exp-form { margin-top: 0; }
 .bp-exp-form, .bp-side-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
 .bp-exp-form .bp-input { flex: 1; min-inline-size: 120px; }
 .bp-side-form { flex-direction: column; align-items: stretch; border: 1px dashed var(--bp-border); border-radius: var(--bp-r-md); padding: 12px; }

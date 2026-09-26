@@ -21,12 +21,17 @@ const SUBS: { key: Sub; label: string }[] = [
   { key: 'summary', label: 'expenses.summary' },
 ];
 
-export function ExpensesTab({ tripId, canEdit, isOwner }: { tripId: string; canEdit: boolean; isOwner: boolean }) {
+export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: string; canEdit: boolean; isOwner: boolean; base?: string; dest?: string }) {
   const { t } = useTranslation();
   const { members } = useMembers();
   const { finance, loading } = useFinance();
   const [sub, setSub] = useState<Sub>('kitty');
   const [showDest, setShowDest] = useState(false);
+
+  // The trip's own currencies drive the display. A domestic trip has no distinct
+  // destination currency, so there's just one currency and no toggle.
+  const baseCur = base || 'SAR';
+  const destCur = dest && dest !== baseCur ? dest : undefined;
 
   const active = useMemo(() => (members ?? []).filter((m) => m.status === 'ACTIVE'), [members]);
   const memberUids = useMemo(() => active.map((m) => m.uid), [active]);
@@ -41,29 +46,33 @@ export function ExpensesTab({ tripId, canEdit, isOwner }: { tripId: string; canE
   useEffect(() => {
     if (memberUids.length === 0) return;
     setMockCurrentUser(tripId, meUid); // self-scoped personal writes (mock)
-    void expensesActions.load(tripId, { memberUids, base: 'SAR', dest: 'GBP', rate: 0.2122 }, meUid);
+    void expensesActions.load(tripId, { memberUids, base: baseCur, dest: destCur ?? baseCur, rate: 0.2122 }, meUid);
     return () => expensesActions.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId, uidsKey]);
 
   const locale = useUIStore((s) => s.locale);
+  // Amounts are stored in the base currency; only convert for the dest view.
+  const useDest = showDest && !!destCur;
   const fmt = useMemo(() => {
     const rate = finance?.rate ?? 0.2122;
-    const code = showDest ? (finance?.dest ?? 'GBP') : (finance?.base ?? 'SAR');
-    return (base: number) => formatCurrency(convert(base, showDest, rate), code, locale);
-  }, [finance, showDest, locale]);
+    const code = useDest ? destCur! : baseCur;
+    return (b: number) => formatCurrency(convert(b, useDest, rate), code, locale);
+  }, [finance, useDest, locale, baseCur, destCur]);
 
   if (loading && finance === null) return <p className="bp-page__lead">…</p>;
   if (!finance) return <p className="bp-page__lead">{t('expenses.needMembers')}</p>;
 
   return (
     <div className="bp-expenses">
-      <div className="bp-expenses__bar">
-        <div className="bp-currency-toggle" role="group" aria-label={t('expenses.currency')}>
-          <button className={`bp-cur ${!showDest ? 'is-on' : ''}`} aria-pressed={!showDest} onClick={() => setShowDest(false)}>{finance.base}</button>
-          <button className={`bp-cur ${showDest ? 'is-on' : ''}`} aria-pressed={showDest} onClick={() => setShowDest(true)}>{finance.dest}</button>
+      {destCur && (
+        <div className="bp-expenses__bar">
+          <div className="bp-currency-toggle" role="group" aria-label={t('expenses.currency')}>
+            <button className={`bp-cur ${!showDest ? 'is-on' : ''}`} aria-pressed={!showDest} onClick={() => setShowDest(false)}>{baseCur}</button>
+            <button className={`bp-cur ${showDest ? 'is-on' : ''}`} aria-pressed={showDest} onClick={() => setShowDest(true)}>{destCur}</button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="bp-subtabs2" role="tablist" aria-label={t('tripDetail.tabExpenses')}>
         {SUBS.map((s) => (
@@ -73,7 +82,7 @@ export function ExpensesTab({ tripId, canEdit, isOwner }: { tripId: string; canE
         ))}
       </div>
 
-      {sub === 'kitty' && <KittyPanel finance={finance} memberUids={memberUids} nameOf={nameOf} fmt={fmt} canEdit={canEdit} isOwner={isOwner} />}
+      {sub === 'kitty' && <KittyPanel finance={finance} memberUids={memberUids} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} isOwner={isOwner} baseCur={baseCur} destCur={destCur} rate={finance.rate} />}
       {sub === 'side' && <SidePanel finance={finance} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} />}
       {sub === 'personal' && <PersonalPanel finance={finance} fmt={fmt} canEdit={canEdit} />}
       {sub === 'summary' && <SummaryPanel finance={finance} memberUids={memberUids} fmt={fmt} />}
@@ -85,17 +94,19 @@ function Bar({ pct }: { pct: number }) {
   return <div className="bp-progress"><div className="bp-progress__bar" style={{ inlineSize: `${Math.max(0, Math.min(100, pct))}%` }} /></div>;
 }
 
-function KittyPanel({ finance, memberUids, nameOf, fmt, canEdit, isOwner }: {
-  finance: Finance; memberUids: string[]; nameOf: (u: string) => string; fmt: (n: number) => string; canEdit: boolean; isOwner: boolean;
+function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner, baseCur, destCur, rate }: {
+  finance: Finance; memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: (u: string) => string;
+  fmt: (n: number) => string; canEdit: boolean; isOwner: boolean; baseCur: string; destCur?: string; rate: number;
 }) {
   const { t } = useTranslation();
   const [total, setTotal] = useState(String(finance.kittyTotal || ''));
   const dues = perMemberDue(finance.kittyTotal, memberUids);
   const collected = kittyCollected(finance.kittyTotal, memberUids, finance.paid);
-  const remaining = finance.kittyTotal - collected;
-  const pct = finance.kittyTotal > 0 ? (collected / finance.kittyTotal) * 100 : 0;
   const dist = distribution(finance.group);
   const groupTotal = finance.group.reduce((a, e) => a + e.amount, 0);
+  // The kitty is a pot: recording a shared expense draws it down.
+  const remaining = finance.kittyTotal - groupTotal;
+  const pct = finance.kittyTotal > 0 ? (groupTotal / finance.kittyTotal) * 100 : 0;
 
   return (
     <div className="bp-panel">
@@ -111,10 +122,11 @@ function KittyPanel({ finance, memberUids, nameOf, fmt, canEdit, isOwner }: {
 
       <div className="bp-stat-row">
         <Stat label={t('expenses.total')} value={fmt(finance.kittyTotal)} />
-        <Stat label={t('expenses.collected')} value={fmt(collected)} />
+        <Stat label={t('expenses.spent')} value={fmt(groupTotal)} />
         <Stat label={t('expenses.remaining')} value={fmt(remaining)} />
       </div>
       <Bar pct={pct} />
+      <p className="bp-note">{t('expenses.collected')}: {fmt(collected)}</p>
 
       <h4 className="bp-panel__h">{t('expenses.dues')}</h4>
       <ul className="bp-pay-list" role="list">
@@ -154,7 +166,7 @@ function KittyPanel({ finance, memberUids, nameOf, fmt, canEdit, isOwner }: {
         ))}
         {finance.group.length === 0 && <li className="bp-members__empty">{t('expenses.noGroup')}</li>}
       </ul>
-      {canEdit && <GroupForm memberUids={memberUids} nameOf={nameOf} />}
+      {canEdit && <AddExpense memberUids={memberUids} active={active} nameOf={nameOf} baseCur={baseCur} destCur={destCur} rate={rate} />}
     </div>
   );
 }
@@ -205,30 +217,86 @@ function GroupRow({ e, memberUids, nameOf, fmt, canEdit }: {
   );
 }
 
-function GroupForm({ memberUids, nameOf }: { memberUids: string[]; nameOf: (u: string) => string }) {
+type Pot = 'SHARED' | 'PAIR' | 'PERSONAL';
+const POTS: Pot[] = ['SHARED', 'PAIR', 'PERSONAL'];
+
+/** One entry point for every kind of expense: pick the kitty type (shared /
+ *  two-person / personal), the currency you paid in, and the amount. */
+function AddExpense({ memberUids, active, nameOf, baseCur, destCur, rate }: {
+  memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: (u: string) => string;
+  baseCur: string; destCur?: string; rate: number;
+}) {
   const { t } = useTranslation();
+  const [pot, setPot] = useState<Pot>('SHARED');
   const [desc, setDesc] = useState('');
   const [cat, setCat] = useState<Category>('FOOD');
   const [amount, setAmount] = useState('');
+  const [cur, setCur] = useState(baseCur);
   const [payer, setPayer] = useState(memberUids[0] ?? CURRENT_UID);
+  const [parts, setParts] = useState<string[]>(memberUids.slice(0, 2));
 
+  function toggle(uid: string) {
+    setParts((p) => (p.includes(uid) ? p.filter((x) => x !== uid) : [...p, uid]));
+  }
+  // Amount is entered in the chosen currency; store it in the base currency.
+  function toBase(a: number): number {
+    return destCur && cur === destCur && rate > 0 ? Math.round((a / rate) * 100) / 100 : a;
+  }
   async function submit() {
     const a = Number(amount);
     if (!desc.trim() || !(a > 0)) return;
-    await expensesActions.addGroup({ desc, category: cat, amount: a, payerUid: payer });
+    const amt = toBase(a);
+    if (pot === 'SHARED') await expensesActions.addGroup({ desc, category: cat, amount: amt, payerUid: payer });
+    else if (pot === 'PERSONAL') await expensesActions.addPersonal({ desc, amount: amt });
+    else {
+      if (parts.length < 2) return;
+      await expensesActions.addSide({ title: desc, participantUids: parts, total: amt, payerUid: parts.includes(payer) ? payer : parts[0] });
+    }
     setDesc(''); setAmount('');
   }
+
   return (
-    <div className="bp-exp-form">
-      <input className="bp-input" value={desc} placeholder={t('expenses.descPh')} aria-label={t('expenses.desc')} onChange={(e) => setDesc(e.target.value)} />
-      <select className="bp-input" value={cat} aria-label={t('expenses.category')} onChange={(e) => setCat(e.target.value as Category)}>
-        {CATEGORIES.map((c) => <option key={c} value={c}>{t(`expenses.cat.${c}`)}</option>)}
-      </select>
-      <input className="bp-input" type="number" min="0" step="0.01" value={amount} placeholder={t('expenses.amountPh')} aria-label={t('expenses.amount')} onChange={(e) => setAmount(e.target.value)} style={{ maxInlineSize: 120 }} />
-      <select className="bp-input" value={payer} aria-label={t('expenses.payer')} onChange={(e) => setPayer(e.target.value)}>
-        {memberUids.map((u) => <option key={u} value={u}>{nameOf(u)}</option>)}
-      </select>
-      <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={submit}>{t('expenses.add')}</button>
+    <div className="bp-addexp">
+      <div className="bp-kinds" role="group" aria-label={t('expenses.potType')}>
+        {POTS.map((p) => (
+          <button key={p} type="button" className={`bp-chip bp-chip--btn ${pot === p ? 'is-on' : ''}`} aria-pressed={pot === p} onClick={() => setPot(p)}>
+            {t(`expenses.pot.${p}`)}
+          </button>
+        ))}
+      </div>
+
+      {pot === 'PAIR' && (
+        <fieldset className="bp-parts">
+          <legend>{t('expenses.participants')}</legend>
+          {active.map((m) => (
+            <label key={m.uid} className="bp-check">
+              <input type="checkbox" checked={parts.includes(m.uid)} onChange={() => toggle(m.uid)} />{m.displayName}
+            </label>
+          ))}
+        </fieldset>
+      )}
+
+      <div className="bp-exp-form">
+        <input className="bp-input" value={desc} placeholder={t('expenses.descPh')} aria-label={t('expenses.desc')} onChange={(e) => setDesc(e.target.value)} />
+        {pot !== 'PERSONAL' && (
+          <select className="bp-input" value={cat} aria-label={t('expenses.category')} onChange={(e) => setCat(e.target.value as Category)}>
+            {CATEGORIES.map((c) => <option key={c} value={c}>{t(`expenses.cat.${c}`)}</option>)}
+          </select>
+        )}
+        <input className="bp-input" type="number" min="0" step="0.01" value={amount} placeholder={t('expenses.amountPh')} aria-label={t('expenses.amount')} onChange={(e) => setAmount(e.target.value)} style={{ maxInlineSize: 120 }} />
+        {destCur && (
+          <select className="bp-input" value={cur} aria-label={t('expenses.currency')} onChange={(e) => setCur(e.target.value)} style={{ maxInlineSize: 90 }}>
+            <option value={baseCur}>{baseCur}</option>
+            <option value={destCur}>{destCur}</option>
+          </select>
+        )}
+        {pot !== 'PERSONAL' && (
+          <select className="bp-input" value={payer} aria-label={t('expenses.payer')} onChange={(e) => setPayer(e.target.value)}>
+            {(pot === 'PAIR' ? parts : memberUids).map((u) => <option key={u} value={u}>{nameOf(u)}</option>)}
+          </select>
+        )}
+        <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={submit}>{t('expenses.add')}</button>
+      </div>
     </div>
   );
 }
