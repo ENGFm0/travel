@@ -23,19 +23,19 @@ export function createApiPartnersService(getToken?: () => string | undefined): P
   };
 }
 
-/** Demo success-partner directory (mock only). */
+/** Real success-partner directory. Curated, verified companies only — no demo
+ *  data. Listings link out to the partner's own site. */
 export function demoPartners(): Partner[] {
   return [
-    { id: 'pa1', name: 'طيران أجنحة', category: 'FLIGHTS', coverage: 'ALL', tagline: 'حجوزات طيران داخلي ودولي بأسعار للمجموعات.', featured: true },
-    { id: 'pa2', name: 'رحلات المسافر', category: 'AGENCY', coverage: 'ALL', tagline: 'باقات سفر جاهزة ومصمّمة حسب الطلب.', featured: true },
-    { id: 'pa3', name: 'فنادق الواحة', category: 'HOTELS', coverage: 'الرياض', tagline: 'إقامة فاخرة في قلب الرياض بأسعار خاصة.', featured: true },
-    { id: 'pa4', name: 'تأجير درب', category: 'CARS', coverage: 'ALL', tagline: 'استئجار سيارات بجميع الفئات مع توصيل للمطار.' },
-    { id: 'pa5', name: 'منتجعات البحر الأحمر', category: 'HOTELS', coverage: 'جدة', tagline: 'منتجعات على الشاطئ مع عروض عائلية.', featured: true },
-    { id: 'pa6', name: 'مغامرات العلا', category: 'ACTIVITIES', coverage: 'العلا', tagline: 'جولات صحراوية ومناطيد وتجارب فلكية.' },
-    { id: 'pa7', name: 'دليل عسير', category: 'ACTIVITIES', coverage: 'أبها', tagline: 'رحلات هايكنق وتخييم في مرتفعات السودة.' },
-    { id: 'pa8', name: 'وكالة الخليج للسفر', category: 'AGENCY', coverage: 'الدمام', tagline: 'تنظيم رحلات الشركات والمجموعات.' },
-    { id: 'pa9', name: 'كابتن كار', category: 'CARS', coverage: 'جدة', tagline: 'سائق خاص وسيارات فخمة بالساعة أو اليوم.' },
-    { id: 'pa10', name: 'طيران الصحراء', category: 'FLIGHTS', coverage: 'ALL', tagline: 'رحلات داخلية متكررة وبرنامج نقاط للمجموعات.' },
+    {
+      id: 'rich-experience',
+      name: 'Rich Experience — ريتش إكسبيرنس',
+      category: 'AGENCY',
+      coverage: 'ALL',
+      tagline: 'شركة سياحة سعودية — تنظيم الرحلات والتجارب والباقات السياحية.',
+      url: 'https://richexperience.sa/',
+      featured: true,
+    },
   ];
 }
 

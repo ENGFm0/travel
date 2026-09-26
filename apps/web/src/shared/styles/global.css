@@ -821,6 +821,11 @@ select.bp-input {
 .bp-partner-card__meta { margin: 0; display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--bp-ink-muted); }
 .bp-partner-card__meta .material-symbols-outlined { font-size: 16px; }
 .bp-partner-card__tag { margin: 2px 0 0; font-size: 13px; color: var(--bp-ink-muted); line-height: 1.45; }
+.bp-partner-card__link { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;
+  padding: 6px 12px; border: 1px solid var(--bp-border); border-radius: var(--bp-r-full); color: var(--bp-primary);
+  font-size: 13px; font-weight: 700; text-decoration: none; }
+.bp-partner-card__link:hover { border-color: var(--bp-primary); background: color-mix(in srgb, var(--bp-primary) 6%, transparent); }
+.bp-partner-card__link .material-symbols-outlined { font-size: 16px; }
 
 /* ── Itinerary: organized city sections + weather ───────────────────────────── */
 .bp-itin-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-block: 14px; }

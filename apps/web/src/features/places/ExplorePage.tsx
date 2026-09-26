@@ -355,6 +355,11 @@ function PartnerCard({ partner }: { partner: Partner }) {
           <span className="material-symbols-outlined" aria-hidden="true">location_on</span>{coverage}
         </p>
         <p className="bp-partner-card__tag">{partner.tagline}</p>
+        {partner.url && (
+          <a className="bp-partner-card__link" href={partner.url} target="_blank" rel="noopener noreferrer">
+            <span className="material-symbols-outlined" aria-hidden="true">open_in_new</span>{t('partners.visit')}
+          </a>
+        )}
       </div>
     </article>
   );
