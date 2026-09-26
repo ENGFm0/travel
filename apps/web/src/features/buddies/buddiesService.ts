@@ -1,17 +1,26 @@
 import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
 import {
-  spotsLeft, statusOf, type BuddyBudget, type BuddyCategory, type BuddyKind, type BuddyRequest,
+  spotsLeft, statusOf, type BuddyCategory, type BuddyKind, type BuddyRequest,
 } from './buddiesModel';
 
 export interface CreateBuddyPayload {
   kind: BuddyKind;
   title: string;
+  country?: string;
   city: string;
+  cities?: string[];
   dateFrom: string;
   dateTo: string;
   category: BuddyCategory;
-  budget: BuddyBudget;
+  perPerson?: number;
+  currency?: string;
+  destCurrency?: string;
+  includes?: string;
+  hotel?: string;
+  activityType?: string;
+  activityLocation?: string;
+  meetingPoint?: string;
   capacity: number;
   description: string;
 }
@@ -48,8 +57,14 @@ export function createMockBuddiesService(seed?: BuddyRequest[], persistKey?: str
     async create(p, ownerUid) {
       await tick();
       reqs.unshift({
-        id: uid('b'), kind: p.kind, title: p.title.trim(), city: p.city.trim(),
-        dateFrom: p.dateFrom, dateTo: p.dateTo, category: p.category, budget: p.budget,
+        id: uid('b'), kind: p.kind, title: p.title.trim(),
+        country: p.country?.trim() || undefined, city: p.city.trim(),
+        cities: p.cities?.map((c) => c.trim()).filter(Boolean),
+        dateFrom: p.dateFrom, dateTo: p.dateTo, category: p.category,
+        perPerson: p.perPerson, currency: p.currency, destCurrency: p.destCurrency,
+        includes: p.includes?.trim() || undefined, hotel: p.hotel?.trim() || undefined,
+        activityType: p.activityType?.trim() || undefined, activityLocation: p.activityLocation?.trim() || undefined,
+        meetingPoint: p.meetingPoint?.trim() || undefined,
         capacity: Math.max(1, p.capacity), participantUids: [ownerUid], ownerUid, closed: false,
         description: p.description.trim(),
       });
@@ -101,17 +116,10 @@ export function createApiBuddiesService(getToken?: () => string | undefined): Bu
   };
 }
 
-/** Demo buddy requests for dev (mock only). */
-export function demoBuddies(): BuddyRequest[] {
-  return [
-    { id: 'b1', kind: 'FULL_TRIP', title: 'رحلة شمال السعودية', city: 'العلا', dateFrom: '2026-10-01', dateTo: '2026-10-06', category: 'FAMILIES', budget: 'MEDIUM', capacity: 6, participantUids: ['u9', 'u8'], ownerUid: 'u9', closed: false, description: 'رحلة عائلية لاستكشاف العلا.' },
-    { id: 'b2', kind: 'MEETUP', title: 'هايكنق في السودة', city: 'أبها', dateFrom: '2026-09-12', dateTo: '2026-09-12', category: 'YOUTH', budget: 'LOW', capacity: 3, participantUids: ['u7', 'u6', 'u5'], ownerUid: 'u7', closed: false, description: 'طلعة صباحية.' },
-    { id: 'b3', kind: 'FULL_TRIP', title: 'أوروبا للشباب', city: 'براغ', dateFrom: '2026-12-20', dateTo: '2027-01-02', category: 'YOUTH', budget: 'HIGH', capacity: 8, participantUids: ['u4'], ownerUid: 'u4', closed: false, description: 'جولة أوروبية.' },
-  ];
-}
-
 export function createBuddiesService(): BuddiesService {
-  return import.meta.env.VITE_API_BASE_URL ? createApiBuddiesService() : createMockBuddiesService(demoBuddies(), 'bp.buddies.v1');
+  // Real listings only — created by users; no demo/seed data. (v2 key drops any
+  // previously persisted demo entries.)
+  return import.meta.env.VITE_API_BASE_URL ? createApiBuddiesService() : createMockBuddiesService([], 'bp.buddies.v2');
 }
 
 export { spotsLeft, statusOf };

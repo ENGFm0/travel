@@ -643,6 +643,9 @@ select.bp-input {
 .bp-buddy-card__title { margin: 4px 0 0; font-size: 17px; }
 .bp-buddy-card__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; color: var(--bp-ink-muted); font-size: 14px; }
 .bp-buddy-card__meta .material-symbols-outlined { font-size: 18px; }
+.bp-buddy-card__line { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: 13px; color: var(--bp-ink); line-height: 1.45; }
+.bp-buddy-card__line .material-symbols-outlined { font-size: 16px; color: var(--bp-primary); flex: 0 0 auto; margin-top: 1px; }
+.bp-buddy-card__desc { margin: 0; font-size: 13px; color: var(--bp-ink-muted); line-height: 1.5; }
 .bp-buddy-card__spots { margin: 0; font-size: 13px; font-weight: 700; color: var(--bp-ink-muted); }
 .bp-buddy-card__actions { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; }
 .bp-buddy-card__actions .bp-btn { flex: 1; }

@@ -16,7 +16,7 @@ import { applyFilters, statusOf, canManage, spotsLeft, type BuddyRequest } from 
 function req(over: Partial<BuddyRequest>): BuddyRequest {
   return {
     id: 'r', kind: 'FULL_TRIP', title: 'T', city: 'Riyadh', dateFrom: '2099-01-01', dateTo: '2099-01-05',
-    category: 'GENERAL', budget: 'MEDIUM', capacity: 4, participantUids: [], ownerUid: 'u1', closed: false, description: '',
+    category: 'GENERAL', capacity: 4, participantUids: [], ownerUid: 'u1', closed: false, description: '',
     ...over,
   };
 }
@@ -29,7 +29,7 @@ describe('US-011 buddies model', () => {
       req({ id: '2', kind: 'FULL_TRIP', city: 'London', category: 'YOUTH' }),
       req({ id: '3', kind: 'MEETUP', city: 'Riyadh', category: 'FAMILIES' }),
     ];
-    const out = applyFilters(list, { kind: 'FULL_TRIP', city: 'riy', category: 'FAMILIES', budget: 'ALL' });
+    const out = applyFilters(list, { kind: 'FULL_TRIP', city: 'riy', category: 'FAMILIES' });
     expect(out.map((r) => r.id)).toEqual(['1']);
   });
   it('derives status + spots and owner rights', () => {
