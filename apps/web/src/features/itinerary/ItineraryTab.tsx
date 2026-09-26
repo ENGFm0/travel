@@ -1105,24 +1105,6 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
         <p className="bp-day-card__empty">{t('itinerary.noActivities')}</p>
       )}
 
-      {canEdit && mapsEnabled() && (
-        <PlaceSearch city={cityName} regionCode={guessCountry(cityName)?.code} onPick={prefillFromPlace} />
-      )}
-
-      {canEdit && (
-        <div className="bp-browse">
-          <span className="bp-browse__label">{t('itinerary.browseLabel')}</span>
-          <div className="bp-browse__links">
-            <a className="bp-map-chip" href={mapsSearch(`اماكن سياحية ${cityName}`)} target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.openMaps')}
-            </a>
-            <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
-              <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.openExplore')}
-            </Link>
-          </div>
-        </div>
-      )}
-
       {canEdit && (open ? (
         <div className="bp-act-form">
           {photoUrl && (
@@ -1166,9 +1148,25 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
           </div>
         </div>
       ) : (
-        <button className="bp-add-activity" onClick={() => setOpen(true)}>
-          <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addActivity')}
-        </button>
+        <div className="bp-add-zone">
+          {mapsEnabled() && (
+            <PlaceSearch city={cityName} regionCode={guessCountry(cityName)?.code} onPick={prefillFromPlace} />
+          )}
+          <div className="bp-add-zone__foot">
+            <button className="bp-add-activity" onClick={() => setOpen(true)}>
+              <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addActivity')}
+            </button>
+            <div className="bp-add-zone__browse">
+              <span className="bp-add-zone__label">{t('itinerary.browseShort')}</span>
+              <a className="bp-map-chip" href={mapsSearch(`اماكن سياحية ${cityName}`)} target="_blank" rel="noopener noreferrer">
+                <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.openMaps')}
+              </a>
+              <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
+                <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.openExplore')}
+              </Link>
+            </div>
+          </div>
+        </div>
       ))}
     </li>
   );

@@ -545,6 +545,7 @@
     "placeSearchErr": "Search failed, try again.",
     "placeSearchNone": "No results.",
     "browseLabel": "No place to add? Open and browse:",
+    "browseShort": "or browse:",
     "openMaps": "Google Maps",
     "openExplore": "Explore",
     "removePhoto": "Remove photo"

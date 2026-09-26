@@ -545,6 +545,7 @@
     "placeSearchErr": "تعذّر البحث، حاول مرة أخرى.",
     "placeSearchNone": "لا نتائج.",
     "browseLabel": "ما عندك مكان تضيفه؟ افتح وتصفّح:",
+    "browseShort": "أو تصفّح:",
     "openMaps": "خرائط قوقل",
     "openExplore": "استكشف",
     "removePhoto": "حذف الصورة"
