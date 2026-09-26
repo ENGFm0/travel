@@ -342,9 +342,13 @@ function PartnerCard({ partner }: { partner: Partner }) {
   const coverage = partner.coverage === 'ALL' ? t('partners.nationwide') : partner.coverage;
   return (
     <article className="bp-partner-card">
-      <span className={`bp-partner-card__logo bp-partner-card__logo--${partner.category.toLowerCase()}`} aria-hidden="true">
-        <span className="material-symbols-outlined">{PARTNER_ICON[partner.category]}</span>
-      </span>
+      {partner.logoUrl ? (
+        <img className="bp-partner-card__logo bp-partner-card__logo--img" src={partner.logoUrl} alt={partner.name} loading="lazy" />
+      ) : (
+        <span className={`bp-partner-card__logo bp-partner-card__logo--${partner.category.toLowerCase()}`} aria-hidden="true">
+          <span className="material-symbols-outlined">{PARTNER_ICON[partner.category]}</span>
+        </span>
+      )}
       <div className="bp-partner-card__body">
         <div className="bp-partner-card__top">
           <span className="bp-chip bp-chip--cat">{t(`partners.cat.${partner.category}`)}</span>

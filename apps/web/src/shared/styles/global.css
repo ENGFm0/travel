@@ -810,6 +810,7 @@ select.bp-input {
 .bp-partner-card__logo { flex: 0 0 56px; inline-size: 56px; block-size: 56px; border-radius: var(--bp-r-md);
   display: grid; place-items: center; color: #fff; }
 .bp-partner-card__logo .material-symbols-outlined { font-size: 28px; }
+.bp-partner-card__logo--img { object-fit: contain; background: #fff; border: 1px solid var(--bp-border); padding: 4px; }
 .bp-partner-card__logo--agency { background: linear-gradient(135deg, #e85d3d, #f0a04b); }
 .bp-partner-card__logo--hotels { background: linear-gradient(135deg, #1f8a70, #4cc3a5); }
 .bp-partner-card__logo--cars { background: linear-gradient(135deg, #3a6ea5, #6aa0d8); }

@@ -30,16 +30,18 @@ export function createApiPartnersService(getToken?: () => string | undefined): P
  *  agency & tour operator based in Taif — CR 4032243561, tourism licence
  *  73101887. One card per service line so it surfaces under each filter. */
 const RICH_WA = '966551557800';
+const RICH_LOGO = '/partners/rich-experience.png';
 export function demoPartners(): Partner[] {
   return [
     {
       id: 'rich-experience',
-      name: 'التجربة الثرية للسفر والسياحة',
+      name: 'التجربة الثرية',
       category: 'AGENCY',
       coverage: 'ALL',
       tagline: 'وكالة سفر ومنظِّم رحلات مرخّصة — باقات سياحية داخلية ودولية مصمّمة حسب الطلب.',
       url: 'https://richexperience.sa/',
       whatsapp: RICH_WA,
+      logoUrl: RICH_LOGO,
       featured: true,
     },
     {
@@ -50,6 +52,7 @@ export function demoPartners(): Partner[] {
       tagline: 'رحلات وتجارب داخل السعودية: العلا، الطائف، أبها، جدة التاريخية، حافة العالم ورحلات الكروز.',
       url: 'https://richexperience.sa/ar/-/c1569557178',
       whatsapp: RICH_WA,
+      logoUrl: RICH_LOGO,
       featured: true,
     },
     {
@@ -60,6 +63,7 @@ export function demoPartners(): Partner[] {
       tagline: 'باقات سفر دولية: أوروبا، آسيا، الجزر، والسياحة العلاجية.',
       url: 'https://richexperience.sa/ar/-/c1010381718',
       whatsapp: RICH_WA,
+      logoUrl: RICH_LOGO,
     },
     {
       id: 'rich-experience-hotels',
@@ -69,6 +73,7 @@ export function demoPartners(): Partner[] {
       tagline: 'حجز الفنادق والإقامات داخل المملكة وخارجها.',
       url: 'https://rihexp.com/hotel',
       whatsapp: RICH_WA,
+      logoUrl: RICH_LOGO,
     },
     {
       id: 'rich-experience-flights',
@@ -78,6 +83,7 @@ export function demoPartners(): Partner[] {
       tagline: 'حجوزات الطيران الداخلي والدولي ضمن الباقات السياحية.',
       url: 'https://rihexp.com/hotel',
       whatsapp: RICH_WA,
+      logoUrl: RICH_LOGO,
     },
     {
       id: 'rich-experience-transfers',
@@ -87,6 +93,7 @@ export function demoPartners(): Partner[] {
       tagline: 'استقبال بالمطار (VIP) وتوصيل بين المدن بسيارة خاصة مع سائق.',
       url: 'https://richexperience.sa/ar/category/rOrwn',
       whatsapp: RICH_WA,
+      logoUrl: RICH_LOGO,
     },
   ];
 }
