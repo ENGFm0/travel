@@ -1075,6 +1075,9 @@ select.bp-input {
 .bp-car-card__line { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13.5px; font-weight: 600; }
 .bp-car-card__line .material-symbols-outlined { font-size: 17px; color: var(--bp-blue, #3a6ea5); }
 
+.bp-act-form__pot { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.bp-act-form__pot .bp-field__label { margin: 0; }
+
 /* Rental media (papers / car state / odometer) — editor + read-only view */
 .bp-carmedia { display: flex; flex-direction: column; gap: 8px; }
 .bp-carmedia__hint { margin: 0; font-size: 12px; color: var(--bp-ink-muted); }

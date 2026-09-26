@@ -239,6 +239,25 @@ export async function recordTripExpense(
   await createExpensesService().addGroup(tripId, { desc: e.desc.trim() || '—', category: e.category, amount: e.amount, payerUid });
 }
 
+/** Record a personal (self-scoped) expense from outside the Expenses tab. */
+export async function recordTripPersonalExpense(
+  tripId: string, e: { desc: string; amount: number },
+): Promise<void> {
+  if (!e.amount || e.amount <= 0) return;
+  await createExpensesService().addPersonal(tripId, { desc: e.desc.trim() || '—', amount: e.amount });
+}
+
+/** Record a two-person side kitty from outside the Expenses tab. */
+export async function recordTripPairExpense(
+  tripId: string, e: { desc: string; amount: number; participantUids: string[]; payerUid: string },
+): Promise<void> {
+  if (!e.amount || e.amount <= 0 || e.participantUids.length < 2) return;
+  await createExpensesService().addSide(tripId, {
+    title: e.desc.trim() || '—', participantUids: e.participantUids, total: e.amount,
+    payerUid: e.participantUids.includes(e.payerUid) ? e.payerUid : e.participantUids[0],
+  });
+}
+
 /** Set the shared kitty total from outside the Expenses tab (e.g. the wizard). */
 export async function setTripKitty(tripId: string, total: number): Promise<void> {
   await createExpensesService().setKittyTotal(tripId, Math.max(0, total));

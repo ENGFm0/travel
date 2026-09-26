@@ -16,7 +16,7 @@ import { PhotoGallery } from './PhotoGallery';
 import { mapsEnabled } from '@/shared/googleMaps';
 import { placesActions } from '@/features/places/placesStore';
 import type { Place, PlaceCategory } from '@/features/places/placesModel';
-import { recordTripExpense } from '@/features/expenses/expensesService';
+import { recordTripExpense, recordTripPersonalExpense } from '@/features/expenses/expensesService';
 import type { Category } from '@/features/expenses/finance';
 import { guessCountry } from '@/shared/countries';
 
@@ -1162,6 +1162,7 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const [note, setNote] = useState('');
   const [kind, setKind] = useState<ActivityKind>('ACTIVITY');
   const [cost, setCost] = useState('');
+  const [pot, setPot] = useState<'SHARED' | 'PERSONAL'>('SHARED');
   const [photoUrl, setPhotoUrl] = useState<string | undefined>();
   const [photoUrls, setPhotoUrls] = useState<string[] | undefined>();
   const [mapsUrl, setMapsUrl] = useState<string | undefined>();
@@ -1169,7 +1170,7 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const [open, setOpen] = useState(false);
 
   function reset() {
-    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY'); setCost('');
+    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY'); setCost(''); setPot('SHARED');
     setPhotoUrl(undefined); setPhotoUrls(undefined); setMapsUrl(undefined); setPlaceId(undefined); setOpen(false);
   }
 
@@ -1181,8 +1182,13 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
       title: title.trim(), time: time || undefined, period: periodFromTime(time), note: note || undefined, kind,
       cost: costNum, photoUrl, photoUrls, mapsUrl, placeId,
     });
-    // Any added item with a value is reflected in the shared expenses (kitty).
-    if (costNum && costNum > 0) { try { await recordTripExpense(tripId, { desc: title.trim(), category: KIND_TO_EXP_CAT[kind], amount: costNum }); } catch { /* best-effort */ } }
+    // A cost flows to the chosen kitty: shared (draws down the pot) or personal.
+    if (costNum && costNum > 0) {
+      try {
+        if (pot === 'PERSONAL') await recordTripPersonalExpense(tripId, { desc: title.trim(), amount: costNum });
+        else await recordTripExpense(tripId, { desc: title.trim(), category: KIND_TO_EXP_CAT[kind], amount: costNum });
+      } catch { /* best-effort */ }
+    }
     reset();
   }
 
@@ -1273,6 +1279,15 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
                 onChange={(e) => setCost(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
             </label>
           </div>
+          {Number(cost) > 0 && (
+            <div className="bp-act-form__pot">
+              <span className="bp-field__label">{t('expenses.potType')}</span>
+              <div className="bp-kinds" role="group" aria-label={t('expenses.potType')}>
+                <button type="button" className={`bp-chip bp-chip--btn ${pot === 'SHARED' ? 'is-on' : ''}`} aria-pressed={pot === 'SHARED'} onClick={() => setPot('SHARED')}>{t('expenses.pot.SHARED')}</button>
+                <button type="button" className={`bp-chip bp-chip--btn ${pot === 'PERSONAL' ? 'is-on' : ''}`} aria-pressed={pot === 'PERSONAL'} onClick={() => setPot('PERSONAL')}>{t('expenses.pot.PERSONAL')}</button>
+              </div>
+            </div>
+          )}
           {time && <p className="bp-act-form__hint">{formatTime12(time, locale)} · {t(`itinerary.period.${periodFromTime(time)}`)}</p>}
           <div className="bp-row-between">
             <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={addActivity}>{t('itinerary.add')}</button>
