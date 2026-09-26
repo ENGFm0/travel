@@ -103,6 +103,14 @@ export interface FlightLeg {
   dateEnd?: string; // ISO date (rental return) — car rentals only
   time?: string;  // HH:mm
   cost?: number;  // optional price → recorded as a shared expense
+  media?: CarMedia[]; // rental docs/photos/video (papers, odometer, car state)
+}
+
+/** A photo or video kept with a rental (papers, car condition, odometer…). */
+export interface CarMedia {
+  url: string;
+  type: 'image' | 'video';
+  name?: string;
 }
 
 /** A place to stay: hotel/apartment with photo, dates (→ nights), location and

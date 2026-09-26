@@ -6,8 +6,9 @@ import { useUIStore, type Locale } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
 import {
   ACTIVITY_KINDS, TRIP_KINDS, CAR_KINDS, formatTime12, periodFromTime,
-  type Activity, type ActivityKind, type CarKind, type CitySeed, type CityStop, type Day, type FlightLeg, type Stay, type TravelMode, type TripKind,
+  type Activity, type ActivityKind, type CarKind, type CarMedia, type CitySeed, type CityStop, type Day, type FlightLeg, type Stay, type TravelMode, type TripKind,
 } from './itineraryService';
+import { uploadFile, mediaTypeOf } from '@/shared/uploads';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
 import { PlaceSearch, type PickedPlace } from './PlaceSearch';
@@ -615,7 +616,7 @@ function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; c
     // Keep only the fields that belong to the chosen kind, so switching type
     // never leaves stale data behind.
     const clean: FlightLeg = ckind === 'RENTAL'
-      ? { airline: draft.airline, date: draft.date, dateEnd: draft.dateEnd, cost: draft.cost, no: draft.no }
+      ? { airline: draft.airline, date: draft.date, dateEnd: draft.dateEnd, cost: draft.cost, no: draft.no, media: draft.media }
       : { cost: draft.cost, no: draft.no };
     itineraryActions.setCityInfo(tripId, city.id, { car: clean, carKind: ckind });
     setEditing(false);
@@ -666,6 +667,8 @@ function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; c
                   <input className="bp-input" type="number" inputMode="decimal" min="0" value={draft.cost ?? ''} placeholder="0" onChange={(e) => setCost(e.target.value)} /></label>
               </div>
               <input className="bp-input" value={draft.no ?? ''} placeholder={t('itinerary.carNotePh')} onChange={(e) => set('no', e.target.value)} />
+              <CarMediaEditor media={draft.media ?? []} folder={`memories/${tripId}/car/${city.id}`}
+                onChange={(m) => setDraft((p) => ({ ...p, media: m.length ? m : undefined }))} />
             </>
           ) : (
             <>
@@ -711,6 +714,74 @@ function CarSummary({ car, kind, locale }: { car: FlightLeg; kind: CarKind; loca
         <p className="bp-car-card__line"><span className="material-symbols-outlined" aria-hidden="true">payments</span>{t('itinerary.rentalCost')}: {money(car.cost)}</p>
       )}
       {car.no && <p className="bp-tl-item__note">{car.no}</p>}
+      {(car.media?.length ?? 0) > 0 && <CarMediaStrip media={car.media!} />}
+    </div>
+  );
+}
+
+/** Upload + manage rental photos/videos (papers, car state, odometer). */
+function CarMediaEditor({ media, folder, onChange }: { media: CarMedia[]; folder: string; onChange: (m: CarMedia[]) => void }) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(false);
+
+  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (!files.length) return;
+    setBusy(true); setErr(false);
+    const added: CarMedia[] = [];
+    for (const f of files) {
+      try {
+        const url = await uploadFile(folder, f);
+        added.push({ url, type: mediaTypeOf(f.type), name: f.name });
+      } catch { setErr(true); }
+    }
+    if (added.length) onChange([...media, ...added]);
+    setBusy(false);
+  }
+
+  return (
+    <div className="bp-carmedia">
+      <p className="bp-carmedia__hint">{t('itinerary.carMediaHint')}</p>
+      {media.length > 0 && (
+        <div className="bp-carmedia__grid">
+          {media.map((m, i) => (
+            <div className="bp-carmedia__tile" key={m.url}>
+              {m.type === 'video'
+                ? <video className="bp-carmedia__thumb" src={m.url} muted playsInline preload="metadata" />
+                : <img className="bp-carmedia__thumb" src={m.url} alt={m.name ?? ''} loading="lazy" />}
+              {m.type === 'video' && <span className="bp-carmedia__play material-symbols-outlined" aria-hidden="true">play_circle</span>}
+              <button type="button" className="bp-carmedia__rm" aria-label={t('itinerary.removePhoto')}
+                onClick={() => onChange(media.filter((_, idx) => idx !== i))}>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <label className={`bp-add-activity bp-carmedia__add ${busy ? 'is-busy' : ''}`}>
+        <span className="material-symbols-outlined" aria-hidden="true">{busy ? 'progress_activity' : 'add_a_photo'}</span>
+        {busy ? t('itinerary.uploading') : t('itinerary.addMedia')}
+        <input type="file" accept="image/*,video/*" multiple hidden disabled={busy} onChange={onPick} />
+      </label>
+      {err && <p className="bp-rate-box__err">{t('itinerary.uploadFailed')}</p>}
+    </div>
+  );
+}
+
+/** Read-only rental media: images open a lightbox; videos play inline. */
+function CarMediaStrip({ media }: { media: CarMedia[] }) {
+  const { t } = useTranslation();
+  const images = media.filter((m) => m.type === 'image').map((m) => m.url);
+  const videos = media.filter((m) => m.type === 'video');
+  return (
+    <div className="bp-carmedia__view">
+      <p className="bp-car-card__line"><span className="material-symbols-outlined" aria-hidden="true">photo_library</span>{t('itinerary.rentalDocs')}</p>
+      {images.length > 0 && <PhotoGallery photos={images} alt={t('itinerary.rentalDocs')} size="sm" />}
+      {videos.map((v) => (
+        <video key={v.url} className="bp-carmedia__video" src={v.url} controls preload="metadata" />
+      ))}
     </div>
   );
 }

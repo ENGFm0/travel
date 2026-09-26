@@ -1,6 +1,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 /** Shared Firebase app/Firestore access for the data services. Config comes from
  *  the (public) VITE_FIREBASE_* build env; when it's absent the app runs on the
@@ -38,6 +39,12 @@ export function db(): Firestore {
     _db = getFirestore(app); // already initialized elsewhere
   }
   return _db;
+}
+
+let _storage: FirebaseStorage | null = null;
+export function storage(): FirebaseStorage {
+  if (!_storage) _storage = getStorage(getFirebaseApp());
+  return _storage;
 }
 
 /** The signed-in user's uid, or null. Data services read this at call time so

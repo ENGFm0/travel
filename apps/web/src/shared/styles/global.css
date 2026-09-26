@@ -1071,6 +1071,23 @@ select.bp-input {
 .bp-car-card__line { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13.5px; font-weight: 600; }
 .bp-car-card__line .material-symbols-outlined { font-size: 17px; color: var(--bp-blue, #3a6ea5); }
 
+/* Rental media (papers / car state / odometer) — editor + read-only view */
+.bp-carmedia { display: flex; flex-direction: column; gap: 8px; }
+.bp-carmedia__hint { margin: 0; font-size: 12px; color: var(--bp-ink-muted); }
+.bp-carmedia__grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.bp-carmedia__tile { position: relative; inline-size: 84px; block-size: 84px; border-radius: var(--bp-r-md);
+  overflow: hidden; border: 1px solid var(--bp-border); background: #0000000a; }
+.bp-carmedia__thumb { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.bp-carmedia__play { position: absolute; inset: 0; margin: auto; inline-size: 32px; block-size: 32px;
+  display: grid; place-items: center; color: #fff; font-size: 32px; text-shadow: 0 1px 4px #0009; pointer-events: none; }
+.bp-carmedia__rm { position: absolute; inset-block-start: 3px; inset-inline-end: 3px; inline-size: 24px; block-size: 24px;
+  display: grid; place-items: center; border: 0; border-radius: 999px; background: #000000a6; color: #fff; cursor: pointer; }
+.bp-carmedia__rm .material-symbols-outlined { font-size: 16px; }
+.bp-carmedia__add { align-self: flex-start; }
+.bp-carmedia__add.is-busy { opacity: .7; cursor: progress; }
+.bp-carmedia__view { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.bp-carmedia__video { inline-size: 100%; max-inline-size: 320px; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); }
+
 /* ── In-form find row: Google Maps search + browse chips (inside add form) ────── */
 .bp-act-form__browse { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .bp-add-zone__label { font-size: 12px; font-weight: 700; color: var(--bp-ink-muted); }
