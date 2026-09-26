@@ -1066,16 +1066,9 @@ select.bp-input {
 .bp-browse__label { font-size: 12.5px; font-weight: 700; color: var(--bp-ink-muted); }
 .bp-browse__links { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* ── Add zone: one tidy panel holding the search + add + browse actions ──────── */
-.bp-add-zone { display: flex; flex-direction: column; gap: 10px; padding: 10px;
-  border: 1px dashed var(--bp-border); border-radius: var(--bp-r-lg);
-  background: color-mix(in srgb, var(--bp-primary) 3%, var(--bp-surface)); }
-.bp-add-zone__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; }
-.bp-add-zone__browse { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* ── In-form find row: Google Maps search + browse chips (inside add form) ────── */
+.bp-act-form__browse { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .bp-add-zone__label { font-size: 12px; font-weight: 700; color: var(--bp-ink-muted); }
-/* Inside the dashed panel the primary action reads solid, the browse links stay light. */
-.bp-add-zone .bp-add-activity { border-style: solid; background: var(--bp-surface); font-weight: 800;
-  border-color: color-mix(in srgb, var(--bp-primary) 40%, var(--bp-border)); }
 
 /* ── Activity add-form photo preview + time field ───────────────────────────── */
 .bp-act-form__photo { position: relative; align-self: flex-start; inline-size: 100%; max-inline-size: 320px; }

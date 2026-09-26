@@ -1107,6 +1107,18 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
 
       {canEdit && (open ? (
         <div className="bp-act-form">
+          {mapsEnabled() && (
+            <PlaceSearch city={cityName} regionCode={guessCountry(cityName)?.code} onPick={prefillFromPlace} />
+          )}
+          <div className="bp-act-form__browse">
+            <span className="bp-add-zone__label">{t('itinerary.browseShort')}</span>
+            <a className="bp-map-chip" href={mapsSearch(`اماكن سياحية ${cityName}`)} target="_blank" rel="noopener noreferrer">
+              <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.openMaps')}
+            </a>
+            <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
+              <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.openExplore')}
+            </Link>
+          </div>
           {photoUrl && (
             <div className="bp-act-form__photo">
               <PhotoGallery photos={photoUrls ?? [photoUrl]} placeId={placeId} alt={title || t('itinerary.addActivity')} size="sm" />
@@ -1148,25 +1160,9 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
           </div>
         </div>
       ) : (
-        <div className="bp-add-zone">
-          {mapsEnabled() && (
-            <PlaceSearch city={cityName} regionCode={guessCountry(cityName)?.code} onPick={prefillFromPlace} />
-          )}
-          <div className="bp-add-zone__foot">
-            <button className="bp-add-activity" onClick={() => setOpen(true)}>
-              <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addActivity')}
-            </button>
-            <div className="bp-add-zone__browse">
-              <span className="bp-add-zone__label">{t('itinerary.browseShort')}</span>
-              <a className="bp-map-chip" href={mapsSearch(`اماكن سياحية ${cityName}`)} target="_blank" rel="noopener noreferrer">
-                <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.openMaps')}
-              </a>
-              <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
-                <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.openExplore')}
-              </Link>
-            </div>
-          </div>
-        </div>
+        <button className="bp-add-activity" onClick={() => setOpen(true)}>
+          <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addActivity')}
+        </button>
       ))}
     </li>
   );
