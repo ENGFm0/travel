@@ -28,7 +28,7 @@ export function createApiPartnersService(getToken?: () => string | undefined): P
  *
  *  Rich Experience (التجربة الثرية للسفر والسياحة): a licensed Saudi travel
  *  agency & tour operator based in Taif — CR 4032243561, tourism licence
- *  73101887. One card per service line so it surfaces under each filter. */
+ *  73101887. A single card covering all its service lines. */
 const RICH_WA = '966551557800';
 const RICH_LOGO = '/partners/rich-experience.png';
 export function demoPartners(): Partner[] {
@@ -38,62 +38,11 @@ export function demoPartners(): Partner[] {
       name: 'التجربة الثرية',
       category: 'AGENCY',
       coverage: 'ALL',
-      tagline: 'وكالة سفر ومنظِّم رحلات مرخّصة — باقات سياحية داخلية ودولية مصمّمة حسب الطلب.',
+      tagline: 'وكالة سفر ومنظِّم رحلات مرخّصة — رحلات داخلية ودولية، تجارب، حجز فنادق وطيران، وخدمات استقبال وتوصيل.',
       url: 'https://richexperience.sa/',
       whatsapp: RICH_WA,
       logoUrl: RICH_LOGO,
       featured: true,
-    },
-    {
-      id: 'rich-experience-trips',
-      name: 'التجربة الثرية — الرحلات والتجارب',
-      category: 'ACTIVITIES',
-      coverage: 'ALL',
-      tagline: 'رحلات وتجارب داخل السعودية: العلا، الطائف، أبها، جدة التاريخية، حافة العالم ورحلات الكروز.',
-      url: 'https://richexperience.sa/ar/-/c1569557178',
-      whatsapp: RICH_WA,
-      logoUrl: RICH_LOGO,
-      featured: true,
-    },
-    {
-      id: 'rich-experience-intl',
-      name: 'التجربة الثرية — الرحلات الدولية',
-      category: 'AGENCY',
-      coverage: 'ALL',
-      tagline: 'باقات سفر دولية: أوروبا، آسيا، الجزر، والسياحة العلاجية.',
-      url: 'https://richexperience.sa/ar/-/c1010381718',
-      whatsapp: RICH_WA,
-      logoUrl: RICH_LOGO,
-    },
-    {
-      id: 'rich-experience-hotels',
-      name: 'التجربة الثرية — حجوزات الفنادق',
-      category: 'HOTELS',
-      coverage: 'ALL',
-      tagline: 'حجز الفنادق والإقامات داخل المملكة وخارجها.',
-      url: 'https://rihexp.com/hotel',
-      whatsapp: RICH_WA,
-      logoUrl: RICH_LOGO,
-    },
-    {
-      id: 'rich-experience-flights',
-      name: 'التجربة الثرية — حجوزات الطيران',
-      category: 'FLIGHTS',
-      coverage: 'ALL',
-      tagline: 'حجوزات الطيران الداخلي والدولي ضمن الباقات السياحية.',
-      url: 'https://rihexp.com/hotel',
-      whatsapp: RICH_WA,
-      logoUrl: RICH_LOGO,
-    },
-    {
-      id: 'rich-experience-transfers',
-      name: 'التجربة الثرية — الاستقبال والتوصيل',
-      category: 'CARS',
-      coverage: 'ALL',
-      tagline: 'استقبال بالمطار (VIP) وتوصيل بين المدن بسيارة خاصة مع سائق.',
-      url: 'https://richexperience.sa/ar/category/rOrwn',
-      whatsapp: RICH_WA,
-      logoUrl: RICH_LOGO,
     },
   ];
 }
