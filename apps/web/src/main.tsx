@@ -29,10 +29,28 @@ createRoot(el).render(
 );
 
 // Register the PWA service worker in production only (offline shell + installable).
+// Auto-apply updates: when a newly deployed worker takes control, reload once so
+// the user always sees the latest build without a manual hard-refresh.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // Only reload when an update replaces an existing controller — not on the
+    // very first install (which has no prior controller).
+    if (reloading || !hadController) return;
+    reloading = true;
+    window.location.reload();
+  });
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL })
+      .then((reg) => {
+        reg.update().catch(() => {});
+        // Re-check for a new version whenever the app is reopened/refocused.
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') reg.update().catch(() => {});
+        });
+      })
       .catch(() => {});
   });
 }
