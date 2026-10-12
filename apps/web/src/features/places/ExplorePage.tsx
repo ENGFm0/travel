@@ -11,7 +11,7 @@ import {
 } from '@/features/itinerary/itineraryService';
 import {
   categoryFromTypes, CATEGORY_QUERY, citiesOf, filterPlaces,
-  PLACE_CATEGORIES, type Place, type PlaceCategory,
+  type Place, type PlaceCategory,
 } from './placesModel';
 import { placesActions, usePlaces } from './placesStore';
 import {
@@ -75,7 +75,6 @@ function PlacesTab() {
   const { places, loading } = usePlaces();
   const { trips } = useTripsList();
   const [tripId, setTripId] = useState('');
-  const [category, setCategory] = useState<PlaceCategory | 'ALL'>('ALL');
   const [city, setCity] = useState('');
   const [query, setQuery] = useState('');
   const [addPlace, setAddPlace] = useState<Place | null>(null);
@@ -110,8 +109,8 @@ function PlacesTab() {
   }, [tripCities, communityCities]);
 
   const recommended = useMemo(
-    () => filterPlaces(places ?? [], category, query, city ? city : 'ALL'),
-    [places, category, query, city],
+    () => filterPlaces(places ?? [], 'ALL', query, city ? city : 'ALL'),
+    [places, query, city],
   );
 
   function changeTrip(id: string) {
@@ -143,23 +142,11 @@ function PlacesTab() {
         <input className="bp-input bp-input--sm" value={query} placeholder={t('explorePage.search')} aria-label={t('explorePage.search')} onChange={(e) => setQuery(e.target.value)} />
       </div>
 
-      <div className="bp-chips-row">
-        <button className={`bp-chip bp-chip--btn ${category === 'ALL' ? 'is-on' : ''}`} aria-pressed={category === 'ALL'} onClick={() => setCategory('ALL')}>{t('explorePage.all')}</button>
-        {PLACE_CATEGORIES.map((c) => (
-          <button key={c} className={`bp-chip bp-chip--btn ${category === c ? 'is-on' : ''}`} aria-pressed={category === c} onClick={() => setCategory(c)}>{t(`explorePage.cat.${c}`)}</button>
-        ))}
-      </div>
-
       {toast && <div className="bp-banner bp-banner--ok" role="status">{toast}</div>}
 
-      {/* Primary: live Google Maps results (real places, photos, ratings) */}
-      {mapsEnabled() && (
-        <GoogleResults city={city} category={category} query={query}
-          canAdd={myTrips.length > 0} onAdd={(g) => openAdd(toPlace(g, city))} />
-      )}
-
-      {/* Secondary: traveller picks — shown only when there's content (or when
-          Maps is off, as the sole source). Keeps the page uncluttered. */}
+      {/* Traveller picks come first so they don't get buried under a long list
+          of live results. Shown only when there's content (or when Maps is off,
+          as the sole source). */}
       {(!mapsEnabled() || recommended.length > 0) && (
         <div className="bp-explore__sec">
           <h2 className="bp-explore__sec-title">
@@ -185,6 +172,12 @@ function PlacesTab() {
             </ul>
           )}
         </div>
+      )}
+
+      {/* Live Google Maps results (real places, photos, ratings) */}
+      {mapsEnabled() && (
+        <GoogleResults city={city} category="ALL" query={query}
+          canAdd={myTrips.length > 0} onAdd={(g) => openAdd(toPlace(g, city))} />
       )}
 
       {addPlace && (

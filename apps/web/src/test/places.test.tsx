@@ -79,11 +79,11 @@ async function signIn() {
 const cardOf = async (title: string) => (await screen.findByText(title)).closest('article') as HTMLElement;
 
 describe('US-012 Explore UI', () => {
-  it('filters places by category chip (AC1)', async () => {
+  it('filters places by the search box (AC1)', async () => {
     seed([P1, P2]);
     renderExplore();
     await screen.findByText('Najd Restaurant');
-    await userEvent.click(screen.getByRole('button', { name: 'Restaurants & cafés' }));
+    await userEvent.type(screen.getByLabelText('Search places…'), 'Najd');
     await waitFor(() => expect(screen.queryByText('Masmak Fort')).not.toBeInTheDocument());
     expect(screen.getByText('Najd Restaurant')).toBeInTheDocument();
   });
