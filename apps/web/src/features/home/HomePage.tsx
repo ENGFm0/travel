@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { mapsEnabled, searchPlacesByText } from '@/shared/googleMaps';
 
 /** Home / landing page. Replaces the shell placeholder with real content:
  *  a hero + primary CTA, quick-action tiles into the main sections, a set of
@@ -15,7 +17,7 @@ const ACTIONS = [
   { key: 'explore', to: '/explore', icon: 'explore' },
 ] as const;
 
-const DESTINATIONS = ['alula', 'riyadh', 'jeddah', 'abha', 'istanbul', 'dubai'] as const;
+const DESTINATIONS = ['alula', 'riyadh', 'jeddah', 'taif', 'abha', 'istanbul', 'dubai'] as const;
 
 const FEATURES = [
   { key: 'itinerary', icon: 'calendar_month' },
@@ -68,9 +70,7 @@ export function HomePage() {
         {DESTINATIONS.map((d, i) => (
           <li key={d}>
             <Link className="bp-dest-card" to="/?new=1" aria-label={t(`home.dest.${d}.name`)}>
-              <span className={`bp-dest-card__art bp-dest-card__art--${i + 1}`} aria-hidden="true">
-                <span className="material-symbols-outlined">travel_explore</span>
-              </span>
+              <DestArt query={t(`home.dest.${d}.name`)} i={i + 1} />
               <span className="bp-dest-card__body">
                 <span className="bp-dest-card__name">{t(`home.dest.${d}.name`)}</span>
                 <span className="bp-dest-card__tag">{t(`home.dest.${d}.tag`)}</span>
@@ -98,5 +98,27 @@ export function HomePage() {
         ))}
       </ul>
     </section>
+  );
+}
+
+/** Destination thumbnail: a real Google place photo, with the gradient art as a
+ *  placeholder while it loads (and a permanent fallback when Maps is off). */
+function DestArt({ query, i }: { query: string; i: number }) {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    if (mapsEnabled()) {
+      searchPlacesByText(query, { maxResults: 1 })
+        .then((r) => { const u = r[0]?.photoUrl; if (alive && u) setSrc(u); })
+        .catch(() => { /* keep the gradient fallback */ });
+    }
+    return () => { alive = false; };
+  }, [query]);
+  return (
+    <span className={`bp-dest-card__art bp-dest-card__art--${i}`} aria-hidden="true">
+      {src
+        ? <img className="bp-dest-card__img" src={src} alt="" loading="lazy" />
+        : <span className="material-symbols-outlined">travel_explore</span>}
+    </span>
   );
 }

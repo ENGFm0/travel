@@ -40,8 +40,9 @@ describe('Home page', () => {
     const grid = document.querySelector('.bp-dest-grid') as HTMLElement;
     expect(grid).toBeTruthy();
     const cards = within(grid).getAllByRole('link');
-    expect(cards.length).toBe(6);
+    expect(cards.length).toBe(7);
     expect(within(grid).getByText('العلا')).toBeInTheDocument();
+    expect(within(grid).getByText('الطائف')).toBeInTheDocument();
     cards.forEach((c) => expect(c).toHaveAttribute('href', expect.stringContaining('new=1')));
   });
 });
