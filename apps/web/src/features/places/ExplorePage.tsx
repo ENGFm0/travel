@@ -15,7 +15,7 @@ import {
 } from './placesModel';
 import { placesActions, usePlaces } from './placesStore';
 import {
-  filterPartners, PARTNER_CATEGORIES, PARTNER_ICON, type Partner, type PartnerCategory,
+  filterPartners, PARTNER_ICON, type Partner,
 } from '@/features/partners/partnersModel';
 import { partnersActions, usePartners } from '@/features/partners/partnersStore';
 
@@ -291,18 +291,11 @@ function GooglePlaceCard({ g, canAdd, onAdd }: { g: GmapsPlace; canAdd: boolean;
 function PartnersTab() {
   const { t } = useTranslation();
   const { partners, loading } = usePartners();
-  const [category, setCategory] = useState<PartnerCategory | 'ALL'>('ALL');
-  const shown = useMemo(() => filterPartners(partners ?? [], category), [partners, category]);
+  const shown = useMemo(() => filterPartners(partners ?? [], 'ALL'), [partners]);
 
   return (
     <>
       <p className="bp-explore__hint">{t('partners.lead')}</p>
-      <div className="bp-chips-row">
-        <button className={`bp-chip bp-chip--btn ${category === 'ALL' ? 'is-on' : ''}`} aria-pressed={category === 'ALL'} onClick={() => setCategory('ALL')}>{t('partners.all')}</button>
-        {PARTNER_CATEGORIES.map((c) => (
-          <button key={c} className={`bp-chip bp-chip--btn ${category === c ? 'is-on' : ''}`} aria-pressed={category === c} onClick={() => setCategory(c)}>{t(`partners.cat.${c}`)}</button>
-        ))}
-      </div>
 
       {loading && partners === null ? (
         <p className="bp-page__lead">…</p>
