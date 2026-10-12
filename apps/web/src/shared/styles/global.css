@@ -800,6 +800,9 @@ select.bp-input {
 .bp-seg--full .bp-seg__btn { flex: 1; text-align: center; padding: 10px 12px; }
 .bp-explore__filters { display: flex; flex-wrap: wrap; gap: 8px; }
 .bp-explore__filters .bp-input { flex: 1 1 140px; inline-size: auto; max-inline-size: none; min-inline-size: 0; }
+.bp-explore__trip { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.bp-explore__trip .bp-field__label { margin: 0; }
+.bp-explore .bp-chips-row { margin-bottom: 8px; }
 .bp-explore__hint { margin: 0; color: var(--bp-ink-muted); font-size: 14px; }
 .bp-explore__views { margin-top: 4px; }
 .bp-explore__views .bp-seg__btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }

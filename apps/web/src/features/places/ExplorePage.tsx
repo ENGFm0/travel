@@ -132,12 +132,22 @@ function PlacesTab() {
 
   return (
     <>
-      <div className="bp-explore__filters">
-        {myTrips.length > 1 && (
+      {myTrips.length > 0 && (
+        <label className="bp-field bp-explore__trip">
+          <span className="bp-field__label">{t('explorePage.tripLabel')}</span>
           <select className="bp-input bp-input--sm" value={trip?.id ?? ''} aria-label={t('explorePage.tripLabel')} onChange={(e) => changeTrip(e.target.value)}>
             {myTrips.map((tr) => <option key={tr.id} value={tr.id}>{tr.title}</option>)}
           </select>
-        )}
+        </label>
+      )}
+      {trip && trip.cities.length > 0 && (
+        <div className="bp-chips-row">
+          {Array.from(new Set(trip.cities.map((c) => c.name).filter(Boolean))).map((c) => (
+            <button key={c} type="button" className={`bp-chip bp-chip--btn ${city === c ? 'is-on' : ''}`} aria-pressed={city === c} onClick={() => setCity(c)}>{c}</button>
+          ))}
+        </div>
+      )}
+      <div className="bp-explore__filters">
         <input className="bp-input bp-input--sm" type="search" value={city} placeholder={t('explorePage.cityPh')}
           aria-label={t('explorePage.cityLabel')} onChange={(e) => setCity(e.target.value)} />
         <select className="bp-input bp-input--sm" value={find} aria-label={t('explorePage.findLabel')} onChange={(e) => setFind(e.target.value)}>
