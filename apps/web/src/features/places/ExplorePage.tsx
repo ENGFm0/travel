@@ -20,7 +20,6 @@ import {
 import { partnersActions, usePartners } from '@/features/partners/partnersStore';
 
 type Tab = 'places' | 'partners';
-type PlaceView = 'maps' | 'picks';
 interface TripLite { id: string; title: string; cities: { name: string }[] }
 
 /** PlaceCategory → itinerary ActivityKind (for the real add to the schedule). */
@@ -79,7 +78,6 @@ function PlacesTab() {
   const [category, setCategory] = useState<PlaceCategory | 'ALL'>('ALL');
   const [city, setCity] = useState('');
   const [query, setQuery] = useState('');
-  const [view, setView] = useState<PlaceView>(mapsEnabled() ? 'maps' : 'picks');
   const [addPlace, setAddPlace] = useState<Place | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -134,7 +132,7 @@ function PlacesTab() {
   return (
     <>
       <div className="bp-explore__filters">
-        {myTrips.length > 0 && (
+        {myTrips.length > 1 && (
           <select className="bp-input bp-input--sm" value={trip?.id ?? ''} aria-label={t('explorePage.tripLabel')} onChange={(e) => changeTrip(e.target.value)}>
             {myTrips.map((tr) => <option key={tr.id} value={tr.id}>{tr.title}</option>)}
           </select>
@@ -152,28 +150,17 @@ function PlacesTab() {
         ))}
       </div>
 
-      {/* Two boxes: Google Maps live results / traveller picks */}
-      {mapsEnabled() && (
-        <div className="bp-seg bp-seg--full bp-explore__views" role="tablist" aria-label={t('explorePage.title')}>
-          <button role="tab" className={`bp-seg__btn ${view === 'maps' ? 'is-on' : ''}`} aria-selected={view === 'maps'} onClick={() => setView('maps')}>
-            <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('explorePage.fromMaps')}
-          </button>
-          <button role="tab" className={`bp-seg__btn ${view === 'picks' ? 'is-on' : ''}`} aria-selected={view === 'picks'} onClick={() => setView('picks')}>
-            <span className="material-symbols-outlined" aria-hidden="true">recommend</span>{t('explorePage.recommended')}
-          </button>
-        </div>
-      )}
-
       {toast && <div className="bp-banner bp-banner--ok" role="status">{toast}</div>}
 
-      {/* Google Maps live results */}
-      {mapsEnabled() && view === 'maps' && (
+      {/* Primary: live Google Maps results (real places, photos, ratings) */}
+      {mapsEnabled() && (
         <GoogleResults city={city} category={category} query={query}
           canAdd={myTrips.length > 0} onAdd={(g) => openAdd(toPlace(g, city))} />
       )}
 
-      {/* Community recommendations */}
-      {(!mapsEnabled() || view === 'picks') && (
+      {/* Secondary: traveller picks — shown only when there's content (or when
+          Maps is off, as the sole source). Keeps the page uncluttered. */}
+      {(!mapsEnabled() || recommended.length > 0) && (
         <div className="bp-explore__sec">
           <h2 className="bp-explore__sec-title">
             <span className="material-symbols-outlined" aria-hidden="true">recommend</span>
@@ -186,7 +173,7 @@ function PlacesTab() {
           ) : recommended.length === 0 ? (
             <div className="bp-empty bp-empty--sm">
               <span className="material-symbols-outlined bp-empty__icon" aria-hidden="true">travel_explore</span>
-              <p>{mapsEnabled() ? t('explorePage.recommendedEmpty') : t('explorePage.empty')}</p>
+              <p>{t('explorePage.empty')}</p>
             </div>
           ) : (
             <ul className="bp-place-grid" role="list">
