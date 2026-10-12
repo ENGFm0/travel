@@ -10,7 +10,7 @@ import {
   type ActivityKind, type Board,
 } from '@/features/itinerary/itineraryService';
 import {
-  categoryFromTypes, CATEGORY_QUERY, citiesOf, filterPlaces,
+  categoryFromTypes, CATEGORY_QUERY, filterPlaces,
   type Place, type PlaceCategory,
 } from './placesModel';
 import { placesActions, usePlaces } from './placesStore';
@@ -87,11 +87,6 @@ function PlacesTab() {
     [trips],
   );
   const trip = myTrips.find((tr) => tr.id === tripId) ?? myTrips[0];
-  const tripCities = useMemo(() => {
-    const seen: string[] = [];
-    for (const c of trip?.cities ?? []) if (c.name && !seen.includes(c.name)) seen.push(c.name);
-    return seen;
-  }, [trip]);
 
   // Explore follows your trips: default to your first trip + its first city.
   useEffect(() => {
@@ -100,13 +95,6 @@ function PlacesTab() {
       setCity(myTrips[0].cities[0]?.name ?? '');
     }
   }, [myTrips, tripId]);
-
-  const communityCities = useMemo(() => citiesOf(places ?? []), [places]);
-  const cityOptions = useMemo(() => {
-    const s = [...tripCities];
-    for (const c of communityCities) if (!s.includes(c)) s.push(c);
-    return s;
-  }, [tripCities, communityCities]);
 
   const recommended = useMemo(
     () => filterPlaces(places ?? [], 'ALL', query, city ? city : 'ALL'),
@@ -136,10 +124,9 @@ function PlacesTab() {
             {myTrips.map((tr) => <option key={tr.id} value={tr.id}>{tr.title}</option>)}
           </select>
         )}
-        <input className="bp-input bp-input--sm" list="bp-city-opts" value={city} placeholder={t('explorePage.cityPh')}
+        <input className="bp-input bp-input--sm" type="search" value={city} placeholder={t('explorePage.cityPh')}
           aria-label={t('explorePage.cityLabel')} onChange={(e) => setCity(e.target.value)} />
-        <datalist id="bp-city-opts">{cityOptions.map((c) => <option key={c} value={c} />)}</datalist>
-        <input className="bp-input bp-input--sm" value={query} placeholder={t('explorePage.search')} aria-label={t('explorePage.search')} onChange={(e) => setQuery(e.target.value)} />
+        <input className="bp-input bp-input--sm" type="search" value={query} placeholder={t('explorePage.search')} aria-label={t('explorePage.search')} onChange={(e) => setQuery(e.target.value)} />
       </div>
 
       {toast && <div className="bp-banner bp-banner--ok" role="status">{toast}</div>}
