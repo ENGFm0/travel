@@ -823,6 +823,17 @@
     "cityLabel": "City",
     "allCities": "All cities",
     "cityPh": "City (e.g. Riyadh)",
+    "findLabel": "Place type",
+    "find": {
+      "all": "All",
+      "restaurants": "Restaurants",
+      "cafes": "Cafés",
+      "museums": "Museums",
+      "landmarks": "Landmarks",
+      "parks": "Parks",
+      "activities": "Activities",
+      "shopping": "Shopping"
+    },
     "fromMaps": "From Google Maps",
     "fromMapsSub": "Live results — real places, photos and ratings.",
     "mapsHint": "Pick a city or type to search real places on Google Maps.",

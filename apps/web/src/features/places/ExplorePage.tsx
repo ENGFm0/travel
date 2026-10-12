@@ -22,6 +22,19 @@ import { partnersActions, usePartners } from '@/features/partners/partnersStore'
 type Tab = 'places' | 'partners';
 interface TripLite { id: string; title: string; cities: { name: string }[] }
 
+/** Place-type options for the Explore search dropdown. `q` is the Google Maps
+ *  search term; `cat` maps to a community-picks category for filtering. */
+const FIND_OPTIONS: { key: string; q: string; cat: PlaceCategory | 'ALL' }[] = [
+  { key: 'all', q: '', cat: 'ALL' },
+  { key: 'restaurants', q: 'مطاعم', cat: 'RESTAURANTS' },
+  { key: 'cafes', q: 'كوفي', cat: 'RESTAURANTS' },
+  { key: 'museums', q: 'متاحف', cat: 'LANDMARKS' },
+  { key: 'landmarks', q: 'معالم سياحية', cat: 'LANDMARKS' },
+  { key: 'parks', q: 'حدائق ومتنزهات', cat: 'ACTIVITIES' },
+  { key: 'activities', q: 'أنشطة ترفيهية', cat: 'ACTIVITIES' },
+  { key: 'shopping', q: 'مولات وتسوق', cat: 'SHOPPING' },
+];
+
 /** PlaceCategory → itinerary ActivityKind (for the real add to the schedule). */
 const KIND: Record<PlaceCategory, ActivityKind> = {
   RESTAURANTS: 'FOOD', LANDMARKS: 'SIGHT', ACTIVITIES: 'ACTIVITY', SHOPPING: 'SHOPPING',
@@ -76,7 +89,8 @@ function PlacesTab() {
   const { trips } = useTripsList();
   const [tripId, setTripId] = useState('');
   const [city, setCity] = useState('');
-  const [query, setQuery] = useState('');
+  const [find, setFind] = useState('all');
+  const sel = FIND_OPTIONS.find((o) => o.key === find) ?? FIND_OPTIONS[0];
   const [addPlace, setAddPlace] = useState<Place | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -97,8 +111,8 @@ function PlacesTab() {
   }, [myTrips, tripId]);
 
   const recommended = useMemo(
-    () => filterPlaces(places ?? [], 'ALL', query, city ? city : 'ALL'),
-    [places, query, city],
+    () => filterPlaces(places ?? [], sel.cat, '', city ? city : 'ALL'),
+    [places, sel.cat, city],
   );
 
   function changeTrip(id: string) {
@@ -126,7 +140,9 @@ function PlacesTab() {
         )}
         <input className="bp-input bp-input--sm" type="search" value={city} placeholder={t('explorePage.cityPh')}
           aria-label={t('explorePage.cityLabel')} onChange={(e) => setCity(e.target.value)} />
-        <input className="bp-input bp-input--sm" type="search" value={query} placeholder={t('explorePage.search')} aria-label={t('explorePage.search')} onChange={(e) => setQuery(e.target.value)} />
+        <select className="bp-input bp-input--sm" value={find} aria-label={t('explorePage.findLabel')} onChange={(e) => setFind(e.target.value)}>
+          {FIND_OPTIONS.map((o) => <option key={o.key} value={o.key}>{t(`explorePage.find.${o.key}`)}</option>)}
+        </select>
       </div>
 
       {toast && <div className="bp-banner bp-banner--ok" role="status">{toast}</div>}
@@ -163,7 +179,7 @@ function PlacesTab() {
 
       {/* Live Google Maps results (real places, photos, ratings) */}
       {mapsEnabled() && (
-        <GoogleResults city={city} category="ALL" query={query}
+        <GoogleResults city={city} category="ALL" query={sel.q}
           canAdd={myTrips.length > 0} onAdd={(g) => openAdd(toPlace(g, city))} />
       )}
 
