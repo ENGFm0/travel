@@ -31,19 +31,25 @@ export function HomePage() {
 
   return (
     <section className="bp-page bp-home">
-      {/* Hero */}
+      {/* Hero — the clear starting point: one prominent primary CTA. */}
       <div className="bp-home__hero">
-        <h1>{t('pages.home.title')}</h1>
-        <p className="bp-page__lead">{t('pages.home.lead')}</p>
-        <div className="bp-home__hero-cta">
-          <Link className="bp-btn bp-btn--primary" to="/?new=1">
-            <span className="material-symbols-outlined" aria-hidden="true">add</span>
-            {t('home.heroCta')}
-          </Link>
-          <Link className="bp-btn bp-btn--outline" to="/explore">
-            <span className="material-symbols-outlined" aria-hidden="true">explore</span>
-            {t('home.browse')}
-          </Link>
+        <span className="bp-home__hero-glow" aria-hidden="true">
+          <span className="material-symbols-outlined">flight_takeoff</span>
+        </span>
+        <div className="bp-home__hero-body">
+          <span className="bp-home__hero-eyebrow">{t('home.heroEyebrow')}</span>
+          <h1>{t('pages.home.title')}</h1>
+          <p className="bp-page__lead">{t('pages.home.lead')}</p>
+          <div className="bp-home__hero-cta">
+            <Link className="bp-btn bp-btn--primary" to="/?new=1">
+              <span className="material-symbols-outlined" aria-hidden="true">add</span>
+              {t('home.heroCta')}
+            </Link>
+            <Link className="bp-btn bp-btn--outline" to="/explore">
+              <span className="material-symbols-outlined" aria-hidden="true">explore</span>
+              {t('home.browse')}
+            </Link>
+          </div>
         </div>
       </div>
 

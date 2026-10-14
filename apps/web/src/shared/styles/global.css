@@ -737,10 +737,38 @@ select.bp-input {
 
 /* ── Home / landing (marketing) ─────────────────────────────────────────────── */
 .bp-home { display: flex; flex-direction: column; gap: 28px; }
-.bp-home__hero { display: flex; flex-direction: column; gap: 10px; }
-.bp-home__hero h1 { margin: 0; }
-.bp-home__hero-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
-.bp-home__hero-cta .bp-btn { padding-inline: 18px; }
+/* Hero: a distinct, always-dark panel that anchors the page and makes the
+   "start a new trip" CTA the obvious first step, with generous white space. */
+.bp-home__hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--bp-r-lg);
+  padding: clamp(28px, 6vw, 56px) clamp(20px, 5vw, 48px);
+  background:
+    radial-gradient(130% 150% at 88% -10%, color-mix(in srgb, var(--bp-orange) 42%, transparent), transparent 55%),
+    linear-gradient(135deg, #14213d 0%, #233a63 60%, #2a3d6b 100%);
+  background-color: #1b2a4e;
+  box-shadow: var(--bp-shadow-pop);
+  color: #fdf6ec;
+  text-align: center;
+}
+.bp-home__hero-body { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.bp-home__hero-eyebrow {
+  font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--bp-orange) 80%, #fff); opacity: .95;
+}
+.bp-home__hero h1 { margin: 0; color: #fff; font-size: clamp(1.75rem, 5.2vw, 2.6rem); line-height: 1.14; letter-spacing: -0.01em; }
+.bp-home__hero .bp-page__lead { margin: 0; color: rgba(253, 246, 236, 0.82); max-inline-size: 48ch; }
+.bp-home__hero-cta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+.bp-home__hero-cta .bp-btn { height: 52px; padding-inline: 26px; font-size: 1.02rem; }
+.bp-home__hero-cta .bp-btn--primary { box-shadow: 0 10px 26px rgba(232, 93, 61, 0.42); }
+.bp-home__hero-cta .bp-btn--outline { color: #fdf6ec; border-color: rgba(253, 246, 236, 0.45); background: rgba(253, 246, 236, 0.06); }
+.bp-home__hero-cta .bp-btn--outline:hover { background: rgba(253, 246, 236, 0.14); }
+.bp-home__hero-glow {
+  position: absolute; inset-block-start: -18px; inset-inline-start: -14px; z-index: 0;
+  color: #fdf6ec; opacity: 0.08; pointer-events: none;
+}
+.bp-home__hero-glow .material-symbols-outlined { font-size: 170px; transform: scaleX(-1); }
 .bp-home__h2 { font-size: 1.15rem; font-weight: 800; margin: 0 0 12px; }
 .bp-home__section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .bp-home__section-head .bp-home__h2 { margin-bottom: 2px; }
