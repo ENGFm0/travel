@@ -102,7 +102,10 @@ export function TripDetailPage() {
         {t('tripDetail.backToTrips')}
       </Link>
 
-      <header className="bp-trip-detail__head">
+      <header className={`bp-trip-detail__head ${domestic ? 'bp-trip-detail__head--dom' : 'bp-trip-detail__head--intl'}`}>
+        <span className="bp-trip-detail__cover-glyph" aria-hidden="true">
+          <span className="material-symbols-outlined">{domestic ? 'map' : 'flight_takeoff'}</span>
+        </span>
         <div className="bp-trip-detail__titles">
           <span className={`bp-badge ${domestic ? 'bp-badge--green' : 'bp-badge--blue'}`}>
             {t(domestic ? 'trips.domestic' : 'trips.international')}

@@ -448,10 +448,21 @@ select.bp-input {
 /* ── Trip detail + Members (US-006 shell / US-009) ─────────────────────────── */
 .bp-back { display: inline-flex; align-items: center; gap: 6px; color: var(--bp-ink-muted); text-decoration: none; font-weight: 600; font-size: 14px; }
 .bp-back:hover { color: var(--bp-primary); }
-.bp-trip-detail__head { margin: 12px 0 8px; }
-.bp-trip-detail__titles h1 { margin: 8px 0 6px; }
-.bp-trip-detail__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; color: var(--bp-ink-muted); font-size: 14px; }
+/* Trip cover: a gradient header that gives the trip identity and puts the
+   title / destination / dates up front. Tinted by domestic vs international. */
+.bp-trip-detail__head { position: relative; overflow: hidden; margin: 10px 0 14px;
+  padding: clamp(18px, 4.5vw, 30px) clamp(16px, 4.5vw, 28px); border-radius: var(--bp-r-lg);
+  color: #fdf6ec; box-shadow: var(--bp-shadow-pop); background: linear-gradient(135deg, #14213d 0%, #2a3d6b 100%); }
+.bp-trip-detail__head--intl { background: linear-gradient(135deg, #14213d 0%, #2a5a8c 100%); }
+.bp-trip-detail__head--dom { background: linear-gradient(135deg, #14213d 0%, #1f6a52 100%); }
+.bp-trip-detail__cover-glyph { position: absolute; inset-block-start: -22px; inset-inline-start: -16px; z-index: 0;
+  color: #fdf6ec; opacity: 0.1; pointer-events: none; }
+.bp-trip-detail__cover-glyph .material-symbols-outlined { font-size: 150px; transform: scaleX(-1); }
+.bp-trip-detail__titles { position: relative; z-index: 1; }
+.bp-trip-detail__titles h1 { margin: 10px 0 8px; color: #fff; }
+.bp-trip-detail__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; color: rgba(253, 246, 236, 0.85); font-size: 14px; }
 .bp-trip-detail__meta .material-symbols-outlined { font-size: 18px; }
+.bp-trip-detail__meta .bp-sep { color: rgba(253, 246, 236, 0.5); }
 
 .bp-members { margin-top: 20px; border-top: 1px solid var(--bp-border); padding-top: 20px; }
 .bp-members__h { margin: 0 0 12px; font-size: 20px; }
