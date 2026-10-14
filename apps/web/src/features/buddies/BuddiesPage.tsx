@@ -51,7 +51,7 @@ export function BuddiesPage() {
       </div>
 
       <div className="bp-filter-bar">
-        <input className="bp-input bp-input--sm" value={filter.city} placeholder={t('buddiesPage.city')} aria-label={t('buddiesPage.city')}
+        <input className="bp-input bp-input--sm" type="search" value={filter.city} placeholder={t('buddiesPage.city')} aria-label={t('buddiesPage.city')}
           onChange={(e) => setFilter((f) => ({ ...f, city: e.target.value }))} />
         <select className="bp-input bp-input--sm" value={filter.category} aria-label={t('buddiesPage.category')}
           onChange={(e) => setFilter((f) => ({ ...f, category: e.target.value as BuddyCategory | 'ALL' }))}>
