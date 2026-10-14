@@ -70,6 +70,24 @@
       "back": "Back to home"
     }
   },
+  "onboarding": {
+    "title": "Quick tour",
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Start a new trip",
+    "welcome": {
+      "title": "Welcome to BoardingPass",
+      "body": "Plan your whole trip in one place — from picking a destination to the day-by-day plan to splitting expenses."
+    },
+    "discover": {
+      "title": "Discover & add",
+      "body": "Find real restaurants and places from Google Maps, and add them to a specific day and time in your trip."
+    },
+    "group": {
+      "title": "Plan together",
+      "body": "Invite your travel buddies, share tasks, and split expenses with ease."
+    }
+  },
   "home": {
     "heroEyebrow": "Plan your trip, the easy way",
     "heroCta": "Start a new trip",

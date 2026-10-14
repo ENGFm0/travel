@@ -314,6 +314,23 @@ svg {
 }
 .bp-modal__head { display: flex; align-items: center; justify-content: space-between; }
 .bp-modal__title { font-size: 1.15rem; font-weight: 700; margin: 0; }
+
+/* First-run onboarding card */
+.bp-onb { align-items: center; text-align: center; gap: 12px; padding-top: 20px; }
+.bp-onb__skip { align-self: flex-end; margin-bottom: -6px; color: var(--bp-ink-muted); font-weight: 600; }
+.bp-onb__art { inline-size: 84px; block-size: 84px; border-radius: 999px; display: grid; place-items: center;
+  color: #fff; background:
+    radial-gradient(120% 120% at 70% 10%, color-mix(in srgb, var(--bp-orange) 55%, transparent), transparent 60%),
+    linear-gradient(135deg, #14213d, #2a3d6b); box-shadow: var(--bp-shadow-pop); margin-block: 4px 2px; }
+.bp-onb__art .material-symbols-outlined { font-size: 40px; }
+.bp-onb__title { font-size: 1.3rem; font-weight: 800; margin: 0; }
+.bp-onb__body { margin: 0; color: var(--bp-ink-muted); line-height: 1.55; max-inline-size: 34ch; }
+.bp-onb__dots { display: flex; gap: 8px; margin-block: 4px; }
+.bp-onb__dot { inline-size: 8px; block-size: 8px; border-radius: 999px; border: 0; padding: 0; cursor: pointer;
+  background: color-mix(in srgb, var(--bp-ink) 20%, transparent); transition: inline-size .18s ease, background .18s ease; }
+.bp-onb__dot.is-on { inline-size: 22px; background: var(--bp-primary); }
+.bp-onb__actions { display: flex; flex-direction: column; inline-size: 100%; gap: 8px; }
+.bp-onb__actions .bp-btn { inline-size: 100%; }
 .bp-field { display: flex; flex-direction: column; gap: 6px; }
 .bp-field > label { font-size: 13px; font-weight: 600; }
 .bp-input { height: 44px; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border);
