@@ -38,19 +38,20 @@ export function BuddiesPage() {
     <section className="bp-page bp-buddies">
       <div className="bp-buddies__head">
         <div><h1>{t('buddiesPage.title')}</h1><p className="bp-page__lead">{t('buddiesPage.lead')}</p></div>
-        <button className="bp-btn bp-btn--primary" onClick={guardedCreate}>
-          <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('buddiesPage.create')}
-        </button>
       </div>
 
-      <div className="bp-seg" role="group" aria-label={t('buddiesPage.mode')}>
+      <button className="bp-btn bp-btn--primary bp-buddies__cta" onClick={guardedCreate}>
+        <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('buddiesPage.create')}
+      </button>
+
+      <div className="bp-seg bp-seg--full" role="group" aria-label={t('buddiesPage.mode')}>
         {KINDS.map((k) => (
           <button key={k} className={`bp-seg__btn ${filter.kind === k ? 'is-on' : ''}`} aria-pressed={filter.kind === k}
             onClick={() => setFilter((f) => ({ ...f, kind: k }))}>{t(`buddiesPage.kind.${k}`)}</button>
         ))}
       </div>
 
-      <div className="bp-filter-bar">
+      <div className="bp-filter-bar bp-filter-bar--2">
         <input className="bp-input bp-input--sm" type="search" value={filter.city} placeholder={t('buddiesPage.city')} aria-label={t('buddiesPage.city')}
           onChange={(e) => setFilter((f) => ({ ...f, city: e.target.value }))} />
         <select className="bp-input bp-input--sm" value={filter.category} aria-label={t('buddiesPage.category')}
@@ -187,6 +188,8 @@ function CreateForm({ kind, onClose }: { kind: BuddyKind; onClose: () => void })
   return (
     <div className="bp-create-buddy">
       <h3 className="bp-panel__h">{t('buddiesPage.newTitle')}</h3>
+
+      {/* Essentials — the few fields needed to post. */}
       <input className="bp-input" value={title} placeholder={t('buddiesPage.titlePh')} aria-label={t('buddiesPage.titleLabel')} onChange={(e) => setTitle(e.target.value)} />
 
       <div className="bp-field">
@@ -198,15 +201,15 @@ function CreateForm({ kind, onClose }: { kind: BuddyKind; onClose: () => void })
           <input className="bp-input" value={city} placeholder={t('buddiesPage.cityPh')} aria-label={t('buddiesPage.city')} onChange={(e) => setCity(e.target.value)} />
         )}
       </div>
-      {isTrip && (
-        <input className="bp-input" value={extraCities} placeholder={t('buddiesPage.extraCitiesPh')} aria-label={t('buddiesPage.extraCities')} onChange={(e) => setExtraCities(e.target.value)} />
-      )}
 
       <div className="bp-grid-2">
         <label className="bp-field"><span className="bp-field__label">{t('trips.fromLabel')}</span>
           <input className="bp-input" type="date" value={dateFrom} aria-label={t('trips.fromLabel')} onChange={(e) => setDateFrom(e.target.value)} /></label>
         <label className="bp-field"><span className="bp-field__label">{t('trips.toLabel')}</span>
           <input className="bp-input" type="date" value={dateTo} aria-label={t('trips.toLabel')} onChange={(e) => setDateTo(e.target.value)} /></label>
+      </div>
+
+      <div className="bp-grid-2">
         <label className="bp-field"><span className="bp-field__label">{t('buddiesPage.category')}</span>
           <select className="bp-input" value={category} aria-label={t('buddiesPage.category')} onChange={(e) => setCategory(e.target.value as BuddyCategory)}>
             {CATEGORIES.map((c) => <option key={c} value={c}>{t(`buddiesPage.cat.${c}`)}</option>)}
@@ -215,34 +218,43 @@ function CreateForm({ kind, onClose }: { kind: BuddyKind; onClose: () => void })
           <input className="bp-input" type="number" min="1" value={capacity} aria-label={t('buddiesPage.capacity')} onChange={(e) => setCapacity(e.target.value)} /></label>
       </div>
 
-      <div className="bp-grid-2">
-        <label className="bp-field"><span className="bp-field__label">{t('buddiesPage.perPerson')}</span>
-          <input className="bp-input" type="number" min="0" value={perPerson} placeholder="0" aria-label={t('buddiesPage.perPerson')} onChange={(e) => setPerPerson(e.target.value)} /></label>
-        <label className="bp-field"><span className="bp-field__label">{t('buddiesPage.currency')}</span>
-          <select className="bp-input" value={currency} aria-label={t('buddiesPage.currency')} onChange={(e) => setCurrency(e.target.value)}>
-            {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select></label>
-      </div>
-      {destCurrency && (
-        <label className="bp-field"><span className="bp-field__label">{t('buddiesPage.destCurrency')}</span>
-          <select className="bp-input" value={destCurrency} aria-label={t('buddiesPage.destCurrency')} onChange={(e) => setDestCurrency(e.target.value)}>
-            <option value="">—</option>
-            {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select></label>
-      )}
-      <input className="bp-input" value={includes} placeholder={t('buddiesPage.includesPh')} aria-label={t('buddiesPage.includes')} onChange={(e) => setIncludes(e.target.value)} />
-
-      {isTrip ? (
-        <input className="bp-input" value={hotel} placeholder={t('buddiesPage.hotelPh')} aria-label={t('buddiesPage.hotel')} onChange={(e) => setHotel(e.target.value)} />
-      ) : (
-        <div className="bp-grid-2">
-          <input className="bp-input" value={activityType} placeholder={t('buddiesPage.activityTypePh')} aria-label={t('buddiesPage.activityType')} onChange={(e) => setActivityType(e.target.value)} />
-          <input className="bp-input" value={activityLocation} placeholder={t('buddiesPage.activityLocationPh')} aria-label={t('buddiesPage.activityLocation')} onChange={(e) => setActivityLocation(e.target.value)} />
-        </div>
-      )}
-      <input className="bp-input" value={meetingPoint} placeholder={t('buddiesPage.meetingPointPh')} aria-label={t('buddiesPage.meetingPoint')} onChange={(e) => setMeetingPoint(e.target.value)} />
-
       <textarea className="bp-input" value={description} placeholder={t('buddiesPage.descPh')} aria-label={t('buddiesPage.description')} rows={3} onChange={(e) => setDescription(e.target.value)} />
+
+      {/* Everything else is optional — tucked away so the form isn't overwhelming. */}
+      <details className="bp-more">
+        <summary>{t('buddiesPage.moreOptions')}</summary>
+        <div className="bp-more__body">
+          {isTrip && (
+            <input className="bp-input" value={extraCities} placeholder={t('buddiesPage.extraCitiesPh')} aria-label={t('buddiesPage.extraCities')} onChange={(e) => setExtraCities(e.target.value)} />
+          )}
+          <div className="bp-grid-2">
+            <label className="bp-field"><span className="bp-field__label">{t('buddiesPage.perPerson')}</span>
+              <input className="bp-input" type="number" min="0" value={perPerson} placeholder="0" aria-label={t('buddiesPage.perPerson')} onChange={(e) => setPerPerson(e.target.value)} /></label>
+            <label className="bp-field"><span className="bp-field__label">{t('buddiesPage.currency')}</span>
+              <select className="bp-input" value={currency} aria-label={t('buddiesPage.currency')} onChange={(e) => setCurrency(e.target.value)}>
+                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select></label>
+          </div>
+          {destCurrency && (
+            <label className="bp-field"><span className="bp-field__label">{t('buddiesPage.destCurrency')}</span>
+              <select className="bp-input" value={destCurrency} aria-label={t('buddiesPage.destCurrency')} onChange={(e) => setDestCurrency(e.target.value)}>
+                <option value="">—</option>
+                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select></label>
+          )}
+          <input className="bp-input" value={includes} placeholder={t('buddiesPage.includesPh')} aria-label={t('buddiesPage.includes')} onChange={(e) => setIncludes(e.target.value)} />
+          {isTrip ? (
+            <input className="bp-input" value={hotel} placeholder={t('buddiesPage.hotelPh')} aria-label={t('buddiesPage.hotel')} onChange={(e) => setHotel(e.target.value)} />
+          ) : (
+            <div className="bp-grid-2">
+              <input className="bp-input" value={activityType} placeholder={t('buddiesPage.activityTypePh')} aria-label={t('buddiesPage.activityType')} onChange={(e) => setActivityType(e.target.value)} />
+              <input className="bp-input" value={activityLocation} placeholder={t('buddiesPage.activityLocationPh')} aria-label={t('buddiesPage.activityLocation')} onChange={(e) => setActivityLocation(e.target.value)} />
+            </div>
+          )}
+          <input className="bp-input" value={meetingPoint} placeholder={t('buddiesPage.meetingPointPh')} aria-label={t('buddiesPage.meetingPoint')} onChange={(e) => setMeetingPoint(e.target.value)} />
+        </div>
+      </details>
+
       <div className="bp-row-between">
         <button className="bp-btn bp-btn--primary" onClick={submit}>{t('buddiesPage.publish')}</button>
         <button className="bp-btn bp-btn--outline" onClick={onClose}>{t('trips.close')}</button>
