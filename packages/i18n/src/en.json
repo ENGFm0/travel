@@ -654,13 +654,15 @@
     "kittyMode": "Kitty type",
     "kittyFixed": "Fixed",
     "kittyOpen": "Open",
-    "kittyFixedNote": "Set a total amount, split equally among travellers.",
-    "kittyOpenNote": "No fixed amount — each person adds their contribution; the total shows what's available.",
+    "kittyFixedNote": "Set the total amount, split equally among travellers.",
+    "kittyOpenNote": "Don't know the total? Add amounts as you go — they accumulate and split equally among travellers.",
     "contributions": "Contributions",
     "contributionOf": "{{name}}'s contribution",
     "saveFailed": "Could not save — check your connection and try again",
     "contributor": "Contributor",
-    "reset": "Reset"
+    "reset": "Reset",
+    "perHead": "Per person",
+    "addAmount": "Add amount"
   },
   "tasks": {
     "title": "Tasks",

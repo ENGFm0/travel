@@ -7,7 +7,7 @@ import { CURRENT_UID } from '@/features/members/membersService';
 import { setMockCurrentUser } from './expensesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
-  CATEGORIES, contribCollected, convert, distribution, kittyCollected, myNetBalance, perMemberDue,
+  CATEGORIES, convert, distribution, kittyCollected, myNetBalance, perMemberDue,
   personalRemaining, personalSpent, splitEqual, type Category, type Finance,
   type GroupExpense, type PersonalExpense,
 } from './finance';
@@ -107,13 +107,12 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
   const dist = distribution(finance.group);
   const groupTotal = finance.group.reduce((a, e) => a + e.amount, 0);
 
-  const openCollected = contribCollected(finance.contrib);
-  const collected = mode === 'OPEN' ? openCollected : kittyCollected(finance.kittyTotal, memberUids, finance.paid);
-  // The kitty is a pot: recording a shared expense draws it down. In OPEN mode
-  // there's no target, so the pot is whatever has been contributed.
-  const pot = mode === 'OPEN' ? openCollected : finance.kittyTotal;
-  const remaining = pot - groupTotal;
-  const pct = pot > 0 ? (groupTotal / pot) * 100 : 0;
+  const collected = kittyCollected(finance.kittyTotal, memberUids, finance.paid);
+  // Both modes split the kitty equally among members; the pot is the total,
+  // drawn down by shared expenses. FIXED sets the total once; OPEN adds to it.
+  const remaining = finance.kittyTotal - groupTotal;
+  const pct = finance.kittyTotal > 0 ? (groupTotal / finance.kittyTotal) * 100 : 0;
+  const perHead = memberUids.length ? finance.kittyTotal / memberUids.length : 0;
 
   return (
     <div className="bp-panel">
@@ -137,53 +136,36 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
         </div>
       )}
 
+      {(isOwner || canEdit) && mode === 'OPEN' && (
+        <AddToKitty onAdd={(amt) => expensesActions.setKittyTotal(finance.kittyTotal + amt)} />
+      )}
+
       <div className="bp-stat-row">
-        {mode === 'FIXED' && <Stat label={t('expenses.total')} value={fmt(finance.kittyTotal)} />}
-        <Stat label={t('expenses.collected')} value={fmt(collected)} />
+        <Stat label={t('expenses.total')} value={fmt(finance.kittyTotal)} />
         <Stat label={t('expenses.spent')} value={fmt(groupTotal)} />
         <Stat label={t('expenses.remaining')} value={fmt(remaining)} />
       </div>
       <Bar pct={pct} />
+      <p className="bp-note">{t('expenses.perHead')}: {fmt(perHead)} · {t('expenses.collected')}: {fmt(collected)}</p>
 
-      {mode === 'FIXED' ? (
-        <>
-          <h4 className="bp-panel__h">{t('expenses.dues')}</h4>
-          <ul className="bp-pay-list" role="list">
-            {memberUids.map((u) => (
-              <li key={u} className="bp-pay">
-                <span className="bp-pay__name">{nameOf(u)}</span>
-                <span className="bp-pay__due">{fmt(dues[u] ?? 0)}</span>
-                {finance.paid[u]
-                  ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.paid')}</span>
-                  : <span className="bp-status-chip">{t('expenses.pending')}</span>}
-                {isOwner && (
-                  <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.markPaid(u, !finance.paid[u])}>
-                    {finance.paid[u] ? t('expenses.markPending') : t('expenses.confirmPaid')}
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : (
-        <>
-          <h4 className="bp-panel__h">{t('expenses.contributions')}</h4>
-          {(canEdit || isOwner) && (
-            <AddContribution active={active} onAdd={(u, amt) => expensesActions.setContribution(u, (finance.contrib?.[u] ?? 0) + amt)} />
-          )}
-          <ul className="bp-pay-list" role="list">
-            {memberUids.map((u) => (
-              <li key={u} className="bp-pay">
-                <span className="bp-pay__name">{nameOf(u)}</span>
-                <span className="bp-pay__due">{fmt(finance.contrib?.[u] ?? 0)}</span>
-                {isOwner && (finance.contrib?.[u] ?? 0) > 0 && (
-                  <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.setContribution(u, 0)}>{t('expenses.reset')}</button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      {/* Equal split per member (both modes). */}
+      <h4 className="bp-panel__h">{t('expenses.dues')}</h4>
+      <ul className="bp-pay-list" role="list">
+        {memberUids.map((u) => (
+          <li key={u} className="bp-pay">
+            <span className="bp-pay__name">{nameOf(u)}</span>
+            <span className="bp-pay__due">{fmt(dues[u] ?? 0)}</span>
+            {finance.paid[u]
+              ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.paid')}</span>
+              : <span className="bp-status-chip">{t('expenses.pending')}</span>}
+            {isOwner && (
+              <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.markPaid(u, !finance.paid[u])}>
+                {finance.paid[u] ? t('expenses.markPending') : t('expenses.confirmPaid')}
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
 
       {groupTotal > 0 && (
         <>
@@ -210,31 +192,20 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
   );
 }
 
-/** Add a contribution to the open kitty: pick who paid, type an amount, add.
- *  Amounts accumulate onto that person's running total. */
-function AddContribution({ active, onAdd }: {
-  active: { uid: string; displayName: string }[]; onAdd: (uid: string, amount: number) => void;
-}) {
+/** Add an amount to an open kitty — it accumulates into the total, which is
+ *  then split equally among the members (same as a fixed total). */
+function AddToKitty({ onAdd }: { onAdd: (amount: number) => void }) {
   const { t } = useTranslation();
-  const [who, setWho] = useState('');
   const [amt, setAmt] = useState('');
-  useEffect(() => { if (!who && active[0]) setWho(active[0].uid); }, [active, who]);
-  function add() {
-    const a = Number(amt) || 0;
-    const uid = who || active[0]?.uid;
-    if (!uid || a <= 0) return;
-    onAdd(uid, a);
-    setAmt('');
-  }
+  function add() { const a = Number(amt) || 0; if (a <= 0) return; onAdd(a); setAmt(''); }
   return (
     <div className="bp-add-row">
-      <select className="bp-input" value={who} aria-label={t('expenses.contributor')} onChange={(e) => setWho(e.target.value)}>
-        {active.map((m) => <option key={m.uid} value={m.uid}>{m.displayName}</option>)}
-      </select>
-      <input className="bp-input bp-contrib-input" type="number" min="0" inputMode="decimal" value={amt} placeholder="0"
-        aria-label={t('expenses.amount')} onChange={(e) => setAmt(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
-      <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={add}>{t('expenses.add')}</button>
+      <div className="bp-field" style={{ flex: 1 }}>
+        <label htmlFor="bp-kitty-add">{t('expenses.addAmount')}</label>
+        <input id="bp-kitty-add" className="bp-input" type="number" min="0" inputMode="decimal" value={amt} placeholder="0"
+          onChange={(e) => setAmt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
+      </div>
+      <button className="bp-btn bp-btn--primary bp-btn--sm" style={{ alignSelf: 'end' }} onClick={add}>{t('expenses.add')}</button>
     </div>
   );
 }
