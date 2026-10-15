@@ -13,7 +13,7 @@ import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
 import { PlaceSearch, type PickedPlace } from './PlaceSearch';
 import { PhotoGallery } from './PhotoGallery';
-import { mapsEnabled, loadMapsLib, geocode } from '@/shared/googleMaps';
+import { mapsEnabled, loadMapsLib, geocode, searchPlacesByText, type GmapsPlace } from '@/shared/googleMaps';
 import { placesActions } from '@/features/places/placesStore';
 import type { Place, PlaceCategory } from '@/features/places/placesModel';
 import { recordTripExpense, recordTripPersonalExpense } from '@/features/expenses/expensesService';
@@ -25,13 +25,6 @@ function mapsSearch(query: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
-/** Booking.com search deep-link for a city, with check-in/out when known. */
-function bookingSearch(city: string, checkin?: string, checkout?: string): string {
-  const p = new URLSearchParams({ ss: city });
-  if (checkin) p.set('checkin', checkin);
-  if (checkout) p.set('checkout', checkout);
-  return `https://www.booking.com/searchresults.html?${p.toString()}`;
-}
 type CitySub = 'days' | 'flight' | 'stay' | 'weather';
 
 /** Icon per travel mode (also used for the "flight" sub-tab). */
@@ -856,6 +849,13 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
     });
     setPicking(false);
   }
+  function onAddHotel(h: GmapsPlace) {
+    saveStay({
+      id: `stay-${crypto.randomUUID()}`, name: h.name, placeId: h.id, mapsUrl: h.mapsUrl,
+      photoUrl: h.photoUrl, photoUrls: h.photoUrl ? [h.photoUrl] : undefined,
+      checkIn: city.dateFrom, checkOut: city.dateTo,
+    });
+  }
 
   return (
     <section className="bp-itin-sec">
@@ -888,19 +888,56 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
             <span className="material-symbols-outlined" aria-hidden="true">add_location_alt</span>{t('itinerary.pickOnMap')}
           </button>
         )}
-        <a className="bp-map-chip" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">
-          <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.hotelsOnMaps')}
-        </a>
-        <a className="bp-map-chip" href={bookingSearch(city.name, city.dateFrom, city.dateTo)} target="_blank" rel="noopener noreferrer">
-          <span className="material-symbols-outlined" aria-hidden="true">hotel</span>{t('itinerary.hotelsOnBooking')}
-        </a>
         <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
           <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.browseHotels')}
         </Link>
       </div>
 
+      {canEdit && mapsEnabled() && <HotelSuggestions city={city} onAdd={onAddHotel} />}
       {picking && <MapPicker cityName={city.name} onPick={onPickLocation} onClose={() => setPicking(false)} />}
     </section>
+  );
+}
+
+/** Live hotel suggestions from Google for the city — tap to add as a stay. */
+function HotelSuggestions({ city, onAdd }: { city: CityStop; onAdd: (h: GmapsPlace) => void }) {
+  const { t } = useTranslation();
+  const [results, setResults] = useState<GmapsPlace[]>([]);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    if (!city.name.trim()) return;
+    setBusy(true);
+    searchPlacesByText(`فنادق ${city.name}`, { maxResults: 6 })
+      .then((r) => { if (alive) setResults(r); })
+      .catch(() => { /* optional */ })
+      .finally(() => { if (alive) setBusy(false); });
+    return () => { alive = false; };
+  }, [city.name]);
+
+  if (busy && results.length === 0) return <p className="bp-note">{t('itinerary.loadingHotels')}</p>;
+  if (results.length === 0) return null;
+  return (
+    <div className="bp-hotel-suggest">
+      <h5 className="bp-hotel-suggest__h">{t('itinerary.suggestedHotels')}</h5>
+      <ul className="bp-hotel-list" role="list">
+        {results.map((h) => (
+          <li key={h.id} className="bp-hotel-card">
+            <div className="bp-hotel-card__photo">
+              {h.photoUrl ? <img src={h.photoUrl} alt={h.name} loading="lazy" /> : <span className="material-symbols-outlined" aria-hidden="true">hotel</span>}
+            </div>
+            <div className="bp-hotel-card__body">
+              <span className="bp-hotel-card__name">{h.name}</span>
+              {typeof h.rating === 'number' && h.rating > 0 && (
+                <span className="bp-hotel-card__rate"><span className="material-symbols-outlined" aria-hidden="true">star</span>{h.rating.toFixed(1)}</span>
+              )}
+              {h.address && <span className="bp-hotel-card__addr">{h.address}</span>}
+            </div>
+            <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => onAdd(h)}>{t('itinerary.addStay')}</button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -921,7 +958,16 @@ function MapPicker({ cityName, onPick, onClose }: {
     (async () => {
       try {
         const { Map } = await loadMapsLib();
-        const center = (await geocode(cityName)) ?? { lat: 24.7136, lng: 46.6753 }; // Riyadh fallback
+        // Start on the user's current location; fall back to the city, then Riyadh.
+        const here = await new Promise<{ lat: number; lng: number } | null>((resolve) => {
+          if (!navigator.geolocation) return resolve(null);
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            () => resolve(null),
+            { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 },
+          );
+        });
+        const center = here ?? (await geocode(cityName)) ?? { lat: 24.7136, lng: 46.6753 };
         if (!alive || !mapEl.current) return;
         mapObj.current = new Map(mapEl.current, {
           center, zoom: 14, disableDefaultUI: true, zoomControl: true, gestureHandling: 'greedy', clickableIcons: false,
@@ -1032,20 +1078,10 @@ function StayEditor({ stay, city, onSave, onCancel }: { stay: Stay; city: CitySt
           <input className="bp-input" value={d.name} placeholder={t('itinerary.hotelPh')} onChange={(e) => set('name', e.target.value)} />
         )}
       </div>
-      <div className="bp-leg__grid">
-        <label className="bp-field"><span className="bp-field__label">{t('itinerary.checkIn')}</span>
-          <input className="bp-input" type="date" value={d.checkIn ?? ''} onChange={(e) => set('checkIn', e.target.value || undefined)} /></label>
-        <label className="bp-field"><span className="bp-field__label">{t('itinerary.checkOut')}</span>
-          <input className="bp-input" type="date" value={d.checkOut ?? ''} min={d.checkIn || undefined} onChange={(e) => set('checkOut', e.target.value || undefined)} /></label>
-        <label className="bp-field"><span className="bp-field__label">{t('itinerary.checkInTime')}</span>
-          <input className="bp-input" type="time" value={d.time ?? ''} onChange={(e) => set('time', e.target.value || undefined)} /></label>
-        <label className="bp-field"><span className="bp-field__label">{t('itinerary.hotelLink')}</span>
-          <input className="bp-input" value={d.mapsUrl ?? ''} placeholder="https://…" dir="ltr" onChange={(e) => set('mapsUrl', e.target.value || undefined)} /></label>
-      </div>
       {((d.photoUrls?.length ?? 0) > 0 || d.placeId) && <PhotoGallery photos={d.photoUrls ?? (d.photoUrl ? [d.photoUrl] : [])} placeId={d.placeId} alt={d.name || t('itinerary.hotel')} size="sm" />}
       <input className="bp-input" value={d.note ?? ''} placeholder={t('itinerary.activityNotePh')} onChange={(e) => set('note', e.target.value || undefined)} />
       <div className="bp-row-between">
-        <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => d.name.trim() && onSave({ ...d, name: d.name.trim() })}>{t('itinerary.saveLeg')}</button>
+        <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => d.name.trim() && onSave({ ...d, name: d.name.trim(), checkIn: city.dateFrom, checkOut: city.dateTo })}>{t('itinerary.saveLeg')}</button>
         <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={onCancel}>{t('trips.close')}</button>
       </div>
     </div>

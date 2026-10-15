@@ -594,7 +594,9 @@
     "saveLocation": "Save point",
     "savedLocation": "Pinned location",
     "locationName": "Place name",
-    "locationNamePh": "Place name (optional) — e.g. Family rest house"
+    "locationNamePh": "Place name (optional) — e.g. Family rest house",
+    "suggestedHotels": "Suggested hotels",
+    "loadingHotels": "Finding hotels…"
   },
   "expenses": {
     "kitty": "Kitty",

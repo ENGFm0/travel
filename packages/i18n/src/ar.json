@@ -594,7 +594,9 @@
     "saveLocation": "احفظ النقطة",
     "savedLocation": "موقع محدّد",
     "locationName": "اسم المكان",
-    "locationNamePh": "اسم المكان (اختياري) — مثال: استراحة العائلة"
+    "locationNamePh": "اسم المكان (اختياري) — مثال: استراحة العائلة",
+    "suggestedHotels": "فنادق مقترحة",
+    "loadingHotels": "جارٍ جلب الفنادق…"
   },
   "expenses": {
     "kitty": "القطة",

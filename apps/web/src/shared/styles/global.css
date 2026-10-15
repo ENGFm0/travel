@@ -1019,6 +1019,22 @@ select.bp-input {
 .bp-map-chip:hover { border-color: color-mix(in srgb, var(--bp-primary) 45%, var(--bp-border)); transform: translateY(-1px); }
 .bp-map-chip--explore .material-symbols-outlined { color: var(--bp-orange); }
 .bp-map-chip--pick { cursor: pointer; border-style: dashed; }
+
+/* Suggested hotels (live from Google) — tap a card to add as a stay */
+.bp-hotel-suggest { margin-top: 14px; }
+.bp-hotel-suggest__h { margin: 0 0 10px; font-size: 14px; font-weight: 800; }
+.bp-hotel-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.bp-hotel-card { display: flex; align-items: center; gap: 12px; padding: 8px; border: 1px solid var(--bp-border);
+  border-radius: var(--bp-r-md); background: var(--bp-surface); transition: border-color .14s ease, transform .14s ease; }
+.bp-hotel-card:hover { border-color: color-mix(in srgb, var(--bp-primary) 40%, var(--bp-border)); transform: translateY(-1px); }
+.bp-hotel-card__photo { flex: 0 0 64px; inline-size: 64px; block-size: 64px; border-radius: var(--bp-r-sm); overflow: hidden;
+  display: grid; place-items: center; background: var(--bp-surface-2, #e9eef5); color: var(--bp-ink-muted); }
+.bp-hotel-card__photo img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.bp-hotel-card__body { display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; margin-inline-end: auto; }
+.bp-hotel-card__name { font-weight: 800; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bp-hotel-card__rate { display: inline-flex; align-items: center; gap: 3px; font-weight: 700; font-size: 13px; color: var(--bp-gold, #d4a017); }
+.bp-hotel-card__rate .material-symbols-outlined { font-size: 15px; font-variation-settings: 'FILL' 1; }
+.bp-hotel-card__addr { font-size: 12px; color: var(--bp-ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bp-map-chip--pick .material-symbols-outlined { color: var(--bp-primary); }
 
 /* Map picker modal */
