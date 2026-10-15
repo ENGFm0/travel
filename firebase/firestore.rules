@@ -107,13 +107,27 @@ service cloud.firestore {
       allow read, write: if signedIn() && uid() == userId;
     }
 
-    // ── Email → uid index for friend discovery ─────────────────────────────
-    // Tiny public lookup docs ({ uid, name }); anyone signed-in may resolve one
-    // (get, not list), but may only write/own the entry for their own uid.
+    // ── Public lookup indexes for friend discovery ─────────────────────────
+    // Tiny docs ({ uid, name, username? }); anyone signed-in may resolve one
+    // (get, not list), but may only create/own the entry for their own uid.
+    // On username/phone, create succeeds only when the handle is unclaimed
+    // (create) and updates only by the owner — so handles can't be stolen.
     match /emailIndex/{email} {
-      allow get:           if signedIn();
+      allow get:            if signedIn();
       allow create, update: if signedIn() && request.resource.data.uid == uid();
-      allow delete:        if signedIn() && resource.data.uid == uid();
+      allow delete:         if signedIn() && resource.data.uid == uid();
+    }
+    match /usernames/{handle} {
+      allow get:            if signedIn();
+      allow create:         if signedIn() && request.resource.data.uid == uid();
+      allow update:         if signedIn() && resource.data.uid == uid() && request.resource.data.uid == uid();
+      allow delete:         if signedIn() && resource.data.uid == uid();
+    }
+    match /phones/{phone} {
+      allow get:            if signedIn();
+      allow create:         if signedIn() && request.resource.data.uid == uid();
+      allow update:         if signedIn() && resource.data.uid == uid() && request.resource.data.uid == uid();
+      allow delete:         if signedIn() && resource.data.uid == uid();
     }
 
     // ── Friend requests (real, cross-user) ─────────────────────────────────

@@ -6,6 +6,7 @@ import {
   query, where, arrayUnion, serverTimestamp,
 } from 'firebase/firestore';
 import { FriendsError, normalizeHandle, type Friend, type FriendRequest, type Graph } from './friendsModel';
+import { normalizeUsername, phoneKey } from '@/features/profile/profileModel';
 
 export interface FriendsService {
   getGraph(): Promise<Graph>;
@@ -82,18 +83,37 @@ export function createApiFriendsService(getToken?: () => string | undefined): Fr
 }
 
 /** Firestore-backed friends: real, cross-user social graph. Users are found by
- *  email (via the public `emailIndex`); a request lives at friendRequests/
- *  `${fromUid}_${toUid}`; an accepted friendship is one doc per pair at
- *  friendships/`${sortedUidA}_${sortedUidB}` holding both parties' names/emails. */
+ *  username or phone (via the public `usernames` / `phones` lookup docs, with
+ *  email as a fallback); a request lives at friendRequests/`${fromUid}_${toUid}`;
+ *  an accepted friendship is one doc per pair at
+ *  friendships/`${sortedUidA}_${sortedUidB}` holding both parties' name + handle. */
 export function createFirestoreFriendsService(): FriendsService {
   const me = () => {
     const u = currentUser();
     if (!u) throw new FriendsError('GENERIC');
     return u;
   };
-  const key = (e: string | null | undefined) => (e ?? '').trim().toLowerCase();
   const pairId = (a: string, b: string) => [a, b].sort().join('_');
   const reqId = (from: string, to: string) => `${from}_${to}`;
+  // My own public handle (username) for display on the other side; self-read ok.
+  const myHandle = async (uid: string): Promise<string> => {
+    try { return normalizeUsername(((await getDoc(doc(db(), 'users', uid))).data() as { username?: string })?.username ?? ''); }
+    catch { return ''; }
+  };
+  // Resolve a typed handle (username / phone / email) to a lookup doc.
+  const resolve = async (handle: string): Promise<{ uid: string; name: string; username: string } | null> => {
+    const raw = (handle ?? '').trim();
+    if (!raw) return null;
+    const stripped = raw.replace(/[\s()\-]/g, '');
+    let ref;
+    if (/^\+?\d{9,}$/.test(stripped)) { const pk = phoneKey(stripped); if (!pk) return null; ref = doc(db(), 'phones', pk); }
+    else if (raw.includes('@') && raw.includes('.')) ref = doc(db(), 'emailIndex', raw.toLowerCase());
+    else { const un = normalizeUsername(raw); if (!un) return null; ref = doc(db(), 'usernames', un); }
+    const s = await getDoc(ref);
+    if (!s.exists()) return null;
+    const d = s.data() as { uid: string; name?: string; username?: string };
+    return { uid: d.uid, name: d.name ?? raw, username: d.username ?? '' };
+  };
 
   async function snapshot(): Promise<Graph> {
     const u = me();
@@ -102,14 +122,14 @@ export function createFirestoreFriendsService(): FriendsService {
       getDocs(query(collection(db(), 'friendRequests'), where('toUid', '==', u.uid))),
     ]);
     const friends: Friend[] = fs.docs.map((d) => {
-      const data = d.data() as { uids: string[]; profiles?: Record<string, { name?: string; email?: string }> };
+      const data = d.data() as { uids: string[]; profiles?: Record<string, { name?: string; username?: string }> };
       const other = data.uids.find((x) => x !== u.uid) ?? '';
       const p = data.profiles?.[other] ?? {};
-      return { id: other, name: p.name ?? p.email ?? other, username: p.email ?? '' };
+      return { id: other, name: p.name ?? other, username: p.username ?? '' };
     });
     const incoming: FriendRequest[] = rs.docs.map((d) => {
-      const data = d.data() as { fromName?: string; fromEmail?: string; fromUid: string };
-      return { id: d.id, name: data.fromName ?? data.fromEmail ?? data.fromUid, username: data.fromEmail ?? '' };
+      const data = d.data() as { fromName?: string; fromUsername?: string; fromUid: string };
+      return { id: d.id, name: data.fromName ?? data.fromUid, username: data.fromUsername ?? '' };
     });
     return { friends, incoming };
   }
@@ -119,13 +139,9 @@ export function createFirestoreFriendsService(): FriendsService {
 
     async sendRequest(handle) {
       const u = me();
-      const email = key(handle);
-      if (!email) throw new FriendsError('NO_USER');
-      if (email === key(u.email)) throw new FriendsError('SELF');
-      const idx = await getDoc(doc(db(), 'emailIndex', email));
-      if (!idx.exists()) throw new FriendsError('NO_USER');
-      const toUid = (idx.data() as { uid: string }).uid;
-      const toName = (idx.data() as { name?: string }).name ?? email;
+      const target = await resolve(handle);
+      if (!target) throw new FriendsError('NO_USER');
+      const { uid: toUid, name: toName, username: toUsername } = target;
       if (toUid === u.uid) throw new FriendsError('SELF');
       if ((await getDoc(doc(db(), 'friendships', pairId(u.uid, toUid)))).exists()) throw new FriendsError('ALREADY_FRIEND');
       const [out, inc] = await Promise.all([
@@ -134,8 +150,8 @@ export function createFirestoreFriendsService(): FriendsService {
       ]);
       if (out.exists() || inc.exists()) throw new FriendsError('PENDING');
       await setDoc(doc(db(), 'friendRequests', reqId(u.uid, toUid)), {
-        fromUid: u.uid, fromName: u.name, fromEmail: key(u.email),
-        toUid, toName, toEmail: email, createdAt: serverTimestamp(),
+        fromUid: u.uid, fromName: u.name, fromUsername: await myHandle(u.uid),
+        toUid, toName, toUsername, createdAt: serverTimestamp(),
       });
       return snapshot();
     },
@@ -145,13 +161,13 @@ export function createFirestoreFriendsService(): FriendsService {
       const rref = doc(db(), 'friendRequests', id);
       const rs = await getDoc(rref);
       if (!rs.exists()) throw new FriendsError('NOT_FOUND');
-      const r = rs.data() as { fromUid: string; fromName?: string; fromEmail?: string; toUid: string };
+      const r = rs.data() as { fromUid: string; fromName?: string; fromUsername?: string; toUid: string };
       if (r.toUid !== u.uid) throw new FriendsError('NOT_FOUND');
       await setDoc(doc(db(), 'friendships', pairId(r.fromUid, u.uid)), {
         uids: [r.fromUid, u.uid].sort(),
         profiles: {
-          [r.fromUid]: { name: r.fromName ?? r.fromEmail ?? r.fromUid, email: r.fromEmail ?? '' },
-          [u.uid]: { name: u.name, email: key(u.email) },
+          [r.fromUid]: { name: r.fromName ?? r.fromUid, username: r.fromUsername ?? '' },
+          [u.uid]: { name: u.name, username: await myHandle(u.uid) },
         },
         createdAt: serverTimestamp(),
       });

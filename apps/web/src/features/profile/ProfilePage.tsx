@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Locale, ThemeChoice } from '@boardingpass/types';
 import { useUIStore } from '@/app/store/uiStore';
 import { useAuth, authActions } from '@/features/auth/authStore';
-import { NOTIF_KEYS, validateAvatar, validateName, type NotifPrefs } from './profileModel';
+import { NOTIF_KEYS, validateAvatar, validateName, validateUsername, normalizeUsername, type NotifPrefs } from './profileModel';
 import { profileActions, useProfile } from './profileStore';
 import { COUNTRIES } from '@/shared/countries';
 
@@ -53,6 +53,7 @@ function ProfileForm() {
   const [middle, setMiddle] = useState(profile?.middleName ?? '');
   const [last, setLast] = useState(profile?.lastName ?? '');
   const [phone, setPhone] = useState(profile?.phone ?? '');
+  const [username, setUsername] = useState(profile?.username ?? '');
   const [country, setCountry] = useState(profile?.country ?? '');
   const [errCode, setErrCode] = useState<string | null>(null);
   const [avatarErr, setAvatarErr] = useState<string | null>(null);
@@ -63,8 +64,13 @@ function ProfileForm() {
   async function save() {
     const nameErr = validateName(first, last);
     if (nameErr) { setErrCode(nameErr); return; }
+    const userErr = validateUsername(username);
+    if (userErr) { setErrCode(userErr === 'TOO_SHORT' ? 'USERNAME_SHORT' : 'USERNAME_INVALID'); return; }
     setErrCode(null);
-    const ok = await profileActions.update({ firstName: first, middleName: middle, lastName: last, phone, country: country || undefined });
+    const ok = await profileActions.update({
+      firstName: first, middleName: middle, lastName: last, phone,
+      username: normalizeUsername(username), country: country || undefined,
+    });
     if (ok) { setSaved(true); window.setTimeout(() => setSaved(false), 2000); }
   }
 
@@ -100,6 +106,12 @@ function ProfileForm() {
         <div className="bp-field"><label htmlFor="bp-p-middle">{t('auth.middleName')}</label><input id="bp-p-middle" className="bp-input" value={middle} onChange={(e) => setMiddle(e.target.value)} /></div>
         <div className="bp-field"><label htmlFor="bp-p-last">{t('auth.lastName')}</label><input id="bp-p-last" className="bp-input" value={last} onChange={(e) => setLast(e.target.value)} /></div>
         <div className="bp-field"><label htmlFor="bp-p-phone">{t('auth.phone')}</label><input id="bp-p-phone" className="bp-input" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+        <div className="bp-field">
+          <label htmlFor="bp-p-username">{t('account.username')}</label>
+          <input id="bp-p-username" className="bp-input" value={username} placeholder={t('account.usernamePh')} autoComplete="off"
+            aria-describedby="bp-username-note" onChange={(e) => setUsername(e.target.value)} />
+          <span id="bp-username-note" className="bp-note">{t('account.usernameNote')}</span>
+        </div>
         <div className="bp-field">
           <label htmlFor="bp-p-country">{t('account.country')}</label>
           <select id="bp-p-country" className="bp-input" value={country} onChange={(e) => setCountry(e.target.value)}>

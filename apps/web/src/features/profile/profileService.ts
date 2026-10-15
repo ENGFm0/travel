@@ -1,6 +1,6 @@
 import { loadJSON, persistAfter } from '@/shared/persist';
 import { createApiClient } from '@boardingpass/core';
-import { defaultPrefs, type NotifPrefs, type Profile } from './profileModel';
+import { defaultPrefs, normalizeUsername, phoneKey, type NotifPrefs, type Profile } from './profileModel';
 import { db, firebaseEnabled } from '@/shared/firebase';
 import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
@@ -105,34 +105,45 @@ export function createFirestoreProfileService(): ProfileService {
     const d = (s.data() ?? {}) as Partial<Profile>;
     return {
       uid, firstName: d.firstName ?? '', middleName: d.middleName ?? '', lastName: d.lastName ?? '',
-      email: d.email ?? '', phone: d.phone ?? '', country: d.country ?? undefined,
+      email: d.email ?? '', phone: d.phone ?? '', username: d.username ?? '', country: d.country ?? undefined,
       avatarUrl: d.avatarUrl ?? '', notif: d.notif ?? defaultPrefs(),
     };
   };
-  // Keep a public email→uid lookup so friends can be found by email. Tiny doc,
-  // best-effort (never blocks the profile flow).
-  const indexEmail = async (p: Profile): Promise<void> => {
+  // Maintain public lookup docs so friends can be found by username or phone
+  // (email too, as a fallback). Tiny docs, best-effort; stale keys are cleaned
+  // when the user changes their username/phone.
+  const indexLookups = async (p: Profile, old?: Partial<Profile>): Promise<void> => {
+    const name = [p.firstName, p.lastName].filter(Boolean).join(' ').trim() || p.email || p.username || '';
     const email = (p.email ?? '').trim().toLowerCase();
-    if (!email) return;
-    const name = [p.firstName, p.lastName].filter(Boolean).join(' ').trim() || p.email;
-    await setDoc(doc(db(), 'emailIndex', email), { uid: p.uid, name }, { merge: true }).catch(() => { /* best-effort */ });
+    if (email) await setDoc(doc(db(), 'emailIndex', email), { uid: p.uid, name }, { merge: true }).catch(() => {});
+
+    const uname = normalizeUsername(p.username ?? '');
+    const oldUname = normalizeUsername(old?.username ?? '');
+    if (oldUname && oldUname !== uname) await deleteDoc(doc(db(), 'usernames', oldUname)).catch(() => {});
+    if (uname) await setDoc(doc(db(), 'usernames', uname), { uid: p.uid, name, username: p.username }, { merge: true }).catch(() => {});
+
+    const pk = phoneKey(p.phone ?? '');
+    const oldPk = phoneKey(old?.phone ?? '');
+    if (oldPk && oldPk !== pk) await deleteDoc(doc(db(), 'phones', oldPk)).catch(() => {});
+    if (pk) await setDoc(doc(db(), 'phones', pk), { uid: p.uid, name }, { merge: true }).catch(() => {});
   };
   return {
     async getProfile(seed) {
       const s = await getDoc(ref(seed.uid));
-      if (s.exists()) { const p = await readProfile(seed.uid); await indexEmail(p); return p; }
+      if (s.exists()) { const p = await readProfile(seed.uid); await indexLookups(p, p); return p; }
       const { firstName, lastName } = splitName(seed.displayName);
-      const p: Profile = { uid: seed.uid, firstName, middleName: '', lastName, email: seed.email, phone: '', avatarUrl: '', notif: defaultPrefs() };
+      const p: Profile = { uid: seed.uid, firstName, middleName: '', lastName, email: seed.email, phone: '', username: '', avatarUrl: '', notif: defaultPrefs() };
       const { uid: _uid, ...rest } = p;
       await setDoc(ref(seed.uid), rest);
-      await indexEmail(p);
+      await indexLookups(p);
       return p;
     },
     async updateProfile(uid, patch) {
+      const before = (await getDoc(ref(uid))).data() as Partial<Profile> | undefined;
       const { uid: _u, email: _e, ...rest } = patch; // uid + email immutable
       await updateDoc(ref(uid), rest);
       const p = await readProfile(uid);
-      await indexEmail(p);
+      await indexLookups(p, before);
       return p;
     },
     async updateNotif(uid, notif) { await updateDoc(ref(uid), { notif }); return readProfile(uid); },

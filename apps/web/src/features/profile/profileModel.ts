@@ -20,9 +20,30 @@ export interface Profile {
   lastName: string;
   email: string; // immutable identity anchor (BR-002-001)
   phone: string;
+  username?: string; // optional public handle, used to be discoverable by friends
   country?: string; // ISO 3166-1 alpha-2 home country (drives default currency)
   avatarUrl: string;
   notif: NotifPrefs;
+}
+
+/** Normalize a username for storage/lookup: trim, lowercase, drop a leading @. */
+export function normalizeUsername(u: string): string {
+  return (u ?? '').trim().toLowerCase().replace(/^@+/, '');
+}
+
+/** Validate an optional username: 3–20 chars, letters/digits/._ only. */
+export function validateUsername(u: string): 'INVALID' | 'TOO_SHORT' | null {
+  const n = normalizeUsername(u);
+  if (!n) return null; // optional
+  if (n.length < 3 || n.length > 20) return 'TOO_SHORT';
+  if (!/^[a-z0-9._]+$/.test(n)) return 'INVALID';
+  return null;
+}
+
+/** Canonical phone key for lookup: last 9 digits (handles 05… and +9665… alike). */
+export function phoneKey(phone: string): string {
+  const digits = (phone ?? '').replace(/\D/g, '');
+  return digits.length >= 9 ? digits.slice(-9) : '';
 }
 
 export type AvatarError = 'TYPE' | 'SIZE';
