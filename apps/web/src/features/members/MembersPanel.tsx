@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { CURRENT_UID, type Member } from './membersService';
 import { membersActions, useMembers } from './membersStore';
+
+/** The signed-in user's member uid — the real Firebase uid in production, or
+ *  the mock constant in dev/tests. */
+function meUidOf(): string {
+  return firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
+}
 
 function initialOf(name: string): string {
   return name.trim().charAt(0).toUpperCase() || '?';
@@ -26,7 +33,8 @@ export function MembersPanel({ tripId }: { tripId: string }) {
     return () => { live = false; };
   }, [tripId]);
 
-  const me = members?.find((m) => m.uid === CURRENT_UID);
+  const meUid = meUidOf();
+  const me = members?.find((m) => m.uid === meUid);
   const isOwner = me?.role === 'OWNER';
 
   const { active, pending } = useMemo(() => {
@@ -100,7 +108,7 @@ export function MembersPanel({ tripId }: { tripId: string }) {
               <h3 className="bp-members__sub">{t('members.pendingTitle')}</h3>
               <ul className="bp-member-list" role="list">
                 {pending.map((m) => (
-                  <MemberRow key={m.uid} tripId={tripId} m={m} isOwner={isOwner} />
+                  <MemberRow key={m.uid} tripId={tripId} m={m} isOwner={isOwner} meUid={meUid} />
                 ))}
               </ul>
             </>
@@ -109,7 +117,7 @@ export function MembersPanel({ tripId }: { tripId: string }) {
           <h3 className="bp-members__sub">{t('members.activeTitle')}</h3>
           <ul className="bp-member-list" role="list">
             {active.map((m) => (
-              <MemberRow key={m.uid} tripId={tripId} m={m} isOwner={isOwner} />
+              <MemberRow key={m.uid} tripId={tripId} m={m} isOwner={isOwner} meUid={meUid} />
             ))}
           </ul>
 
@@ -122,10 +130,10 @@ export function MembersPanel({ tripId }: { tripId: string }) {
   );
 }
 
-function MemberRow({ tripId, m, isOwner }: { tripId: string; m: Member; isOwner: boolean }) {
+function MemberRow({ tripId, m, isOwner, meUid }: { tripId: string; m: Member; isOwner: boolean; meUid: string }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
-  const isMe = m.uid === CURRENT_UID;
+  const isMe = m.uid === meUid;
   const owner = m.role === 'OWNER';
 
   async function guard(fn: () => Promise<unknown>) {

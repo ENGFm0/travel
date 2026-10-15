@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { CURRENT_UID } from '@/features/members/membersService';
 import {
   canDelete, groupMedia, mediaTypeOf, validateFile, type Grouping,
@@ -17,6 +18,7 @@ interface Props {
 
 export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, memberCount }: Props) {
   const { t } = useTranslation();
+  const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
   const { media, loading } = useMemories();
   const [group, setGroup] = useState<Grouping>('day');
   const [day, setDay] = useState('1');
@@ -46,7 +48,7 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, membe
     try { src = URL.createObjectURL(file); } catch { /* jsdom: no object URLs */ }
     await memoriesActions.upload(
       { type: mediaTypeOf(file.type), src, name: file.name, day: t('memories.dayN', { n: day }), place, file },
-      CURRENT_UID,
+      meUid,
     );
     setBusy(false);
   }
@@ -122,7 +124,7 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, membe
                   {m.type === 'video'
                     ? <video className="bp-mem-media" src={m.src} controls aria-label={m.name} />
                     : <img className="bp-mem-media" src={m.src} alt={m.name} loading="lazy" />}
-                  {canDelete(m, CURRENT_UID, isOwner) && (
+                  {canDelete(m, meUid, isOwner) && (
                     <button className="bp-mem-del" aria-label={t('memories.delete')} onClick={() => memoriesActions.remove(m.id)}>
                       <span className="material-symbols-outlined" aria-hidden="true">delete</span>
                     </button>
