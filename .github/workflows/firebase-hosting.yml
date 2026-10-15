@@ -75,3 +75,11 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
         run: npx --yes firebase-tools@latest deploy --only firestore:rules --project bordingpass-ae272 --non-interactive
+
+      - name: Deploy Storage security rules (best-effort)
+        # Governs memory/photo uploads to Firebase Storage (US-013). Best-effort,
+        # same as Firestore rules above.
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx --yes firebase-tools@latest deploy --only storage --project bordingpass-ae272 --non-interactive
