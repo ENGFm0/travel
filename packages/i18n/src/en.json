@@ -588,7 +588,13 @@
     "browseShort": "or browse:",
     "openMaps": "Google Maps",
     "openExplore": "Explore",
-    "removePhoto": "Remove photo"
+    "removePhoto": "Remove photo",
+    "pickOnMap": "Pin a point on the map",
+    "pickOnMapHint": "Move the map so the pin sits over the place, then save.",
+    "saveLocation": "Save point",
+    "savedLocation": "Pinned location",
+    "locationName": "Place name",
+    "locationNamePh": "Place name (optional) — e.g. Family rest house"
   },
   "expenses": {
     "kitty": "Kitty",

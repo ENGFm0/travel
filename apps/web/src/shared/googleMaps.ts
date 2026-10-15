@@ -38,6 +38,24 @@ export async function loadPlaces(): Promise<G> {
   return g.maps.importLibrary('places');
 }
 
+/** The Maps library ({ Map, ... }) for rendering an interactive map. */
+export async function loadMapsLib(): Promise<G> {
+  const g = await loadScript();
+  return g.maps.importLibrary('maps');
+}
+
+/** Geocode a free-text place/city to coordinates (for centering a map). */
+export async function geocode(query: string): Promise<{ lat: number; lng: number } | null> {
+  if (!mapsEnabled() || !query.trim()) return null;
+  try {
+    const g = await loadScript();
+    const { Geocoder } = await g.maps.importLibrary('geocoding');
+    const res = await new Geocoder().geocode({ address: query, region: 'SA' });
+    const loc = res?.results?.[0]?.geometry?.location;
+    return loc ? { lat: loc.lat(), lng: loc.lng() } : null;
+  } catch { return null; }
+}
+
 /** All available photos for a place (new API caps this at ~10), at a large
  *  size so they can be browsed full-screen. Empty when no key / no photos. */
 export async function fetchPlacePhotos(placeId: string, max = 10): Promise<string[]> {

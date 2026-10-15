@@ -13,7 +13,7 @@ import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
 import { PlaceSearch, type PickedPlace } from './PlaceSearch';
 import { PhotoGallery } from './PhotoGallery';
-import { mapsEnabled } from '@/shared/googleMaps';
+import { mapsEnabled, loadMapsLib, geocode } from '@/shared/googleMaps';
 import { placesActions } from '@/features/places/placesStore';
 import type { Place, PlaceCategory } from '@/features/places/placesModel';
 import { recordTripExpense, recordTripPersonalExpense } from '@/features/expenses/expensesService';
@@ -834,6 +834,7 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
   const { t } = useTranslation();
   const locale = useUIStore((s) => s.locale);
   const [editId, setEditId] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
 
   // Prefer the rich stays list; fall back to the legacy single hotel for display.
   const stays: Stay[] = city.stays ?? (city.hotel ? [{ id: 'legacy', name: city.hotel, mapsUrl: city.hotelUrl }] : []);
@@ -847,6 +848,14 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
   }
   function removeStay(id: string) { persist(stays.filter((x) => x.id !== id)); }
   function rate(id: string, r: number) { persist(stays.map((x) => (x.id === id ? { ...x, rating: r } : x))); }
+  function onPickLocation(p: { lat: number; lng: number; name: string }) {
+    saveStay({
+      id: `stay-${crypto.randomUUID()}`, name: p.name || t('itinerary.savedLocation'),
+      lat: p.lat, lng: p.lng, mapsUrl: `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`,
+      checkIn: city.dateFrom, checkOut: city.dateTo,
+    });
+    setPicking(false);
+  }
 
   return (
     <section className="bp-itin-sec">
@@ -874,6 +883,11 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
       )}
 
       <div className="bp-map-links">
+        {canEdit && mapsEnabled() && (
+          <button type="button" className="bp-map-chip bp-map-chip--pick" onClick={() => setPicking(true)}>
+            <span className="material-symbols-outlined" aria-hidden="true">add_location_alt</span>{t('itinerary.pickOnMap')}
+          </button>
+        )}
         <a className="bp-map-chip" href={mapsSearch(`فنادق ${city.name}`)} target="_blank" rel="noopener noreferrer">
           <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.hotelsOnMaps')}
         </a>
@@ -884,7 +898,66 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
           <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.browseHotels')}
         </Link>
       </div>
+
+      {picking && <MapPicker cityName={city.name} onPick={onPickLocation} onClose={() => setPicking(false)} />}
     </section>
+  );
+}
+
+/** Drop a pin anywhere on the map and save it as a stay — for places that have
+ *  no Google listing (a chalet, a rest house, a wedding venue…). The map pans
+ *  under a fixed centre pin; saving uses the map's current centre. */
+function MapPicker({ cityName, onPick, onClose }: {
+  cityName: string; onPick: (p: { lat: number; lng: number; name: string }) => void; onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const mapEl = useRef<HTMLDivElement>(null);
+  const mapObj = useRef<{ getCenter: () => { lat: () => number; lng: () => number } } | null>(null);
+  const [name, setName] = useState('');
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { Map } = await loadMapsLib();
+        const center = (await geocode(cityName)) ?? { lat: 24.7136, lng: 46.6753 }; // Riyadh fallback
+        if (!alive || !mapEl.current) return;
+        mapObj.current = new Map(mapEl.current, {
+          center, zoom: 14, disableDefaultUI: true, zoomControl: true, gestureHandling: 'greedy', clickableIcons: false,
+        });
+        setReady(true);
+      } catch { /* map failed to load */ }
+    })();
+    return () => { alive = false; };
+  }, [cityName]);
+
+  function save() {
+    const c = mapObj.current?.getCenter?.();
+    if (!c) return;
+    onPick({ lat: c.lat(), lng: c.lng(), name: name.trim() });
+  }
+
+  return (
+    <div className="bp-scrim" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bp-modal bp-map-modal" role="dialog" aria-modal="true" aria-label={t('itinerary.pickOnMap')} onMouseDown={(e) => e.stopPropagation()}>
+        <div className="bp-modal__head">
+          <h2 className="bp-modal__title">{t('itinerary.pickOnMap')}</h2>
+          <button className="bp-icon-btn" aria-label={t('trips.close')} onClick={onClose}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>
+        </div>
+        <p className="bp-note">{t('itinerary.pickOnMapHint')}</p>
+        <div className="bp-map-wrap">
+          <div ref={mapEl} className="bp-map-canvas" />
+          <span className="material-symbols-outlined bp-map-crosshair" aria-hidden="true">location_on</span>
+          {!ready && <div className="bp-map-loading">…</div>}
+        </div>
+        <input className="bp-input" value={name} placeholder={t('itinerary.locationNamePh')} aria-label={t('itinerary.locationName')} onChange={(e) => setName(e.target.value)} />
+        <div className="bp-row-between">
+          <button className="bp-btn bp-btn--primary" disabled={!ready} onClick={save}>{t('itinerary.saveLocation')}</button>
+          <button className="bp-btn bp-btn--outline" onClick={onClose}>{t('trips.close')}</button>
+        </div>
+      </div>
+    </div>
   );
 }
 

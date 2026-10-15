@@ -588,7 +588,13 @@
     "browseShort": "أو تصفّح:",
     "openMaps": "خرائط قوقل",
     "openExplore": "استكشف",
-    "removePhoto": "حذف الصورة"
+    "removePhoto": "حذف الصورة",
+    "pickOnMap": "حدّد نقطة على الخريطة",
+    "pickOnMapHint": "حرّك الخريطة حتى يكون المؤشّر فوق المكان، ثم احفظ.",
+    "saveLocation": "احفظ النقطة",
+    "savedLocation": "موقع محدّد",
+    "locationName": "اسم المكان",
+    "locationNamePh": "اسم المكان (اختياري) — مثال: استراحة العائلة"
   },
   "expenses": {
     "kitty": "القطة",

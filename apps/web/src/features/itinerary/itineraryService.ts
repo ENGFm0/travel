@@ -122,6 +122,8 @@ export interface Stay {
   photoUrl?: string;
   photoUrls?: string[]; // all place photos — browsable gallery
   mapsUrl?: string;
+  lat?: number;         // pinned coordinates (when picked on the map)
+  lng?: number;
   checkIn?: string;   // ISO date
   checkOut?: string;  // ISO date
   time?: string;      // check-in time HH:mm

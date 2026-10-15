@@ -1018,6 +1018,17 @@ select.bp-input {
 .bp-map-chip .material-symbols-outlined { font-size: 17px; color: var(--bp-blue, #3a6ea5); }
 .bp-map-chip:hover { border-color: color-mix(in srgb, var(--bp-primary) 45%, var(--bp-border)); transform: translateY(-1px); }
 .bp-map-chip--explore .material-symbols-outlined { color: var(--bp-orange); }
+.bp-map-chip--pick { cursor: pointer; border-style: dashed; }
+.bp-map-chip--pick .material-symbols-outlined { color: var(--bp-primary); }
+
+/* Map picker modal */
+.bp-map-modal { max-width: 560px; }
+.bp-map-wrap { position: relative; block-size: 340px; border-radius: var(--bp-r-md); overflow: hidden; border: 1px solid var(--bp-border); }
+.bp-map-canvas { position: absolute; inset: 0; }
+.bp-map-crosshair { position: absolute; top: 50%; left: 50%; z-index: 2; pointer-events: none;
+  transform: translate(-50%, -100%); font-size: 44px; color: var(--bp-primary);
+  font-variation-settings: 'FILL' 1; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)); }
+.bp-map-loading { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; background: var(--bp-surface-2, #e9eef5); color: var(--bp-ink-muted); }
 
 /* ── Flight legs + countdown ────────────────────────────────────────────────── */
 .bp-countdown { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px;
