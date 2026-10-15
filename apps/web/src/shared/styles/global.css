@@ -668,6 +668,7 @@ select.bp-input {
   .bp-filter-bar > .bp-input:first-child { grid-column: auto; }
 }
 .bp-create-buddy { display: flex; flex-direction: column; gap: 10px; border: 1px dashed var(--bp-border); border-radius: var(--bp-r-md); padding: 14px; }
+.bp-buddy-form { display: flex; flex-direction: column; gap: 10px; }
 /* Collapsible "more options" to keep forms from overwhelming the user */
 .bp-more { border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); padding: 0; }
 .bp-more > summary { cursor: pointer; padding: 10px 12px; font-weight: 700; font-size: 14px; color: var(--bp-ink);

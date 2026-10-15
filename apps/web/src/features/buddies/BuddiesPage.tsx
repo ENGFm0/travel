@@ -61,7 +61,19 @@ export function BuddiesPage() {
         </select>
       </div>
 
-      {creating && <CreateForm kind={filter.kind} onClose={() => setCreating(false)} />}
+      {creating && (
+        <div className="bp-scrim" onMouseDown={(e) => e.target === e.currentTarget && setCreating(false)}>
+          <div className="bp-modal" role="dialog" aria-modal="true" aria-label={t('buddiesPage.newTitle')} onMouseDown={(e) => e.stopPropagation()}>
+            <div className="bp-modal__head">
+              <h2 className="bp-modal__title">{t('buddiesPage.newTitle')}</h2>
+              <button className="bp-icon-btn" aria-label={t('trips.close')} onClick={() => setCreating(false)}>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
+              </button>
+            </div>
+            <CreateForm kind={filter.kind} onClose={() => setCreating(false)} />
+          </div>
+        </div>
+      )}
 
       {flagged && <div className="bp-banner bp-banner--ok" role="status">{t('buddiesPage.flagged')}</div>}
 
@@ -186,9 +198,7 @@ function CreateForm({ kind, onClose }: { kind: BuddyKind; onClose: () => void })
   }
 
   return (
-    <div className="bp-create-buddy">
-      <h3 className="bp-panel__h">{t('buddiesPage.newTitle')}</h3>
-
+    <div className="bp-buddy-form">
       {/* Essentials — the few fields needed to post. */}
       <input className="bp-input" value={title} placeholder={t('buddiesPage.titlePh')} aria-label={t('buddiesPage.titleLabel')} onChange={(e) => setTitle(e.target.value)} />
 
