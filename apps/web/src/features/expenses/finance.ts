@@ -12,7 +12,8 @@ export interface GroupExpense {
   category: Category;
   amount: number; // base currency, major units
   payerUid: string;
-  receiptUrl?: string; // optional photo of the receipt/invoice
+  receiptUrl?: string;     // legacy single receipt
+  receiptUrls?: string[];  // one or more receipt/invoice photos
 }
 
 export interface SideKitty {

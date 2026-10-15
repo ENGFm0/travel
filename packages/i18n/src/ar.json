@@ -698,7 +698,8 @@
     "owesShort": "عليه",
     "whoPaysWhom": "من يدفع لمن",
     "allSettled": "الكل متساوٍ، ما فيه تحويلات",
-    "paysTo": "يدفع لـ"
+    "paysTo": "يدفع لـ",
+    "receiptsCount": "{{count}} صورة مرفقة"
   },
   "tasks": {
     "title": "المهام",

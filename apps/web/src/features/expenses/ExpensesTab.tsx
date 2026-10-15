@@ -237,11 +237,11 @@ function GroupRow({ e, memberUids, nameOf, fmt, canEdit }: {
       <span className="bp-chip bp-chip--cat">{t(`expenses.cat.${e.category}`)}</span>
       <span className="bp-exp__by">{nameOf(e.payerUid)}</span>
       <span className="bp-exp__amt">{fmt(e.amount)}</span>
-      {e.receiptUrl && (
-        <a className="bp-icon-btn bp-icon-btn--xs" href={e.receiptUrl} target="_blank" rel="noopener noreferrer" aria-label={t('expenses.viewReceipt')}>
+      {(e.receiptUrls ?? (e.receiptUrl ? [e.receiptUrl] : [])).map((url, i) => (
+        <a key={i} className="bp-icon-btn bp-icon-btn--xs" href={url} target="_blank" rel="noopener noreferrer" aria-label={t('expenses.viewReceipt')}>
           <span className="material-symbols-outlined" aria-hidden="true">receipt_long</span>
         </a>
-      )}
+      ))}
       {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.edit')} onClick={start}><span className="material-symbols-outlined" aria-hidden="true">edit</span></button>}
       {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.delete')} onClick={() => expensesActions.deleteGroup(e.id)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
     </li>
@@ -265,7 +265,7 @@ function AddExpense({ tripId, memberUids, active, nameOf, baseCur, destCur, rate
   const [cur, setCur] = useState(baseCur);
   const [payer, setPayer] = useState(memberUids[0] ?? CURRENT_UID);
   const [parts, setParts] = useState<string[]>(memberUids.slice(0, 2));
-  const [receipt, setReceipt] = useState<File | null>(null);
+  const [receipts, setReceipts] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
 
   function toggle(uid: string) {
@@ -282,16 +282,20 @@ function AddExpense({ tripId, memberUids, active, nameOf, baseCur, destCur, rate
     setBusy(true);
     try {
       if (pot === 'SHARED') {
-        let receiptUrl: string | undefined;
-        if (receipt) { try { receiptUrl = await uploadTripImage(tripId, receipt); } catch { /* keep the expense even if the photo fails */ } }
-        await expensesActions.addGroup({ desc, category: cat, amount: amt, payerUid: payer, receiptUrl });
+        let receiptUrls: string[] | undefined;
+        if (receipts.length > 0) {
+          const urls: string[] = [];
+          for (const f of receipts) { try { urls.push(await uploadTripImage(tripId, f)); } catch { /* keep the expense even if a photo fails */ } }
+          if (urls.length) receiptUrls = urls;
+        }
+        await expensesActions.addGroup({ desc, category: cat, amount: amt, payerUid: payer, receiptUrls });
       } else if (pot === 'PERSONAL') {
         await expensesActions.addPersonal({ desc, amount: amt });
       } else {
         if (parts.length < 2) return;
         await expensesActions.addSide({ title: desc, participantUids: parts, total: amt, payerUid: parts.includes(payer) ? payer : parts[0] });
       }
-      setDesc(''); setAmount(''); setReceipt(null);
+      setDesc(''); setAmount(''); setReceipts([]);
     } finally { setBusy(false); }
   }
 
@@ -341,9 +345,9 @@ function AddExpense({ tripId, memberUids, active, nameOf, baseCur, destCur, rate
       {pot === 'SHARED' && (
         <label className="bp-receipt">
           <span className="material-symbols-outlined" aria-hidden="true">photo_camera</span>
-          <span>{receipt ? receipt.name : t('expenses.attachReceipt')}</span>
-          <input type="file" accept="image/*" className="bp-vh" aria-label={t('expenses.attachReceipt')}
-            onChange={(e) => { setReceipt(e.target.files?.[0] ?? null); e.target.value = ''; }} />
+          <span>{receipts.length > 0 ? t('expenses.receiptsCount', { count: receipts.length }) : t('expenses.attachReceipt')}</span>
+          <input type="file" accept="image/*" multiple className="bp-vh" aria-label={t('expenses.attachReceipt')}
+            onChange={(e) => { setReceipts(Array.from(e.target.files ?? [])); e.target.value = ''; }} />
         </label>
       )}
     </div>

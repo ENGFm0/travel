@@ -17,7 +17,7 @@ export interface ExpensesService {
   setKittyTotal(tripId: string, total: number): Promise<Finance>;
   markPaid(tripId: string, uid: string, paid: boolean): Promise<Finance>;
   setContribution(tripId: string, uid: string, amount: number): Promise<Finance>;
-  addGroup(tripId: string, e: { desc: string; category: Category; amount: number; payerUid: string; receiptUrl?: string }): Promise<Finance>;
+  addGroup(tripId: string, e: { desc: string; category: Category; amount: number; payerUid: string; receiptUrl?: string; receiptUrls?: string[] }): Promise<Finance>;
   updateGroup(tripId: string, id: string, e: { desc: string; category: Category; amount: number; payerUid: string }): Promise<Finance>;
   deleteGroup(tripId: string, id: string): Promise<Finance>;
   addSide(tripId: string, s: { title: string; participantUids: string[]; total: number; payerUid: string }): Promise<Finance>;
@@ -88,7 +88,7 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>,
     async setContribution(tripId, u, amount) { await tick(); (store(tripId).contrib ??= {})[u] = Math.max(0, amount); return view(tripId, ME(tripId)); },
     async addGroup(tripId, e) {
       await tick();
-      store(tripId).group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid, receiptUrl: e.receiptUrl });
+      store(tripId).group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid, receiptUrl: e.receiptUrl, receiptUrls: e.receiptUrls });
       return view(tripId, ME(tripId));
     },
     async updateGroup(tripId, id, e) {
@@ -223,7 +223,7 @@ export function createFirestoreExpensesService(): ExpensesService {
     setKittyTotal: (tripId, total) => withShared(tripId, (sh) => { sh.kittyTotal = Math.max(0, total); }),
     markPaid: (tripId, u, paid) => withShared(tripId, (sh) => { sh.paid[u] = paid; }),
     setContribution: (tripId, u, amount) => withShared(tripId, (sh) => { (sh.contrib ??= {})[u] = Math.max(0, amount); }),
-    addGroup: (tripId, e) => withShared(tripId, (sh) => { sh.group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid, receiptUrl: e.receiptUrl }); }),
+    addGroup: (tripId, e) => withShared(tripId, (sh) => { sh.group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid, receiptUrl: e.receiptUrl, receiptUrls: e.receiptUrls }); }),
     updateGroup: (tripId, id, e) => withShared(tripId, (sh) => { const g = sh.group.find((x) => x.id === id); if (g) { g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid; } }),
     deleteGroup: (tripId, id) => withShared(tripId, (sh) => { sh.group = sh.group.filter((g) => g.id !== id); }),
     addSide: (tripId, x) => withShared(tripId, (sh) => { sh.sides.push({ id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false }); }),

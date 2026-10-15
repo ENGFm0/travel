@@ -37,19 +37,22 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, membe
   const groups = useMemo(() => groupMedia(media ?? [], group), [media, group]);
 
   async function onPick(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ''; // allow re-picking the same file
-    if (!file) return;
-    const err = validateFile(file.type, file.size);
-    if (err) { setUploadError(err); return; }
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ''; // allow re-picking the same files
+    if (files.length === 0) return;
     setUploadError(null);
     setBusy(true);
-    let src = '';
-    try { src = URL.createObjectURL(file); } catch { /* jsdom: no object URLs */ }
-    await memoriesActions.upload(
-      { type: mediaTypeOf(file.type), src, name: file.name, day: t('memories.dayN', { n: day }), place, file },
-      meUid,
-    );
+    // Upload each selected file; skip (and flag) any that fail validation.
+    for (const file of files) {
+      const err = validateFile(file.type, file.size);
+      if (err) { setUploadError(err); continue; }
+      let src = '';
+      try { src = URL.createObjectURL(file); } catch { /* jsdom: no object URLs */ }
+      await memoriesActions.upload(
+        { type: mediaTypeOf(file.type), src, name: file.name, day: t('memories.dayN', { n: day }), place, file },
+        meUid,
+      );
+    }
     setBusy(false);
   }
 
@@ -100,7 +103,7 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, membe
               {(places.length ? places : ['—']).map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
-          <input ref={fileRef} type="file" accept="image/*,video/*" className="bp-vh" onChange={onPick} aria-label={t('memories.upload')} />
+          <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="bp-vh" onChange={onPick} aria-label={t('memories.upload')} />
           <button className="bp-btn bp-btn--primary bp-btn--sm" disabled={busy} onClick={() => fileRef.current?.click()}>
             <span className="material-symbols-outlined" aria-hidden="true">add_a_photo</span>
             {busy ? t('memories.uploading') : t('memories.upload')}

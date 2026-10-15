@@ -698,7 +698,8 @@
     "owesShort": "owes",
     "whoPaysWhom": "Who pays whom",
     "allSettled": "All settled — no transfers needed",
-    "paysTo": "pays"
+    "paysTo": "pays",
+    "receiptsCount": "{{count}} attached"
   },
   "tasks": {
     "title": "Tasks",
