@@ -5,8 +5,8 @@ import { formatDate } from '@boardingpass/core';
 import { useUIStore, type Locale } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
 import {
-  ACTIVITY_KINDS, TRIP_KINDS, CAR_KINDS, formatTime12, periodFromTime,
-  type Activity, type ActivityKind, type CarKind, type CarMedia, type CitySeed, type CityStop, type Day, type FlightLeg, type Stay, type TravelMode, type TripKind,
+  ACTIVITY_KINDS, TRIP_KINDS, CAR_KINDS, CAR_EXPENSE_KINDS, formatTime12, periodFromTime,
+  type Activity, type ActivityKind, type CarKind, type CarExpense, type CarExpenseKind, type CarMedia, type CitySeed, type CityStop, type Day, type FlightLeg, type Stay, type TravelMode, type TripKind,
 } from './itineraryService';
 import { uploadFile, mediaTypeOf } from '@/shared/uploads';
 import { itineraryActions, useItinerary } from './itineraryStore';
@@ -610,7 +610,7 @@ function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; c
     // never leaves stale data behind.
     const clean: FlightLeg = ckind === 'RENTAL'
       ? { airline: draft.airline, date: draft.date, dateEnd: draft.dateEnd, cost: draft.cost, no: draft.no, media: draft.media }
-      : { cost: draft.cost, no: draft.no };
+      : { expenses: draft.expenses, no: draft.no, cost: (draft.expenses ?? []).reduce((a, e) => a + (e.amount || 0), 0) || undefined };
     itineraryActions.setCityInfo(tripId, city.id, { car: clean, carKind: ckind });
     setEditing(false);
   }
@@ -665,8 +665,7 @@ function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; c
             </>
           ) : (
             <>
-              <label className="bp-field"><span className="bp-field__label">{t('itinerary.fuelCost')}</span>
-                <input className="bp-input" type="number" inputMode="decimal" min="0" value={draft.cost ?? ''} placeholder="0" onChange={(e) => setCost(e.target.value)} /></label>
+              <CarExpensesEditor expenses={draft.expenses ?? []} onChange={(x) => setDraft((p) => ({ ...p, expenses: x.length ? x : undefined }))} />
               <input className="bp-input" value={draft.no ?? ''} placeholder={t('itinerary.carNotePh')} onChange={(e) => set('no', e.target.value)} />
             </>
           )}
@@ -680,16 +679,73 @@ function CarBlock({ tripId, city, canEdit }: { tripId: string; city: CityStop; c
   );
 }
 
+/** Own-car expenses: pick a type (fuel, oil, tyres…), enter an amount, add. */
+function CarExpensesEditor({ expenses, onChange }: { expenses: CarExpense[]; onChange: (x: CarExpense[]) => void }) {
+  const { t } = useTranslation();
+  const [kind, setKind] = useState<CarExpenseKind>('FUEL');
+  const [amount, setAmount] = useState('');
+  function add() {
+    const a = Number(amount) || 0;
+    if (a <= 0) return;
+    onChange([...expenses, { id: `ce-${crypto.randomUUID()}`, kind, amount: a }]);
+    setAmount('');
+  }
+  const total = expenses.reduce((a, e) => a + (e.amount || 0), 0);
+  return (
+    <div className="bp-car-exp">
+      <span className="bp-field__label">{t('itinerary.carExpenses')}</span>
+      <div className="bp-add-row">
+        <select className="bp-input" value={kind} aria-label={t('itinerary.carExpType')} onChange={(e) => setKind(e.target.value as CarExpenseKind)}>
+          {CAR_EXPENSE_KINDS.map((k) => <option key={k} value={k}>{t(`itinerary.carExp.${k}`)}</option>)}
+        </select>
+        <input className="bp-input bp-contrib-input" type="number" min="0" inputMode="decimal" value={amount} placeholder="0"
+          aria-label={t('itinerary.amount')} onChange={(e) => setAmount(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
+        <button type="button" className="bp-btn bp-btn--primary bp-btn--sm" onClick={add}>{t('itinerary.add')}</button>
+      </div>
+      {expenses.length > 0 && (
+        <ul className="bp-pay-list" role="list">
+          {expenses.map((e) => (
+            <li key={e.id} className="bp-pay">
+              <span className="bp-pay__name">{t(`itinerary.carExp.${e.kind}`)}</span>
+              <span className="bp-pay__due">{e.amount.toLocaleString()}</span>
+              <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.deleteActivity')} onClick={() => onChange(expenses.filter((x) => x.id !== e.id))}>
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {total > 0 && <p className="bp-note">{t('itinerary.total')}: {total.toLocaleString()}</p>}
+    </div>
+  );
+}
+
 /** Read-only car summary — rental (company, pickup→return dates, cost) or own (fuel). */
 function CarSummary({ car, kind, locale }: { car: FlightLeg; kind: CarKind; locale: Locale }) {
   const { t } = useTranslation();
   const money = (n?: number) => (typeof n === 'number' ? n.toLocaleString(locale.startsWith('ar') ? 'ar-EG' : 'en-US') : '');
   if (kind === 'OWN') {
+    const exp = car.expenses ?? [];
+    const total = exp.reduce((a, e) => a + (e.amount || 0), 0);
     return (
       <div className="bp-car-card">
-        {typeof car.cost === 'number' && (
+        {exp.length > 0 ? (
+          <ul className="bp-pay-list" role="list">
+            {exp.map((e) => (
+              <li key={e.id} className="bp-pay">
+                <span className="bp-pay__name">{t(`itinerary.carExp.${e.kind}`)}</span>
+                <span className="bp-pay__due">{money(e.amount)}</span>
+              </li>
+            ))}
+            <li className="bp-pay bp-car-exp__total">
+              <span className="bp-pay__name">{t('itinerary.total')}</span>
+              <span className="bp-pay__due">{money(total)}</span>
+            </li>
+          </ul>
+        ) : typeof car.cost === 'number' ? (
           <p className="bp-car-card__line"><span className="material-symbols-outlined" aria-hidden="true">local_gas_station</span>{t('itinerary.fuelCost')}: {money(car.cost)}</p>
-        )}
+        ) : null}
         {car.no && <p className="bp-tl-item__note">{car.no}</p>}
       </div>
     );

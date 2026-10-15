@@ -26,6 +26,11 @@ export const TRIP_KINDS: TripKind[] = ['ONE_WAY', 'ROUND', 'MULTI'];
 export type CarKind = 'RENTAL' | 'OWN';
 export const CAR_KINDS: CarKind[] = ['RENTAL', 'OWN'];
 
+/** Own-car running costs, logged by type. */
+export type CarExpenseKind = 'FUEL' | 'OIL' | 'TIRES' | 'WASH' | 'TOLL' | 'PARKING' | 'MAINT' | 'OTHER';
+export const CAR_EXPENSE_KINDS: CarExpenseKind[] = ['FUEL', 'OIL', 'TIRES', 'WASH', 'TOLL', 'PARKING', 'MAINT', 'OTHER'];
+export interface CarExpense { id: string; kind: CarExpenseKind; amount: number; note?: string }
+
 export interface Activity {
   id: string;
   title: string;
@@ -104,6 +109,7 @@ export interface FlightLeg {
   time?: string;  // HH:mm
   cost?: number;  // optional price → recorded as a shared expense
   media?: CarMedia[]; // rental docs/photos/video (papers, odometer, car state)
+  expenses?: CarExpense[]; // own-car running costs by type (fuel, oil, tyres…)
 }
 
 /** A photo or video kept with a rental (papers, car condition, odometer…). */

@@ -596,7 +596,21 @@
     "locationName": "اسم المكان",
     "locationNamePh": "اسم المكان (اختياري) — مثال: استراحة العائلة",
     "suggestedHotels": "فنادق مقترحة",
-    "loadingHotels": "جارٍ جلب الفنادق…"
+    "loadingHotels": "جارٍ جلب الفنادق…",
+    "carExpenses": "مصاريف السيارة",
+    "carExpType": "نوع المصروف",
+    "amount": "المبلغ",
+    "total": "الإجمالي",
+    "carExp": {
+      "FUEL": "بنزين",
+      "OIL": "تغيير زيت",
+      "TIRES": "كفرات",
+      "WASH": "غسيل",
+      "TOLL": "رسوم طريق",
+      "PARKING": "مواقف",
+      "MAINT": "صيانة",
+      "OTHER": "أخرى"
+    }
   },
   "expenses": {
     "kitty": "القطة",

@@ -552,6 +552,8 @@ select.bp-input {
 .bp-pay__name { font-weight: 700; margin-inline-end: auto; }
 .bp-pay__due { font-weight: 800; }
 .bp-contrib-input { max-inline-size: 130px; }
+.bp-car-exp { display: flex; flex-direction: column; gap: 8px; }
+.bp-car-exp__total { font-weight: 800; background: color-mix(in srgb, var(--bp-primary) 8%, var(--bp-surface)); }
 .bp-pay__net { font-weight: 800; }
 .bp-pay__net.is-pos { color: var(--bp-green, #1f8a70); }
 .bp-pay__net.is-neg { color: var(--bp-red, #c0392b); }

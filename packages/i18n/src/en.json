@@ -596,7 +596,21 @@
     "locationName": "Place name",
     "locationNamePh": "Place name (optional) — e.g. Family rest house",
     "suggestedHotels": "Suggested hotels",
-    "loadingHotels": "Finding hotels…"
+    "loadingHotels": "Finding hotels…",
+    "carExpenses": "Car expenses",
+    "carExpType": "Expense type",
+    "amount": "Amount",
+    "total": "Total",
+    "carExp": {
+      "FUEL": "Fuel",
+      "OIL": "Oil change",
+      "TIRES": "Tyres",
+      "WASH": "Car wash",
+      "TOLL": "Tolls",
+      "PARKING": "Parking",
+      "MAINT": "Maintenance",
+      "OTHER": "Other"
+    }
   },
   "expenses": {
     "kitty": "Kitty",
