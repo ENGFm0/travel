@@ -122,3 +122,15 @@ export function createMemoriesService(): MemoriesService {
   if (firebaseEnabled()) return createFirestoreMemoriesService();
   return import.meta.env.VITE_API_BASE_URL ? createApiMemoriesService() : createMockMemoriesService();
 }
+
+/** Upload a trip image (e.g. an expense receipt) to Storage and return its URL.
+ *  Falls back to a local object URL when Firebase isn't enabled (dev/tests). */
+export async function uploadTripImage(tripId: string, file: File, prefix = 'receipt'): Promise<string> {
+  if (!firebaseEnabled()) {
+    try { return URL.createObjectURL(file); } catch { return ''; }
+  }
+  const path = `memories/${tripId}/${prefix}-${crypto.randomUUID()}`;
+  const sref = storageRef(storage(), path);
+  await uploadBytes(sref, file, { contentType: file.type });
+  return getDownloadURL(sref);
+}

@@ -663,7 +663,10 @@
     "reset": "Reset",
     "perHead": "Per person",
     "addAmount": "Add amount",
-    "openHint": "Add a shared expense from \"Add expense\" below and it will split across everyone."
+    "openHint": "Add a shared expense from \"Add expense\" below and it will split across everyone.",
+    "attachReceipt": "Attach a receipt photo",
+    "viewReceipt": "View receipt",
+    "saving": "Saving…"
   },
   "tasks": {
     "title": "Tasks",

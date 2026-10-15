@@ -5,6 +5,7 @@ import { useUIStore } from '@/app/store/uiStore';
 import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { CURRENT_UID } from '@/features/members/membersService';
 import { setMockCurrentUser } from './expensesService';
+import { uploadTripImage } from '@/features/memories/memoriesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
   CATEGORIES, convert, distribution, kittyCollected, myNetBalance, perMemberDue,
@@ -84,7 +85,7 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
         ))}
       </div>
 
-      {sub === 'kitty' && <KittyPanel finance={finance} memberUids={memberUids} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} isOwner={isOwner} baseCur={baseCur} destCur={destCur} rate={finance.rate} />}
+      {sub === 'kitty' && <KittyPanel tripId={tripId} finance={finance} memberUids={memberUids} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} isOwner={isOwner} baseCur={baseCur} destCur={destCur} rate={finance.rate} />}
       {sub === 'side' && <SidePanel finance={finance} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} />}
       {sub === 'personal' && <PersonalPanel finance={finance} fmt={fmt} canEdit={canEdit} />}
       {sub === 'summary' && <SummaryPanel finance={finance} memberUids={memberUids} fmt={fmt} />}
@@ -96,8 +97,8 @@ function Bar({ pct }: { pct: number }) {
   return <div className="bp-progress"><div className="bp-progress__bar" style={{ inlineSize: `${Math.max(0, Math.min(100, pct))}%` }} /></div>;
 }
 
-function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner, baseCur, destCur, rate }: {
-  finance: Finance; memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: (u: string) => string;
+function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, canEdit, isOwner, baseCur, destCur, rate }: {
+  tripId: string; finance: Finance; memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: (u: string) => string;
   fmt: (n: number) => string; canEdit: boolean; isOwner: boolean; baseCur: string; destCur?: string; rate: number;
 }) {
   const { t } = useTranslation();
@@ -191,7 +192,7 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
         ))}
         {finance.group.length === 0 && <li className="bp-members__empty">{t('expenses.noGroup')}</li>}
       </ul>
-      {canEdit && <AddExpense memberUids={memberUids} active={active} nameOf={nameOf} baseCur={baseCur} destCur={destCur} rate={rate} />}
+      {canEdit && <AddExpense tripId={tripId} memberUids={memberUids} active={active} nameOf={nameOf} baseCur={baseCur} destCur={destCur} rate={rate} />}
     </div>
   );
 }
@@ -236,6 +237,11 @@ function GroupRow({ e, memberUids, nameOf, fmt, canEdit }: {
       <span className="bp-chip bp-chip--cat">{t(`expenses.cat.${e.category}`)}</span>
       <span className="bp-exp__by">{nameOf(e.payerUid)}</span>
       <span className="bp-exp__amt">{fmt(e.amount)}</span>
+      {e.receiptUrl && (
+        <a className="bp-icon-btn bp-icon-btn--xs" href={e.receiptUrl} target="_blank" rel="noopener noreferrer" aria-label={t('expenses.viewReceipt')}>
+          <span className="material-symbols-outlined" aria-hidden="true">receipt_long</span>
+        </a>
+      )}
       {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.edit')} onClick={start}><span className="material-symbols-outlined" aria-hidden="true">edit</span></button>}
       {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.delete')} onClick={() => expensesActions.deleteGroup(e.id)}><span className="material-symbols-outlined" aria-hidden="true">close</span></button>}
     </li>
@@ -247,8 +253,8 @@ const POTS: Pot[] = ['SHARED', 'PAIR', 'PERSONAL'];
 
 /** One entry point for every kind of expense: pick the kitty type (shared /
  *  two-person / personal), the currency you paid in, and the amount. */
-function AddExpense({ memberUids, active, nameOf, baseCur, destCur, rate }: {
-  memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: (u: string) => string;
+function AddExpense({ tripId, memberUids, active, nameOf, baseCur, destCur, rate }: {
+  tripId: string; memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: (u: string) => string;
   baseCur: string; destCur?: string; rate: number;
 }) {
   const { t } = useTranslation();
@@ -259,6 +265,8 @@ function AddExpense({ memberUids, active, nameOf, baseCur, destCur, rate }: {
   const [cur, setCur] = useState(baseCur);
   const [payer, setPayer] = useState(memberUids[0] ?? CURRENT_UID);
   const [parts, setParts] = useState<string[]>(memberUids.slice(0, 2));
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
 
   function toggle(uid: string) {
     setParts((p) => (p.includes(uid) ? p.filter((x) => x !== uid) : [...p, uid]));
@@ -271,13 +279,20 @@ function AddExpense({ memberUids, active, nameOf, baseCur, destCur, rate }: {
     const a = Number(amount);
     if (!desc.trim() || !(a > 0)) return;
     const amt = toBase(a);
-    if (pot === 'SHARED') await expensesActions.addGroup({ desc, category: cat, amount: amt, payerUid: payer });
-    else if (pot === 'PERSONAL') await expensesActions.addPersonal({ desc, amount: amt });
-    else {
-      if (parts.length < 2) return;
-      await expensesActions.addSide({ title: desc, participantUids: parts, total: amt, payerUid: parts.includes(payer) ? payer : parts[0] });
-    }
-    setDesc(''); setAmount('');
+    setBusy(true);
+    try {
+      if (pot === 'SHARED') {
+        let receiptUrl: string | undefined;
+        if (receipt) { try { receiptUrl = await uploadTripImage(tripId, receipt); } catch { /* keep the expense even if the photo fails */ } }
+        await expensesActions.addGroup({ desc, category: cat, amount: amt, payerUid: payer, receiptUrl });
+      } else if (pot === 'PERSONAL') {
+        await expensesActions.addPersonal({ desc, amount: amt });
+      } else {
+        if (parts.length < 2) return;
+        await expensesActions.addSide({ title: desc, participantUids: parts, total: amt, payerUid: parts.includes(payer) ? payer : parts[0] });
+      }
+      setDesc(''); setAmount(''); setReceipt(null);
+    } finally { setBusy(false); }
   }
 
   return (
@@ -320,8 +335,17 @@ function AddExpense({ memberUids, active, nameOf, baseCur, destCur, rate }: {
             {(pot === 'PAIR' ? parts : memberUids).map((u) => <option key={u} value={u}>{nameOf(u)}</option>)}
           </select>
         )}
-        <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={submit}>{t('expenses.add')}</button>
+        <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={busy} onClick={submit}>{busy ? t('expenses.saving') : t('expenses.add')}</button>
       </div>
+
+      {pot === 'SHARED' && (
+        <label className="bp-receipt">
+          <span className="material-symbols-outlined" aria-hidden="true">photo_camera</span>
+          <span>{receipt ? receipt.name : t('expenses.attachReceipt')}</span>
+          <input type="file" accept="image/*" className="bp-vh" aria-label={t('expenses.attachReceipt')}
+            onChange={(e) => { setReceipt(e.target.files?.[0] ?? null); e.target.value = ''; }} />
+        </label>
+      )}
     </div>
   );
 }
