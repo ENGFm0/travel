@@ -26,6 +26,9 @@ export async function uploadFile(folder: string, file: File): Promise<string> {
   if (!firebaseEnabled()) return readAsDataUrl(file);
   const safe = file.name.replace(/[^\w.-]+/g, '_').slice(-60);
   const path = `${folder}/${uid()}-${safe}`;
-  const snap = await uploadBytes(ref(storage(), path), file, { contentType: file.type });
+  // Force a concrete media content-type (iOS photos can arrive with an empty
+  // type), so membership-scoped Storage rules that require image/video accept it.
+  const contentType = file.type || (mediaTypeOf(file.type) === 'video' ? 'video/mp4' : 'image/jpeg');
+  const snap = await uploadBytes(ref(storage(), path), file, { contentType });
   return getDownloadURL(snap.ref);
 }

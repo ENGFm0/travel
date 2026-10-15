@@ -96,7 +96,10 @@ export function createFirestoreMemoriesService(): MemoriesService {
       if (meta.file) {
         const path = `memories/${tripId}/${id}`;
         const sref = storageRef(storage(), path);
-        await uploadBytes(sref, meta.file, { contentType: meta.file.type });
+        // Some iOS photos arrive with an empty type; force a media content-type
+        // so the Storage rules (image|video only) accept the upload.
+        const contentType = meta.file.type || (meta.type === 'video' ? 'video/mp4' : 'image/jpeg');
+        await uploadBytes(sref, meta.file, { contentType });
         src = await getDownloadURL(sref);
       }
       await setDoc(doc(col(tripId), id), {
@@ -131,6 +134,7 @@ export async function uploadTripImage(tripId: string, file: File, prefix = 'rece
   }
   const path = `memories/${tripId}/${prefix}-${crypto.randomUUID()}`;
   const sref = storageRef(storage(), path);
-  await uploadBytes(sref, file, { contentType: file.type });
+  const contentType = file.type || (file.type.startsWith('video') ? 'video/mp4' : 'image/jpeg');
+  await uploadBytes(sref, file, { contentType });
   return getDownloadURL(sref);
 }

@@ -785,7 +785,8 @@
     "errors": {
       "TYPE": "Unsupported file type — images and videos only",
       "SIZE": "File is too large"
-    }
+    },
+    "uploadFailed": "Upload failed"
   },
   "friends": {
     "requests": "Friend requests",

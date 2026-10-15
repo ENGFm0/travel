@@ -19,7 +19,7 @@ interface Props {
 export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, memberCount }: Props) {
   const { t } = useTranslation();
   const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
-  const { media, loading } = useMemories();
+  const { media, loading, error } = useMemories();
   const [group, setGroup] = useState<Grouping>('day');
   const [day, setDay] = useState('1');
   const [place, setPlace] = useState(places[0] ?? '—');
@@ -112,6 +112,7 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, membe
       )}
 
       {errText && <div className="bp-banner" role="alert">{errText}</div>}
+      {error && <div className="bp-banner" role="alert">{t('memories.uploadFailed')} — {error}</div>}
 
       {loading && media === null ? (
         <p className="bp-page__lead">…</p>

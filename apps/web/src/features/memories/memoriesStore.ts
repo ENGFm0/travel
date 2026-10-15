@@ -41,13 +41,18 @@ function svc(): MemoriesService {
 }
 
 let activeTripId = '';
+function errText(e: unknown): string {
+  const anyE = e as { code?: string; message?: string };
+  return anyE?.code || anyE?.message || 'GENERIC';
+}
+
 async function apply(fn: (tripId: string) => Promise<Media[]>): Promise<void> {
   useMemoriesStore.getState()._set({ error: null });
   try {
     const media = await fn(activeTripId);
     useMemoriesStore.getState()._set({ media });
-  } catch {
-    useMemoriesStore.getState()._set({ error: 'GENERIC' });
+  } catch (e) {
+    useMemoriesStore.getState()._set({ error: errText(e) });
   }
 }
 
@@ -58,8 +63,8 @@ export const memoriesActions = {
     try {
       const media = await svc().list(tripId);
       useMemoriesStore.getState()._set({ media });
-    } catch {
-      useMemoriesStore.getState()._set({ error: 'GENERIC' });
+    } catch (e) {
+      useMemoriesStore.getState()._set({ error: errText(e) });
     } finally {
       useMemoriesStore.getState()._set({ loading: false });
     }
