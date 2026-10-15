@@ -96,7 +96,8 @@ describe('US-007 Expenses UI', () => {
     await screen.findByText('Taxi');
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
     expect(await screen.findByText('Owed to you')).toBeInTheDocument();
-    expect(screen.getByText(/200\.00/)).toBeInTheDocument();
+    // The headline net shows my +200 balance.
+    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/200\.00/);
   });
 
   it('edits a group expense in place (BR-007-008)', async () => {

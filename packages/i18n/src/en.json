@@ -666,7 +666,16 @@
     "openHint": "Add a shared expense from \"Add expense\" below and it will split across everyone.",
     "attachReceipt": "Attach a receipt photo",
     "viewReceipt": "View receipt",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "sideSpend": "Side kitties",
+    "grandTotal": "Grand total",
+    "perPerson": "Per person",
+    "settledUp": "Settled",
+    "owedShort": "owed",
+    "owesShort": "owes",
+    "whoPaysWhom": "Who pays whom",
+    "allSettled": "All settled — no transfers needed",
+    "paysTo": "pays"
   },
   "tasks": {
     "title": "Tasks",

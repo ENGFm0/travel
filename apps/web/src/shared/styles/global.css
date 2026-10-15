@@ -552,6 +552,13 @@ select.bp-input {
 .bp-pay__name { font-weight: 700; margin-inline-end: auto; }
 .bp-pay__due { font-weight: 800; }
 .bp-contrib-input { max-inline-size: 130px; }
+.bp-pay__net { font-weight: 800; }
+.bp-pay__net.is-pos { color: var(--bp-green, #1f8a70); }
+.bp-pay__net.is-neg { color: var(--bp-red, #c0392b); }
+.bp-settle { gap: 8px; flex-wrap: wrap; }
+.bp-settle .bp-pay__name { margin-inline-end: 0; }
+.bp-settle__to { color: var(--bp-ink-muted); font-size: 13px; }
+.bp-settle .bp-pay__due { margin-inline-start: auto; }
 .bp-receipt { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 12px; cursor: pointer;
   border: 1px dashed var(--bp-border); border-radius: var(--bp-r-md); color: var(--bp-ink-muted); font-size: 13.5px; font-weight: 600; }
 .bp-receipt:hover { border-color: color-mix(in srgb, var(--bp-primary) 45%, var(--bp-border)); color: var(--bp-ink); }

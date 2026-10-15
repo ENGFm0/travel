@@ -126,6 +126,36 @@ export function myNetBalance(f: Finance, memberUids: string[], me: string): numb
   return fromCents(toCents(groupNet(f.group, memberUids, me)) + toCents(sideNet(f.sides, me)));
 }
 
+/** Net balance for every member (group + side). Positive → owed to them (له),
+ *  negative → they owe (عليه). */
+export function netByMember(f: Finance, memberUids: string[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const u of memberUids) {
+    out[u] = fromCents(toCents(groupNet(f.group, memberUids, u)) + toCents(sideNet(f.sides, u)));
+  }
+  return out;
+}
+
+export interface Settlement { from: string; to: string; amount: number }
+
+/** Minimal "who pays whom" from a per-member net map (greedy largest-first). */
+export function settlements(net: Record<string, number>): Settlement[] {
+  const debtors = Object.entries(net).map(([u, v]) => ({ u, c: toCents(v) })).filter((x) => x.c < 0).map((x) => ({ u: x.u, c: -x.c }));
+  const creditors = Object.entries(net).map(([u, v]) => ({ u, c: toCents(v) })).filter((x) => x.c > 0);
+  debtors.sort((a, b) => b.c - a.c);
+  creditors.sort((a, b) => b.c - a.c);
+  const res: Settlement[] = [];
+  let i = 0, j = 0;
+  while (i < debtors.length && j < creditors.length) {
+    const pay = Math.min(debtors[i].c, creditors[j].c);
+    if (pay > 0) res.push({ from: debtors[i].u, to: creditors[j].u, amount: fromCents(pay) });
+    debtors[i].c -= pay; creditors[j].c -= pay;
+    if (debtors[i].c === 0) i++;
+    if (creditors[j].c === 0) j++;
+  }
+  return res;
+}
+
 export function personalSpent(personal: PersonalExpense[]): number {
   return fromCents(personal.reduce((a, e) => a + toCents(e.amount), 0));
 }

@@ -8,9 +8,9 @@ import { setMockCurrentUser } from './expensesService';
 import { uploadTripImage } from '@/features/memories/memoriesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
-  CATEGORIES, convert, distribution, kittyCollected, myNetBalance, perMemberDue,
-  personalRemaining, personalSpent, splitEqual, type Category, type Finance,
-  type GroupExpense, type PersonalExpense,
+  CATEGORIES, convert, distribution, kittyCollected, myNetBalance, netByMember,
+  perMemberDue, personalRemaining, personalSpent, settlements, splitEqual,
+  type Category, type Finance, type GroupExpense, type PersonalExpense,
 } from './finance';
 import { expensesActions, useFinance } from './expensesStore';
 
@@ -88,7 +88,7 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
       {sub === 'kitty' && <KittyPanel tripId={tripId} finance={finance} memberUids={memberUids} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} isOwner={isOwner} baseCur={baseCur} destCur={destCur} rate={finance.rate} />}
       {sub === 'side' && <SidePanel finance={finance} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} />}
       {sub === 'personal' && <PersonalPanel finance={finance} fmt={fmt} canEdit={canEdit} />}
-      {sub === 'summary' && <SummaryPanel finance={finance} memberUids={memberUids} fmt={fmt} />}
+      {sub === 'summary' && <SummaryPanel finance={finance} memberUids={memberUids} nameOf={nameOf} fmt={fmt} meUid={meUid} />}
     </div>
   );
 }
@@ -384,9 +384,7 @@ function SidePanel({ finance, active, nameOf, fmt, canEdit }: {
                 {s.participantUids.map((u) => nameOf(u)).join('، ')} · {t('expenses.share')}: {fmt(shares[0] ?? 0)} · {t('expenses.payer')}: {nameOf(s.payerUid)}
               </p>
               <div className="bp-side-card__foot">
-                {s.settled
-                  ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.settled')}</span>
-                  : <span className="bp-side-note">{t('expenses.settleNote')}</span>}
+                {s.settled && <span className="bp-status-chip bp-status-chip--ok">{t('expenses.settled')}</span>}
                 {canEdit && !s.settled && <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.settleSide(s.id)}>{t('expenses.settle')}</button>}
                 {canEdit && <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('expenses.delete')} onClick={() => expensesActions.deleteSide(s.id)}><span className="material-symbols-outlined" aria-hidden="true">delete</span></button>}
               </div>
@@ -502,30 +500,70 @@ function PersonalPanel({ finance, fmt, canEdit }: { finance: Finance; fmt: (n: n
   );
 }
 
-function SummaryPanel({ finance, memberUids, fmt }: { finance: Finance; memberUids: string[]; fmt: (n: number) => string }) {
+function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid }: {
+  finance: Finance; memberUids: string[]; nameOf: (u: string) => string; fmt: (n: number) => string; meUid: string;
+}) {
   const { t } = useTranslation();
-  const net = myNetBalance(finance, memberUids, CURRENT_UID);
-  const owed = net >= 0;
-  const dist = distribution(finance.group);
-  const spent = personalSpent(finance.personal);
+  const myNet = myNetBalance(finance, memberUids, meUid);
+  const owed = myNet >= 0;
+  const nets = netByMember(finance, memberUids);
+  const transfers = settlements(nets);
+  const groupTotal = finance.group.reduce((a, e) => a + e.amount, 0);
+  const sideTotal = finance.sides.reduce((a, s) => a + s.total, 0);
+  const grand = groupTotal + sideTotal;
+  const mySpent = personalSpent(finance.personal);
 
   return (
     <div className="bp-panel">
+      {/* My overall balance */}
       <div className={`bp-net ${owed ? 'bp-net--pos' : 'bp-net--neg'}`}>
         <span className="bp-net__label">{owed ? t('expenses.owedToYou') : t('expenses.youOwe')}</span>
-        <span className="bp-net__val">{fmt(Math.abs(net))}</span>
+        <span className="bp-net__val">{fmt(Math.abs(myNet))}</span>
       </div>
-      <h4 className="bp-panel__h">{t('expenses.analysis')}</h4>
+
       <div className="bp-stat-row">
-        <Stat label={t('expenses.groupSpend')} value={fmt(finance.group.reduce((a, e) => a + e.amount, 0))} />
-        <Stat label={t('expenses.personalSpend')} value={fmt(spent)} />
+        <Stat label={t('expenses.groupSpend')} value={fmt(groupTotal)} />
+        <Stat label={t('expenses.sideSpend')} value={fmt(sideTotal)} />
+        <Stat label={t('expenses.grandTotal')} value={fmt(grand)} />
       </div>
-      {CATEGORIES.map((c) => dist[c] > 0 && (
-        <div key={c} className="bp-dist-row">
-          <span className="bp-dist-row__label">{t(`expenses.cat.${c}`)}</span>
-          <span className="bp-dist-row__val">{fmt(dist[c])}</span>
-        </div>
-      ))}
+
+      {/* Per-person: how much each is owed / owes */}
+      <h4 className="bp-panel__h">{t('expenses.perPerson')}</h4>
+      <ul className="bp-pay-list" role="list">
+        {memberUids.map((u) => {
+          const v = nets[u] ?? 0;
+          const settled = Math.abs(v) < 0.005;
+          return (
+            <li key={u} className="bp-pay">
+              <span className="bp-pay__name">{nameOf(u)}{u === meUid && ` (${t('members.you')})`}</span>
+              {settled
+                ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.settledUp')}</span>
+                : <span className={`bp-pay__net ${v > 0 ? 'is-pos' : 'is-neg'}`}>
+                    {v > 0 ? t('expenses.owedShort') : t('expenses.owesShort')} {fmt(Math.abs(v))}
+                  </span>}
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Who pays whom */}
+      <h4 className="bp-panel__h">{t('expenses.whoPaysWhom')}</h4>
+      {transfers.length === 0 ? (
+        <p className="bp-note">{t('expenses.allSettled')}</p>
+      ) : (
+        <ul className="bp-pay-list" role="list">
+          {transfers.map((tr, i) => (
+            <li key={i} className="bp-pay bp-settle">
+              <span className="bp-pay__name">{nameOf(tr.from)}</span>
+              <span className="bp-settle__to">{t('expenses.paysTo')}</span>
+              <span className="bp-pay__name bp-settle__payee">{nameOf(tr.to)}</span>
+              <span className="bp-pay__due">{fmt(tr.amount)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {mySpent > 0 && <p className="bp-note">{t('expenses.personalSpend')}: {fmt(mySpent)}</p>}
     </div>
   );
 }

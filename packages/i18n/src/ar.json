@@ -666,7 +666,16 @@
     "openHint": "أضف مصروفًا مشتركًا من «أضف مصروف» بالأسفل، وراح ينقسم على الجميع.",
     "attachReceipt": "إرفاق صورة فاتورة",
     "viewReceipt": "عرض الفاتورة",
-    "saving": "جارٍ الحفظ…"
+    "saving": "جارٍ الحفظ…",
+    "sideSpend": "القطّات المشتركة",
+    "grandTotal": "الإجمالي",
+    "perPerson": "لكل شخص",
+    "settledUp": "متساوٍ",
+    "owedShort": "له",
+    "owesShort": "عليه",
+    "whoPaysWhom": "من يدفع لمن",
+    "allSettled": "الكل متساوٍ، ما فيه تحويلات",
+    "paysTo": "يدفع لـ"
   },
   "tasks": {
     "title": "المهام",
