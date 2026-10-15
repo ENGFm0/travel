@@ -74,8 +74,10 @@ export const expensesActions = {
       useExpensesStore.getState()._set({ loading: false });
     }
   },
+  setKittyMode: (mode: 'FIXED' | 'OPEN') => apply((t) => svc().setKittyMode(t, mode)),
   setKittyTotal: (total: number) => apply((t) => svc().setKittyTotal(t, total)),
   markPaid: (uid: string, paid: boolean) => apply((t) => svc().markPaid(t, uid, paid)),
+  setContribution: (uid: string, amount: number) => apply((t) => svc().setContribution(t, uid, amount)),
   addGroup: (e: { desc: string; category: Category; amount: number; payerUid: string }) => apply((t) => svc().addGroup(t, e)),
   updateGroup: (id: string, e: { desc: string; category: Category; amount: number; payerUid: string }) => apply((t) => svc().updateGroup(t, id, e)),
   deleteGroup: (id: string) => apply((t) => svc().deleteGroup(t, id)),

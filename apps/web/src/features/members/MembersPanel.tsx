@@ -14,7 +14,6 @@ export function MembersPanel({ tripId }: { tripId: string }) {
   const [link, setLink] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState('');
-  const [handle, setHandle] = useState('');
   const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
@@ -52,9 +51,10 @@ export function MembersPanel({ tripId }: { tripId: string }) {
     e.preventDefault();
     if (!name.trim()) return;
     setInviting(true);
-    const ok = await membersActions.invite(tripId, { name: name.trim(), handle: handle.trim() || undefined });
+    // Name-only: register the traveller directly (no invite / no app needed).
+    const ok = await membersActions.invite(tripId, { name: name.trim() });
     setInviting(false);
-    if (ok) { setName(''); setHandle(''); }
+    if (ok) { setName(''); }
   }
 
   const errText = error ? t(`members.errors.${error}`, t('members.errors.GENERIC')) : null;
@@ -79,15 +79,12 @@ export function MembersPanel({ tripId }: { tripId: string }) {
       {isOwner && (
         <form className="bp-invite-form" onSubmit={submitInvite}>
           <div className="bp-field">
-            <label htmlFor="bp-inv-name">{t('members.inviteeName')}</label>
-            <input id="bp-inv-name" className="bp-input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('members.inviteeNamePh')} />
-          </div>
-          <div className="bp-field">
-            <label htmlFor="bp-inv-handle">{t('members.inviteeHandle')}</label>
-            <input id="bp-inv-handle" className="bp-input" value={handle} onChange={(e) => setHandle(e.target.value)} placeholder={t('members.inviteeHandlePh')} />
+            <label htmlFor="bp-inv-name">{t('members.addTravellerName')}</label>
+            <input id="bp-inv-name" className="bp-input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('members.inviteeNamePh')} aria-describedby="bp-addtrav-note" />
+            <span id="bp-addtrav-note" className="bp-note">{t('members.addTravellerNote')}</span>
           </div>
           <button type="submit" className="bp-btn bp-btn--primary" disabled={inviting || !name.trim()} style={{ alignSelf: 'end' }}>
-            {t('members.invite')}
+            {t('members.addTraveller')}
           </button>
         </form>
       )}

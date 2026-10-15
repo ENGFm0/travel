@@ -373,7 +373,10 @@
       "OWNER_MUST_TRANSFER": "انقل الملكية قبل مغادرة الرحلة",
       "NOT_FOUND": "العضو غير موجود",
       "GENERIC": "تعذّر إتمام العملية، حاول مرة أخرى"
-    }
+    },
+    "addTraveller": "إضافة",
+    "addTravellerName": "اسم المسافر",
+    "addTravellerNote": "سجّل أسماء المسافرين يدويًا — ينضافون مباشرة بدون دعوة أو تحميل التطبيق."
   },
   "tripDetail": {
     "notFoundTitle": "الرحلة غير موجودة",
@@ -647,7 +650,14 @@
     "youOwe": "عليك",
     "analysis": "تحليل الإنفاق",
     "groupSpend": "إنفاق المجموعة",
-    "personalSpend": "إنفاق شخصي"
+    "personalSpend": "إنفاق شخصي",
+    "kittyMode": "نوع القطة",
+    "kittyFixed": "محدد",
+    "kittyOpen": "غير محدد",
+    "kittyFixedNote": "حدّد مبلغًا إجماليًا ويُقسَّم بالتساوي على المسافرين.",
+    "kittyOpenNote": "بدون مبلغ ثابت — كل واحد يضيف مساهمته، والمجموع يبيّن المتوفّر.",
+    "contributions": "المساهمات",
+    "contributionOf": "مساهمة {{name}}"
   },
   "tasks": {
     "title": "المهام",

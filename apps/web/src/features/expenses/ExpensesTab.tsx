@@ -7,7 +7,7 @@ import { CURRENT_UID } from '@/features/members/membersService';
 import { setMockCurrentUser } from './expensesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
-  CATEGORIES, convert, distribution, kittyCollected, myNetBalance, perMemberDue,
+  CATEGORIES, contribCollected, convert, distribution, kittyCollected, myNetBalance, perMemberDue,
   personalRemaining, personalSpent, splitEqual, type Category, type Finance,
   type GroupExpense, type PersonalExpense,
 } from './finance';
@@ -99,18 +99,31 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
   fmt: (n: number) => string; canEdit: boolean; isOwner: boolean; baseCur: string; destCur?: string; rate: number;
 }) {
   const { t } = useTranslation();
+  const mode: 'FIXED' | 'OPEN' = finance.kittyMode ?? 'FIXED';
   const [total, setTotal] = useState(String(finance.kittyTotal || ''));
   const dues = perMemberDue(finance.kittyTotal, memberUids);
-  const collected = kittyCollected(finance.kittyTotal, memberUids, finance.paid);
   const dist = distribution(finance.group);
   const groupTotal = finance.group.reduce((a, e) => a + e.amount, 0);
-  // The kitty is a pot: recording a shared expense draws it down.
-  const remaining = finance.kittyTotal - groupTotal;
-  const pct = finance.kittyTotal > 0 ? (groupTotal / finance.kittyTotal) * 100 : 0;
+
+  const openCollected = contribCollected(finance.contrib);
+  const collected = mode === 'OPEN' ? openCollected : kittyCollected(finance.kittyTotal, memberUids, finance.paid);
+  // The kitty is a pot: recording a shared expense draws it down. In OPEN mode
+  // there's no target, so the pot is whatever has been contributed.
+  const pot = mode === 'OPEN' ? openCollected : finance.kittyTotal;
+  const remaining = pot - groupTotal;
+  const pct = pot > 0 ? (groupTotal / pot) * 100 : 0;
 
   return (
     <div className="bp-panel">
       {isOwner && (
+        <div className="bp-seg bp-seg--full" role="group" aria-label={t('expenses.kittyMode')}>
+          <button type="button" className={`bp-seg__btn ${mode === 'FIXED' ? 'is-on' : ''}`} aria-pressed={mode === 'FIXED'} onClick={() => expensesActions.setKittyMode('FIXED')}>{t('expenses.kittyFixed')}</button>
+          <button type="button" className={`bp-seg__btn ${mode === 'OPEN' ? 'is-on' : ''}`} aria-pressed={mode === 'OPEN'} onClick={() => expensesActions.setKittyMode('OPEN')}>{t('expenses.kittyOpen')}</button>
+        </div>
+      )}
+      <p className="bp-note">{mode === 'OPEN' ? t('expenses.kittyOpenNote') : t('expenses.kittyFixedNote')}</p>
+
+      {isOwner && mode === 'FIXED' && (
         <div className="bp-add-row">
           <div className="bp-field" style={{ flex: 1 }}>
             <label htmlFor="bp-kitty-total">{t('expenses.kittyTotal')}</label>
@@ -121,30 +134,44 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
       )}
 
       <div className="bp-stat-row">
-        <Stat label={t('expenses.total')} value={fmt(finance.kittyTotal)} />
+        {mode === 'FIXED' && <Stat label={t('expenses.total')} value={fmt(finance.kittyTotal)} />}
+        <Stat label={t('expenses.collected')} value={fmt(collected)} />
         <Stat label={t('expenses.spent')} value={fmt(groupTotal)} />
         <Stat label={t('expenses.remaining')} value={fmt(remaining)} />
       </div>
       <Bar pct={pct} />
-      <p className="bp-note">{t('expenses.collected')}: {fmt(collected)}</p>
 
-      <h4 className="bp-panel__h">{t('expenses.dues')}</h4>
-      <ul className="bp-pay-list" role="list">
-        {memberUids.map((u) => (
-          <li key={u} className="bp-pay">
-            <span className="bp-pay__name">{nameOf(u)}</span>
-            <span className="bp-pay__due">{fmt(dues[u] ?? 0)}</span>
-            {finance.paid[u]
-              ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.paid')}</span>
-              : <span className="bp-status-chip">{t('expenses.pending')}</span>}
-            {isOwner && (
-              <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.markPaid(u, !finance.paid[u])}>
-                {finance.paid[u] ? t('expenses.markPending') : t('expenses.confirmPaid')}
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+      {mode === 'FIXED' ? (
+        <>
+          <h4 className="bp-panel__h">{t('expenses.dues')}</h4>
+          <ul className="bp-pay-list" role="list">
+            {memberUids.map((u) => (
+              <li key={u} className="bp-pay">
+                <span className="bp-pay__name">{nameOf(u)}</span>
+                <span className="bp-pay__due">{fmt(dues[u] ?? 0)}</span>
+                {finance.paid[u]
+                  ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.paid')}</span>
+                  : <span className="bp-status-chip">{t('expenses.pending')}</span>}
+                {isOwner && (
+                  <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.markPaid(u, !finance.paid[u])}>
+                    {finance.paid[u] ? t('expenses.markPending') : t('expenses.confirmPaid')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <>
+          <h4 className="bp-panel__h">{t('expenses.contributions')}</h4>
+          <ul className="bp-pay-list" role="list">
+            {memberUids.map((u) => (
+              <ContribRow key={u} name={nameOf(u)} amount={finance.contrib?.[u] ?? 0} canEdit={canEdit || isOwner}
+                fmt={fmt} onSave={(a) => expensesActions.setContribution(u, a)} />
+            ))}
+          </ul>
+        </>
+      )}
 
       {groupTotal > 0 && (
         <>
@@ -168,6 +195,29 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
       </ul>
       {canEdit && <AddExpense memberUids={memberUids} active={active} nameOf={nameOf} baseCur={baseCur} destCur={destCur} rate={rate} />}
     </div>
+  );
+}
+
+/** One member's free contribution to an open kitty — editable inline. */
+function ContribRow({ name, amount, canEdit, fmt, onSave }: {
+  name: string; amount: number; canEdit: boolean; fmt: (n: number) => string; onSave: (a: number) => void;
+}) {
+  const { t } = useTranslation();
+  const [v, setV] = useState(String(amount || ''));
+  useEffect(() => { setV(String(amount || '')); }, [amount]);
+  function commit() { const n = Number(v) || 0; if (n !== amount) onSave(n); }
+  return (
+    <li className="bp-pay">
+      <span className="bp-pay__name">{name}</span>
+      {canEdit ? (
+        <input className="bp-input bp-input--sm bp-contrib-input" type="number" min="0" inputMode="decimal" value={v}
+          aria-label={t('expenses.contributionOf', { name })}
+          onChange={(e) => setV(e.target.value)} onBlur={commit}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } }} />
+      ) : (
+        <span className="bp-pay__due">{fmt(amount)}</span>
+      )}
+    </li>
   );
 }
 

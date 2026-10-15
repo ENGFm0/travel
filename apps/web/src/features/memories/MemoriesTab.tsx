@@ -45,7 +45,7 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, membe
     let src = '';
     try { src = URL.createObjectURL(file); } catch { /* jsdom: no object URLs */ }
     await memoriesActions.upload(
-      { type: mediaTypeOf(file.type), src, name: file.name, day: t('memories.dayN', { n: day }), place },
+      { type: mediaTypeOf(file.type), src, name: file.name, day: t('memories.dayN', { n: day }), place, file },
       CURRENT_UID,
     );
     setBusy(false);

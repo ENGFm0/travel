@@ -85,7 +85,9 @@ export function createMockMembersService(seed?: Record<string, Member[]>, persis
         displayName: payload.name.trim(),
         handle,
         role: 'MEMBER',
-        status: 'PENDING',
+        // A name-only add is someone the owner is registering directly (no app),
+        // so they're ACTIVE at once; a handle means a real invite → PENDING.
+        status: handle ? 'PENDING' : 'ACTIVE',
       };
       list.push(member);
       return { ...member };
@@ -206,8 +208,11 @@ export function createFirestoreMembersService(): MembersService {
       const handle = payload.handle?.trim();
       const existing = await getDocs(col(tripId));
       if (handle && existing.docs.some((d) => d.data().handle === handle)) throw new MembersError('ALREADY_MEMBER');
-      const id = `pending-${crypto.randomUUID()}`;
-      const member = { displayName: payload.name.trim(), handle: handle ?? null, role: 'MEMBER' as MemberRole, status: 'PENDING' as MemberStatus };
+      // A name-only add (no handle) is registered directly as ACTIVE; a real
+      // handle invite stays PENDING until the invitee joins from their device.
+      const status: MemberStatus = handle ? 'PENDING' : 'ACTIVE';
+      const id = `${status === 'ACTIVE' ? 'guest' : 'pending'}-${crypto.randomUUID()}`;
+      const member = { displayName: payload.name.trim(), handle: handle ?? null, role: 'MEMBER' as MemberRole, status };
       await setDoc(doc(col(tripId), id), { ...member, invitedAt: serverTimestamp() });
       return { uid: id, ...member, handle };
     },

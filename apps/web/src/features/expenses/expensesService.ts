@@ -2,7 +2,7 @@ import { createApiClient } from '@boardingpass/core';
 import { loadJSON, persistAfter } from '@/shared/persist';
 import { currentUid, db, firebaseEnabled, requireUid } from '@/shared/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { Category, Finance, GroupExpense, PersonalExpense, SideKitty } from './finance';
+import type { Category, Finance, GroupExpense, KittyMode, PersonalExpense, SideKitty } from './finance';
 
 export interface FinanceInit {
   memberUids: string[];
@@ -13,8 +13,10 @@ export interface FinanceInit {
 
 export interface ExpensesService {
   getFinance(tripId: string, init: FinanceInit, me: string): Promise<Finance>;
+  setKittyMode(tripId: string, mode: KittyMode): Promise<Finance>;
   setKittyTotal(tripId: string, total: number): Promise<Finance>;
   markPaid(tripId: string, uid: string, paid: boolean): Promise<Finance>;
+  setContribution(tripId: string, uid: string, amount: number): Promise<Finance>;
   addGroup(tripId: string, e: { desc: string; category: Category; amount: number; payerUid: string }): Promise<Finance>;
   updateGroup(tripId: string, id: string, e: { desc: string; category: Category; amount: number; payerUid: string }): Promise<Finance>;
   deleteGroup(tripId: string, id: string): Promise<Finance>;
@@ -31,8 +33,10 @@ const uid = (p: string) => `${p}-${crypto.randomUUID()}`;
 
 interface Store {
   base: string; dest: string; rate: number;
+  kittyMode?: KittyMode;
   kittyTotal: number;
   paid: Record<string, boolean>;
+  contrib?: Record<string, number>;
   group: GroupExpense[];
   sides: SideKitty[];
   personalBudget: Record<string, number>;         // per user (self-scoped)
@@ -56,7 +60,7 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>,
       const seeded = seed?.[tripId];
       s = {
         base: init?.base ?? 'SAR', dest: init?.dest ?? 'GBP', rate: init?.rate ?? 0.2122,
-        kittyTotal: 0, paid: {}, group: [], sides: [], personalBudget: {}, personal: {},
+        kittyMode: 'FIXED', kittyTotal: 0, paid: {}, contrib: {}, group: [], sides: [], personalBudget: {}, personal: {},
         ...seeded,
       };
       stores.set(tripId, s);
@@ -68,7 +72,7 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>,
     const s = stores.get(tripId)!;
     return {
       base: s.base, dest: s.dest, rate: s.rate,
-      kittyTotal: s.kittyTotal, paid: { ...s.paid },
+      kittyMode: s.kittyMode ?? 'FIXED', kittyTotal: s.kittyTotal, paid: { ...s.paid }, contrib: { ...(s.contrib ?? {}) },
       group: s.group.map((g) => ({ ...g })),
       sides: s.sides.map((x) => ({ ...x, participantUids: [...x.participantUids] })),
       personalBudget: s.personalBudget[me] ?? 0,
@@ -78,8 +82,10 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>,
 
   const base: ExpensesService = {
     async getFinance(tripId, init, me) { await tick(); store(tripId, init); return view(tripId, me); },
+    async setKittyMode(tripId, mode) { await tick(); store(tripId).kittyMode = mode; return view(tripId, ME(tripId)); },
     async setKittyTotal(tripId, total) { await tick(); store(tripId).kittyTotal = Math.max(0, total); return view(tripId, ME(tripId)); },
     async markPaid(tripId, u, paid) { await tick(); store(tripId).paid[u] = paid; return view(tripId, ME(tripId)); },
+    async setContribution(tripId, u, amount) { await tick(); (store(tripId).contrib ??= {})[u] = Math.max(0, amount); return view(tripId, ME(tripId)); },
     async addGroup(tripId, e) {
       await tick();
       store(tripId).group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid });
@@ -138,8 +144,10 @@ export function createApiExpensesService(getToken?: () => string | undefined): E
   const fin = (tripId: string) => client.apiFetch<Finance>(`/trips/${tripId}/finance/summary`);
   return {
     getFinance: (tripId) => fin(tripId),
+    setKittyMode: (tripId, mode) => client.apiFetch<Finance>(`/trips/${tripId}/kitty`, { method: 'PUT', body: JSON.stringify({ mode }) }),
     setKittyTotal: (tripId, total) => client.apiFetch<Finance>(`/trips/${tripId}/kitty`, { method: 'PUT', body: JSON.stringify({ total }) }),
     markPaid: (tripId, u, paid) => client.apiFetch<Finance>(`/trips/${tripId}/kitty/mark-paid`, { method: 'POST', body: JSON.stringify({ memberUid: u, paid }) }),
+    setContribution: (tripId, u, amount) => client.apiFetch<Finance>(`/trips/${tripId}/kitty/contribution`, { method: 'POST', body: JSON.stringify({ memberUid: u, amount }) }),
     addGroup: (tripId, e) => client.apiFetch<Finance>(`/trips/${tripId}/expenses`, { method: 'POST', body: JSON.stringify({ kind: 'GROUP', ...e }) }),
     updateGroup: (tripId, id, e) => client.apiFetch<Finance>(`/trips/${tripId}/expenses/${id}`, { method: 'PATCH', body: JSON.stringify({ kind: 'GROUP', ...e }) }),
     deleteGroup: async (tripId, id) => { await client.apiFetch<void>(`/trips/${tripId}/expenses/${id}`, { method: 'DELETE' }); return fin(tripId); },
@@ -158,7 +166,9 @@ export function createApiExpensesService(getToken?: () => string | undefined): E
  *  budget + spend is self-scoped in trips/{tripId}/finance/personal_<uid>. */
 interface SharedFinance {
   base: string; dest: string; rate: number;
+  kittyMode?: KittyMode;
   kittyTotal: number; paid: Record<string, boolean>;
+  contrib?: Record<string, number>;
   group: GroupExpense[]; sides: SideKitty[];
 }
 interface PersonalDoc { budget: number; items: PersonalExpense[] }
@@ -172,7 +182,7 @@ export function createFirestoreExpensesService(): ExpensesService {
     if (s.exists()) return s.data() as SharedFinance;
     const fresh: SharedFinance = {
       base: init?.base ?? 'SAR', dest: init?.dest ?? 'GBP', rate: init?.rate ?? 0.2122,
-      kittyTotal: 0, paid: {}, group: [], sides: [],
+      kittyMode: 'FIXED', kittyTotal: 0, paid: {}, contrib: {}, group: [], sides: [],
     };
     await setDoc(sharedRef(tripId), fresh);
     return fresh;
@@ -183,7 +193,7 @@ export function createFirestoreExpensesService(): ExpensesService {
   }
   const view = (sh: SharedFinance, p: PersonalDoc): Finance => ({
     base: sh.base, dest: sh.dest, rate: sh.rate,
-    kittyTotal: sh.kittyTotal, paid: { ...sh.paid },
+    kittyMode: sh.kittyMode ?? 'FIXED', kittyTotal: sh.kittyTotal, paid: { ...sh.paid }, contrib: { ...(sh.contrib ?? {}) },
     group: sh.group.map((g) => ({ ...g })),
     sides: sh.sides.map((x) => ({ ...x, participantUids: [...x.participantUids] })),
     personalBudget: p.budget, personal: p.items.map((i) => ({ ...i })),
@@ -209,8 +219,10 @@ export function createFirestoreExpensesService(): ExpensesService {
       const p = await readPersonal(tripId, me);
       return view(sh, p);
     },
+    setKittyMode: (tripId, mode) => withShared(tripId, (sh) => { sh.kittyMode = mode; }),
     setKittyTotal: (tripId, total) => withShared(tripId, (sh) => { sh.kittyTotal = Math.max(0, total); }),
     markPaid: (tripId, u, paid) => withShared(tripId, (sh) => { sh.paid[u] = paid; }),
+    setContribution: (tripId, u, amount) => withShared(tripId, (sh) => { (sh.contrib ??= {})[u] = Math.max(0, amount); }),
     addGroup: (tripId, e) => withShared(tripId, (sh) => { sh.group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid }); }),
     updateGroup: (tripId, id, e) => withShared(tripId, (sh) => { const g = sh.group.find((x) => x.id === id); if (g) { g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid; } }),
     deleteGroup: (tripId, id) => withShared(tripId, (sh) => { sh.group = sh.group.filter((g) => g.id !== id); }),

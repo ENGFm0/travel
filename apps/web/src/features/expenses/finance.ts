@@ -29,12 +29,16 @@ export interface PersonalExpense {
   amount: number;
 }
 
+export type KittyMode = 'FIXED' | 'OPEN';
+
 export interface Finance {
   base: string; // e.g. 'SAR'
   dest: string; // e.g. 'GBP'
   rate: number; // base → dest multiplier
+  kittyMode?: KittyMode; // FIXED = set a total & split equally; OPEN = free contributions
   kittyTotal: number;
-  paid: Record<string, boolean>; // memberUid → confirmed
+  paid: Record<string, boolean>; // memberUid → confirmed (FIXED mode)
+  contrib?: Record<string, number>; // memberUid → amount contributed (OPEN mode)
   group: GroupExpense[];
   sides: SideKitty[];
   personalBudget: number;
@@ -61,6 +65,12 @@ export function perMemberDue(total: number, memberUids: string[]): Record<string
   const out: Record<string, number> = {};
   memberUids.forEach((u, i) => { out[u] = shares[i] ?? 0; });
   return out;
+}
+
+/** Open-kitty collected = sum of free contributions (OPEN mode). */
+export function contribCollected(contrib: Record<string, number> | undefined): number {
+  const cents = Object.values(contrib ?? {}).reduce((a, v) => a + toCents(v || 0), 0);
+  return fromCents(cents);
 }
 
 /** Kitty collected = sum of dues for members the owner has confirmed paid. */

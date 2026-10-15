@@ -551,6 +551,7 @@ select.bp-input {
 .bp-pay { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-surface); flex-wrap: wrap; }
 .bp-pay__name { font-weight: 700; margin-inline-end: auto; }
 .bp-pay__due { font-weight: 800; }
+.bp-contrib-input { max-inline-size: 130px; }
 .bp-status-chip--ok { background: color-mix(in srgb, var(--bp-success) 16%, transparent); color: var(--bp-success); }
 .bp-dist-row { display: flex; align-items: center; gap: 10px; }
 .bp-dist-row__label { min-inline-size: 80px; font-size: 13px; font-weight: 700; }

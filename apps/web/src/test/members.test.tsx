@@ -70,15 +70,16 @@ describe('US-009 Members', () => {
     expect(await screen.findByRole('heading', { name: 'الرحلة غير موجودة' })).toBeInTheDocument();
   });
 
-  it('owner invites someone, adding a pending member', async () => {
+  it('owner adds a traveller by name as an active member', async () => {
     await signIn();
     seed([OWNER]);
     renderAt('/trips/trip-x#members');
     await screen.findByText('الأمير');
-    await userEvent.type(screen.getByLabelText('الاسم'), 'نورة');
-    await userEvent.click(screen.getByRole('button', { name: 'دعوة' }));
+    await userEvent.type(screen.getByLabelText('اسم المسافر'), 'نورة');
+    await userEvent.click(screen.getByRole('button', { name: 'إضافة' }));
     expect(await screen.findByText('نورة')).toBeInTheDocument();
-    expect(await screen.findByText('معلّق')).toBeInTheDocument();
+    // Added directly (no invitation), so there's no pending badge.
+    expect(screen.queryByText('معلّق')).not.toBeInTheDocument();
   });
 
   it('owner changes a member to viewer', async () => {

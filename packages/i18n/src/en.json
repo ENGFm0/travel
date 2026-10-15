@@ -373,7 +373,10 @@
       "OWNER_MUST_TRANSFER": "Transfer ownership before leaving the trip",
       "NOT_FOUND": "Member not found",
       "GENERIC": "Could not complete the action, try again"
-    }
+    },
+    "addTraveller": "Add",
+    "addTravellerName": "Traveller's name",
+    "addTravellerNote": "Add travellers by name — they join directly, no invite or app needed."
   },
   "tripDetail": {
     "notFoundTitle": "Trip not found",
@@ -647,7 +650,14 @@
     "youOwe": "You owe",
     "analysis": "Spend analysis",
     "groupSpend": "Group spend",
-    "personalSpend": "Personal spend"
+    "personalSpend": "Personal spend",
+    "kittyMode": "Kitty type",
+    "kittyFixed": "Fixed",
+    "kittyOpen": "Open",
+    "kittyFixedNote": "Set a total amount, split equally among travellers.",
+    "kittyOpenNote": "No fixed amount — each person adds their contribution; the total shows what's available.",
+    "contributions": "Contributions",
+    "contributionOf": "{{name}}'s contribution"
   },
   "tasks": {
     "title": "Tasks",

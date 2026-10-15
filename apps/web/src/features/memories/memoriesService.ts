@@ -1,4 +1,7 @@
 import { createApiClient } from '@boardingpass/core';
+import { db, storage, firebaseEnabled, requireUid } from '@/shared/firebase';
+import { collection, doc, getDocs, setDoc, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Media, MediaType } from './memoriesModel';
 
 export interface UploadMeta {
@@ -7,6 +10,7 @@ export interface UploadMeta {
   name: string;
   day: string;
   place: string;
+  file?: File; // the actual bytes — required for real (Storage) uploads
 }
 
 export interface MemoriesService {
@@ -65,6 +69,56 @@ export function createApiMemoriesService(getToken?: () => string | undefined): M
   };
 }
 
+/** Firestore + Storage memories: files live in Storage under
+ *  memories/{tripId}/{mediaId}; metadata docs at trips/{tripId}/memories/{id}.
+ *  Membership-scoped by the Firestore + Storage rules. */
+export function createFirestoreMemoriesService(): MemoriesService {
+  const col = (tripId: string) => collection(db(), 'trips', tripId, 'memories');
+  const toMedia = (id: string, d: Record<string, unknown>): Media => ({
+    id,
+    type: (d.type as MediaType) ?? 'image',
+    src: (d.src as string) ?? '',
+    name: (d.name as string) ?? '',
+    uploaderUid: (d.uploaderUid as string) ?? '',
+    day: (d.day as string) ?? '',
+    place: (d.place as string) ?? '',
+  });
+  async function list(tripId: string): Promise<Media[]> {
+    const snap = await getDocs(query(col(tripId), orderBy('createdAt', 'asc')));
+    return snap.docs.map((s) => toMedia(s.id, s.data() as Record<string, unknown>));
+  }
+  return {
+    list,
+    async upload(tripId, meta) {
+      const uid = requireUid();
+      const id = `m-${crypto.randomUUID()}`;
+      let src = meta.src;
+      if (meta.file) {
+        const path = `memories/${tripId}/${id}`;
+        const sref = storageRef(storage(), path);
+        await uploadBytes(sref, meta.file, { contentType: meta.file.type });
+        src = await getDownloadURL(sref);
+      }
+      await setDoc(doc(col(tripId), id), {
+        type: meta.type, src, name: meta.name, uploaderUid: uid,
+        day: meta.day, place: meta.place, createdAt: serverTimestamp(),
+      });
+      return list(tripId);
+    },
+    async remove(tripId, id) {
+      // Storage object deletion is denied to clients (rules); removing the
+      // metadata doc hides it. The orphaned object is reaped server-side.
+      await deleteDoc(doc(col(tripId), id)).catch(() => { /* already gone */ });
+      return list(tripId);
+    },
+    async shareLink(tripId) {
+      try { return `${globalThis.location?.origin ?? 'https://boardingpass.app'}/shared/${tripId}`; }
+      catch { return `https://boardingpass.app/shared/${tripId}`; }
+    },
+  };
+}
+
 export function createMemoriesService(): MemoriesService {
+  if (firebaseEnabled()) return createFirestoreMemoriesService();
   return import.meta.env.VITE_API_BASE_URL ? createApiMemoriesService() : createMockMemoriesService();
 }
