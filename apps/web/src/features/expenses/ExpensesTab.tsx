@@ -103,16 +103,17 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
   const { t } = useTranslation();
   const mode: 'FIXED' | 'OPEN' = finance.kittyMode ?? 'FIXED';
   const [total, setTotal] = useState(String(finance.kittyTotal || ''));
-  const dues = perMemberDue(finance.kittyTotal, memberUids);
   const dist = distribution(finance.group);
   const groupTotal = finance.group.reduce((a, e) => a + e.amount, 0);
 
-  const collected = kittyCollected(finance.kittyTotal, memberUids, finance.paid);
-  // Both modes split the kitty equally among members; the pot is the total,
-  // drawn down by shared expenses. FIXED sets the total once; OPEN adds to it.
+  // What gets split equally among members: a fixed budget you set (FIXED), or
+  // the actual shared spending (OPEN — when you don't know the total up front).
+  const splitBase = mode === 'FIXED' ? finance.kittyTotal : groupTotal;
+  const dues = perMemberDue(splitBase, memberUids);
+  const perHead = memberUids.length ? splitBase / memberUids.length : 0;
+  const collected = kittyCollected(splitBase, memberUids, finance.paid);
   const remaining = finance.kittyTotal - groupTotal;
   const pct = finance.kittyTotal > 0 ? (groupTotal / finance.kittyTotal) * 100 : 0;
-  const perHead = memberUids.length ? finance.kittyTotal / memberUids.length : 0;
 
   return (
     <div className="bp-panel">
@@ -136,19 +137,22 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
         </div>
       )}
 
-      {(isOwner || canEdit) && mode === 'OPEN' && (
-        <AddToKitty onAdd={(amt) => expensesActions.setKittyTotal(finance.kittyTotal + amt)} />
+      <div className="bp-stat-row">
+        <Stat label={t('expenses.perHead')} value={fmt(perHead)} />
+        <Stat label={t('expenses.spent')} value={fmt(groupTotal)} />
+        <Stat label={t('expenses.collected')} value={fmt(collected)} />
+      </div>
+      {mode === 'FIXED' && (
+        <>
+          <Bar pct={pct} />
+          <p className="bp-note">{t('expenses.total')}: {fmt(finance.kittyTotal)} · {t('expenses.remaining')}: {fmt(remaining)}</p>
+        </>
+      )}
+      {mode === 'OPEN' && groupTotal === 0 && (
+        <p className="bp-note">{t('expenses.openHint')}</p>
       )}
 
-      <div className="bp-stat-row">
-        <Stat label={t('expenses.total')} value={fmt(finance.kittyTotal)} />
-        <Stat label={t('expenses.spent')} value={fmt(groupTotal)} />
-        <Stat label={t('expenses.remaining')} value={fmt(remaining)} />
-      </div>
-      <Bar pct={pct} />
-      <p className="bp-note">{t('expenses.perHead')}: {fmt(perHead)} · {t('expenses.collected')}: {fmt(collected)}</p>
-
-      {/* Equal split per member (both modes). */}
+      {/* Equal split per member: a share of the budget (FIXED) or the spending (OPEN). */}
       <h4 className="bp-panel__h">{t('expenses.dues')}</h4>
       <ul className="bp-pay-list" role="list">
         {memberUids.map((u) => (
@@ -188,24 +192,6 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
         {finance.group.length === 0 && <li className="bp-members__empty">{t('expenses.noGroup')}</li>}
       </ul>
       {canEdit && <AddExpense memberUids={memberUids} active={active} nameOf={nameOf} baseCur={baseCur} destCur={destCur} rate={rate} />}
-    </div>
-  );
-}
-
-/** Add an amount to an open kitty — it accumulates into the total, which is
- *  then split equally among the members (same as a fixed total). */
-function AddToKitty({ onAdd }: { onAdd: (amount: number) => void }) {
-  const { t } = useTranslation();
-  const [amt, setAmt] = useState('');
-  function add() { const a = Number(amt) || 0; if (a <= 0) return; onAdd(a); setAmt(''); }
-  return (
-    <div className="bp-add-row">
-      <div className="bp-field" style={{ flex: 1 }}>
-        <label htmlFor="bp-kitty-add">{t('expenses.addAmount')}</label>
-        <input id="bp-kitty-add" className="bp-input" type="number" min="0" inputMode="decimal" value={amt} placeholder="0"
-          onChange={(e) => setAmt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
-      </div>
-      <button className="bp-btn bp-btn--primary bp-btn--sm" style={{ alignSelf: 'end' }} onClick={add}>{t('expenses.add')}</button>
     </div>
   );
 }
