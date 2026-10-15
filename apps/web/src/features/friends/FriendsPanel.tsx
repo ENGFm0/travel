@@ -40,7 +40,7 @@ export function FriendsPanel() {
             {graph!.incoming.map((r) => (
               <li key={r.id} className="bp-friend">
                 <span className="bp-avatar bp-avatar--sm" aria-hidden="true">{initialOf(r.name)}</span>
-                <div className="bp-friend__info"><span className="bp-friend__name">{r.name}</span><span className="bp-friend__at">@{r.username}</span></div>
+                <div className="bp-friend__info"><span className="bp-friend__name">{r.name}</span>{r.username && <span className="bp-friend__at">{r.username}</span>}</div>
                 <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => friendsActions.accept(r.id)}>{t('friends.accept')}</button>
                 <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => friendsActions.reject(r.id)}>{t('friends.reject')}</button>
               </li>
@@ -53,7 +53,7 @@ export function FriendsPanel() {
       <section className="bp-section">
         <h3 className="bp-section__head">{t('friends.addFriend')}</h3>
         <div className="bp-add-row">
-          <input className="bp-input" value={handle} placeholder={t('friends.handlePh')} aria-label={t('friends.addFriend')}
+          <input className="bp-input" type="email" inputMode="email" autoComplete="off" value={handle} placeholder={t('friends.handlePh')} aria-label={t('friends.addFriend')}
             onChange={(e) => { setHandle(e.target.value); if (error) friendsActions.clearError(); }}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void send())} />
           <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={send}>{t('friends.send')}</button>
@@ -79,7 +79,7 @@ export function FriendsPanel() {
             {shown.map((f) => (
               <li key={f.id} className="bp-friend">
                 <span className="bp-avatar bp-avatar--sm" aria-hidden="true">{initialOf(f.name)}</span>
-                <div className="bp-friend__info"><span className="bp-friend__name">{f.name}</span><span className="bp-friend__at">@{f.username}</span></div>
+                <div className="bp-friend__info"><span className="bp-friend__name">{f.name}</span>{f.username && <span className="bp-friend__at">{f.username}</span>}</div>
                 {ownedTrips.length > 0 && <InviteToTrip friendId={f.id} trips={ownedTrips} />}
                 <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('friends.remove')} onClick={() => friendsActions.remove(f.id)}>
                   <span className="material-symbols-outlined" aria-hidden="true">person_remove</span>

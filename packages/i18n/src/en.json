@@ -735,7 +735,7 @@
     "accept": "Accept",
     "reject": "Reject",
     "addFriend": "Add a friend",
-    "handlePh": "Username or phone",
+    "handlePh": "Your friend's email",
     "send": "Send request",
     "sent": "Request sent ✓",
     "myFriends": "My friends",
@@ -751,6 +751,7 @@
       "ALREADY_FRIEND": "You're already friends",
       "PENDING": "A request is already pending",
       "NOT_FOUND": "Request not found",
+      "NO_USER": "No user found with that email",
       "GENERIC": "Could not complete the action, try again"
     }
   },

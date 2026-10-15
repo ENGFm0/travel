@@ -102,9 +102,43 @@ service cloud.firestore {
       }
     }
 
-    // ── Friends (self-scoped social graph) ─────────────────────────────────
+    // ── Friends (self-scoped social graph, legacy) ─────────────────────────
     match /friends/{userId}/{doc=**} {
       allow read, write: if signedIn() && uid() == userId;
+    }
+
+    // ── Email → uid index for friend discovery ─────────────────────────────
+    // Tiny public lookup docs ({ uid, name }); anyone signed-in may resolve one
+    // (get, not list), but may only write/own the entry for their own uid.
+    match /emailIndex/{email} {
+      allow get:           if signedIn();
+      allow create, update: if signedIn() && request.resource.data.uid == uid();
+      allow delete:        if signedIn() && resource.data.uid == uid();
+    }
+
+    // ── Friend requests (real, cross-user) ─────────────────────────────────
+    // Doc id is `${fromUid}_${toUid}`. Sender creates; either party reads/deletes.
+    match /friendRequests/{reqId} {
+      allow create: if signedIn()
+                    && request.resource.data.fromUid == uid()
+                    && request.resource.data.toUid is string
+                    && request.resource.data.toUid != uid();
+      allow read:   if signedIn() && (resource.data.fromUid == uid() || resource.data.toUid == uid());
+      allow delete: if signedIn() && (resource.data.fromUid == uid() || resource.data.toUid == uid());
+    }
+
+    // ── Friendships (one doc per pair; either party reads/removes) ──────────
+    // Created on accept; requires a matching request to have existed (anti-spam).
+    match /friendships/{pairId} {
+      allow read:   if signedIn() && uid() in resource.data.uids;
+      allow create: if signedIn()
+                    && uid() in request.resource.data.uids
+                    && request.resource.data.uids.size() == 2
+                    && (
+                         exists(/databases/$(database)/documents/friendRequests/$(request.resource.data.uids[0] + '_' + request.resource.data.uids[1]))
+                      || exists(/databases/$(database)/documents/friendRequests/$(request.resource.data.uids[1] + '_' + request.resource.data.uids[0]))
+                    );
+      allow delete: if signedIn() && uid() in resource.data.uids;
     }
 
     // ── Buddies (public browse; owner edits own) ───────────────────────────

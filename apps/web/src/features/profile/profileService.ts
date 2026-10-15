@@ -109,20 +109,31 @@ export function createFirestoreProfileService(): ProfileService {
       avatarUrl: d.avatarUrl ?? '', notif: d.notif ?? defaultPrefs(),
     };
   };
+  // Keep a public email→uid lookup so friends can be found by email. Tiny doc,
+  // best-effort (never blocks the profile flow).
+  const indexEmail = async (p: Profile): Promise<void> => {
+    const email = (p.email ?? '').trim().toLowerCase();
+    if (!email) return;
+    const name = [p.firstName, p.lastName].filter(Boolean).join(' ').trim() || p.email;
+    await setDoc(doc(db(), 'emailIndex', email), { uid: p.uid, name }, { merge: true }).catch(() => { /* best-effort */ });
+  };
   return {
     async getProfile(seed) {
       const s = await getDoc(ref(seed.uid));
-      if (s.exists()) return readProfile(seed.uid);
+      if (s.exists()) { const p = await readProfile(seed.uid); await indexEmail(p); return p; }
       const { firstName, lastName } = splitName(seed.displayName);
       const p: Profile = { uid: seed.uid, firstName, middleName: '', lastName, email: seed.email, phone: '', avatarUrl: '', notif: defaultPrefs() };
       const { uid: _uid, ...rest } = p;
       await setDoc(ref(seed.uid), rest);
+      await indexEmail(p);
       return p;
     },
     async updateProfile(uid, patch) {
       const { uid: _u, email: _e, ...rest } = patch; // uid + email immutable
       await updateDoc(ref(uid), rest);
-      return readProfile(uid);
+      const p = await readProfile(uid);
+      await indexEmail(p);
+      return p;
     },
     async updateNotif(uid, notif) { await updateDoc(ref(uid), { notif }); return readProfile(uid); },
     async uploadAvatar(uid, url) { await updateDoc(ref(uid), { avatarUrl: url }); return readProfile(uid); },

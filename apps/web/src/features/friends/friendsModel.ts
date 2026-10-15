@@ -17,7 +17,7 @@ export interface Graph {
   incoming: FriendRequest[];
 }
 
-export type FriendsErrorCode = 'SELF' | 'ALREADY_FRIEND' | 'PENDING' | 'NOT_FOUND' | 'GENERIC';
+export type FriendsErrorCode = 'SELF' | 'ALREADY_FRIEND' | 'PENDING' | 'NOT_FOUND' | 'NO_USER' | 'GENERIC';
 
 export class FriendsError extends Error {
   code: FriendsErrorCode;
