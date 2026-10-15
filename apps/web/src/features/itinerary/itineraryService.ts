@@ -29,7 +29,7 @@ export const CAR_KINDS: CarKind[] = ['RENTAL', 'OWN'];
 /** Own-car running costs, logged by type. */
 export type CarExpenseKind = 'FUEL' | 'OIL' | 'TIRES' | 'WASH' | 'TOLL' | 'PARKING' | 'MAINT' | 'OTHER';
 export const CAR_EXPENSE_KINDS: CarExpenseKind[] = ['FUEL', 'OIL', 'TIRES', 'WASH', 'TOLL', 'PARKING', 'MAINT', 'OTHER'];
-export interface CarExpense { id: string; kind: CarExpenseKind; amount: number; note?: string }
+export interface CarExpense { id: string; kind: CarExpenseKind; amount: number; note?: string; recorded?: boolean }
 
 export interface Activity {
   id: string;

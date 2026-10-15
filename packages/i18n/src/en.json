@@ -610,7 +610,8 @@
       "PARKING": "Parking",
       "MAINT": "Maintenance",
       "OTHER": "Other"
-    }
+    },
+    "carExpLinked": "Car expenses are added to the Expenses tab (transport) and split with the group."
   },
   "expenses": {
     "kitty": "Kitty",
