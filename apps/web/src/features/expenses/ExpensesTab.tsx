@@ -24,7 +24,7 @@ const SUBS: { key: Sub; label: string }[] = [
 export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: string; canEdit: boolean; isOwner: boolean; base?: string; dest?: string }) {
   const { t } = useTranslation();
   const { members } = useMembers();
-  const { finance, loading } = useFinance();
+  const { finance, loading, error } = useFinance();
   const [sub, setSub] = useState<Sub>('kitty');
   const [showDest, setShowDest] = useState(false);
 
@@ -73,6 +73,8 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
           </div>
         </div>
       )}
+
+      {error && <div className="bp-banner" role="alert">{t('expenses.saveFailed')}</div>}
 
       <div className="bp-subtabs2" role="tablist" aria-label={t('tripDetail.tabExpenses')}>
         {SUBS.map((s) => (
@@ -127,7 +129,9 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
         <div className="bp-add-row">
           <div className="bp-field" style={{ flex: 1 }}>
             <label htmlFor="bp-kitty-total">{t('expenses.kittyTotal')}</label>
-            <input id="bp-kitty-total" className="bp-input" type="number" min="0" value={total} onChange={(e) => setTotal(e.target.value)} />
+            <input id="bp-kitty-total" className="bp-input" type="number" min="0" inputMode="decimal" value={total}
+              onChange={(e) => setTotal(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); expensesActions.setKittyTotal(Number(total) || 0); } }} />
           </div>
           <button className="bp-btn bp-btn--primary bp-btn--sm" style={{ alignSelf: 'end' }} onClick={() => expensesActions.setKittyTotal(Number(total) || 0)}>{t('expenses.setTotal')}</button>
         </div>
@@ -164,10 +168,18 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
       ) : (
         <>
           <h4 className="bp-panel__h">{t('expenses.contributions')}</h4>
+          {(canEdit || isOwner) && (
+            <AddContribution active={active} onAdd={(u, amt) => expensesActions.setContribution(u, (finance.contrib?.[u] ?? 0) + amt)} />
+          )}
           <ul className="bp-pay-list" role="list">
             {memberUids.map((u) => (
-              <ContribRow key={u} name={nameOf(u)} amount={finance.contrib?.[u] ?? 0} canEdit={canEdit || isOwner}
-                fmt={fmt} onSave={(a) => expensesActions.setContribution(u, a)} />
+              <li key={u} className="bp-pay">
+                <span className="bp-pay__name">{nameOf(u)}</span>
+                <span className="bp-pay__due">{fmt(finance.contrib?.[u] ?? 0)}</span>
+                {isOwner && (finance.contrib?.[u] ?? 0) > 0 && (
+                  <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.setContribution(u, 0)}>{t('expenses.reset')}</button>
+                )}
+              </li>
             ))}
           </ul>
         </>
@@ -198,26 +210,32 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, canEdit, isOwner
   );
 }
 
-/** One member's free contribution to an open kitty — editable inline. */
-function ContribRow({ name, amount, canEdit, fmt, onSave }: {
-  name: string; amount: number; canEdit: boolean; fmt: (n: number) => string; onSave: (a: number) => void;
+/** Add a contribution to the open kitty: pick who paid, type an amount, add.
+ *  Amounts accumulate onto that person's running total. */
+function AddContribution({ active, onAdd }: {
+  active: { uid: string; displayName: string }[]; onAdd: (uid: string, amount: number) => void;
 }) {
   const { t } = useTranslation();
-  const [v, setV] = useState(String(amount || ''));
-  useEffect(() => { setV(String(amount || '')); }, [amount]);
-  function commit() { const n = Number(v) || 0; if (n !== amount) onSave(n); }
+  const [who, setWho] = useState('');
+  const [amt, setAmt] = useState('');
+  useEffect(() => { if (!who && active[0]) setWho(active[0].uid); }, [active, who]);
+  function add() {
+    const a = Number(amt) || 0;
+    const uid = who || active[0]?.uid;
+    if (!uid || a <= 0) return;
+    onAdd(uid, a);
+    setAmt('');
+  }
   return (
-    <li className="bp-pay">
-      <span className="bp-pay__name">{name}</span>
-      {canEdit ? (
-        <input className="bp-input bp-input--sm bp-contrib-input" type="number" min="0" inputMode="decimal" value={v}
-          aria-label={t('expenses.contributionOf', { name })}
-          onChange={(e) => setV(e.target.value)} onBlur={commit}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } }} />
-      ) : (
-        <span className="bp-pay__due">{fmt(amount)}</span>
-      )}
-    </li>
+    <div className="bp-add-row">
+      <select className="bp-input" value={who} aria-label={t('expenses.contributor')} onChange={(e) => setWho(e.target.value)}>
+        {active.map((m) => <option key={m.uid} value={m.uid}>{m.displayName}</option>)}
+      </select>
+      <input className="bp-input bp-contrib-input" type="number" min="0" inputMode="decimal" value={amt} placeholder="0"
+        aria-label={t('expenses.amount')} onChange={(e) => setAmt(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
+      <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={add}>{t('expenses.add')}</button>
+    </div>
   );
 }
 

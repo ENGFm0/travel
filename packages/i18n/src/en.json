@@ -657,7 +657,10 @@
     "kittyFixedNote": "Set a total amount, split equally among travellers.",
     "kittyOpenNote": "No fixed amount — each person adds their contribution; the total shows what's available.",
     "contributions": "Contributions",
-    "contributionOf": "{{name}}'s contribution"
+    "contributionOf": "{{name}}'s contribution",
+    "saveFailed": "Could not save — check your connection and try again",
+    "contributor": "Contributor",
+    "reset": "Reset"
   },
   "tasks": {
     "title": "Tasks",
