@@ -76,6 +76,51 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
         run: npx --yes firebase-tools@latest deploy --only firestore:rules --project bordingpass-ae272 --non-interactive
 
+      - name: Provision Firebase Storage default bucket (one-time, best-effort)
+        # Cloud Storage for Firebase (since Oct 2024) needs the default bucket to
+        # be explicitly provisioned via projects.defaultBucket.create (v1alpha)
+        # and the project on the Blaze plan. This creates the bucket if missing so
+        # memory / receipt / car uploads work. Verbose + best-effort so the exact
+        # outcome (incl. a billing/permission block) shows up in the run logs.
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+          PROJECT: bordingpass-ae272
+        run: |
+          set +e
+          gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS" --quiet
+          TOKEN="$(gcloud auth print-access-token 2>/dev/null)"
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::could not mint an access token from the service account"
+            exit 0
+          fi
+
+          echo "== Enabling firebasestorage.googleapis.com =="
+          gcloud services enable firebasestorage.googleapis.com storage.googleapis.com \
+            --project="$PROJECT" --quiet
+
+          echo "== Current default bucket (GET) =="
+          GET_OUT="$(curl -sS -H "Authorization: Bearer $TOKEN" \
+            "https://firebasestorage.googleapis.com/v1alpha/projects/$PROJECT/defaultBucket" \
+            -w $'\nHTTP %{http_code}\n')"
+          echo "$GET_OUT"
+          if printf '%s' "$GET_OUT" | grep -q '"bucket"\|"name"'; then
+            echo "Default bucket already linked — nothing to create."
+            exit 0
+          fi
+
+          echo "== Creating default bucket (POST) =="
+          curl -sS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "https://firebasestorage.googleapis.com/v1alpha/projects/$PROJECT/defaultBucket" \
+            -w $'\nHTTP %{http_code}\n'
+          echo "== Re-check default bucket (GET) =="
+          curl -sS -H "Authorization: Bearer $TOKEN" \
+            "https://firebasestorage.googleapis.com/v1alpha/projects/$PROJECT/defaultBucket" \
+            -w $'\nHTTP %{http_code}\n'
+
       - name: Deploy Storage security rules (best-effort)
         # Governs memory/photo uploads to Firebase Storage (US-013). Best-effort,
         # same as Firestore rules above.
