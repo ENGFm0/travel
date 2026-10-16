@@ -2,11 +2,18 @@
 //
 // Printing the report from mobile Safari produces a PDF with no hyperlinks and
 // with below-the-fold images missing, so we build the PDF ourselves: the
-// report HTML is laid out in a hidden same-origin iframe at A4 width, waited on
-// (fonts + every image decoded), rasterised with html2canvas in a few tall
-// chunks, sliced into A4 pages at "smart" cut points that never run through a
-// card / row / photo, and written with jsPDF — with a real link annotation for
-// every <a> so places open Google Maps straight from the PDF.
+// report HTML is laid out in a hidden same-origin iframe at phone width, waited
+// on (fonts + every image decoded), rasterised with html2canvas in modest
+// chunks, sliced into booklet pages at "smart" cut points that never run
+// through a card / row / photo, and written with jsPDF — with a real link
+// annotation for every <a> so places open Google Maps straight from the PDF.
+//
+// Memory: iOS Safari has a hard cap on live canvas memory and silently returns
+// blank canvases past it (which showed up as "photos missing" at the end of
+// long reports). So chunks are streamed: each chunk is rasterised, drawn into
+// the page canvases it overlaps, finished pages are flushed to the PDF, and the
+// chunk canvas is released before the next one is rendered. At most one chunk
+// and two pages are alive at a time.
 //
 // jspdf + html2canvas are imported lazily (only when the user exports).
 
@@ -32,8 +39,8 @@ const PAGE_H = Math.round(PAGE_W * (PAGE_H_MM / PAGE_W_MM)); // 768
 const MARGIN_Y = 22;                // top/bottom page margin (CSS px)
 const CONTENT_H = PAGE_H - MARGIN_Y * 2;
 const MIN_CUT_ADVANCE = 40;         // never produce a strip shorter than this (except the last)
-const CHUNK_TARGET = 2000;          // raster chunk height (CSS px) — keeps canvases well under mobile limits
-const MAX_CANVAS_PX = 14_000_000;   // iOS Safari caps canvases around 16.7M px
+const CHUNK_TARGET = 1200;          // raster chunk height (CSS px) — small, to stay far below iOS canvas limits
+const MAX_CANVAS_PX = 8_000_000;    // per-canvas budget (iOS caps ~16.7M px; stay well under)
 const TARGET_SCALE = 3;             // ~290 dpi on the 127mm page
 const JPEG_QUALITY = 0.92;
 
@@ -48,7 +55,7 @@ const ATOMS = [
 const KEEP_WITH_NEXT = 'h2, h3, h4, .ph-day, .day-h, .city-h';
 
 interface Rect { top: number; bottom: number; left: number; width: number }
-interface Chunk { top: number; height: number; canvas: HTMLCanvasElement; scale: number }
+interface Strip { a: number; b: number }
 
 async function waitReady(doc: Document): Promise<void> {
   try { await (doc as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready; } catch { /* ignore */ }
@@ -72,7 +79,6 @@ function chooseCut(y: number, target: number, atoms: Rect[], total: number): num
   if (target >= total) return total;
   const blocking = atoms.filter((a) => a.bottom - a.top <= CONTENT_H && a.top < target && a.bottom > target);
   if (blocking.length === 0) return target;
-  // Try the tops of the blocking atoms (and their ancestors' tops, which are also in `atoms`).
   let best = y;
   for (const a of atoms) {
     const h = a.bottom - a.top;
@@ -97,6 +103,11 @@ function keepHeadingsWithNext(y: number, cut: number, headings: Rect[], total: n
   return cut;
 }
 
+/** Release a canvas's backing store immediately (GC on iOS is too lazy). */
+function freeCanvas(c: HTMLCanvasElement): void {
+  c.width = 0; c.height = 0;
+}
+
 export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): Promise<PdfExportResult> {
   const [{ jsPDF }, { default: html2canvas }] = await Promise.all([import('jspdf'), import('html2canvas')]);
   opts.onProgress?.(0.05);
@@ -111,7 +122,8 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
   try {
     const doc = iframe.contentDocument!;
     doc.open(); doc.write(html); doc.close();
-    // PDF mode: hide the sticky bar, pin the sheet to A4 width, drop shadows.
+    // PDF mode: hide the sticky bar, pin the sheet to the page width, drop
+    // shadows, uniform photo grid.
     const st = doc.createElement('style');
     st.textContent = `html,body{background:#fff!important;margin:0;overflow:visible}
       .bar{display:none!important}
@@ -148,23 +160,14 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
       }
       wrap.appendChild(ch);
     }
+    const groupRects = groups.map((g) => rectIn(g, origin));
+    const tallest = Math.max(1, ...groupRects.map((r) => r.bottom - r.top));
+    // One output scale for every page; chunks taller than the budget allows
+    // render softer rather than failing.
+    const outScale = Math.min(TARGET_SCALE, Math.sqrt(MAX_CANVAS_PX / (PAGE_W * Math.min(tallest, PAGE_H))));
 
-    const chunks: Chunk[] = [];
-    for (let i = 0; i < groups.length; i++) {
-      const g = groups[i];
-      const r = rectIn(g, origin);
-      const h = Math.max(1, Math.ceil(r.bottom - r.top));
-      const scale = Math.min(TARGET_SCALE, Math.sqrt(MAX_CANVAS_PX / (PAGE_W * h)));
-      const canvas = await html2canvas(g, {
-        scale, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false,
-        windowWidth: PAGE_W, scrollX: 0, scrollY: 0,
-      });
-      chunks.push({ top: r.top, height: h, canvas, scale });
-      opts.onProgress?.(0.1 + 0.6 * ((i + 1) / groups.length));
-    }
-
-    // Paginate.
-    const strips: { a: number; b: number }[] = [];
+    // Paginate up front (pure DOM measurements).
+    const strips: Strip[] = [];
     let y = 0;
     while (y < total - 1) {
       const b = keepHeadingsWithNext(y, chooseCut(y, y + CONTENT_H, atoms, total), headings, total);
@@ -174,25 +177,27 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
 
     const pdf = new jsPDF({ unit: 'mm', format: [PAGE_W_MM, PAGE_H_MM], compress: true });
     const mm = PAGE_W_MM / PAGE_W; // mm per CSS px
-    const outScale = Math.max(...chunks.map((c) => c.scale));
-    const page = document.createElement('canvas');
-    page.width = Math.round(PAGE_W * outScale);
-    page.height = Math.round(PAGE_H * outScale);
-    const ctx = page.getContext('2d')!;
+    const pageW = Math.round(PAGE_W * outScale), pageH = Math.round(PAGE_H * outScale);
     const pageImages: string[] = [];
+    const live = new Map<number, HTMLCanvasElement>(); // page index → canvas in progress
+    let nextToFlush = 0;
 
-    strips.forEach(({ a, b }, i) => {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, page.width, page.height);
-      for (const c of chunks) {
-        const from = Math.max(a, c.top), to = Math.min(b, c.top + c.height);
-        if (to <= from) continue;
-        const sy = (from - c.top) * c.scale, sh = (to - from) * c.scale;
-        const dy = (MARGIN_Y + (from - a)) * outScale, dh = (to - from) * outScale;
-        ctx.drawImage(c.canvas, 0, sy, c.canvas.width, sh, 0, dy, page.width, dh);
+    const pageCanvas = (i: number): HTMLCanvasElement => {
+      let c = live.get(i);
+      if (!c) {
+        c = document.createElement('canvas');
+        c.width = pageW; c.height = pageH;
+        const ctx = c.getContext('2d')!;
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, pageW, pageH);
+        live.set(i, c);
       }
+      return c;
+    };
+    const flush = (i: number) => {
+      const c = pageCanvas(i);
+      const { a, b } = strips[i];
       if (i > 0) pdf.addPage();
-      const dataUrl = page.toDataURL('image/jpeg', JPEG_QUALITY);
+      const dataUrl = c.toDataURL('image/jpeg', JPEG_QUALITY);
       pageImages.push(dataUrl);
       pdf.addImage(dataUrl, 'JPEG', 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, 'FAST');
       // Page number (digits only — the default font has no Arabic).
@@ -204,9 +209,38 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
         if (bottom - top < 4) continue;
         pdf.link(l.left * mm, (MARGIN_Y + (top - a)) * mm, l.width * mm, (bottom - top) * mm, { url: l.href });
       }
-      opts.onPage?.(page, i);
-      opts.onProgress?.(0.7 + 0.3 * ((i + 1) / strips.length));
-    });
+      opts.onPage?.(c, i);
+      freeCanvas(c);
+      live.delete(i);
+    };
+
+    for (let gi = 0; gi < groups.length; gi++) {
+      const r = groupRects[gi];
+      const h = Math.max(1, Math.ceil(r.bottom - r.top));
+      const scale = Math.min(outScale, Math.sqrt(MAX_CANVAS_PX / (PAGE_W * h)));
+      const chunk = await html2canvas(groups[gi], {
+        scale, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false,
+        windowWidth: PAGE_W, scrollX: 0, scrollY: 0,
+      });
+      const cTop = r.top, cBottom = r.top + h;
+      // Draw this chunk into every page it overlaps.
+      for (let i = nextToFlush; i < strips.length; i++) {
+        const { a, b } = strips[i];
+        if (a >= cBottom) break;
+        const from = Math.max(a, cTop), to = Math.min(b, cBottom);
+        if (to <= from) continue;
+        const ctx = pageCanvas(i).getContext('2d')!;
+        const sy = (from - cTop) * scale, sh = (to - from) * scale;
+        const dy = (MARGIN_Y + (from - a)) * outScale, dh = (to - from) * outScale;
+        ctx.drawImage(chunk, 0, sy, chunk.width, sh, 0, dy, pageW, dh);
+      }
+      freeCanvas(chunk);
+      // Flush every page that is now fully covered.
+      while (nextToFlush < strips.length && strips[nextToFlush].b <= cBottom + 0.5) flush(nextToFlush++);
+      opts.onProgress?.(0.1 + 0.85 * ((gi + 1) / groups.length));
+    }
+    while (nextToFlush < strips.length) flush(nextToFlush++);
+    opts.onProgress?.(1);
 
     return { blob: pdf.output('blob'), pages: strips.length, pageImages };
   } finally {
