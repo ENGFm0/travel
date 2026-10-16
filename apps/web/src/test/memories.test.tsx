@@ -134,12 +134,12 @@ describe('US-013 Memories UI', () => {
     await signIn();
     seed([OWNER, U2]);
     renderAt('/trips/trip-x#memories');
-    await userEvent.click(await screen.findByRole('button', { name: 'Export report' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'View report' }));
     await waitFor(() => expect(written).toContain('London Trip'));
     expect(written).toContain('London');          // city from the itinerary
     expect(written).toContain('Khalid');          // members
     expect(written).toContain('Omar');
-    expect(written).toContain('Print / Save as PDF');
+    expect(written).toContain('window.print()'); // print button in the report bar
     expect(written).toContain('<html lang="en" dir="ltr">');
   });
 

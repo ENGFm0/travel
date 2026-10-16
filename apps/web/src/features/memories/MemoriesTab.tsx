@@ -6,7 +6,7 @@ import {
   canDelete, groupMedia, mediaTypeOf, validateFile, type Grouping,
 } from './memoriesModel';
 import { memoriesActions, useMemories } from './memoriesStore';
-import { openTripReport, type ReportTrip } from './tripReport';
+import { loadTripReportHtml, openTripReport, type ReportTrip } from './tripReport';
 import { useUIStore } from '@/app/store/uiStore';
 import { useMembers } from '@/features/members/membersStore';
 
@@ -28,6 +28,8 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
   const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
   const { media, loading, error } = useMemories();
   const [exporting, setExporting] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfPct, setPdfPct] = useState(0);
   const [group, setGroup] = useState<Grouping>('day');
   const [day, setDay] = useState('1');
   const [place, setPlace] = useState(places[0] ?? '—');
@@ -71,6 +73,25 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
     window.setTimeout(() => setCopied(false), 2000);
   }
 
+  /** Build the PDF on-device (real links + embedded photos) and share/download it. */
+  async function downloadPdf() {
+    if (!reportTrip || pdfBusy) return;
+    setPdfBusy(true);
+    setPdfPct(0);
+    setReport(null);
+    try {
+      const html = await loadTripReportHtml(reportTrip, media ?? [], members ?? [], locale, t);
+      const { renderReportPdf, saveOrSharePdf } = await import('./pdfExport');
+      const { blob } = await renderReportPdf(html, { onProgress: (p) => setPdfPct(Math.round(p * 100)) });
+      const safe = reportTrip.title.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'trip';
+      await saveOrSharePdf(blob, `${safe}.pdf`);
+    } catch (e) {
+      setReport(`${t('memories.pdfFailed')} — ${(e as { code?: string; message?: string })?.code ?? (e as Error)?.message ?? ''}`);
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
   async function exportReport() {
     if (!reportTrip || exporting) return;
     setExporting(true);
@@ -95,6 +116,9 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
           <button className={`bp-seg__btn ${group === 'place' ? 'is-on' : ''}`} aria-pressed={group === 'place'} onClick={() => setGroup('place')}>{t('memories.byPlace')}</button>
         </div>
         <div className="bp-memories__actions">
+          <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={downloadPdf} disabled={pdfBusy || !reportTrip}>
+            {pdfBusy ? t('memories.pdfPreparing', { pct: pdfPct }) : t('memories.downloadPdf')}
+          </button>
           <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={exportReport} disabled={exporting || !reportTrip}>
             {exporting ? t('memories.exporting') : t('memories.export')}
           </button>

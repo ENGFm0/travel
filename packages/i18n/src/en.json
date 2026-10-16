@@ -772,7 +772,7 @@
     "groupBy": "Group by",
     "byDay": "By day",
     "byPlace": "By place",
-    "export": "Export report",
+    "export": "View report",
     "share": "Share trip",
     "day": "Day",
     "place": "Place",
@@ -790,7 +790,7 @@
       "SIZE": "File is too large"
     },
     "uploadFailed": "Upload failed",
-    "reportPrint": "Print / Save as PDF",
+    "reportPrint": "Print",
     "reportPreparing": "Preparing the report…",
     "reportFailed": "Could not generate the report",
     "reportGenerated": "Generated on {{date}}",
@@ -817,7 +817,10 @@
       "paidSplit": "{{group}} group + {{side}} side",
       "paidLegend": "Solid = group pot · hatched = side kitties",
       "catNote": "Group pot only"
-    }
+    },
+    "downloadPdf": "📄 Download PDF",
+    "pdfPreparing": "Building PDF… {{pct}}%",
+    "pdfFailed": "Could not build the PDF"
   },
   "friends": {
     "requests": "Friend requests",

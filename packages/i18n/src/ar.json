@@ -772,7 +772,7 @@
     "groupBy": "التجميع حسب",
     "byDay": "حسب اليوم",
     "byPlace": "حسب المكان",
-    "export": "تصدير التقرير",
+    "export": "عرض التقرير",
     "share": "مشاركة الرحلة",
     "day": "اليوم",
     "place": "المكان",
@@ -790,7 +790,7 @@
       "SIZE": "حجم الملف كبير جدًا"
     },
     "uploadFailed": "تعذّر رفع الذكرى",
-    "reportPrint": "طباعة / حفظ PDF",
+    "reportPrint": "طباعة",
     "reportPreparing": "جارٍ تجهيز التقرير…",
     "reportFailed": "تعذّر إنشاء التقرير",
     "reportGenerated": "أُنشئ في {{date}}",
@@ -817,7 +817,10 @@
       "paidSplit": "{{group}} عامة + {{side}} مشتركة",
       "paidLegend": "لون كامل = القطة العامة · مخطّط = قطّات مشتركة",
       "catNote": "القطة العامة فقط"
-    }
+    },
+    "downloadPdf": "📄 تحميل PDF",
+    "pdfPreparing": "جارٍ إنشاء الـ PDF… {{pct}}%",
+    "pdfFailed": "تعذّر إنشاء ملف الـ PDF"
   },
   "friends": {
     "requests": "طلبات الصداقة",

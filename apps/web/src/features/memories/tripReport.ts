@@ -60,6 +60,11 @@ const KIND_COLOR: Record<ActivityKind, string> = {
 const KIND_ICON: Record<ActivityKind, string> = {
   ARRIVAL: '🛬', FOOD: '🍽️', SIGHT: '🏛️', TRANSPORT: '🚕', SHOPPING: '🛍️', ACTIVITY: '🎯', HOTEL: '🏨', OTHER: '📌',
 };
+/** Translucent tint of a hex color (html2canvas can't do CSS color-mix()). */
+const tint = (hex: string, a: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+};
 const POS = '#2a78d6'; // diverging: owed (+)
 const NEG = '#e34948'; // diverging: owes (−)
 const GOOD = '#0ca30c'; // status: settled
@@ -235,7 +240,7 @@ export function buildTripReportHtml(d: ReportData): string {
         const when = a.time ? formatTime12(a.time, locale) : (a.period ? t(`itinerary.period.${a.period}`) : '');
         const kind = a.kind ?? 'OTHER';
         return `<li class="act"><span class="act-when">${esc(when)}</span><span class="act-dot" style="background:${KIND_COLOR[kind]}"></span>
-          <div class="act-body"><div class="act-title">${KIND_ICON[kind]} ${place(esc(a.title), mapsUrl(a.title, c.name, a.mapsUrl))}${a.kind ? ` <span class="tag" style="--c:${KIND_COLOR[kind]}">${esc(t(`itinerary.kind.${a.kind}`))}</span>` : ''}</div>${a.note ? `<div class="muted">${esc(a.note)}</div>` : ''}</div>
+          <div class="act-body"><div class="act-title">${KIND_ICON[kind]} ${place(esc(a.title), mapsUrl(a.title, c.name, a.mapsUrl))}${a.kind ? ` <span class="tag" style="color:${KIND_COLOR[kind]};background:${tint(KIND_COLOR[kind], 0.14)}">${esc(t(`itinerary.kind.${a.kind}`))}</span>` : ''}</div>${a.note ? `<div class="muted">${esc(a.note)}</div>` : ''}</div>
           <span class="act-cost">${a.cost ? esc(money(a.cost)) : ''}</span></li>`;
       }).join('');
       const label = day.date ? formatDate(day.date, locale, { weekday: 'long', day: 'numeric', month: 'short' }) : '';
@@ -244,7 +249,7 @@ export function buildTripReportHtml(d: ReportData): string {
         ${items ? `<ul class="acts">${items}</ul>` : `<p class="muted pad">${esc(t('itinerary.noActivities'))}</p>`}</div>`;
     }).join('');
     return `<section class="city" style="--c:${cityColor(c)}">
-      <div class="city-h"><div><h3>${esc(c.name)}</h3>${dates ? `<div class="muted">📅 ${esc(dates)}${nights ? ` · 🌙 ${esc(t('memories.rpt.nights', { count: nights }))}` : ''}</div>` : ''}</div><span class="city-stat">${short(c.days.length)} ${esc(t('memories.rpt.days'))} · ${short(c.days.reduce((a, dd) => a + dd.activities.length, 0))} ${esc(t('memories.rpt.activities'))}</span></div>
+      <div class="city-h"><div><h3>${esc(c.name)}</h3>${dates ? `<div class="muted">📅 ${esc(dates)}${nights ? ` · 🌙 ${esc(t('memories.rpt.nights', { count: nights }))}` : ''}</div>` : ''}</div><span class="city-stat" style="color:${cityColor(c)};background:${tint(cityColor(c), 0.12)}">${short(c.days.length)} ${esc(t('memories.rpt.days'))} · ${short(c.days.reduce((a, dd) => a + dd.activities.length, 0))} ${esc(t('memories.rpt.activities'))}</span></div>
       ${stays ? `<div class="chips">${stays}</div>` : ''}
       ${transport.length ? `<ul class="transport">${transport.join('')}</ul>` : ''}
       ${days}</section>`;
@@ -270,7 +275,7 @@ export function buildTripReportHtml(d: ReportData): string {
   const memories = images.length === 0 && videos.length === 0
     ? `<p class="muted">${esc(t('memories.empty'))}</p>`
     : [...byDay.entries()].map(([day, items]) =>
-        `<h4 class="ph-day">${esc(day)} <span class="muted">· ${short(items.length)}</span></h4><div class="photos">${items.map((m, i) => `<figure class="${i === 0 && items.length > 2 ? 'big' : ''}"><img src="${esc(m.src)}" alt="${esc(m.name)}" loading="lazy">${m.place ? `<figcaption>📍 ${esc(m.place)}</figcaption>` : ''}</figure>`).join('')}</div>`).join('')
+        `<h4 class="ph-day">${esc(day)} <span class="muted">· ${short(items.length)}</span></h4><div class="photos">${items.map((m, i) => `<figure class="${i === 0 && items.length >= 5 && (items.length - 1) % 4 === 0 ? 'big' : ''}"><img src="${esc(m.src)}" alt="${esc(m.name)}">${m.place ? `<figcaption>📍 ${esc(m.place)}</figcaption>` : ''}</figure>`).join('')}</div>`).join('')
       + (videos.length ? `<p class="muted">🎬 ${esc(t('memories.videosNotIncluded', { count: videos.length }))}</p>` : '');
 
   // ---- Document -------------------------------------------------------------------
@@ -294,7 +299,7 @@ export function buildTripReportHtml(d: ReportData): string {
   /* Cover */
   .hero { position: relative; overflow: hidden; background: ${heroGrad}; color: #fff; border-radius: 22px; padding: 28px 24px 22px; box-shadow: 0 14px 40px rgba(20,33,61,.25); }
   .hero::before { content: "${trip.domestic ? '🗺️' : '✈️'}"; position: absolute; inset-inline-end: -10px; top: -18px; font-size: 150px; opacity: .12; transform: scaleX(${dir === 'rtl' ? '-1' : '1'}); }
-  .hero .badge { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .3px; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,.18); backdrop-filter: blur(4px); }
+  .hero .badge { display: inline-block; font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,.18); }
   .hero h1 { margin: 10px 0 6px; font-size: clamp(28px, 6vw, 40px); line-height: 1.15; }
   .hero .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 18px; opacity: .92; font-size: 14px; }
   .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
@@ -348,7 +353,7 @@ export function buildTripReportHtml(d: ReportData): string {
   /* Itinerary */
   .city { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px 10px; margin: 12px 0; break-inside: avoid; border-inline-start: 6px solid var(--c); }
   .city-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
-  .city-stat { font-size: 12px; color: var(--c); font-weight: 800; background: color-mix(in srgb, var(--c) 12%, #fff); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+  .city-stat { font-size: 12px; font-weight: 800; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; } .chip { background: #f3f5fa; border-radius: 999px; padding: 4px 10px; font-size: 12.5px; } .chip em { color: var(--muted); font-style: normal; }
   .transport { margin: 6px 0; padding-inline-start: 18px; font-size: 13px; color: var(--ink2); }
   .day { margin-top: 10px; } .day-h { display: flex; align-items: center; gap: 8px; } .day-h h4 { margin: 0; flex: 1; }
@@ -360,7 +365,7 @@ export function buildTripReportHtml(d: ReportData): string {
   .act-when { font-size: 12px; color: var(--muted); white-space: nowrap; padding-top: 2px; text-align: end; }
   .act-dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; box-shadow: 0 0 0 2px #fff; }
   .act-title { font-weight: 700; } .act-cost { font-size: 12.5px; color: var(--ink2); white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 8px; border-radius: 999px; background: color-mix(in srgb, var(--c, #9aa3b8) 14%, #fff); color: var(--c, #3a4a6b); vertical-align: middle; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 8px; border-radius: 999px; background: #eef1f8; color: #3a4a6b; vertical-align: middle; }
   .tag.ok { background: #e8f7e8; color: #0a5a0a; } .pad { padding-inline-start: 32px; }
   a.place { color: inherit; text-decoration: none; border-bottom: 1px dashed #b9c2d8; } a.place .pin { font-size: 11px; }
   .tile small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
