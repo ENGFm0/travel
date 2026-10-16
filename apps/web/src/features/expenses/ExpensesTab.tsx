@@ -8,8 +8,8 @@ import { setMockCurrentUser } from './expensesService';
 import { uploadTripImage } from '@/features/memories/memoriesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
-  CATEGORIES, convert, distribution, kittyCollected, memberBreakdown, myNetBalance, netByMember,
-  perMemberDue, personalRemaining, personalSpent, settlements,
+  CATEGORIES, convert, distribution, kittyCollected, memberBreakdown, myNetBalance,
+  perMemberDue, personalRemaining, personalSpent, settledLedger, settlements,
   type Category, type Finance, type GroupExpense, type PersonalExpense,
 } from './finance';
 import { expensesActions, useFinance } from './expensesStore';
@@ -550,8 +550,12 @@ function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid }: {
   const { t } = useTranslation();
   const myNet = myNetBalance(finance, memberUids, meUid);
   const owed = myNet >= 0;
-  const nets = netByMember(finance, memberUids);            // settled halalas, zero-sum
-  const transfers = settlements(nets);                      // reproduce the rows exactly
+  // Direct (default): everyone pays whoever paid for them; rows are derived
+  // from those rounded transfers so both views agree to the halala.
+  const ledger = settledLedger(finance, memberUids);
+  const nets = ledger.net;
+  const [settleMode, setSettleMode] = useState<'direct' | 'min'>('direct');
+  const transfers = settleMode === 'direct' ? ledger.transfers : settlements(nets);
   const groupTotal = finance.group.reduce((a, e) => a + e.amount, 0);
   const sideTotal = finance.sides.reduce((a, s) => a + s.total, 0);
   const grand = groupTotal + sideTotal;
@@ -593,6 +597,11 @@ function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid }: {
 
       {/* Who pays whom */}
       <h4 className="bp-panel__h">{t('expenses.whoPaysWhom')}</h4>
+      <div className="bp-seg bp-seg--settle" role="group" aria-label={t('expenses.whoPaysWhom')}>
+        <button className={`bp-seg__btn ${settleMode === 'direct' ? 'is-on' : ''}`} aria-pressed={settleMode === 'direct'} onClick={() => setSettleMode('direct')}>{t('expenses.settleDirect')}</button>
+        <button className={`bp-seg__btn ${settleMode === 'min' ? 'is-on' : ''}`} aria-pressed={settleMode === 'min'} onClick={() => setSettleMode('min')}>{t('expenses.settleMin')}</button>
+      </div>
+      <p className="bp-note">{settleMode === 'direct' ? t('expenses.settleDirectHint') : t('expenses.settleMinHint')}</p>
       {transfers.length === 0 ? (
         <p className="bp-note">{t('expenses.allSettled')}</p>
       ) : (

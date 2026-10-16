@@ -147,43 +147,76 @@ export function netByMemberExact(f: Finance, memberUids: string[]): Record<strin
   return out;
 }
 
-/** The balances that are actually SETTLED: whole halalas that sum to exactly
- *  zero, so "who pays whom" reproduces every row to the halala. Each exact net
- *  is rounded; the halalas missing/extra (fractions like 1/7 never round to a
- *  zero sum) are assigned by largest remainder — to whole groups of identical
- *  balances at once (so identical participation stays identical), biggest
- *  balance first; if that can't absorb the rest, the single largest unique
- *  balance takes it. Positive → owed to them (له), negative → they owe (عليه). */
-export function netByMember(f: Finance, memberUids: string[]): Record<string, number> {
-  const exact = netByMemberExact(f, memberUids);
-  const rows = memberUids.map((u) => {
-    const ec = exact[u] * 100;
-    return { u, ec, c: Math.sign(ec) * Math.round(Math.abs(ec) + 1e-9) };
-  });
-  let diff = -rows.reduce((a, r) => a + r.c, 0); // halalas to add to reach a zero sum
-  if (diff !== 0) {
-    const dir = Math.sign(diff);
-    let remaining = Math.abs(diff);
-    // Group members by identical exact balance.
-    const groups = new Map<number, typeof rows>();
-    for (const r of rows) { const k = Math.round(r.ec * 1e4); const g = groups.get(k) ?? []; g.push(r); groups.set(k, g); }
-    const ordered = [...groups.values()].sort((a, b) => {
-      const ra = dir * (a[0].ec - a[0].c), rb = dir * (b[0].ec - b[0].c); // remainder in the needed direction
-      if (Math.abs(ra - rb) > 1e-9) return rb - ra;
-      return Math.abs(b[0].ec) - Math.abs(a[0].ec);
-    });
-    for (const g of ordered) {
-      if (remaining === 0) break;
-      if (g.length <= remaining) { for (const r of g) r.c += dir; remaining -= g.length; }
-    }
-    if (remaining > 0) {
-      const single = ordered.find((g) => g.length === 1) ?? ordered[0];
-      single[0].c += dir * remaining;
+export interface Settlement { from: string; to: string; amount: number }
+export interface Ledger { transfers: Settlement[]; net: Record<string, number> }
+
+/** Exact pairwise debts: debts[a][b] = what a owes b, after netting each pair
+ *  (if a owes b 10 and b owes a 4, a owes b 6). Built from who actually paid:
+ *  every participant of a pot owes the pot's payer their share. */
+export function pairwiseDebts(f: Finance, memberUids: string[]): Record<string, Record<string, number>> {
+  const owe = new Map<string, number>(); // `${from}|${to}` → amount
+  const add = (from: string, to: string, amt: number) => {
+    if (from === to || amt === 0) return;
+    const k = `${from}|${to}`;
+    owe.set(k, (owe.get(k) ?? 0) + amt);
+  };
+  const n = memberUids.length;
+  for (const e of f.group) {
+    const share = exactShare(e.amount, n);
+    for (const u of memberUids) add(u, e.payerUid, share);
+  }
+  for (const s of f.sides) {
+    if (s.settled) continue;
+    const share = exactShare(s.total, s.participantUids.length);
+    for (const u of s.participantUids) add(u, s.payerUid, share);
+  }
+  const out: Record<string, Record<string, number>> = {};
+  const done = new Set<string>();
+  for (const [k, v] of owe) {
+    if (done.has(k)) continue;
+    const [a, b] = k.split('|');
+    const rk = `${b}|${a}`;
+    done.add(k); done.add(rk);
+    const net = v - (owe.get(rk) ?? 0);
+    if (Math.abs(net) < 1e-9) continue;
+    const [from, to, amt] = net > 0 ? [a, b, net] : [b, a, -net];
+    (out[from] ??= {})[to] = amt;
+  }
+  return out;
+}
+
+/** DIRECT settlement — the default: everyone pays whoever paid for them
+ *  (pairs netted), each transfer rounded to the halala. Balances are DERIVED
+ *  from these rounded transfers, so the per-person rows and "who pays whom"
+ *  agree to the halala and sum to exactly zero by construction; identical
+ *  participation yields identical transfers and rows. Transfers are listed
+ *  grouped by payee (largest payee first), largest amount first. */
+export function settledLedger(f: Finance, memberUids: string[]): Ledger {
+  const debts = pairwiseDebts(f, memberUids);
+  const transfers: Settlement[] = [];
+  const netC: Record<string, number> = {};
+  for (const u of memberUids) netC[u] = 0;
+  for (const [from, tos] of Object.entries(debts)) {
+    for (const [to, amt] of Object.entries(tos)) {
+      const c = Math.round(amt * 100 + 1e-9);
+      if (c <= 0) continue;
+      transfers.push({ from, to, amount: c / 100 });
+      netC[from] = (netC[from] ?? 0) - c;
+      netC[to] = (netC[to] ?? 0) + c;
     }
   }
-  const out: Record<string, number> = {};
-  for (const r of rows) out[r.u] = r.c / 100;
-  return out;
+  const inflow: Record<string, number> = {};
+  for (const t of transfers) inflow[t.to] = (inflow[t.to] ?? 0) + t.amount;
+  transfers.sort((a, b) => (inflow[b.to] - inflow[a.to]) || a.to.localeCompare(b.to) || (b.amount - a.amount));
+  const net: Record<string, number> = {};
+  for (const u of memberUids) net[u] = (netC[u] ?? 0) / 100;
+  return { transfers, net };
+}
+
+/** Settled balance per member (whole halalas, zero-sum — see settledLedger).
+ *  Positive → owed to them (له), negative → they owe (عليه). */
+export function netByMember(f: Finance, memberUids: string[]): Record<string, number> {
+  return settledLedger(f, memberUids).net;
 }
 
 /** My overall net balance — the same settled figure as my row. Sign per
@@ -193,13 +226,11 @@ export function myNetBalance(f: Finance, memberUids: string[], me: string): numb
   return netByMember(f, memberUids)[me] ?? 0;
 }
 
-export interface Settlement { from: string; to: string; amount: number }
-
-/** "Who pays whom" from the settled (zero-sum, whole-halala) nets, in integer
- *  halalas — so each debtor's transfers add up to exactly their row and each
- *  creditor receives exactly theirs. Each debtor, largest first, pays a
- *  creditor who can absorb the whole remaining debt when one exists (fewest
- *  split payments), else the largest creditor. */
+/** MINIMAL settlement (optional view): fewest transfers that reproduce the
+ *  settled nets, in integer halalas — a debtor may end up paying someone who
+ *  never paid for them (debts are routed), which is why it is not the default.
+ *  Each debtor, largest first, pays a creditor who can absorb the whole
+ *  remaining debt when one exists, else the largest creditor. */
 export function settlements(net: Record<string, number>): Settlement[] {
   const toC = (v: number) => Math.sign(v) * Math.round(Math.abs(v) * 100 + 1e-9);
   const debtors = Object.entries(net).map(([u, v]) => ({ u, c: -toC(v) })).filter((x) => x.c > 0).sort((a, b) => b.c - a.c);

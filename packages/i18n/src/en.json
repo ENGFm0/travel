@@ -707,7 +707,11 @@
     "groupPot": "Group pot",
     "paidAmt": "paid",
     "formula": "{{total}} ÷ {{count}}",
-    "roundingAdj": "Halala rounding (so the table sums to zero)"
+    "roundingAdj": "Halala rounding (so the table sums to zero)",
+    "settleDirect": "Direct",
+    "settleMin": "Fewest",
+    "settleDirectHint": "Everyone pays whoever actually paid for them (pairs netted).",
+    "settleMinHint": "Fewest transfers — you may pay someone who didn't pay for you, since debts are routed."
   },
   "tasks": {
     "title": "Tasks",

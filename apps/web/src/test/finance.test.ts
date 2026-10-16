@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   splitEqual, perMemberDue, kittyCollected, distribution, groupNet, sideNet,
   myNetBalance, personalSpent, personalRemaining, convert,
-  netByMember, netByMemberExact, settlements, memberBreakdown,
+  netByMember, netByMemberExact, settlements, memberBreakdown, settledLedger,
   type Finance, type GroupExpense, type SideKitty,
 } from '@/features/expenses/finance';
 
@@ -79,25 +79,39 @@ describe('US-007 finance core', () => {
     expect(Math.abs(Object.values(exact).reduce((a, b) => a + b, 0))).toBeLessThan(1e-9);
     expect(exact.faisal).toBeCloseTo(-240.457, 3); // −(664/7 + 121/3 + 74/3 + 8 + 72.6)
     expect(exact.abu).toBeCloseTo(658.543, 3);     // 569.143 + 80.667 + 49.333 + 32 − 72.6
-    const net = netByMember(f, U);
-    expect(net.faisal).toBe(net.fahad);   // same participation → same number (was 240.47 vs 240.49)
+    // Direct settlement: everyone pays whoever paid FOR THEM.
+    const { transfers, net } = settledLedger(f, U);
+    const pays = (u: string) => transfers.filter((x) => x.from === u).map((x) => `${x.to}:${x.amount}`).sort();
+    expect(pays('ziad')).toEqual(['abu:94.86']);          // only in the group pot → owes Abu only (never Shibl)
+    expect(pays('mutrafi')).toEqual(['abu:94.86']);
+    expect(pays('khalid')).toEqual(['abu:102.86', 'shibl:72.6']);   // 94.857 + 8 → Abu; dinner → Shibl
+    expect(pays('faisal')).toEqual(['abu:167.86', 'shibl:72.6']);   // 94.857 + 40.333 + 24.667 + 8
+    expect(pays('fahad')).toEqual(pays('faisal'));                   // identical participation
+    expect(pays('shibl')).toEqual(['abu:30.26']);                    // owes Abu 102.857, Abu owes him 72.6 → netted
+    expect(pays('abu')).toEqual([]);
+    // Rows are derived from those rounded transfers: zero-sum, and above = below exactly.
+    expect(net.faisal).toBe(net.fahad);
     expect(net.faisal).toBe(-240.46);
     expect(net.ziad).toBe(-94.86);
-    expect(net.mutrafi).toBe(net.ziad);
     expect(net.khalid).toBe(-175.46);
-    // Plain rounding leaves the table 2 halalas short; they go to the unique,
-    // largest balances (the creditors here) so the settled table sums to 0.
-    expect(net.abu).toBe(658.55);
-    expect(net.shibl).toBe(187.55);
-    expect(Math.abs(Math.round(Object.values(net).reduce((a, b) => a + b, 0) * 100))).toBe(0); // zero-sum (±0)
-    // Transfers reproduce every row EXACTLY (what's above = what's below).
-    const tr = settlements(net);
+    expect(net.shibl).toBe(187.54);   // +72.6×3 − 30.26
+    expect(net.abu).toBe(658.56);     // 102.86 + 167.86×2 + 94.86×2 + 30.26 (exact 658.543)
+    expect(Math.abs(Math.round(Object.values(net).reduce((a, b) => a + b, 0) * 100))).toBe(0);
     for (const u of U) {
-      const out = tr.filter((x) => x.from === u).reduce((a, x) => a + Math.round(x.amount * 100), 0);
-      const inn = tr.filter((x) => x.to === u).reduce((a, x) => a + Math.round(x.amount * 100), 0);
+      const out = transfers.filter((x) => x.from === u).reduce((a, x) => a + Math.round(x.amount * 100), 0);
+      const inn = transfers.filter((x) => x.to === u).reduce((a, x) => a + Math.round(x.amount * 100), 0);
       expect(inn - out).toBe(Math.round(net[u] * 100));
     }
-    expect(myNetBalance(f, U, 'abu')).toBe(658.55); // the headline matches the row
+    expect(netByMember(f, U)).toEqual(net);
+    expect(myNetBalance(f, U, 'abu')).toBe(658.56); // the headline matches the row
+    // The optional minimal view reproduces the same rows with fewer transfers.
+    const min = settlements(net);
+    expect(min.length).toBeLessThan(transfers.length);
+    for (const u of U) {
+      const out = min.filter((x) => x.from === u).reduce((a, x) => a + Math.round(x.amount * 100), 0);
+      const inn = min.filter((x) => x.to === u).reduce((a, x) => a + Math.round(x.amount * 100), 0);
+      expect(inn - out).toBe(Math.round(net[u] * 100));
+    }
     // Breakdown lists exactly the pots the member is in, with the right divisors.
     const b = memberBreakdown(f, U, 'faisal');
     expect(b.lines.map((l) => l.count)).toEqual([7, 3, 3, 5, 5]);
