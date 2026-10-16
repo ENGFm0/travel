@@ -647,6 +647,21 @@ select.bp-input {
 .bp-mem-del .material-symbols-outlined { font-size: 18px; }
 .bp-report { white-space: pre-wrap; background: var(--bp-surface-2); border-radius: var(--bp-r-md); padding: 12px; font: inherit; margin: 0; }
 
+/* Memories: tap a photo to open it full-screen. */
+.bp-mem-open { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; font: inherit; }
+.bp-mem-open:focus-visible { outline: 2px solid var(--bp-focus); outline-offset: 2px; border-radius: var(--bp-r-md); }
+.bp-lightbox { position: fixed; inset: 0; z-index: 10070; display: flex; flex-direction: column; background: #0b1020; color: #fff; outline: 0; }
+.bp-lightbox__head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top)); background: rgba(0,0,0,.35); }
+.bp-lightbox__count { font-weight: 800; font-size: 14px; }
+.bp-lightbox__meta { flex: 1; font-size: 12px; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bp-lightbox__head .bp-icon-btn { color: #fff; }
+.bp-lightbox__stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: auto; padding: 8px; touch-action: pinch-zoom; }
+.bp-lightbox__media { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.bp-lightbox__actions { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: rgba(0,0,0,.35); }
+.bp-lightbox__actions .bp-btn { min-width: 180px; justify-content: center; gap: 6px; }
+.bp-lightbox__nav { color: #fff; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.12); }
+.bp-lightbox__nav:disabled { opacity: .3; }
+
 /* In-app PDF preview: full-screen, scrollable pages, save/share on a fresh tap. */
 .bp-pdfprev { position: fixed; inset: 0; z-index: 10060; display: flex; flex-direction: column; background: #2b3550; color: #fff; }
 .bp-pdfprev__head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; padding-top: max(10px, env(safe-area-inset-top)); background: var(--bp-ink, #14213d); }

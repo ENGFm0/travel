@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent as ReactKeyboardEvent, type TouchEvent as ReactTouchEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { CURRENT_UID } from '@/features/members/membersService';
 import {
-  canDelete, groupMedia, mediaTypeOf, validateFile, type Grouping,
+  canDelete, groupMedia, mediaTypeOf, validateFile, type Grouping, type Media,
 } from './memoriesModel';
 import { memoriesActions, useMemories } from './memoriesStore';
 import { loadTripReportHtml, openTripReport, type ReportTrip } from './tripReport';
@@ -40,6 +41,12 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
   const [copied, setCopied] = useState(false);
   const [report, setReport] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Full-screen viewer: index into the flat media list.
+  const [viewer, setViewer] = useState<number | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const touchX = useRef<number | null>(null);
+  const deepLinked = useRef(false);
+  const { search } = useLocation();
 
   useEffect(() => {
     void memoriesActions.load(tripId);
@@ -47,6 +54,60 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
   }, [tripId]);
 
   const groups = useMemo(() => groupMedia(media ?? [], group), [media, group]);
+  const flat = media ?? [];
+
+  // Deep link from the report (PDF / HTML): /trips/:id?photo=<mediaId>#memories
+  // opens that photo full-size once the media list is loaded.
+  useEffect(() => {
+    if (deepLinked.current || !media) return;
+    const id = new URLSearchParams(search).get('photo');
+    if (!id) return;
+    const i = media.findIndex((m) => m.id === id);
+    if (i >= 0) { setViewer(i); deepLinked.current = true; }
+  }, [media, search]);
+
+  const current = viewer !== null ? flat[viewer] : undefined;
+  const step = (d: 1 | -1) => setViewer((v) => (v === null || flat.length === 0 ? v : (v + d + flat.length) % flat.length));
+  function onViewerKey(e: ReactKeyboardEvent) {
+    if (e.key === 'Escape') setViewer(null);
+    else if (e.key === 'ArrowRight') step(locale === 'ar' ? -1 : 1);
+    else if (e.key === 'ArrowLeft') step(locale === 'ar' ? 1 : -1);
+  }
+  function onTouchStart(e: ReactTouchEvent) { touchX.current = e.touches[0]?.clientX ?? null; }
+  function onTouchEnd(e: ReactTouchEvent) {
+    const x0 = touchX.current; touchX.current = null;
+    const x1 = e.changedTouches[0]?.clientX;
+    if (x0 === null || x1 === undefined) return;
+    const dx = x1 - x0;
+    if (Math.abs(dx) < 50) return;
+    // Swipe towards the start of the reading direction = next.
+    const next = locale === 'ar' ? dx > 0 : dx < 0;
+    step(next ? 1 : -1);
+  }
+
+  /** Save / share the current photo or video as a real file (share sheet on
+   *  phones → Save Image / Files / WhatsApp…; download elsewhere). */
+  async function sharePhoto(m: Media) {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const blob = await (await fetch(m.src)).blob();
+      const ext = m.type === 'video' ? 'mp4' : 'jpg';
+      const base = (m.name || 'photo').replace(/\.[^.]+$/, '') || 'photo';
+      const file = new File([blob], `${base}.${ext}`, { type: blob.type || (m.type === 'video' ? 'video/mp4' : 'image/jpeg') });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (typeof nav.share === 'function' && nav.canShare?.({ files: [file] })) {
+        try { await nav.share({ files: [file] }); return; }
+        catch (e) { if ((e as Error).name === 'AbortError') return; }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = file.name; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch { /* nothing sensible to do — the viewer stays open */ }
+    finally { setSharing(false); }
+  }
 
   async function onPick(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -181,7 +242,11 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
                 <li key={m.id} className="bp-mem-item">
                   {m.type === 'video'
                     ? <video className="bp-mem-media" src={m.src} controls aria-label={m.name} />
-                    : <img className="bp-mem-media" src={m.src} alt={m.name} loading="lazy" />}
+                    : (
+                      <button type="button" className="bp-mem-open" aria-label={t('memories.viewPhoto')} onClick={() => setViewer(flat.indexOf(m))}>
+                        <img className="bp-mem-media" src={m.src} alt={m.name} loading="lazy" />
+                      </button>
+                    )}
                   {canDelete(m, meUid, isOwner) && (
                     <button className="bp-mem-del" aria-label={t('memories.delete')} onClick={() => memoriesActions.remove(m.id)}>
                       <span className="material-symbols-outlined" aria-hidden="true">delete</span>
@@ -192,6 +257,36 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
             </ul>
           </section>
         ))
+      )}
+
+      {current && (
+        <div className="bp-lightbox" role="dialog" aria-modal="true" aria-label={current.name} tabIndex={-1} autoFocus
+          onKeyDown={onViewerKey} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+          <div className="bp-lightbox__head">
+            <span className="bp-lightbox__count">{t('memories.photoOf', { n: (viewer ?? 0) + 1, total: flat.length })}</span>
+            <span className="bp-lightbox__meta">{current.place}{current.place && current.day ? ' · ' : ''}{current.day}</span>
+            <button className="bp-icon-btn" aria-label={t('trips.close')} onClick={() => setViewer(null)}>
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
+            </button>
+          </div>
+          <div className="bp-lightbox__stage" onClick={(e) => e.target === e.currentTarget && setViewer(null)}>
+            {current.type === 'video'
+              ? <video key={current.id} className="bp-lightbox__media" src={current.src} controls autoPlay playsInline />
+              : <img key={current.id} className="bp-lightbox__media" src={current.src} alt={current.name} />}
+          </div>
+          <div className="bp-lightbox__actions">
+            <button className="bp-icon-btn bp-lightbox__nav" aria-label={t('memories.prev')} onClick={() => step(-1)} disabled={flat.length < 2}>
+              <span className="material-symbols-outlined" aria-hidden="true">{locale === 'ar' ? 'chevron_right' : 'chevron_left'}</span>
+            </button>
+            <button className="bp-btn bp-btn--primary" onClick={() => sharePhoto(current)} disabled={sharing}>
+              <span className="material-symbols-outlined" aria-hidden="true">ios_share</span>
+              {sharing ? t('memories.saving') : t('memories.sharePhoto')}
+            </button>
+            <button className="bp-icon-btn bp-lightbox__nav" aria-label={t('memories.next')} onClick={() => step(1)} disabled={flat.length < 2}>
+              <span className="material-symbols-outlined" aria-hidden="true">{locale === 'ar' ? 'chevron_left' : 'chevron_right'}</span>
+            </button>
+          </div>
+        </div>
       )}
 
       {pdfPreview && (

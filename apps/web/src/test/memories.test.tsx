@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import '@/shared/i18n';
@@ -122,6 +122,24 @@ describe('US-013 Memories UI', () => {
     seed([OWNER, U2], media);
     renderAt('/trips/trip-x#memories');
     await waitFor(() => expect(screen.getAllByRole('button', { name: 'Delete media' }).length).toBeGreaterThanOrEqual(2));
+  });
+
+  it('opens a photo full-screen with a save/share action, incl. via ?photo= deep link', async () => {
+    const pic: Media = { id: 'p1', type: 'image', src: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', name: 'pic.jpg', uploaderUid: 'me', day: 'Day 1', place: 'London' };
+    await signIn();
+    seed([OWNER], [pic]);
+    renderAt('/trips/trip-x#memories');
+    await userEvent.click(await screen.findByRole('button', { name: 'View photo' }));
+    const dlg = await screen.findByRole('dialog', { name: 'pic.jpg' });
+    expect(dlg).toHaveTextContent('1 / 1');
+    expect(within(dlg).getByRole('button', { name: /Save \/ Share/ })).toBeInTheDocument();
+    await userEvent.click(within(dlg).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'pic.jpg' })).not.toBeInTheDocument());
+
+    // Deep link from the report opens the viewer directly.
+    seed([OWNER], [pic]);
+    renderAt('/trips/trip-x?photo=p1#memories');
+    expect(await screen.findByRole('dialog', { name: 'pic.jpg' })).toBeInTheDocument();
   });
 
   it('exports an on-device report into a new tab with the trip summary (AC5)', async () => {

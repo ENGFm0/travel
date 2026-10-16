@@ -272,10 +272,18 @@ export function buildTripReportHtml(d: ReportData): string {
   // ---- Memories -----------------------------------------------------------------
   const byDay = new Map<string, Media[]>();
   for (const m of images) { const k = m.day || '—'; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k)!.push(m); }
+  // Each photo links back to the app's full-size viewer (works from the PDF too).
+  const appOrigin = (() => { try { return globalThis.location?.origin ?? ''; } catch { return ''; } })();
+  const photoHref = (m: Media) => appOrigin ? `${appOrigin}/trips/${encodeURIComponent(trip.id)}?photo=${encodeURIComponent(m.id)}#memories` : '';
+  const photoTag = (m: Media) => {
+    const img = `<img src="${esc(m.src)}" alt="${esc(m.name)}">`;
+    const href = photoHref(m);
+    return href ? `<a class="photo-link" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(t('memories.viewPhoto'))}">${img}</a>` : img;
+  };
   const memories = images.length === 0 && videos.length === 0
     ? `<p class="muted">${esc(t('memories.empty'))}</p>`
     : [...byDay.entries()].map(([day, items]) =>
-        `<h4 class="ph-day">${esc(day)} <span class="muted">· ${short(items.length)}</span></h4><div class="photos">${items.map((m, i) => `<figure class="${i === 0 && items.length >= 5 && (items.length - 1) % 4 === 0 ? 'big' : ''}"><img src="${esc(m.src)}" alt="${esc(m.name)}">${m.place ? `<figcaption>📍 ${esc(m.place)}</figcaption>` : ''}</figure>`).join('')}</div>`).join('')
+        `<h4 class="ph-day">${esc(day)} <span class="muted">· ${short(items.length)}</span></h4><div class="photos">${items.map((m, i) => `<figure class="${i === 0 && items.length >= 5 && (items.length - 1) % 4 === 0 ? 'big' : ''}">${photoTag(m)}${m.place ? `<figcaption>📍 ${esc(m.place)}</figcaption>` : ''}</figure>`).join('')}</div>`).join('')
       + (videos.length ? `<p class="muted">🎬 ${esc(t('memories.videosNotIncluded', { count: videos.length }))}</p>` : '');
 
   // ---- Document -------------------------------------------------------------------
@@ -385,6 +393,7 @@ export function buildTripReportHtml(d: ReportData): string {
   .ph-day { margin: 14px 0 8px; }
   .photos { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 120px; grid-auto-flow: dense; gap: 6px; }
   figure { margin: 0; break-inside: avoid; position: relative; } figure.big { grid-column: span 2; grid-row: span 2; }
+  figure .photo-link { display: block; height: 100%; }
   figure img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: block; }
   figcaption { position: absolute; inset-inline-start: 6px; bottom: 6px; font-size: 10.5px; background: rgba(20,33,61,.7); color: #fff; padding: 2px 8px; border-radius: 999px; }
   @media (max-width: 560px) { .photos { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 100px; } }

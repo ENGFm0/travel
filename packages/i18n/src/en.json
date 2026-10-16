@@ -824,7 +824,12 @@
     "pdfPreviewTitle": "PDF preview",
     "pdfPages": "{{count}} page(s)",
     "pdfSave": "💾 Save / Share",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "viewPhoto": "View photo",
+    "sharePhoto": "Save / Share",
+    "prev": "Previous",
+    "next": "Next",
+    "photoOf": "{{n}} / {{total}}"
   },
   "friends": {
     "requests": "Friend requests",

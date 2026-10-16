@@ -130,10 +130,20 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
       .sheet{max-width:none!important;width:${PAGE_W}px;padding:0 14px 10px!important;margin:0!important}
       .hero,.card,.tile,.city,.settle,.member{box-shadow:none!important}
       .timeline{overflow:visible!important;flex-wrap:wrap}
-      .photos{grid-template-columns:repeat(3,1fr)!important;grid-auto-rows:148px!important}
-      figure.big{grid-column:auto!important;grid-row:auto!important}`;
+      .photos{grid-template-columns:repeat(2,1fr)!important;grid-auto-rows:176px!important;gap:8px!important}
+      figure.big{grid-column:auto!important;grid-row:auto!important}
+      figure{border-radius:12px;overflow:hidden;background-size:cover;background-position:center;background-repeat:no-repeat}`;
     doc.head.appendChild(st);
     await waitReady(doc);
+    // html2canvas ignores object-fit and would stretch photos to the cell; paint
+    // each photo as a cover-cropped background on its <figure> instead (the
+    // <img> stays, invisible, so links/layout are unchanged).
+    doc.querySelectorAll<HTMLImageElement>('figure img').forEach((img) => {
+      const fig = img.closest('figure') as HTMLElement | null;
+      if (!fig || !img.currentSrc && !img.src) return;
+      fig.style.backgroundImage = `url("${(img.currentSrc || img.src).replace(/"/g, '%22')}")`;
+      img.style.visibility = 'hidden';
+    });
 
     const sheet = doc.querySelector('.sheet') as HTMLElement;
     const origin = sheet.getBoundingClientRect();
