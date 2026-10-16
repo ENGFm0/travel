@@ -2,6 +2,7 @@ import { createApiClient } from '@boardingpass/core';
 import { db, storage, firebaseEnabled, requireUid } from '@/shared/firebase';
 import { collection, doc, getDocs, setDoc, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { compressImageToDataUrl, isCompressibleImage } from '@/shared/imageCompress';
 import type { Media, MediaType } from './memoriesModel';
 
 export interface UploadMeta {
@@ -95,12 +96,20 @@ export function createFirestoreMemoriesService(): MemoriesService {
       let src = meta.src;
       if (meta.file) {
         const path = `memories/${tripId}/${id}`;
-        const sref = storageRef(storage(), path);
         // Some iOS photos arrive with an empty type; force a media content-type
         // so the Storage rules (image|video only) accept the upload.
         const contentType = meta.file.type || (meta.type === 'video' ? 'video/mp4' : 'image/jpeg');
-        await uploadBytes(sref, meta.file, { contentType });
-        src = await getDownloadURL(sref);
+        try {
+          const sref = storageRef(storage(), path);
+          await uploadBytes(sref, meta.file, { contentType });
+          src = await getDownloadURL(sref);
+        } catch (e) {
+          // Storage bucket not provisioned yet (storage/unknown): inline a
+          // compressed copy for photos so the memory still saves. Videos need
+          // Storage, so surface the error for those.
+          if (isCompressibleImage(meta.file)) src = await compressImageToDataUrl(meta.file);
+          else throw e;
+        }
       }
       await setDoc(doc(col(tripId), id), {
         type: meta.type, src, name: meta.name, uploaderUid: uid,
@@ -130,11 +139,19 @@ export function createMemoriesService(): MemoriesService {
  *  Falls back to a local object URL when Firebase isn't enabled (dev/tests). */
 export async function uploadTripImage(tripId: string, file: File, prefix = 'receipt'): Promise<string> {
   if (!firebaseEnabled()) {
-    try { return URL.createObjectURL(file); } catch { return ''; }
+    try { return await compressImageToDataUrl(file); }
+    catch { try { return URL.createObjectURL(file); } catch { return ''; } }
   }
   const path = `memories/${tripId}/${prefix}-${crypto.randomUUID()}`;
-  const sref = storageRef(storage(), path);
   const contentType = file.type || (file.type.startsWith('video') ? 'video/mp4' : 'image/jpeg');
-  await uploadBytes(sref, file, { contentType });
-  return getDownloadURL(sref);
+  try {
+    const sref = storageRef(storage(), path);
+    await uploadBytes(sref, file, { contentType });
+    return getDownloadURL(sref);
+  } catch (e) {
+    // Storage not provisioned yet: inline a compressed copy for images (receipts
+    // and car photos are images); videos need Storage.
+    if (isCompressibleImage(file)) return compressImageToDataUrl(file);
+    throw e;
+  }
 }

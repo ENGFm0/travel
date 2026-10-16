@@ -1,5 +1,6 @@
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firebaseEnabled, storage } from './firebase';
+import { compressImageToDataUrl, isCompressibleImage } from './imageCompress';
 
 export type MediaType = 'image' | 'video';
 
@@ -29,6 +30,13 @@ export async function uploadFile(folder: string, file: File): Promise<string> {
   // Force a concrete media content-type (iOS photos can arrive with an empty
   // type), so membership-scoped Storage rules that require image/video accept it.
   const contentType = file.type || (mediaTypeOf(file.type) === 'video' ? 'video/mp4' : 'image/jpeg');
-  const snap = await uploadBytes(ref(storage(), path), file, { contentType });
-  return getDownloadURL(snap.ref);
+  try {
+    const snap = await uploadBytes(ref(storage(), path), file, { contentType });
+    return getDownloadURL(snap.ref);
+  } catch (e) {
+    // Storage bucket not provisioned yet (storage/unknown): fall back to an inline
+    // compressed copy for images so the upload still succeeds. Videos need Storage.
+    if (isCompressibleImage(file)) return compressImageToDataUrl(file);
+    throw e;
+  }
 }
