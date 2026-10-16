@@ -807,7 +807,16 @@
       "balance": "Balance: owed / owes",
       "balanceHint": "Blue = the group owes them, red = they owe the group",
       "timeline": "Trip timeline",
-      "nights": "{{count}} night(s)"
+      "nights": "{{count}} night(s)",
+      "groupNote": "Split equally across all members",
+      "perHeadGroup": "Per head (group pot)",
+      "perHeadNote": "Group pot ÷ number of members",
+      "sideNote": "{{count}} kitty(ies) · split among their participants only",
+      "grandAll": "Grand total",
+      "grandNote": "Group pot + side kitties",
+      "paidSplit": "{{group}} group + {{side}} side",
+      "paidLegend": "Solid = group pot · hatched = side kitties",
+      "catNote": "Group pot only"
     }
   },
   "friends": {

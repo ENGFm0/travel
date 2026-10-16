@@ -72,6 +72,14 @@ const dayDiff = (a?: string, b?: string) => (a && b ? Math.max(0, Math.round((ne
 const addDays = (iso: string, n: number) => new Date(new Date(iso).getTime() + n * DAY).toISOString().slice(0, 10);
 const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0] ?? '').join('').toUpperCase() || '•';
 
+/** Google Maps link for a place: explicit link → pinned coords → name + city search. */
+const mapsUrl = (name: string, city: string, explicit?: string, lat?: number, lng?: number) =>
+  explicit || (lat != null && lng != null
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name} ${city}`.trim())}`);
+/** Clickable place name (label must already be escaped). */
+const place = (label: string, href: string) => `<a class="place" href="${esc(href)}" target="_blank" rel="noopener">${label} <span class="pin">📍</span></a>`;
+
 function legLine(leg: FlightLeg | undefined, locale: Locale): string {
   if (!leg) return '';
   const bits = [leg.airline, leg.no, leg.from && leg.to ? `${leg.from} → ${leg.to}` : (leg.from || leg.to)].filter(Boolean);
@@ -99,10 +107,11 @@ function donut(parts: DonutPart[], total: number, center: string, sub: string): 
     </svg><ul class="legend">${legend}</ul></div>`;
 }
 
-/** Thin horizontal bars (single sequential hue), direct-labeled with the value. */
-function hbars(rows: { label: string; value: number; text: string; color?: string }[]): string {
-  const max = Math.max(...rows.map((r) => r.value), 0) || 1;
-  return `<div class="hbars">${rows.map((r) => `<div class="hb"><span class="hb-name">${esc(r.label)}</span><span class="hb-track"><span class="hb-fill" style="width:${Math.max(2, (r.value / max) * 100)}%;background:${r.color ?? '#2a78d6'}"></span></span><span class="hb-val">${esc(r.text)}</span></div>`).join('')}</div>`;
+/** Thin stacked bars: group-pot segment (solid) + side-kitty segment (same hue,
+ *  hatched) with a 2px surface gap; direct-labeled with the breakdown. */
+function hbars(rows: { label: string; a: number; b: number; color: string; text: string; sub?: string }[]): string {
+  const max = Math.max(...rows.map((r) => r.a + r.b), 0) || 1;
+  return `<div class="hbars">${rows.map((r) => `<div class="hb"><span class="hb-name">${esc(r.label)}</span><span class="hb-track">${r.a > 0 ? `<span class="hb-fill" style="width:${(r.a / max) * 100}%;background:${r.color}"></span>` : ''}${r.b > 0 ? `<span class="hb-fill hb-side" style="width:${(r.b / max) * 100}%;background:${r.color}"></span>` : ''}</span><span class="hb-val">${esc(r.text)}${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</span></div>`).join('')}</div>`;
 }
 
 /** Diverging bars around a center baseline: + grows one way (blue), − the other (red). */
@@ -140,7 +149,9 @@ export function buildTripReportHtml(d: ReportData): string {
   const groupTotal = finance?.group.reduce((a, e) => a + e.amount, 0) ?? 0;
   const sideTotal = finance?.sides.reduce((a, s) => a + s.total, 0) ?? 0;
   const grand = groupTotal + sideTotal;
-  const perHead = active.length ? grand / active.length : 0;
+  // Per head is from the GROUP pot only (split across all members). Side kitties
+  // are split among their own participants — never across everyone.
+  const perHead = active.length ? groupTotal / active.length : 0;
 
   const kpis = [
     { icon: '📅', label: t('memories.rpt.days'), value: short(tripDays) },
@@ -150,10 +161,10 @@ export function buildTripReportHtml(d: ReportData): string {
     { icon: '📸', label: t('memories.rpt.photos'), value: short(images.length) },
   ];
   const moneyTiles = [
-    { label: t('expenses.grandTotal'), value: money(grand), accent: '#14213d', big: true },
-    { label: t('expenses.perHead'), value: money(perHead), accent: '#f26b3a', big: true },
-    { label: t('expenses.groupSpend'), value: money(groupTotal), accent: SERIES[0] },
-    { label: t('expenses.sideSpend'), value: money(sideTotal), accent: SERIES[2] },
+    { label: t('expenses.groupSpend'), value: money(groupTotal), accent: SERIES[0], big: true, sub: t('memories.rpt.groupNote') },
+    { label: t('memories.rpt.perHeadGroup'), value: money(perHead), accent: '#f26b3a', big: true, sub: t('memories.rpt.perHeadNote') },
+    { label: t('expenses.sideSpend'), value: money(sideTotal), accent: SERIES[2], big: false, sub: t('memories.rpt.sideNote', { count: finance?.sides.length ?? 0 }) },
+    { label: t('memories.rpt.grandAll'), value: money(grand), accent: '#14213d', big: false, sub: t('memories.rpt.grandNote') },
   ];
 
   // ---- Charts -------------------------------------------------------------------
@@ -163,9 +174,11 @@ export function buildTripReportHtml(d: ReportData): string {
     const uids = active.map((m) => m.uid);
     const dist = distribution(finance.group);
     const catParts: DonutPart[] = CATEGORIES.map((k) => ({ label: t(`expenses.cat.${k}`), value: dist[k], color: CAT_COLOR[k], sub: money(dist[k]) }));
-    const paid: Record<string, number> = {};
-    for (const e of finance.group) paid[e.payerUid] = (paid[e.payerUid] ?? 0) + e.amount;
-    for (const s of finance.sides) paid[s.payerUid] = (paid[s.payerUid] ?? 0) + s.total;
+    // Keep group-pot and side-kitty payments apart (they split differently).
+    const paidG: Record<string, number> = {};
+    const paidS: Record<string, number> = {};
+    for (const e of finance.group) paidG[e.payerUid] = (paidG[e.payerUid] ?? 0) + e.amount;
+    for (const s of finance.sides) paidS[s.payerUid] = (paidS[s.payerUid] ?? 0) + s.total;
     const nets = netByMember(finance, uids);
     const transfers = settlements(nets);
 
@@ -173,7 +186,11 @@ export function buildTripReportHtml(d: ReportData): string {
       ? donut(catParts, groupTotal, short(groupTotal), cur)
       : `<p class="muted">${esc(t('expenses.noGroup'))}</p>`;
     const paidChart = grand > 0
-      ? hbars(uids.map((u) => ({ label: nameOf(u), value: paid[u] ?? 0, text: money(paid[u] ?? 0), color: memberColor(u) })))
+      ? hbars(uids.map((u) => {
+          const g = paidG[u] ?? 0, s = paidS[u] ?? 0;
+          const sub = s > 0 ? t('memories.rpt.paidSplit', { group: short(g), side: short(s) }) : undefined;
+          return { label: nameOf(u), a: g, b: s, color: memberColor(u), text: money(g + s), sub };
+        }))
       : `<p class="muted">${esc(t('expenses.noGroup'))}</p>`;
     const balChart = dbars(uids.map((u) => {
       const v = nets[u] ?? 0;
@@ -182,8 +199,8 @@ export function buildTripReportHtml(d: ReportData): string {
     }));
 
     charts = `<div class="charts">
-      <div class="card"><h4>🍩 ${esc(t('expenses.distribution'))}</h4>${catChart}</div>
-      <div class="card"><h4>💳 ${esc(t('memories.rpt.paidBy'))}</h4>${paidChart}</div>
+      <div class="card"><h4>🍩 ${esc(t('expenses.distribution'))}</h4><p class="hint">${esc(t('memories.rpt.catNote'))}</p>${catChart}</div>
+      <div class="card"><h4>💳 ${esc(t('memories.rpt.paidBy'))}</h4><p class="hint">${esc(t('memories.rpt.paidLegend'))}</p>${paidChart}</div>
       <div class="card wide"><h4>⚖️ ${esc(t('memories.rpt.balance'))}</h4><p class="hint">${esc(t('memories.rpt.balanceHint'))}</p>${balChart}</div>
     </div>`;
 
@@ -204,8 +221,8 @@ export function buildTripReportHtml(d: ReportData): string {
   const itinerary = cities.map((c) => {
     const nights = dayDiff(c.dateFrom, c.dateTo);
     const dates = c.dateFrom ? `${formatDate(c.dateFrom, locale)}${c.dateTo ? ` – ${formatDate(c.dateTo, locale)}` : ''}` : '';
-    const stays = (c.stays ?? []).map((s) => `<span class="chip">🏨 ${esc(s.name)}${s.note ? ` <em>${esc(s.note)}</em>` : ''}</span>`).join('')
-      || (c.hotel ? `<span class="chip">🏨 ${esc(c.hotel)}</span>` : '');
+    const stays = (c.stays ?? []).map((s) => `<span class="chip">🏨 ${place(esc(s.name), mapsUrl(s.name, c.name, s.mapsUrl, s.lat, s.lng))}${s.note ? ` <em>${esc(s.note)}</em>` : ''}</span>`).join('')
+      || (c.hotel ? `<span class="chip">🏨 ${place(esc(c.hotel), mapsUrl(c.hotel, c.name, c.hotelUrl))}</span>` : '');
     const transport: string[] = [];
     if (c.flightOut) transport.push(`<li>✈️ ${legLine(c.flightOut, locale)}</li>`);
     if (c.flightReturn) transport.push(`<li>✈️ ${legLine(c.flightReturn, locale)}</li>`);
@@ -218,7 +235,7 @@ export function buildTripReportHtml(d: ReportData): string {
         const when = a.time ? formatTime12(a.time, locale) : (a.period ? t(`itinerary.period.${a.period}`) : '');
         const kind = a.kind ?? 'OTHER';
         return `<li class="act"><span class="act-when">${esc(when)}</span><span class="act-dot" style="background:${KIND_COLOR[kind]}"></span>
-          <div class="act-body"><div class="act-title">${KIND_ICON[kind]} ${esc(a.title)}${a.kind ? ` <span class="tag" style="--c:${KIND_COLOR[kind]}">${esc(t(`itinerary.kind.${a.kind}`))}</span>` : ''}</div>${a.note ? `<div class="muted">${esc(a.note)}</div>` : ''}</div>
+          <div class="act-body"><div class="act-title">${KIND_ICON[kind]} ${place(esc(a.title), mapsUrl(a.title, c.name, a.mapsUrl))}${a.kind ? ` <span class="tag" style="--c:${KIND_COLOR[kind]}">${esc(t(`itinerary.kind.${a.kind}`))}</span>` : ''}</div>${a.note ? `<div class="muted">${esc(a.note)}</div>` : ''}</div>
           <span class="act-cost">${a.cost ? esc(money(a.cost)) : ''}</span></li>`;
       }).join('');
       const label = day.date ? formatDate(day.date, locale, { weekday: 'long', day: 'numeric', month: 'short' }) : '';
@@ -345,6 +362,11 @@ export function buildTripReportHtml(d: ReportData): string {
   .act-title { font-weight: 700; } .act-cost { font-size: 12.5px; color: var(--ink2); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 8px; border-radius: 999px; background: color-mix(in srgb, var(--c, #9aa3b8) 14%, #fff); color: var(--c, #3a4a6b); vertical-align: middle; }
   .tag.ok { background: #e8f7e8; color: #0a5a0a; } .pad { padding-inline-start: 32px; }
+  a.place { color: inherit; text-decoration: none; border-bottom: 1px dashed #b9c2d8; } a.place .pin { font-size: 11px; }
+  .tile small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+  .hb-track { display: flex; gap: 2px; min-width: 90px; }
+  .hb-val small { display: block; font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+  .hb-side { opacity: .6; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.6) 0 3px, transparent 3px 6px) !important; }
 
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   td, th { padding: 7px 8px; border-bottom: 1px solid #edf0f6; vertical-align: top; text-align: start; }
@@ -389,7 +411,7 @@ export function buildTripReportHtml(d: ReportData): string {
   </header>
 
   <h2>📊 ${esc(t('memories.rpt.dashboard'))}</h2>
-  <div class="tiles">${moneyTiles.map((m) => `<div class="tile ${m.big ? 'big' : ''}" style="--a:${m.accent}"><span>${esc(m.label)}</span><b>${esc(m.value)}</b></div>`).join('')}</div>
+  <div class="tiles">${moneyTiles.map((m) => `<div class="tile ${m.big ? 'big' : ''}" style="--a:${m.accent}"><span>${esc(m.label)}</span><b>${esc(m.value)}</b>${m.sub ? `<small>${esc(m.sub)}</small>` : ''}</div>`).join('')}</div>
   ${charts}
   ${settleCards ? `<h4 style="margin-top:14px">🔁 ${esc(t('expenses.whoPaysWhom'))}</h4>${settleCards}` : ''}
 
