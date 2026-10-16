@@ -706,7 +706,8 @@
     "breakdown": "Breakdown",
     "groupPot": "Group pot",
     "paidAmt": "paid",
-    "formula": "{{total}} ÷ {{count}}"
+    "formula": "{{total}} ÷ {{count}}",
+    "roundingAdj": "Halala rounding (so the table sums to zero)"
   },
   "tasks": {
     "title": "Tasks",

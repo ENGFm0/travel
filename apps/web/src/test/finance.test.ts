@@ -75,22 +75,29 @@ describe('US-007 finance core', () => {
         { id: 's4', title: 'dinner', participantUids: ['khalid', 'abu', 'faisal', 'shibl', 'fahad'], total: 363, payerUid: 'shibl', settled: false },
       ],
     };
-    const net = netByMember(f, U);
-    expect(net.faisal).toBe(net.fahad);   // same participation → same number (was 240.47 vs 240.49)
-    expect(net.faisal).toBe(-240.46);     // −(664/7 + 121/3 + 74/3 + 8 + 72.6) = −240.457…
-    expect(net.abu).toBe(658.54);         // 569.143 + 80.667 + 49.333 + 32 − 72.6
-    expect(net.shibl).toBe(187.54);       // −94.857 − 8 + 290.4
-    expect(net.ziad).toBe(-94.86);
-    expect(net.mutrafi).toBe(net.ziad);
     const exact = netByMemberExact(f, U);
     expect(Math.abs(Object.values(exact).reduce((a, b) => a + b, 0))).toBeLessThan(1e-9);
-    // Transfers: every member ends within a halala of their balance.
-    const tr = settlements(exact);
+    expect(exact.faisal).toBeCloseTo(-240.457, 3); // −(664/7 + 121/3 + 74/3 + 8 + 72.6)
+    expect(exact.abu).toBeCloseTo(658.543, 3);     // 569.143 + 80.667 + 49.333 + 32 − 72.6
+    const net = netByMember(f, U);
+    expect(net.faisal).toBe(net.fahad);   // same participation → same number (was 240.47 vs 240.49)
+    expect(net.faisal).toBe(-240.46);
+    expect(net.ziad).toBe(-94.86);
+    expect(net.mutrafi).toBe(net.ziad);
+    expect(net.khalid).toBe(-175.46);
+    // Plain rounding leaves the table 2 halalas short; they go to the unique,
+    // largest balances (the creditors here) so the settled table sums to 0.
+    expect(net.abu).toBe(658.55);
+    expect(net.shibl).toBe(187.55);
+    expect(Math.abs(Math.round(Object.values(net).reduce((a, b) => a + b, 0) * 100))).toBe(0); // zero-sum (±0)
+    // Transfers reproduce every row EXACTLY (what's above = what's below).
+    const tr = settlements(net);
     for (const u of U) {
-      const out = tr.filter((x) => x.from === u).reduce((a, x) => a + x.amount, 0);
-      const inn = tr.filter((x) => x.to === u).reduce((a, x) => a + x.amount, 0);
-      expect(Math.abs((inn - out) - net[u])).toBeLessThan(0.011);
+      const out = tr.filter((x) => x.from === u).reduce((a, x) => a + Math.round(x.amount * 100), 0);
+      const inn = tr.filter((x) => x.to === u).reduce((a, x) => a + Math.round(x.amount * 100), 0);
+      expect(inn - out).toBe(Math.round(net[u] * 100));
     }
+    expect(myNetBalance(f, U, 'abu')).toBe(658.55); // the headline matches the row
     // Breakdown lists exactly the pots the member is in, with the right divisors.
     const b = memberBreakdown(f, U, 'faisal');
     expect(b.lines.map((l) => l.count)).toEqual([7, 3, 3, 5, 5]);

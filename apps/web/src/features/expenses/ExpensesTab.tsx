@@ -8,7 +8,7 @@ import { setMockCurrentUser } from './expensesService';
 import { uploadTripImage } from '@/features/memories/memoriesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
-  CATEGORIES, convert, distribution, kittyCollected, memberBreakdown, myNetBalance, netByMember, netByMemberExact,
+  CATEGORIES, convert, distribution, kittyCollected, memberBreakdown, myNetBalance, netByMember,
   perMemberDue, personalRemaining, personalSpent, settlements,
   type Category, type Finance, type GroupExpense, type PersonalExpense,
 } from './finance';
@@ -506,10 +506,16 @@ function PersonalPanel({ finance, fmt, canEdit }: { finance: Finance; fmt: (n: n
 
 /** Line-by-line derivation of one member's balance, so it can be checked by
  *  hand: "total ÷ people = share · paid X" per pot, then paid − shares = net. */
-function Breakdown({ finance, memberUids, u, fmt }: { finance: Finance; memberUids: string[]; u: string; fmt: (n: number) => string }) {
+function Breakdown({ finance, memberUids, u, fmt, shown }: { finance: Finance; memberUids: string[]; u: string; fmt: (n: number) => string; shown: number }) {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
   const b = memberBreakdown(finance, memberUids, u);
   if (b.lines.length === 0) return null;
+  // Exact net to 3 decimals when it isn't whole halalas; and the halala
+  // rounding applied so the table sums to zero (shown − exact), if any.
+  const exact3 = new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(Math.abs(b.net));
+  const adj = Math.round((shown - b.net) * 1000) / 1000;
+  const adjStr = Math.abs(adj) >= 0.005 ? `${adj > 0 ? '+' : '−'}${fmt(Math.abs(adj))}` : null;
   return (
     <details className="bp-breakdown">
       <summary>{t('expenses.breakdown')}</summary>
@@ -525,8 +531,14 @@ function Breakdown({ finance, memberUids, u, fmt }: { finance: Finance; memberUi
         ))}
         <li className="bp-breakdown__sum">
           <span>{t('expenses.paidAmt')} {fmt(b.paid)} − {t('expenses.share')} {fmt(b.share)}</span>
-          <span>= <b className={b.net >= 0 ? 'is-pos' : 'is-neg'}>{fmt(Math.abs(b.net))}</b> {b.net >= 0 ? t('expenses.owedShort') : t('expenses.owesShort')}</span>
+          <span>= <b className={b.net >= 0 ? 'is-pos' : 'is-neg'}>{exact3}</b> {b.net >= 0 ? t('expenses.owedShort') : t('expenses.owesShort')}</span>
         </li>
+        {adjStr && (
+          <li className="bp-breakdown__adj">
+            <span>{t('expenses.roundingAdj')}</span>
+            <span>{adjStr} → <b>{fmt(Math.abs(shown))}</b></span>
+          </li>
+        )}
       </ul>
     </details>
   );
@@ -538,8 +550,8 @@ function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid }: {
   const { t } = useTranslation();
   const myNet = myNetBalance(finance, memberUids, meUid);
   const owed = myNet >= 0;
-  const nets = netByMember(finance, memberUids);
-  const transfers = settlements(netByMemberExact(finance, memberUids)); // exact in, rounded out
+  const nets = netByMember(finance, memberUids);            // settled halalas, zero-sum
+  const transfers = settlements(nets);                      // reproduce the rows exactly
   const groupTotal = finance.group.reduce((a, e) => a + e.amount, 0);
   const sideTotal = finance.sides.reduce((a, s) => a + s.total, 0);
   const grand = groupTotal + sideTotal;
@@ -573,7 +585,7 @@ function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid }: {
                 : <span className={`bp-pay__net ${v > 0 ? 'is-pos' : 'is-neg'}`}>
                     {v > 0 ? t('expenses.owedShort') : t('expenses.owesShort')} {fmt(Math.abs(v))}
                   </span>}
-              <Breakdown finance={finance} memberUids={memberUids} u={u} fmt={fmt} />
+              <Breakdown finance={finance} memberUids={memberUids} u={u} fmt={fmt} shown={v} />
             </li>
           );
         })}

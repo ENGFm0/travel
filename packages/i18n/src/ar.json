@@ -706,7 +706,8 @@
     "breakdown": "تفاصيل الحساب",
     "groupPot": "القطة العامة",
     "paidAmt": "دفع",
-    "formula": "{{total}} ÷ {{count}}"
+    "formula": "{{total}} ÷ {{count}}",
+    "roundingAdj": "تقريب للهللة (حتى يكون مجموع الجدول صفرًا)"
   },
   "tasks": {
     "title": "المهام",
