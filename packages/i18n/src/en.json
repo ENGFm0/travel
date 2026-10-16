@@ -702,7 +702,11 @@
     "whoPaysWhom": "Who pays whom",
     "allSettled": "All settled — no transfers needed",
     "paysTo": "pays",
-    "receiptsCount": "{{count}} attached"
+    "receiptsCount": "{{count}} attached",
+    "breakdown": "Breakdown",
+    "groupPot": "Group pot",
+    "paidAmt": "paid",
+    "formula": "{{total}} ÷ {{count}}"
   },
   "tasks": {
     "title": "Tasks",

@@ -21,7 +21,7 @@ import {
 } from '@/features/itinerary/itineraryService';
 import { createExpensesService } from '@/features/expenses/expensesService';
 import type { Member } from '@/features/members/membersService';
-import { CATEGORIES, distribution, netByMember, settlements, type Category, type Finance } from '@/features/expenses/finance';
+import { CATEGORIES, distribution, netByMember, netByMemberExact, settlements, type Category, type Finance } from '@/features/expenses/finance';
 import type { Media } from './memoriesModel';
 
 type T = (key: string, opts?: Record<string, unknown>) => string;
@@ -185,7 +185,7 @@ export function buildTripReportHtml(d: ReportData): string {
     for (const e of finance.group) paidG[e.payerUid] = (paidG[e.payerUid] ?? 0) + e.amount;
     for (const s of finance.sides) paidS[s.payerUid] = (paidS[s.payerUid] ?? 0) + s.total;
     const nets = netByMember(finance, uids);
-    const transfers = settlements(nets);
+    const transfers = settlements(netByMemberExact(finance, uids));
 
     const catChart = groupTotal > 0
       ? donut(catParts, groupTotal, short(groupTotal), cur)

@@ -702,7 +702,11 @@
     "whoPaysWhom": "من يدفع لمن",
     "allSettled": "الكل متساوٍ، ما فيه تحويلات",
     "paysTo": "يدفع لـ",
-    "receiptsCount": "{{count}} صورة مرفقة"
+    "receiptsCount": "{{count}} صورة مرفقة",
+    "breakdown": "تفاصيل الحساب",
+    "groupPot": "القطة العامة",
+    "paidAmt": "دفع",
+    "formula": "{{total}} ÷ {{count}}"
   },
   "tasks": {
     "title": "المهام",

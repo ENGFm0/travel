@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   splitEqual, perMemberDue, kittyCollected, distribution, groupNet, sideNet,
   myNetBalance, personalSpent, personalRemaining, convert,
+  netByMember, netByMemberExact, settlements, memberBreakdown,
   type Finance, type GroupExpense, type SideKitty,
 } from '@/features/expenses/finance';
 
@@ -55,6 +56,48 @@ describe('US-007 finance core', () => {
     } satisfies Finance;
     // group: a paid 300, share 100 → +200; side: a owes 50 → −50 ⇒ +150
     expect(myNetBalance(f, M, 'a')).toBe(150);
+  });
+
+  it('is exact: identical participation → identical nets, nets sum to 0, transfers settle everyone', () => {
+    // Real scenario: 7 members, a group pot of 664 (÷7), two side kitties ÷3
+    // and two ÷5 with different payers.
+    const U = ['khalid', 'abu', 'faisal', 'ziad', 'mutrafi', 'shibl', 'fahad'];
+    const f: Finance = {
+      base: 'SAR', dest: 'SAR', rate: 1, kittyTotal: 0, paid: {}, personalBudget: 0, personal: [],
+      group: [
+        { id: 'g1', desc: 'villa', category: 'HOUSING', amount: 564, payerUid: 'abu' },
+        { id: 'g2', desc: 'snacks', category: 'FOOD', amount: 100, payerUid: 'abu' },
+      ],
+      sides: [
+        { id: 's1', title: 'fuel', participantUids: ['abu', 'fahad', 'faisal'], total: 121, payerUid: 'abu', settled: false },
+        { id: 's2', title: 'lunch', participantUids: ['abu', 'fahad', 'faisal'], total: 74, payerUid: 'abu', settled: false },
+        { id: 's3', title: 'breakfast', participantUids: ['khalid', 'abu', 'faisal', 'shibl', 'fahad'], total: 40, payerUid: 'abu', settled: false },
+        { id: 's4', title: 'dinner', participantUids: ['khalid', 'abu', 'faisal', 'shibl', 'fahad'], total: 363, payerUid: 'shibl', settled: false },
+      ],
+    };
+    const net = netByMember(f, U);
+    expect(net.faisal).toBe(net.fahad);   // same participation → same number (was 240.47 vs 240.49)
+    expect(net.faisal).toBe(-240.46);     // −(664/7 + 121/3 + 74/3 + 8 + 72.6) = −240.457…
+    expect(net.abu).toBe(658.54);         // 569.143 + 80.667 + 49.333 + 32 − 72.6
+    expect(net.shibl).toBe(187.54);       // −94.857 − 8 + 290.4
+    expect(net.ziad).toBe(-94.86);
+    expect(net.mutrafi).toBe(net.ziad);
+    const exact = netByMemberExact(f, U);
+    expect(Math.abs(Object.values(exact).reduce((a, b) => a + b, 0))).toBeLessThan(1e-9);
+    // Transfers: every member ends within a halala of their balance.
+    const tr = settlements(exact);
+    for (const u of U) {
+      const out = tr.filter((x) => x.from === u).reduce((a, x) => a + x.amount, 0);
+      const inn = tr.filter((x) => x.to === u).reduce((a, x) => a + x.amount, 0);
+      expect(Math.abs((inn - out) - net[u])).toBeLessThan(0.011);
+    }
+    // Breakdown lists exactly the pots the member is in, with the right divisors.
+    const b = memberBreakdown(f, U, 'faisal');
+    expect(b.lines.map((l) => l.count)).toEqual([7, 3, 3, 5, 5]);
+    expect(b.net).toBeCloseTo(-240.457, 3);
+    // A settled side kitty drops out of the balance.
+    const g = { ...f, sides: f.sides.map((s) => (s.id === 's4' ? { ...s, settled: true } : s)) };
+    expect(netByMember(g, U).shibl).toBe(-102.86); // −94.857 − 8
   });
 
   it('personal spend and remaining', () => {

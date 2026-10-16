@@ -8,8 +8,8 @@ import { setMockCurrentUser } from './expensesService';
 import { uploadTripImage } from '@/features/memories/memoriesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
-  CATEGORIES, convert, distribution, kittyCollected, myNetBalance, netByMember,
-  perMemberDue, personalRemaining, personalSpent, settlements, splitEqual,
+  CATEGORIES, convert, distribution, kittyCollected, memberBreakdown, myNetBalance, netByMember, netByMemberExact,
+  perMemberDue, personalRemaining, personalSpent, settlements,
   type Category, type Finance, type GroupExpense, type PersonalExpense,
 } from './finance';
 import { expensesActions, useFinance } from './expensesStore';
@@ -377,7 +377,7 @@ function SidePanel({ finance, active, nameOf, fmt, canEdit }: {
     <div className="bp-panel">
       <ul className="bp-side-list" role="list">
         {finance.sides.map((s) => {
-          const shares = splitEqual(s.total, s.participantUids.length);
+          const share = s.total / s.participantUids.length; // exact; display rounds
           return (
             <li key={s.id} className="bp-side-card">
               <div className="bp-side-card__head">
@@ -385,7 +385,7 @@ function SidePanel({ finance, active, nameOf, fmt, canEdit }: {
                 <span className="bp-exp__amt">{fmt(s.total)}</span>
               </div>
               <p className="bp-side-card__meta">
-                {s.participantUids.map((u) => nameOf(u)).join('، ')} · {t('expenses.share')}: {fmt(shares[0] ?? 0)} · {t('expenses.payer')}: {nameOf(s.payerUid)}
+                {s.participantUids.map((u) => nameOf(u)).join('، ')} · {t('expenses.share')}: {fmt(share)} · {t('expenses.payer')}: {nameOf(s.payerUid)}
               </p>
               <div className="bp-side-card__foot">
                 {s.settled && <span className="bp-status-chip bp-status-chip--ok">{t('expenses.settled')}</span>}
@@ -504,6 +504,34 @@ function PersonalPanel({ finance, fmt, canEdit }: { finance: Finance; fmt: (n: n
   );
 }
 
+/** Line-by-line derivation of one member's balance, so it can be checked by
+ *  hand: "total ÷ people = share · paid X" per pot, then paid − shares = net. */
+function Breakdown({ finance, memberUids, u, fmt }: { finance: Finance; memberUids: string[]; u: string; fmt: (n: number) => string }) {
+  const { t } = useTranslation();
+  const b = memberBreakdown(finance, memberUids, u);
+  if (b.lines.length === 0) return null;
+  return (
+    <details className="bp-breakdown">
+      <summary>{t('expenses.breakdown')}</summary>
+      <ul>
+        {b.lines.map((l, i) => (
+          <li key={i}>
+            <span className="bp-breakdown__label">{l.kind === 'group' ? t('expenses.groupPot') : l.label}</span>
+            <span className="bp-breakdown__calc">
+              {l.share > 0 ? <>{t('expenses.formula', { total: fmt(l.total), count: l.count })} = <b>{fmt(l.share)}</b></> : <>{fmt(l.total)}</>}
+              {l.paid > 0 && <> · {t('expenses.paidAmt')} <b>{fmt(l.paid)}</b></>}
+            </span>
+          </li>
+        ))}
+        <li className="bp-breakdown__sum">
+          <span>{t('expenses.paidAmt')} {fmt(b.paid)} − {t('expenses.share')} {fmt(b.share)}</span>
+          <span>= <b className={b.net >= 0 ? 'is-pos' : 'is-neg'}>{fmt(Math.abs(b.net))}</b> {b.net >= 0 ? t('expenses.owedShort') : t('expenses.owesShort')}</span>
+        </li>
+      </ul>
+    </details>
+  );
+}
+
 function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid }: {
   finance: Finance; memberUids: string[]; nameOf: (u: string) => string; fmt: (n: number) => string; meUid: string;
 }) {
@@ -511,7 +539,7 @@ function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid }: {
   const myNet = myNetBalance(finance, memberUids, meUid);
   const owed = myNet >= 0;
   const nets = netByMember(finance, memberUids);
-  const transfers = settlements(nets);
+  const transfers = settlements(netByMemberExact(finance, memberUids)); // exact in, rounded out
   const groupTotal = finance.group.reduce((a, e) => a + e.amount, 0);
   const sideTotal = finance.sides.reduce((a, s) => a + s.total, 0);
   const grand = groupTotal + sideTotal;
@@ -545,6 +573,7 @@ function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid }: {
                 : <span className={`bp-pay__net ${v > 0 ? 'is-pos' : 'is-neg'}`}>
                     {v > 0 ? t('expenses.owedShort') : t('expenses.owesShort')} {fmt(Math.abs(v))}
                   </span>}
+              <Breakdown finance={finance} memberUids={memberUids} u={u} fmt={fmt} />
             </li>
           );
         })}
