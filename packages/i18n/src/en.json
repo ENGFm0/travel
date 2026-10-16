@@ -376,7 +376,9 @@
     },
     "addTraveller": "Add",
     "addTravellerName": "Traveller's name",
-    "addTravellerNote": "Add travellers by name — they join directly, no invite or app needed."
+    "addTravellerNote": "Add travellers by name — they join directly, no invite or app needed.",
+    "owner": "Owner",
+    "member": "Member"
   },
   "tripDetail": {
     "notFoundTitle": "Trip not found",
@@ -793,7 +795,20 @@
     "reportFailed": "Could not generate the report",
     "reportGenerated": "Generated on {{date}}",
     "videosNotIncluded": "{{count}} video(s) not included in the printed report",
-    "exporting": "Exporting…"
+    "exporting": "Exporting…",
+    "rpt": {
+      "dashboard": "Trip dashboard",
+      "coverTag": "Full report",
+      "days": "days",
+      "cities": "cities",
+      "activities": "activities",
+      "photos": "photos",
+      "paidBy": "Who paid how much",
+      "balance": "Balance: owed / owes",
+      "balanceHint": "Blue = the group owes them, red = they owe the group",
+      "timeline": "Trip timeline",
+      "nights": "{{count}} night(s)"
+    }
   },
   "friends": {
     "requests": "Friend requests",

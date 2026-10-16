@@ -376,7 +376,9 @@
     },
     "addTraveller": "إضافة",
     "addTravellerName": "اسم المسافر",
-    "addTravellerNote": "سجّل أسماء المسافرين يدويًا — ينضافون مباشرة بدون دعوة أو تحميل التطبيق."
+    "addTravellerNote": "سجّل أسماء المسافرين يدويًا — ينضافون مباشرة بدون دعوة أو تحميل التطبيق.",
+    "owner": "المالك",
+    "member": "عضو"
   },
   "tripDetail": {
     "notFoundTitle": "الرحلة غير موجودة",
@@ -793,7 +795,20 @@
     "reportFailed": "تعذّر إنشاء التقرير",
     "reportGenerated": "أُنشئ في {{date}}",
     "videosNotIncluded": "{{count}} مقطع فيديو غير مضمّن في التقرير المطبوع",
-    "exporting": "جارٍ التصدير…"
+    "exporting": "جارٍ التصدير…",
+    "rpt": {
+      "dashboard": "لوحة الرحلة",
+      "coverTag": "التقرير الكامل",
+      "days": "أيام",
+      "cities": "مدن",
+      "activities": "أنشطة",
+      "photos": "صور",
+      "paidBy": "من دفع كم",
+      "balance": "الميزان: له / عليه",
+      "balanceHint": "الأزرق = له مبلغ عند المجموعة، الأحمر = عليه مبلغ للمجموعة",
+      "timeline": "خط سير الرحلة",
+      "nights": "{{count}} ليلة"
+    }
   },
   "friends": {
     "requests": "طلبات الصداقة",
