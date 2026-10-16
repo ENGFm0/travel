@@ -450,18 +450,18 @@ select.bp-input {
 .bp-back:hover { color: var(--bp-primary); }
 /* Trip cover: a gradient header that gives the trip identity and puts the
    title / destination / dates up front. Tinted by domestic vs international. */
-.bp-trip-detail__head { position: relative; overflow: hidden; margin: 10px 0 14px;
-  padding: clamp(18px, 4.5vw, 30px) clamp(16px, 4.5vw, 28px); border-radius: var(--bp-r-lg);
+.bp-trip-detail__head { position: relative; overflow: hidden; margin: 8px 0 12px;
+  padding: clamp(14px, 3.5vw, 24px) clamp(14px, 4vw, 24px); border-radius: var(--bp-r-lg);
   color: #fdf6ec; box-shadow: var(--bp-shadow-pop); background: linear-gradient(135deg, #14213d 0%, #2a3d6b 100%); }
 .bp-trip-detail__head--intl { background: linear-gradient(135deg, #14213d 0%, #2a5a8c 100%); }
 .bp-trip-detail__head--dom { background: linear-gradient(135deg, #14213d 0%, #1f6a52 100%); }
 .bp-trip-detail__cover-glyph { position: absolute; inset-block-start: -22px; inset-inline-start: -16px; z-index: 0;
   color: #fdf6ec; opacity: 0.1; pointer-events: none; }
-.bp-trip-detail__cover-glyph .material-symbols-outlined { font-size: 150px; transform: scaleX(-1); }
+.bp-trip-detail__cover-glyph .material-symbols-outlined { font-size: 120px; transform: scaleX(-1); }
 .bp-trip-detail__titles { position: relative; z-index: 1; }
-.bp-trip-detail__titles h1 { margin: 10px 0 8px; color: #fff; }
-.bp-trip-detail__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; color: rgba(253, 246, 236, 0.85); font-size: 14px; }
-.bp-trip-detail__meta .material-symbols-outlined { font-size: 18px; }
+.bp-trip-detail__titles h1 { margin: 6px 0 6px; color: #fff; font-size: clamp(22px, 6vw, 30px); line-height: 1.2; }
+.bp-trip-detail__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; margin: 0; color: rgba(253, 246, 236, 0.85); font-size: 13px; }
+.bp-trip-detail__meta .material-symbols-outlined { font-size: 17px; }
 .bp-trip-detail__meta .bp-sep { color: rgba(253, 246, 236, 0.5); }
 
 .bp-members { margin-top: 20px; border-top: 1px solid var(--bp-border); padding-top: 20px; }
@@ -489,12 +489,20 @@ select.bp-input {
 .bp-btn--sm { height: 34px; padding-inline: 12px; font-size: 13px; }
 
 /* ── Dashboard tabs + itinerary timeline (US-006) ──────────────────────────── */
-.bp-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--bp-border); margin: 16px 0 20px; scrollbar-width: none; }
-.bp-tabs::-webkit-scrollbar { display: none; }
-.bp-tabbtn { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border: 0; background: transparent; color: var(--bp-ink-muted); font: inherit; font-weight: 700; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.bp-tabbtn .material-symbols-outlined { font-size: 20px; }
-.bp-tabbtn.is-on { color: var(--bp-primary); border-bottom-color: var(--bp-primary); }
+/* Trip tabs: all six always visible side by side (no horizontal scroll). On
+   phones: icon above a small label in a 6-column grid; on wider screens the
+   familiar inline icon + label row. */
+.bp-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; border-bottom: 1px solid var(--bp-border); margin: 12px 0 16px; }
+.bp-tabbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-inline-size: 0; white-space: nowrap; border: 0; background: transparent; color: var(--bp-ink-muted); font: inherit; font-weight: 700; font-size: 11px; line-height: 1.1; padding: 8px 2px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: var(--bp-r-sm) var(--bp-r-sm) 0 0; transition: color 0.15s ease, background-color 0.15s ease; }
+.bp-tabbtn > span:last-child { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; }
+.bp-tabbtn .material-symbols-outlined { font-size: 22px; }
+.bp-tabbtn.is-on { color: var(--bp-primary); border-bottom-color: var(--bp-primary); background: color-mix(in srgb, var(--bp-primary) 9%, transparent); }
 .bp-tabbtn:focus-visible { outline: 2px solid var(--bp-focus); outline-offset: 2px; border-radius: var(--bp-r-sm); }
+@media (min-width: 640px) {
+  .bp-tabs { display: flex; gap: 4px; }
+  .bp-tabbtn { flex: 1 1 0; flex-direction: row; gap: 6px; font-size: inherit; padding: 10px 14px; }
+  .bp-tabbtn .material-symbols-outlined { font-size: 20px; }
+}
 
 .bp-timeline { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px; scrollbar-width: thin; }
 .bp-stop { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-inline-size: 120px; padding: 10px 14px; border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-surface); cursor: pointer; font: inherit; flex: 0 0 auto; }
