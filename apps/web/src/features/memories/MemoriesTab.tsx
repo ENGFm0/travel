@@ -30,6 +30,8 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
   const [exporting, setExporting] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfPct, setPdfPct] = useState(0);
+  const [pdfPreview, setPdfPreview] = useState<{ blob: Blob; pages: string[]; name: string } | null>(null);
+  const [pdfSaving, setPdfSaving] = useState(false);
   const [group, setGroup] = useState<Grouping>('day');
   const [day, setDay] = useState('1');
   const [place, setPlace] = useState(places[0] ?? '—');
@@ -81,14 +83,29 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
     setReport(null);
     try {
       const html = await loadTripReportHtml(reportTrip, media ?? [], members ?? [], locale, t);
-      const { renderReportPdf, saveOrSharePdf } = await import('./pdfExport');
-      const { blob } = await renderReportPdf(html, { onProgress: (p) => setPdfPct(Math.round(p * 100)) });
+      const { renderReportPdf } = await import('./pdfExport');
+      const { blob, pageImages } = await renderReportPdf(html, { onProgress: (p) => setPdfPct(Math.round(p * 100)) });
       const safe = reportTrip.title.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'trip';
-      await saveOrSharePdf(blob, `${safe}.pdf`);
+      // Preview in-app first; saving/sharing happens on a fresh tap (iOS needs
+      // the share sheet to be opened from a direct user gesture).
+      setPdfPreview({ blob, pages: pageImages, name: `${safe}.pdf` });
     } catch (e) {
       setReport(`${t('memories.pdfFailed')} — ${(e as { code?: string; message?: string })?.code ?? (e as Error)?.message ?? ''}`);
     } finally {
       setPdfBusy(false);
+    }
+  }
+
+  async function savePdf() {
+    if (!pdfPreview || pdfSaving) return;
+    setPdfSaving(true);
+    try {
+      const { saveOrSharePdf } = await import('./pdfExport');
+      await saveOrSharePdf(pdfPreview.blob, pdfPreview.name);
+    } catch (e) {
+      setReport(`${t('memories.pdfFailed')} — ${(e as Error)?.message ?? ''}`);
+    } finally {
+      setPdfSaving(false);
     }
   }
 
@@ -175,6 +192,29 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
             </ul>
           </section>
         ))
+      )}
+
+      {pdfPreview && (
+        <div className="bp-pdfprev" role="dialog" aria-modal="true" aria-label={t('memories.pdfPreviewTitle')}>
+          <div className="bp-pdfprev__head">
+            <strong>{t('memories.pdfPreviewTitle')}</strong>
+            <span className="bp-pdfprev__count">{t('memories.pdfPages', { count: pdfPreview.pages.length })}</span>
+            <button className="bp-icon-btn" aria-label={t('trips.close')} onClick={() => setPdfPreview(null)}>
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
+            </button>
+          </div>
+          <div className="bp-pdfprev__scroll">
+            {pdfPreview.pages.map((src, i) => (
+              <img key={i} className="bp-pdfprev__page" src={src} alt={`${i + 1}`} />
+            ))}
+          </div>
+          <div className="bp-pdfprev__actions">
+            <button className="bp-btn bp-btn--outline" onClick={() => setPdfPreview(null)}>{t('trips.close')}</button>
+            <button className="bp-btn bp-btn--primary" onClick={savePdf} disabled={pdfSaving}>
+              {pdfSaving ? t('memories.saving') : t('memories.pdfSave')}
+            </button>
+          </div>
+        </div>
       )}
 
       {report !== null && (

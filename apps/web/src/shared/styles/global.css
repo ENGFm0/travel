@@ -647,6 +647,18 @@ select.bp-input {
 .bp-mem-del .material-symbols-outlined { font-size: 18px; }
 .bp-report { white-space: pre-wrap; background: var(--bp-surface-2); border-radius: var(--bp-r-md); padding: 12px; font: inherit; margin: 0; }
 
+/* In-app PDF preview: full-screen, scrollable pages, save/share on a fresh tap. */
+.bp-pdfprev { position: fixed; inset: 0; z-index: 10060; display: flex; flex-direction: column; background: #2b3550; color: #fff; }
+.bp-pdfprev__head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; padding-top: max(10px, env(safe-area-inset-top)); background: var(--bp-ink, #14213d); }
+.bp-pdfprev__head strong { flex: 1; font-size: 16px; }
+.bp-pdfprev__count { font-size: 12px; opacity: .8; }
+.bp-pdfprev__head .bp-icon-btn { color: #fff; }
+.bp-pdfprev__scroll { flex: 1; overflow: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 14px; align-items: center; -webkit-overflow-scrolling: touch; }
+.bp-pdfprev__page { display: block; width: min(100%, 520px); height: auto; border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.35); background: #fff; }
+.bp-pdfprev__actions { display: flex; gap: 10px; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--bp-ink, #14213d); }
+.bp-pdfprev__actions .bp-btn { flex: 1; }
+.bp-pdfprev__actions .bp-btn--outline { color: #fff; border-color: rgba(255,255,255,.5); }
+
 /* ── Profile & Settings (US-002) ───────────────────────────────────────────── */
 .bp-profile { display: flex; flex-direction: column; gap: 4px; }
 .bp-settings-card { background: var(--bp-surface); border: 1px solid var(--bp-border); border-radius: var(--bp-r-lg); padding: 18px; margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }

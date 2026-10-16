@@ -327,8 +327,8 @@ export function buildTripReportHtml(d: ReportData): string {
   .legend li { display: grid; grid-template-columns: 12px 1fr auto auto; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; border-bottom: 1px dashed var(--line); }
   .legend i { width: 12px; height: 12px; border-radius: 3px; } .lg-val { color: var(--ink2); font-variant-numeric: tabular-nums; } .lg-pct { color: var(--muted); font-size: 12px; min-width: 34px; text-align: end; }
   .hbars, .dbars { display: flex; flex-direction: column; gap: 8px; }
-  .hb, .db { display: grid; grid-template-columns: 90px 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
-  .hb-name, .db-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+  .hb, .db { display: grid; grid-template-columns: minmax(84px, 28%) 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
+  .hb-name, .db-name { font-weight: 700; font-size: 12.5px; line-height: 1.15; overflow-wrap: anywhere; unicode-bidi: plaintext; }
   .hb-track { height: 14px; background: #eef1f8; border-radius: 4px; overflow: hidden; } .hb-fill { display: block; height: 100%; border-radius: 4px; }
   .hb-val, .db-val { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink2); }
   .db-track { display: grid; grid-template-columns: 1fr 1fr; height: 14px; position: relative; }

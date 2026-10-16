@@ -820,7 +820,11 @@
     },
     "downloadPdf": "📄 Download PDF",
     "pdfPreparing": "Building PDF… {{pct}}%",
-    "pdfFailed": "Could not build the PDF"
+    "pdfFailed": "Could not build the PDF",
+    "pdfPreviewTitle": "PDF preview",
+    "pdfPages": "{{count}} page(s)",
+    "pdfSave": "💾 Save / Share",
+    "saving": "Saving…"
   },
   "friends": {
     "requests": "Friend requests",

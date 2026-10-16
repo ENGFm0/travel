@@ -10,7 +10,12 @@
 //
 // jspdf + html2canvas are imported lazily (only when the user exports).
 
-export interface PdfExportResult { blob: Blob; pages: number }
+export interface PdfExportResult {
+  blob: Blob;
+  pages: number;
+  /** JPEG data URL per page — for the in-app preview before saving. */
+  pageImages: string[];
+}
 export interface PdfExportOpts {
   /** Progress 0..1 (coarse). */
   onProgress?: (p: number) => void;
@@ -18,14 +23,19 @@ export interface PdfExportOpts {
   onPage?: (canvas: HTMLCanvasElement, index: number) => void;
 }
 
-const A4_W_MM = 210, A4_H_MM = 297;
-const PAGE_W = 794;                 // A4 width in CSS px at 96dpi
-const PAGE_H = Math.round(PAGE_W * (A4_H_MM / A4_W_MM)); // 1123
-const MARGIN_Y = 34;                // top/bottom page margin (CSS px)
+// Page: a 5×8 in "booklet" (phone-like 1.6 ratio) laid out at a mobile CSS
+// width, so the report keeps its responsive single-column design and reads
+// 1:1 on a phone instead of a shrunken desktop A4.
+const PAGE_W_MM = 127, PAGE_H_MM = 203.2;
+const PAGE_W = 480;                 // CSS px — the report's phone layout
+const PAGE_H = Math.round(PAGE_W * (PAGE_H_MM / PAGE_W_MM)); // 768
+const MARGIN_Y = 22;                // top/bottom page margin (CSS px)
 const CONTENT_H = PAGE_H - MARGIN_Y * 2;
-const MIN_CUT_ADVANCE = 48;         // never produce a strip shorter than this (except the last)
-const CHUNK_TARGET = 2400;          // raster chunk height (CSS px) — keeps canvases well under mobile limits
+const MIN_CUT_ADVANCE = 40;         // never produce a strip shorter than this (except the last)
+const CHUNK_TARGET = 2000;          // raster chunk height (CSS px) — keeps canvases well under mobile limits
 const MAX_CANVAS_PX = 14_000_000;   // iOS Safari caps canvases around 16.7M px
+const TARGET_SCALE = 3;             // ~290 dpi on the 127mm page
+const JPEG_QUALITY = 0.92;
 
 /** Elements that must never be cut by a page break (if they fit on a page). */
 const ATOMS = [
@@ -33,6 +43,9 @@ const ATOMS = [
   '.city-h', '.chips', '.day-h', '.act', '.transport li', 'tr', 'figure', '.hb', '.db',
   '.legend li', 'h2', 'h3', 'h4', '.hint', '.ph-day', 'footer',
 ].join(',');
+
+/** Headings that must stay with what follows them (never last on a page). */
+const KEEP_WITH_NEXT = 'h2, h3, h4, .ph-day, .day-h, .city-h';
 
 interface Rect { top: number; bottom: number; left: number; width: number }
 interface Chunk { top: number; height: number; canvas: HTMLCanvasElement; scale: number }
@@ -73,6 +86,17 @@ function chooseCut(y: number, target: number, atoms: Rect[], total: number): num
   return best > y + MIN_CUT_ADVANCE ? best : target; // forced cut when nothing fits
 }
 
+/** Pull a cut back above any heading that would otherwise end the page. */
+function keepHeadingsWithNext(y: number, cut: number, headings: Rect[], total: number): number {
+  if (cut >= total) return cut;
+  for (let guard = 0; guard < 4; guard++) {
+    const h = headings.find((r) => r.bottom <= cut && r.top > y + MIN_CUT_ADVANCE && cut - r.bottom < 36);
+    if (!h) break;
+    cut = h.top;
+  }
+  return cut;
+}
+
 export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): Promise<PdfExportResult> {
   const [{ jsPDF }, { default: html2canvas }] = await Promise.all([import('jspdf'), import('html2canvas')]);
   opts.onProgress?.(0.05);
@@ -91,9 +115,11 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     const st = doc.createElement('style');
     st.textContent = `html,body{background:#fff!important;margin:0;overflow:visible}
       .bar{display:none!important}
-      .sheet{max-width:none!important;width:${PAGE_W}px;padding:0 30px 12px!important;margin:0!important}
+      .sheet{max-width:none!important;width:${PAGE_W}px;padding:0 14px 10px!important;margin:0!important}
       .hero,.card,.tile,.city,.settle,.member{box-shadow:none!important}
-      .timeline{overflow:visible!important;flex-wrap:wrap}`;
+      .timeline{overflow:visible!important;flex-wrap:wrap}
+      .photos{grid-template-columns:repeat(3,1fr)!important;grid-auto-rows:148px!important}
+      figure.big{grid-column:auto!important;grid-row:auto!important}`;
     doc.head.appendChild(st);
     await waitReady(doc);
 
@@ -101,6 +127,7 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     const origin = sheet.getBoundingClientRect();
     const total = Math.ceil(sheet.scrollHeight);
     const atoms = Array.from(sheet.querySelectorAll(ATOMS)).map((el) => rectIn(el, origin));
+    const headings = Array.from(sheet.querySelectorAll(KEEP_WITH_NEXT)).map((el) => rectIn(el, origin));
     const links = Array.from(sheet.querySelectorAll<HTMLAnchorElement>('a[href]'))
       .map((a) => ({ href: a.href, ...rectIn(a, origin) }))
       .filter((l) => l.width > 0 && l.bottom > l.top);
@@ -127,7 +154,7 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
       const g = groups[i];
       const r = rectIn(g, origin);
       const h = Math.max(1, Math.ceil(r.bottom - r.top));
-      const scale = Math.min(2, Math.sqrt(MAX_CANVAS_PX / (PAGE_W * h)));
+      const scale = Math.min(TARGET_SCALE, Math.sqrt(MAX_CANVAS_PX / (PAGE_W * h)));
       const canvas = await html2canvas(g, {
         scale, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false,
         windowWidth: PAGE_W, scrollX: 0, scrollY: 0,
@@ -140,18 +167,19 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     const strips: { a: number; b: number }[] = [];
     let y = 0;
     while (y < total - 1) {
-      const b = chooseCut(y, y + CONTENT_H, atoms, total);
+      const b = keepHeadingsWithNext(y, chooseCut(y, y + CONTENT_H, atoms, total), headings, total);
       strips.push({ a: y, b });
       y = b;
     }
 
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
-    const mm = A4_W_MM / PAGE_W; // mm per CSS px
+    const pdf = new jsPDF({ unit: 'mm', format: [PAGE_W_MM, PAGE_H_MM], compress: true });
+    const mm = PAGE_W_MM / PAGE_W; // mm per CSS px
     const outScale = Math.max(...chunks.map((c) => c.scale));
     const page = document.createElement('canvas');
     page.width = Math.round(PAGE_W * outScale);
     page.height = Math.round(PAGE_H * outScale);
     const ctx = page.getContext('2d')!;
+    const pageImages: string[] = [];
 
     strips.forEach(({ a, b }, i) => {
       ctx.fillStyle = '#ffffff';
@@ -164,10 +192,12 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
         ctx.drawImage(c.canvas, 0, sy, c.canvas.width, sh, 0, dy, page.width, dh);
       }
       if (i > 0) pdf.addPage();
-      pdf.addImage(page.toDataURL('image/jpeg', 0.86), 'JPEG', 0, 0, A4_W_MM, A4_H_MM, undefined, 'FAST');
+      const dataUrl = page.toDataURL('image/jpeg', JPEG_QUALITY);
+      pageImages.push(dataUrl);
+      pdf.addImage(dataUrl, 'JPEG', 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, 'FAST');
       // Page number (digits only — the default font has no Arabic).
-      pdf.setFontSize(8); pdf.setTextColor(150);
-      pdf.text(`${i + 1} / ${strips.length}`, A4_W_MM / 2, A4_H_MM - 5, { align: 'center' });
+      pdf.setFontSize(7); pdf.setTextColor(150);
+      pdf.text(`${i + 1} / ${strips.length}`, PAGE_W_MM / 2, PAGE_H_MM - 3.5, { align: 'center' });
       // Link annotations for anchors on this page.
       for (const l of links) {
         const top = Math.max(l.top, a), bottom = Math.min(l.bottom, b);
@@ -178,7 +208,7 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
       opts.onProgress?.(0.7 + 0.3 * ((i + 1) / strips.length));
     });
 
-    return { blob: pdf.output('blob'), pages: strips.length };
+    return { blob: pdf.output('blob'), pages: strips.length, pageImages };
   } finally {
     iframe.remove();
   }

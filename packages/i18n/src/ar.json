@@ -820,7 +820,11 @@
     },
     "downloadPdf": "📄 تحميل PDF",
     "pdfPreparing": "جارٍ إنشاء الـ PDF… {{pct}}%",
-    "pdfFailed": "تعذّر إنشاء ملف الـ PDF"
+    "pdfFailed": "تعذّر إنشاء ملف الـ PDF",
+    "pdfPreviewTitle": "معاينة الـ PDF",
+    "pdfPages": "{{count}} صفحة",
+    "pdfSave": "💾 حفظ / مشاركة",
+    "saving": "جارٍ الحفظ…"
   },
   "friends": {
     "requests": "طلبات الصداقة",
