@@ -829,7 +829,8 @@
     "sharePhoto": "حفظ / مشاركة",
     "prev": "السابق",
     "next": "التالي",
-    "photoOf": "{{n}} / {{total}}"
+    "photoOf": "{{n}} / {{total}}",
+    "shareAll": "📤 مشاركة الصور ({{count}})"
   },
   "friends": {
     "requests": "طلبات الصداقة",

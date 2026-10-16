@@ -829,7 +829,8 @@
     "sharePhoto": "Save / Share",
     "prev": "Previous",
     "next": "Next",
-    "photoOf": "{{n}} / {{total}}"
+    "photoOf": "{{n}} / {{total}}",
+    "shareAll": "📤 Share photos ({{count}})"
   },
   "friends": {
     "requests": "Friend requests",

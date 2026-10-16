@@ -85,22 +85,53 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
     step(next ? 1 : -1);
   }
 
+  const toFile = async (m: Media): Promise<File> => {
+    const blob = await (await fetch(m.src)).blob();
+    const ext = m.type === 'video' ? 'mp4' : 'jpg';
+    const base = (m.name || 'photo').replace(/\.[^.]+$/, '') || 'photo';
+    return new File([blob], `${base}.${ext}`, { type: blob.type || (m.type === 'video' ? 'video/mp4' : 'image/jpeg') });
+  };
+
+  /** Share ALL photos as real image files (so recipients can save them to
+   *  their gallery) — the companion to forwarding the PDF. */
+  const [sharingAll, setSharingAll] = useState(false);
+  async function shareAllPhotos() {
+    const imgs = flat.filter((m) => m.type === 'image' && m.src);
+    if (sharingAll || imgs.length === 0) return;
+    setSharingAll(true);
+    try {
+      const files = await Promise.all(imgs.map(toFile));
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (typeof nav.share === 'function' && nav.canShare?.({ files })) {
+        try { await nav.share({ files }); return; }
+        catch (e) { if ((e as Error).name === 'AbortError') return; }
+      }
+      // No multi-file share: download them one by one.
+      for (const f of files) {
+        const url = URL.createObjectURL(f);
+        const a = document.createElement('a');
+        a.href = url; a.download = f.name; a.rel = 'noopener';
+        document.body.appendChild(a); a.click(); a.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    } catch { /* keep UI as is */ }
+    finally { setSharingAll(false); }
+  }
+
   /** Save / share the current photo or video as a real file (share sheet on
    *  phones → Save Image / Files / WhatsApp…; download elsewhere). */
   async function sharePhoto(m: Media) {
     if (sharing) return;
     setSharing(true);
     try {
-      const blob = await (await fetch(m.src)).blob();
-      const ext = m.type === 'video' ? 'mp4' : 'jpg';
-      const base = (m.name || 'photo').replace(/\.[^.]+$/, '') || 'photo';
-      const file = new File([blob], `${base}.${ext}`, { type: blob.type || (m.type === 'video' ? 'video/mp4' : 'image/jpeg') });
+      const file = await toFile(m);
       const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
       if (typeof nav.share === 'function' && nav.canShare?.({ files: [file] })) {
         try { await nav.share({ files: [file] }); return; }
         catch (e) { if ((e as Error).name === 'AbortError') return; }
       }
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(file);
       const a = document.createElement('a');
       a.href = url; a.download = file.name; a.rel = 'noopener';
       document.body.appendChild(a); a.click(); a.remove();
@@ -200,6 +231,11 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
           <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={exportReport} disabled={exporting || !reportTrip}>
             {exporting ? t('memories.exporting') : t('memories.export')}
           </button>
+          {flat.some((m) => m.type === 'image') && (
+            <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={shareAllPhotos} disabled={sharingAll}>
+              {sharingAll ? t('memories.saving') : t('memories.shareAll', { count: flat.filter((m) => m.type === 'image').length })}
+            </button>
+          )}
           {isOwner && <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={share}>{copied ? t('members.copied') : t('memories.share')}</button>}
         </div>
       </div>

@@ -125,14 +125,39 @@ function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   ctx.closePath();
 }
 
-/** Draw one album page: header (title + back hint), the photo fitted at full
- *  size with rounded corners, caption. Canvas text shapes Arabic natively. */
-async function drawAlbumPage(p: Photo, index: number, count: number, rtl: boolean, pageW: number, pageH: number, s: number): Promise<HTMLCanvasElement> {
+interface Box { x: number; y: number; w: number; h: number }
+
+async function loadImage(src: string): Promise<{ img: HTMLImageElement; ok: boolean }> {
   const img = new Image();
   img.decoding = 'async';
-  img.src = p.src;
-  try { await img.decode(); } catch { /* draws a placeholder below */ }
+  if (!src.startsWith('data:')) img.crossOrigin = 'anonymous';
+  img.src = src;
+  try { await img.decode(); return { img, ok: img.naturalWidth > 0 }; } catch { return { img, ok: false }; }
+}
 
+/** Bytes for embedding the photo as its own PDF image object (original JPEG
+ *  bytes when we have them — no re-encoding; otherwise a JPEG of the bitmap). */
+function photoBytes(img: HTMLImageElement, src: string): { data: string; fmt: 'JPEG' | 'PNG' } {
+  if (/^data:image\/jpe?g[;,]/i.test(src)) return { data: src, fmt: 'JPEG' };
+  if (/^data:image\/png[;,]/i.test(src)) return { data: src, fmt: 'PNG' };
+  const max = 2000;
+  const r = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(img.naturalWidth * r));
+  c.height = Math.max(1, Math.round(img.naturalHeight * r));
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  const data = c.toDataURL('image/jpeg', 0.92); // throws on a tainted canvas → caller falls back
+  freeCanvas(c);
+  return { data, fmt: 'JPEG' };
+}
+
+/** Draw an album page's chrome: header (title + counter), caption, and return
+ *  the box where the photo goes. The photo itself is embedded as a separate
+ *  PDF image object (so viewers can offer copy/share/save on it) and is only
+ *  painted into this canvas afterwards for the in-app preview. */
+function drawAlbumChrome(p: Photo, index: number, count: number, rtl: boolean, pageW: number, pageH: number, s: number, iw: number, ih: number): { c: HTMLCanvasElement; box: Box } {
   const c = document.createElement('canvas');
   c.width = pageW; c.height = pageH;
   const ctx = c.getContext('2d')!;
@@ -159,25 +184,21 @@ async function drawAlbumPage(p: Photo, index: number, count: number, rtl: boolea
   try { (ctx as CanvasRenderingContext2D & { direction: string }).direction = rtl ? 'rtl' : 'ltr'; } catch { /* ignore */ }
   ctx.textAlign = rtl ? 'right' : 'left';
 
-  // Photo, fitted (contain) in the content box
+  // Photo box, fitted (contain) in the content area; a soft frame behind it.
   const top = px(58), bottomPad = px(54);
   const boxW = pageW - padX * 2, boxH = pageH - top - bottomPad;
-  const iw = img.naturalWidth || 4, ih = img.naturalHeight || 3;
   const r = Math.min(boxW / iw, boxH / ih);
-  const w = Math.max(1, iw * r), h = Math.max(1, ih * r);
-  const x = (pageW - w) / 2, y = top + (boxH - h) / 2;
-  ctx.save();
-  roundRectPath(ctx, x, y, w, h, px(12));
-  ctx.clip();
-  if (img.naturalWidth) ctx.drawImage(img, x, y, w, h);
-  else { ctx.fillStyle = '#eef1f8'; ctx.fillRect(x, y, w, h); }
-  ctx.restore();
+  const w = Math.max(1, Math.round(iw * r)), h = Math.max(1, Math.round(ih * r));
+  const x = Math.round((pageW - w) / 2), y = Math.round(top + (boxH - h) / 2);
+  ctx.fillStyle = '#eef1f8';
+  roundRectPath(ctx, x - px(4), y - px(4), w + px(8), h + px(8), px(10));
+  ctx.fill();
 
   // Caption
   ctx.fillStyle = '#3a4a6b';
   ctx.font = `${px(12)}px ${FONT}`;
   ctx.fillText(p.caption, startX, pageH - px(30), pageW - padX * 2);
-  return c;
+  return { c, box: { x, y, w, h } };
 }
 
 export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): Promise<PdfExportResult> {
@@ -347,13 +368,34 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     }
     while (nextToFlush < strips.length) flush(nextToFlush++);
 
-    // Album: one full-size page per photo; header links back to the grid page.
+    // Album: one full-size page per photo. The chrome is a page raster; the
+    // photo is embedded as its OWN image object (original bytes) so PDF viewers
+    // treat it as an image (copy / share / save) and it keeps full quality.
+    const mmPx = PAGE_W_MM / pageW; // mm per device px
     for (let pi = 0; pi < photos.length; pi++) {
       const p = photos[pi];
-      const c = await drawAlbumPage(p, pi, photos.length, rtl, pageW, pageH, outScale);
+      const { img, ok } = await loadImage(p.src);
+      const iw = ok ? img.naturalWidth : 4, ih = ok ? img.naturalHeight : 3;
+      const { c, box } = drawAlbumChrome(p, pi, photos.length, rtl, pageW, pageH, outScale, iw, ih);
       const idx = strips.length + pi;
-      emit(c, idx);
+      if (idx > 0) pdf.addPage();
+      pdf.addImage(c.toDataURL('image/jpeg', JPEG_QUALITY), 'JPEG', 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, 'FAST');
+      let embedded = false;
+      if (ok) {
+        try {
+          const b = photoBytes(img, p.src);
+          pdf.addImage(b.data, b.fmt, box.x * mmPx, box.y * mmPx, box.w * mmPx, box.h * mmPx, undefined, 'FAST');
+          embedded = true;
+        } catch { /* tainted / undecodable → baked into the page raster below */ }
+      }
+      // Paint the photo into the canvas for the in-app preview (and as the
+      // on-page fallback when it couldn't be embedded separately).
+      const ctx = c.getContext('2d')!;
+      if (ok) ctx.drawImage(img, box.x, box.y, box.w, box.h);
+      if (!embedded) pdf.addImage(c.toDataURL('image/jpeg', JPEG_QUALITY), 'JPEG', 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, 'FAST');
+      pageNumber(idx);
       pdf.link(0, 0, PAGE_W_MM, 46 * mm, { pageNumber: pageOf(p.top) + 1 });
+      pageImages.push(c.toDataURL('image/jpeg', JPEG_QUALITY));
       opts.onPage?.(c, idx);
       freeCanvas(c);
       opts.onProgress?.(0.7 + 0.3 * ((pi + 1) / photos.length));
