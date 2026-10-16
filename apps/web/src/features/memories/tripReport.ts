@@ -272,14 +272,11 @@ export function buildTripReportHtml(d: ReportData): string {
   // ---- Memories -----------------------------------------------------------------
   const byDay = new Map<string, Media[]>();
   for (const m of images) { const k = m.day || '—'; if (!byDay.has(k)) byDay.set(k, []); byDay.get(k)!.push(m); }
-  // Each photo links back to the app's full-size viewer (works from the PDF too).
-  const appOrigin = (() => { try { return globalThis.location?.origin ?? ''; } catch { return ''; } })();
-  const photoHref = (m: Media) => appOrigin ? `${appOrigin}/trips/${encodeURIComponent(trip.id)}?photo=${encodeURIComponent(m.id)}#memories` : '';
-  const photoTag = (m: Media) => {
-    const img = `<img src="${esc(m.src)}" alt="${esc(m.name)}">`;
-    const href = photoHref(m);
-    return href ? `<a class="photo-link" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(t('memories.viewPhoto'))}">${img}</a>` : img;
-  };
+  // Photos never link outside the document (the report may be forwarded to
+  // people without app access): in the page a tap opens the inline lightbox;
+  // in the PDF the thumbnail jumps to the photo's full-size album page.
+  const photoTag = (m: Media) =>
+    `<a class="photo-link" href="#photo-${esc(m.id)}" title="${esc(t('memories.viewPhoto'))}"><img src="${esc(m.src)}" alt="${esc(m.name)}"></a>`;
   const memories = images.length === 0 && videos.length === 0
     ? `<p class="muted">${esc(t('memories.empty'))}</p>`
     : [...byDay.entries()].map(([day, items]) =>
@@ -398,6 +395,12 @@ export function buildTripReportHtml(d: ReportData): string {
   figcaption { position: absolute; inset-inline-start: 6px; bottom: 6px; font-size: 10.5px; background: rgba(20,33,61,.7); color: #fff; padding: 2px 8px; border-radius: 999px; }
   @media (max-width: 560px) { .photos { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 100px; } }
 
+  /* Inline lightbox for the page view (self-contained; no external links). */
+  .lb { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; padding: 12px; background: rgba(5,10,25,.94); }
+  .lb[hidden] { display: none; }
+  .lb img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+  .lb button { position: absolute; top: 12px; inset-inline-end: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.15); color: #fff; font-size: 18px; cursor: pointer; }
+  .lb .lb-cap { position: absolute; bottom: 14px; inset-inline: 0; text-align: center; color: #fff; font-size: 13px; opacity: .9; }
   footer { margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); text-align: center; }
   footer b { color: var(--accent); }
   @media print {
@@ -444,6 +447,26 @@ export function buildTripReportHtml(d: ReportData): string {
 
   <footer>${esc(t('memories.reportGenerated', { date: generated }))} · <b>BoardingPass</b> ✈️</footer>
 </main>
+<div class="lb" id="lb" hidden><img alt=""><button type="button" aria-label="${esc(t('trips.close'))}">✕</button><div class="lb-cap"></div></div>
+<script>
+(function () {
+  var lb = document.getElementById('lb'); if (!lb) return;
+  var im = lb.querySelector('img'), cap = lb.querySelector('.lb-cap');
+  document.addEventListener('click', function (e) {
+    var t = e.target; if (!t || !t.closest) return;
+    var a = t.closest('a.photo-link');
+    if (a) {
+      e.preventDefault();
+      var src = a.querySelector('img'); if (!src) return;
+      im.src = src.currentSrc || src.src;
+      var fc = a.parentNode && a.parentNode.querySelector ? a.parentNode.querySelector('figcaption') : null;
+      cap.textContent = fc ? fc.textContent : '';
+      lb.hidden = false;
+    } else if (t.closest('#lb')) { lb.hidden = true; im.removeAttribute('src'); }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { lb.hidden = true; im.removeAttribute('src'); } });
+})();
+</script>
 </body>
 </html>`;
 }

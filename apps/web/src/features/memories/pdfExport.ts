@@ -6,14 +6,18 @@
 // on (fonts + every image decoded), rasterised with html2canvas in modest
 // chunks, sliced into booklet pages at "smart" cut points that never run
 // through a card / row / photo, and written with jsPDF — with a real link
-// annotation for every <a> so places open Google Maps straight from the PDF.
+// annotation for every place <a> so they open Google Maps from the PDF.
+//
+// The PDF is fully self-contained (it may be forwarded to people who have no
+// access to the app): after the report pages comes an ALBUM — every photo on
+// its own page at full size — and each thumbnail in the memories grid is an
+// internal link that jumps to its album page (and the album page's header
+// links back). No URL in the PDF points at the app.
 //
 // Memory: iOS Safari has a hard cap on live canvas memory and silently returns
-// blank canvases past it (which showed up as "photos missing" at the end of
-// long reports). So chunks are streamed: each chunk is rasterised, drawn into
-// the page canvases it overlaps, finished pages are flushed to the PDF, and the
-// chunk canvas is released before the next one is rendered. At most one chunk
-// and two pages are alive at a time.
+// blank canvases past it. Chunks are streamed: each chunk is rasterised, drawn
+// into the page canvases it overlaps, finished pages are flushed to the PDF,
+// and the chunk canvas is released before the next one is rendered.
 //
 // jspdf + html2canvas are imported lazily (only when the user exports).
 
@@ -43,6 +47,7 @@ const CHUNK_TARGET = 1200;          // raster chunk height (CSS px) — small, t
 const MAX_CANVAS_PX = 8_000_000;    // per-canvas budget (iOS caps ~16.7M px; stay well under)
 const TARGET_SCALE = 3;             // ~290 dpi on the 127mm page
 const JPEG_QUALITY = 0.92;
+const FONT = '"Noto Kufi Arabic","IBM Plex Sans Arabic","Segoe UI",system-ui,-apple-system,sans-serif';
 
 /** Elements that must never be cut by a page break (if they fit on a page). */
 const ATOMS = [
@@ -56,6 +61,7 @@ const KEEP_WITH_NEXT = 'h2, h3, h4, .ph-day, .day-h, .city-h';
 
 interface Rect { top: number; bottom: number; left: number; width: number }
 interface Strip { a: number; b: number }
+interface Photo extends Rect { src: string; title: string; caption: string }
 
 async function waitReady(doc: Document): Promise<void> {
   try { await (doc as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready; } catch { /* ignore */ }
@@ -108,6 +114,72 @@ function freeCanvas(c: HTMLCanvasElement): void {
   c.width = 0; c.height = 0;
 }
 
+function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+/** Draw one album page: header (title + back hint), the photo fitted at full
+ *  size with rounded corners, caption. Canvas text shapes Arabic natively. */
+async function drawAlbumPage(p: Photo, index: number, count: number, rtl: boolean, pageW: number, pageH: number, s: number): Promise<HTMLCanvasElement> {
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = p.src;
+  try { await img.decode(); } catch { /* draws a placeholder below */ }
+
+  const c = document.createElement('canvas');
+  c.width = pageW; c.height = pageH;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, pageW, pageH);
+  const px = (n: number) => n * s;
+  const padX = px(16);
+  const startX = rtl ? pageW - padX : padX;
+  try { (ctx as CanvasRenderingContext2D & { direction: string }).direction = rtl ? 'rtl' : 'ltr'; } catch { /* older engines */ }
+  ctx.textAlign = rtl ? 'right' : 'left';
+  ctx.textBaseline = 'middle';
+
+  // Header band
+  ctx.fillStyle = '#14213d';
+  ctx.fillRect(0, 0, pageW, px(46));
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `700 ${px(14)}px ${FONT}`;
+  ctx.fillText(p.title, startX, px(23), pageW - padX * 2 - px(70));
+  // Counter is digits + slash: draw it LTR so bidi doesn't reorder "1 / 11".
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.font = `${px(11)}px ${FONT}`;
+  try { (ctx as CanvasRenderingContext2D & { direction: string }).direction = 'ltr'; } catch { /* ignore */ }
+  ctx.textAlign = rtl ? 'left' : 'right';
+  ctx.fillText(`${index + 1} / ${count}`, rtl ? padX : pageW - padX, px(23));
+  try { (ctx as CanvasRenderingContext2D & { direction: string }).direction = rtl ? 'rtl' : 'ltr'; } catch { /* ignore */ }
+  ctx.textAlign = rtl ? 'right' : 'left';
+
+  // Photo, fitted (contain) in the content box
+  const top = px(58), bottomPad = px(54);
+  const boxW = pageW - padX * 2, boxH = pageH - top - bottomPad;
+  const iw = img.naturalWidth || 4, ih = img.naturalHeight || 3;
+  const r = Math.min(boxW / iw, boxH / ih);
+  const w = Math.max(1, iw * r), h = Math.max(1, ih * r);
+  const x = (pageW - w) / 2, y = top + (boxH - h) / 2;
+  ctx.save();
+  roundRectPath(ctx, x, y, w, h, px(12));
+  ctx.clip();
+  if (img.naturalWidth) ctx.drawImage(img, x, y, w, h);
+  else { ctx.fillStyle = '#eef1f8'; ctx.fillRect(x, y, w, h); }
+  ctx.restore();
+
+  // Caption
+  ctx.fillStyle = '#3a4a6b';
+  ctx.font = `${px(12)}px ${FONT}`;
+  ctx.fillText(p.caption, startX, pageH - px(30), pageW - padX * 2);
+  return c;
+}
+
 export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): Promise<PdfExportResult> {
   const [{ jsPDF }, { default: html2canvas }] = await Promise.all([import('jspdf'), import('html2canvas')]);
   opts.onProgress?.(0.05);
@@ -122,11 +194,12 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
   try {
     const doc = iframe.contentDocument!;
     doc.open(); doc.write(html); doc.close();
+    const rtl = (doc.documentElement.getAttribute('dir') || '').toLowerCase() === 'rtl';
     // PDF mode: hide the sticky bar, pin the sheet to the page width, drop
-    // shadows, uniform photo grid.
+    // shadows, uniform 2-column photo grid.
     const st = doc.createElement('style');
     st.textContent = `html,body{background:#fff!important;margin:0;overflow:visible}
-      .bar{display:none!important}
+      .bar,.lb{display:none!important}
       .sheet{max-width:none!important;width:${PAGE_W}px;padding:0 14px 10px!important;margin:0!important}
       .hero,.card,.tile,.city,.settle,.member{box-shadow:none!important}
       .timeline{overflow:visible!important;flex-wrap:wrap}
@@ -140,7 +213,7 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     // <img> stays, invisible, so links/layout are unchanged).
     doc.querySelectorAll<HTMLImageElement>('figure img').forEach((img) => {
       const fig = img.closest('figure') as HTMLElement | null;
-      if (!fig || !img.currentSrc && !img.src) return;
+      if (!fig || (!img.currentSrc && !img.src)) return;
       fig.style.backgroundImage = `url("${(img.currentSrc || img.src).replace(/"/g, '%22')}")`;
       img.style.visibility = 'hidden';
     });
@@ -150,9 +223,23 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     const total = Math.ceil(sheet.scrollHeight);
     const atoms = Array.from(sheet.querySelectorAll(ATOMS)).map((el) => rectIn(el, origin));
     const headings = Array.from(sheet.querySelectorAll(KEEP_WITH_NEXT)).map((el) => rectIn(el, origin));
+    // External links (places → Google Maps). Internal '#' anchors are handled
+    // as album links below.
     const links = Array.from(sheet.querySelectorAll<HTMLAnchorElement>('a[href]'))
+      .filter((a) => !(a.getAttribute('href') || '').startsWith('#'))
       .map((a) => ({ href: a.href, ...rectIn(a, origin) }))
       .filter((l) => l.width > 0 && l.bottom > l.top);
+    // Photos → album pages (one per photo, in document order).
+    const photos: Photo[] = Array.from(sheet.querySelectorAll<HTMLElement>('figure')).flatMap((fig) => {
+      const img = fig.querySelector('img');
+      const src = img?.currentSrc || img?.src || '';
+      if (!src) return [];
+      const grid = fig.closest('.photos');
+      const dayEl = grid?.previousElementSibling;
+      const title = (dayEl?.classList.contains('ph-day') ? dayEl.textContent : '')?.replace(/\s+/g, ' ').trim() || '';
+      const caption = (fig.querySelector('figcaption')?.textContent || '').trim();
+      return [{ src, title, caption, ...rectIn(fig, origin) }];
+    });
 
     // Group consecutive top-level blocks into chunks of ~CHUNK_TARGET px by
     // wrapping them in plain divs (no visual change in a block container).
@@ -172,8 +259,6 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     }
     const groupRects = groups.map((g) => rectIn(g, origin));
     const tallest = Math.max(1, ...groupRects.map((r) => r.bottom - r.top));
-    // One output scale for every page; chunks taller than the budget allows
-    // render softer rather than failing.
     const outScale = Math.min(TARGET_SCALE, Math.sqrt(MAX_CANVAS_PX / (PAGE_W * Math.min(tallest, PAGE_H))));
 
     // Paginate up front (pure DOM measurements).
@@ -184,6 +269,8 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
       strips.push({ a: y, b });
       y = b;
     }
+    const totalPages = strips.length + photos.length;
+    const pageOf = (top: number) => Math.max(0, strips.findIndex((s) => top >= s.a && top < s.b));
 
     const pdf = new jsPDF({ unit: 'mm', format: [PAGE_W_MM, PAGE_H_MM], compress: true });
     const mm = PAGE_W_MM / PAGE_W; // mm per CSS px
@@ -192,6 +279,17 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     const live = new Map<number, HTMLCanvasElement>(); // page index → canvas in progress
     let nextToFlush = 0;
 
+    const pageNumber = (i: number) => {
+      pdf.setFontSize(7); pdf.setTextColor(150);
+      pdf.text(`${i + 1} / ${totalPages}`, PAGE_W_MM / 2, PAGE_H_MM - 3.5, { align: 'center' });
+    };
+    const emit = (c: HTMLCanvasElement, i: number) => {
+      if (i > 0) pdf.addPage();
+      const dataUrl = c.toDataURL('image/jpeg', JPEG_QUALITY);
+      pageImages.push(dataUrl);
+      pdf.addImage(dataUrl, 'JPEG', 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, 'FAST');
+      pageNumber(i);
+    };
     const pageCanvas = (i: number): HTMLCanvasElement => {
       let c = live.get(i);
       if (!c) {
@@ -206,19 +304,19 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
     const flush = (i: number) => {
       const c = pageCanvas(i);
       const { a, b } = strips[i];
-      if (i > 0) pdf.addPage();
-      const dataUrl = c.toDataURL('image/jpeg', JPEG_QUALITY);
-      pageImages.push(dataUrl);
-      pdf.addImage(dataUrl, 'JPEG', 0, 0, PAGE_W_MM, PAGE_H_MM, undefined, 'FAST');
-      // Page number (digits only — the default font has no Arabic).
-      pdf.setFontSize(7); pdf.setTextColor(150);
-      pdf.text(`${i + 1} / ${strips.length}`, PAGE_W_MM / 2, PAGE_H_MM - 3.5, { align: 'center' });
-      // Link annotations for anchors on this page.
+      emit(c, i);
+      // External links (maps) on this page.
       for (const l of links) {
         const top = Math.max(l.top, a), bottom = Math.min(l.bottom, b);
         if (bottom - top < 4) continue;
         pdf.link(l.left * mm, (MARGIN_Y + (top - a)) * mm, l.width * mm, (bottom - top) * mm, { url: l.href });
       }
+      // Thumbnails → their album page (internal link).
+      photos.forEach((p, pi) => {
+        const top = Math.max(p.top, a), bottom = Math.min(p.bottom, b);
+        if (bottom - top < 4) return;
+        pdf.link(p.left * mm, (MARGIN_Y + (top - a)) * mm, p.width * mm, (bottom - top) * mm, { pageNumber: strips.length + pi + 1 });
+      });
       opts.onPage?.(c, i);
       freeCanvas(c);
       live.delete(i);
@@ -233,7 +331,6 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
         windowWidth: PAGE_W, scrollX: 0, scrollY: 0,
       });
       const cTop = r.top, cBottom = r.top + h;
-      // Draw this chunk into every page it overlaps.
       for (let i = nextToFlush; i < strips.length; i++) {
         const { a, b } = strips[i];
         if (a >= cBottom) break;
@@ -245,14 +342,25 @@ export async function renderReportPdf(html: string, opts: PdfExportOpts = {}): P
         ctx.drawImage(chunk, 0, sy, chunk.width, sh, 0, dy, pageW, dh);
       }
       freeCanvas(chunk);
-      // Flush every page that is now fully covered.
       while (nextToFlush < strips.length && strips[nextToFlush].b <= cBottom + 0.5) flush(nextToFlush++);
-      opts.onProgress?.(0.1 + 0.85 * ((gi + 1) / groups.length));
+      opts.onProgress?.(0.1 + 0.6 * ((gi + 1) / groups.length));
     }
     while (nextToFlush < strips.length) flush(nextToFlush++);
+
+    // Album: one full-size page per photo; header links back to the grid page.
+    for (let pi = 0; pi < photos.length; pi++) {
+      const p = photos[pi];
+      const c = await drawAlbumPage(p, pi, photos.length, rtl, pageW, pageH, outScale);
+      const idx = strips.length + pi;
+      emit(c, idx);
+      pdf.link(0, 0, PAGE_W_MM, 46 * mm, { pageNumber: pageOf(p.top) + 1 });
+      opts.onPage?.(c, idx);
+      freeCanvas(c);
+      opts.onProgress?.(0.7 + 0.3 * ((pi + 1) / photos.length));
+    }
     opts.onProgress?.(1);
 
-    return { blob: pdf.output('blob'), pages: strips.length, pageImages };
+    return { blob: pdf.output('blob'), pages: totalPages, pageImages };
   } finally {
     iframe.remove();
   }
