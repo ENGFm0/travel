@@ -137,7 +137,12 @@ export function TripDetailPage() {
         {tab === 'members' && <MembersPanel tripId={trip.id} />}
         {tab === 'memories' && (
           <MemoriesTab tripId={trip.id} canEdit={canEdit} isOwner={isOwner}
-            places={trip.cities.map((c) => c.name).filter(Boolean)} tripTitle={trip.title} memberCount={activeCount} />
+            places={trip.cities.map((c) => c.name).filter(Boolean)} tripTitle={trip.title} memberCount={activeCount}
+            reportTrip={{
+              id: trip.id, title: trip.title, domestic, dateFrom: trip.dateFrom, dateTo: trip.dateTo,
+              currency: trip.currency, destCurrency: trip.destCurrency,
+              citySeed: trip.cities.map((c) => ({ name: c.name, dateFrom: c.dateFrom, dateTo: c.dateTo, hotel: c.hotel, hotelUrl: c.hotelUrl, travelMode: c.travelMode ?? trip.travelMode, flightOut: c.flightOut, flightReturn: c.flightReturn, legs: c.legs, tripKind: c.tripKind })),
+            }} />
         )}
       </div>
     </section>

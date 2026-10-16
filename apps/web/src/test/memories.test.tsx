@@ -16,6 +16,8 @@ import { createMockMembersService, type Member } from '@/features/members/member
 import { useMemoriesStore } from '@/features/memories/memoriesStore';
 import { createMockMemoriesService } from '@/features/memories/memoriesService';
 import { validateFile, canDelete, groupMedia, type Media } from '@/features/memories/memoriesModel';
+import { buildTripReportHtml } from '@/features/memories/tripReport';
+import i18next from 'i18next';
 
 // ── Pure model ────────────────────────────────────────────────────────────────
 describe('US-013 memories model', () => {
@@ -122,13 +124,45 @@ describe('US-013 Memories UI', () => {
     await waitFor(() => expect(screen.getAllByRole('button', { name: 'Delete media' }).length).toBeGreaterThanOrEqual(2));
   });
 
-  it('exports a report preview with the trip summary (AC5)', async () => {
+  it('exports an on-device report into a new tab with the trip summary (AC5)', async () => {
+    // jsdom has no window.open: stub it with a fake window that records the HTML
+    // the report writes into it.
+    let written = '';
+    const fakeWin = { document: { open: () => {}, write: (s: string) => { written += s; }, close: () => {} } };
+    vi.spyOn(window, 'open').mockReturnValue(fakeWin as unknown as Window);
+
     await signIn();
-    seed([OWNER]);
+    seed([OWNER, U2]);
     renderAt('/trips/trip-x#memories');
     await userEvent.click(await screen.findByRole('button', { name: 'Export report' }));
-    const dlg = await screen.findByRole('dialog');
-    expect(dlg).toHaveTextContent('London Trip');
-    expect(dlg).toHaveTextContent('London');
+    await waitFor(() => expect(written).toContain('London Trip'));
+    expect(written).toContain('London');          // city from the itinerary
+    expect(written).toContain('Khalid');          // members
+    expect(written).toContain('Omar');
+    expect(written).toContain('Print / Save as PDF');
+    expect(written).toContain('<html lang="en" dir="ltr">');
+  });
+
+  it('builds a report with settlements and escapes user text', async () => {
+    await i18next.changeLanguage('en');
+    const t = (k: string, o?: Record<string, unknown>) => i18next.t(k, o) as string;
+    const html = buildTripReportHtml({
+      trip: { id: 't', title: 'Trip <b>&</b>', domestic: false, dateFrom: '2099-05-01', dateTo: '2099-05-03', currency: 'SAR', citySeed: [] },
+      board: { tripId: 't', cities: [{ id: 'c1', name: 'London', days: [{ id: 'd1', title: 'Day 1', date: '2099-05-01', activities: [{ id: 'a1', title: 'Big Ben', kind: 'SIGHT', time: '10:00', cost: 20 }] }] }] },
+      members: [OWNER, U2],
+      // Khalid paid 100 shared between both → Omar owes Khalid 50.
+      finance: { base: 'SAR', dest: 'SAR', rate: 1, kittyTotal: 0, paid: {}, group: [{ id: 'g1', desc: 'Dinner', category: 'FOOD', amount: 100, payerUid: 'me' }], sides: [], personalBudget: 0, personal: [] },
+      media: [{ id: 'm1', type: 'image', src: 'data:image/jpeg;base64,xx', name: 'pic', uploaderUid: 'me', day: 'Day 1', place: 'London' }],
+      locale: 'en', t,
+    });
+    expect(html).toContain('Trip &lt;b&gt;&amp;&lt;/b&gt;'); // escaped, not injected
+    expect(html).not.toContain('<b>&</b>');
+    expect(html).toContain('Big Ben');
+    expect(html).toContain('Dinner');
+    // who pays whom: Omar → Khalid
+    const settle = html.slice(html.indexOf(t('expenses.whoPaysWhom')));
+    expect(settle.indexOf('Omar')).toBeGreaterThan(-1);
+    expect(settle.indexOf('Omar')).toBeLessThan(settle.indexOf('Khalid'));
+    expect(html).toContain('<img src="data:image/jpeg;base64,xx"');
   });
 });

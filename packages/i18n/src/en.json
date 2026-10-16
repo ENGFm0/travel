@@ -611,7 +611,8 @@
       "MAINT": "Maintenance",
       "OTHER": "Other"
     },
-    "carExpLinked": "Car expenses are added to the Expenses tab (transport) and split with the group."
+    "carExpLinked": "Car expenses are added to the Expenses tab (transport) and split with the group.",
+    "stays": "Stays"
   },
   "expenses": {
     "kitty": "Kitty",
@@ -786,7 +787,13 @@
       "TYPE": "Unsupported file type — images and videos only",
       "SIZE": "File is too large"
     },
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "reportPrint": "Print / Save as PDF",
+    "reportPreparing": "Preparing the report…",
+    "reportFailed": "Could not generate the report",
+    "reportGenerated": "Generated on {{date}}",
+    "videosNotIncluded": "{{count}} video(s) not included in the printed report",
+    "exporting": "Exporting…"
   },
   "friends": {
     "requests": "Friend requests",

@@ -6,6 +6,9 @@ import {
   canDelete, groupMedia, mediaTypeOf, validateFile, type Grouping,
 } from './memoriesModel';
 import { memoriesActions, useMemories } from './memoriesStore';
+import { openTripReport, type ReportTrip } from './tripReport';
+import { useUIStore } from '@/app/store/uiStore';
+import { useMembers } from '@/features/members/membersStore';
 
 interface Props {
   tripId: string;
@@ -14,12 +17,17 @@ interface Props {
   places: string[];
   tripTitle: string;
   memberCount: number;
+  /** Everything the on-device trip report needs (itinerary seed, dates, currencies). */
+  reportTrip?: ReportTrip;
 }
 
-export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, memberCount }: Props) {
+export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Props) {
   const { t } = useTranslation();
+  const locale = useUIStore((s) => s.locale);
+  const { members } = useMembers(); // already loaded by the trip page
   const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
   const { media, loading, error } = useMemories();
+  const [exporting, setExporting] = useState(false);
   const [group, setGroup] = useState<Grouping>('day');
   const [day, setDay] = useState('1');
   const [place, setPlace] = useState(places[0] ?? '—');
@@ -63,15 +71,18 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, membe
     window.setTimeout(() => setCopied(false), 2000);
   }
 
-  function exportReport() {
-    const lines = [
-      `${t('memories.report')} — ${tripTitle}`,
-      `${t('tripDetail.tabItinerary')}: ${places.join('، ') || '—'}`,
-      `${t('tripDetail.tabMembers')}: ${memberCount}`,
-      `${t('memories.mediaCount', { count: media?.length ?? 0 })}`,
-      t('memories.reportFinanceNote'),
-    ];
-    setReport(lines.join('\n'));
+  async function exportReport() {
+    if (!reportTrip || exporting) return;
+    setExporting(true);
+    setReport(null);
+    try {
+      await openTripReport(reportTrip, media ?? [], members ?? [], locale, t);
+    } catch (e) {
+      // Surface a readable error in the existing report modal.
+      setReport(`${t('memories.reportFailed')} — ${(e as { code?: string; message?: string })?.code ?? (e as Error)?.message ?? ''}`);
+    } finally {
+      setExporting(false);
+    }
   }
 
   const errText = uploadError ? t(`memories.errors.${uploadError}`) : null;
@@ -84,7 +95,9 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, tripTitle, membe
           <button className={`bp-seg__btn ${group === 'place' ? 'is-on' : ''}`} aria-pressed={group === 'place'} onClick={() => setGroup('place')}>{t('memories.byPlace')}</button>
         </div>
         <div className="bp-memories__actions">
-          <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={exportReport}>{t('memories.export')}</button>
+          <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={exportReport} disabled={exporting || !reportTrip}>
+            {exporting ? t('memories.exporting') : t('memories.export')}
+          </button>
           {isOwner && <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={share}>{copied ? t('members.copied') : t('memories.share')}</button>}
         </div>
       </div>
