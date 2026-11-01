@@ -70,7 +70,7 @@ describe('US-006 Itinerary dashboard', () => {
     expect(await screen.findByRole('heading', { name: 'الأعضاء', level: 2 })).toBeInTheDocument();
   });
 
-  it('auto-generates days from the trip dates and adds a detailed activity', async () => {
+  it('auto-generates days from the trip dates; places are added only through Explore', async () => {
     await signIn();
     seed([OWNER]);
     renderAt('/trips/trip-x');
@@ -83,10 +83,14 @@ describe('US-006 Itinerary dashboard', () => {
       return el as HTMLElement;
     });
 
-    // open the activity form in the first day, then add an activity
-    await userEvent.click(within(firstDay).getByRole('button', { name: 'أضف نشاطًا' }));
-    await userEvent.type(within(firstDay).getByLabelText('أضف نشاطًا'), 'زيارة متحف اللوفر{enter}');
-    expect(await screen.findByText('زيارة متحف اللوفر')).toBeInTheDocument();
+    // the day's "+" is a link into Explore preset to this trip, city and day — no inline form
+    const plus = within(firstDay).getByRole('link', { name: 'أضف نشاطًا' });
+    expect(plus.getAttribute('href')).toMatch(/^\/explore\?trip=trip-x&city=.*&mode=day&day=/);
+    expect(within(firstDay).queryByRole('textbox')).not.toBeInTheDocument();
+    // hotels too: the stay section's only add control goes to Explore with the hotels filter
+    await userEvent.click(screen.getByRole('tab', { name: /السكن/ }));
+    expect((await screen.findByRole('link', { name: /تصفّح الفنادق في استكشف/ })).getAttribute('href')).toMatch(/mode=stay&find=hotels$/);
+    expect(screen.queryByRole('button', { name: 'أضف سكن' })).not.toBeInTheDocument();
   });
 
   it('splits the trip days across undated stops and keeps empty days compact', async () => {

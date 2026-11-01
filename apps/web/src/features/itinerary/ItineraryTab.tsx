@@ -11,13 +11,12 @@ import {
 import { uploadFile, mediaTypeOf } from '@/shared/uploads';
 import { itineraryActions, useItinerary } from './itineraryStore';
 import { estimateWeather, type Clothing } from './weather';
-import { PlaceSearch, type PickedPlace } from './PlaceSearch';
+import { PlaceSearch } from './PlaceSearch';
 import { PhotoGallery } from './PhotoGallery';
-import { mapsEnabled, loadMapsLib, geocode, searchPlacesByText, type GmapsPlace } from '@/shared/googleMaps';
+import { mapsEnabled, loadMapsLib, geocode } from '@/shared/googleMaps';
 import { placesActions } from '@/features/places/placesStore';
 import type { Place, PlaceCategory } from '@/features/places/placesModel';
-import { recordTripExpense, recordTripPersonalExpense } from '@/features/expenses/expensesService';
-import type { Category } from '@/features/expenses/finance';
+import { recordTripExpense } from '@/features/expenses/expensesService';
 import { guessCountry } from '@/shared/countries';
 import { KebabMenu } from '@/shared/KebabMenu';
 import { allocateCityRanges, addDaysIso, datesBetween, dayCount, type CityRange } from './cityRanges';
@@ -905,13 +904,6 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
     });
     setPicking(false);
   }
-  function onAddHotel(h: GmapsPlace) {
-    saveStay({
-      id: `stay-${crypto.randomUUID()}`, name: h.name, placeId: h.id, mapsUrl: h.mapsUrl,
-      photoUrl: h.photoUrl, photoUrls: h.photoUrl ? [h.photoUrl] : undefined,
-      checkIn: city.dateFrom, checkOut: city.dateTo,
-    });
-  }
 
   return (
     <section className="bp-itin-sec">
@@ -927,73 +919,22 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
           onEdit={() => setEditId(s.id)} onRemove={() => removeStay(s.id)} onRate={(r) => rate(s.id, r)} />
       )))}
 
-      {editId === 'new' && (
-        <StayEditor stay={{ id: `stay-${crypto.randomUUID()}`, name: '', checkIn: city.dateFrom, checkOut: city.dateTo }} city={city}
-          onSave={saveStay} onCancel={() => setEditId(null)} />
+      {/* Hotels are added ONLY through Explore (photos, ratings, map), preset to
+          this trip and city; a map pin stays for places with no listing. */}
+      {canEdit && (
+        <Link className="bp-add-activity" to={`/explore?trip=${encodeURIComponent(tripId)}&city=${encodeURIComponent(city.name)}&mode=stay&find=hotels`}>
+          <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.browseHotels')}
+        </Link>
       )}
-
-      {canEdit && editId !== 'new' && (
-        <button className="bp-add-activity" onClick={() => setEditId('new')}>
-          <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addStay')}
-        </button>
-      )}
-
-      <div className="bp-map-links">
-        {canEdit && mapsEnabled() && (
+      {canEdit && mapsEnabled() && (
+        <div className="bp-map-links">
           <button type="button" className="bp-map-chip bp-map-chip--pick" onClick={() => setPicking(true)}>
             <span className="material-symbols-outlined" aria-hidden="true">add_location_alt</span>{t('itinerary.pickOnMap')}
           </button>
-        )}
-        <Link className="bp-map-chip bp-map-chip--explore" to={`/explore?trip=${encodeURIComponent(tripId)}&city=${encodeURIComponent(city.name)}&mode=stay&find=hotels`}>
-          <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.browseHotels')}
-        </Link>
-      </div>
-
-      {canEdit && mapsEnabled() && <HotelSuggestions city={city} onAdd={onAddHotel} />}
+        </div>
+      )}
       {picking && <MapPicker cityName={city.name} onPick={onPickLocation} onClose={() => setPicking(false)} />}
     </section>
-  );
-}
-
-/** Live hotel suggestions from Google for the city — tap to add as a stay. */
-function HotelSuggestions({ city, onAdd }: { city: CityStop; onAdd: (h: GmapsPlace) => void }) {
-  const { t } = useTranslation();
-  const [results, setResults] = useState<GmapsPlace[]>([]);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    if (!city.name.trim()) return;
-    setBusy(true);
-    searchPlacesByText(`فنادق ${city.name}`, { maxResults: 6 })
-      .then((r) => { if (alive) setResults(r); })
-      .catch(() => { /* optional */ })
-      .finally(() => { if (alive) setBusy(false); });
-    return () => { alive = false; };
-  }, [city.name]);
-
-  if (busy && results.length === 0) return <p className="bp-note">{t('itinerary.loadingHotels')}</p>;
-  if (results.length === 0) return null;
-  return (
-    <div className="bp-hotel-suggest">
-      <h5 className="bp-hotel-suggest__h">{t('itinerary.suggestedHotels')}</h5>
-      <ul className="bp-hotel-list" role="list">
-        {results.map((h) => (
-          <li key={h.id} className="bp-hotel-card">
-            <div className="bp-hotel-card__photo">
-              {h.photoUrl ? <img src={h.photoUrl} alt={h.name} loading="lazy" /> : <span className="material-symbols-outlined" aria-hidden="true">hotel</span>}
-            </div>
-            <div className="bp-hotel-card__body">
-              <span className="bp-hotel-card__name">{h.name}</span>
-              {typeof h.rating === 'number' && h.rating > 0 && (
-                <span className="bp-hotel-card__rate"><span className="material-symbols-outlined" aria-hidden="true">star</span>{h.rating.toFixed(1)}</span>
-              )}
-              {h.address && <span className="bp-hotel-card__addr">{h.address}</span>}
-            </div>
-            <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={() => onAdd(h)}>{t('itinerary.addStay')}</button>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -1196,11 +1137,6 @@ const KIND_TO_CAT: Record<ActivityKind, PlaceCategory> = {
   ACTIVITY: 'ACTIVITIES', TRANSPORT: 'ACTIVITIES', HOTEL: 'ACTIVITIES', OTHER: 'ACTIVITIES',
 };
 
-/** Activity kind → expenses category (for the cost → shared expense link). */
-const KIND_TO_EXP_CAT: Record<ActivityKind, Category> = {
-  FOOD: 'FOOD', HOTEL: 'HOUSING', ARRIVAL: 'TRANSPORT', TRANSPORT: 'TRANSPORT',
-  SHOPPING: 'OTHER', SIGHT: 'OTHER', ACTIVITY: 'OTHER', OTHER: 'OTHER',
-};
 
 /** Stable community-place id from a name + city (Arabic kept; slashes stripped). */
 function placeSlug(name: string, city: string): string {
@@ -1331,56 +1267,12 @@ function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo, range }: { tri
 function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string; cityId: string; cityName: string; day: Day; n: number; canEdit: boolean }) {
   const { t } = useTranslation();
   const locale = useUIStore((s) => s.locale);
-  const [title, setTitle] = useState('');
-  const [time, setTime] = useState('');
-  const [note, setNote] = useState('');
-  const [kind, setKind] = useState<ActivityKind>('ACTIVITY');
-  const [cost, setCost] = useState('');
-  const [pot, setPot] = useState<'SHARED' | 'PERSONAL'>('SHARED');
-  const [photoUrl, setPhotoUrl] = useState<string | undefined>();
-  const [photoUrls, setPhotoUrls] = useState<string[] | undefined>();
-  const [mapsUrl, setMapsUrl] = useState<string | undefined>();
-  const [placeId, setPlaceId] = useState<string | undefined>();
-  const [open, setOpen] = useState(false);
   // An empty day is a compact one-line row until it is expanded (or gets activities).
   const [expanded, setExpanded] = useState(false);
   const empty = day.activities.length === 0;
-
-  function reset() {
-    setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY'); setCost(''); setPot('SHARED');
-    setPhotoUrl(undefined); setPhotoUrls(undefined); setMapsUrl(undefined); setPlaceId(undefined); setOpen(false);
-  }
-
-  async function addActivity() {
-    if (!title.trim()) return;
-    const costNum = cost ? Number(cost) : undefined;
-    await itineraryActions.addActivity(tripId, cityId, day.id, {
-      // period is derived from the time on display — no manual selection.
-      title: title.trim(), time: time || undefined, period: periodFromTime(time), note: note || undefined, kind,
-      cost: costNum, photoUrl, photoUrls, mapsUrl, placeId,
-    });
-    // A cost flows to the chosen kitty: shared (draws down the pot) or personal.
-    if (costNum && costNum > 0) {
-      try {
-        if (pot === 'PERSONAL') await recordTripPersonalExpense(tripId, { desc: title.trim(), amount: costNum });
-        else await recordTripExpense(tripId, { desc: title.trim(), category: KIND_TO_EXP_CAT[kind], amount: costNum });
-      } catch { /* best-effort */ }
-    }
-    reset();
-  }
-
-  // A place chosen from Google search pre-fills the form (name/address/kind/photo)
-  // and opens it, so the user can set the time / "when I'll go" before saving.
-  function prefillFromPlace(p: PickedPlace) {
-    setTitle(p.name);
-    setNote(p.address ?? '');
-    setKind(p.kind);
-    setPhotoUrl(p.photoUrl);
-    setPhotoUrls(p.photoUrls);
-    setMapsUrl(p.mapsUrl);
-    setPlaceId(p.placeId);
-    setOpen(true);
-  }
+  // Places are added ONLY through Explore (real places, photos, ratings),
+  // preset to this trip, city and day; time/notes/cost are edited on the item.
+  const exploreTo = `/explore?trip=${encodeURIComponent(tripId)}&city=${encodeURIComponent(cityName)}&mode=day&day=${encodeURIComponent(day.id)}`;
 
   const heading = day.title?.trim()
     || (day.date ? `${t('itinerary.dayN', { n })} · ${formatDate(day.date, locale, { weekday: 'short', day: 'numeric', month: 'short' })}` : t('itinerary.dayN', { n }));
@@ -1392,7 +1284,7 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   ) : null;
 
   // Compact row for an empty day: number + date + "+" (expands with the form open).
-  if (empty && !expanded && !open) {
+  if (empty && !expanded) {
     return (
       <li className="bp-day-card bp-day-card--compact">
         <button type="button" className="bp-day-card__row" aria-label={`${heading} — ${t('itinerary.expandDay')}`} aria-expanded={false} onClick={() => setExpanded(true)}>
@@ -1400,10 +1292,9 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
           <span className="bp-day-card__rowtitle">{heading}</span>
         </button>
         {canEdit && (
-          <button type="button" className="bp-icon-btn bp-icon-btn--sm bp-day-card__plus" aria-label={t('itinerary.addActivity')} title={t('itinerary.addActivity')}
-            onClick={() => { setExpanded(true); setOpen(true); }}>
+          <Link className="bp-icon-btn bp-icon-btn--sm bp-day-card__plus" aria-label={t('itinerary.addActivity')} title={t('itinerary.addActivity')} to={exploreTo}>
             <span className="material-symbols-outlined" aria-hidden="true">add</span>
-          </button>
+          </Link>
         )}
         {menu}
       </li>
@@ -1418,7 +1309,7 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
         </h4>
         <div className="bp-day-card__actions">
           {empty && (
-            <button type="button" className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.collapseDay')} onClick={() => { setExpanded(false); reset(); }}>
+            <button type="button" className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.collapseDay')} onClick={() => setExpanded(false)}>
               <span className="material-symbols-outlined" aria-hidden="true">expand_less</span>
             </button>
           )}
@@ -1434,72 +1325,11 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
         </ul>
       )}
 
-      {canEdit && (open ? (
-        <div className="bp-act-form">
-          {/* One plain search box: it IS the activity name. Typing searches Google
-              Places; picking a result fills name/address/photo/map link and sets
-              the category from Google's place types (no manual category). */}
-          {mapsEnabled() ? (
-            <PlaceSearch city={cityName} regionCode={guessCountry(cityName)?.code} value={title} onValueChange={setTitle} onPick={prefillFromPlace}
-              placeholder={t('itinerary.addActivityPh')} ariaLabel={t('itinerary.addActivity')} />
-          ) : (
-            <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
-              onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
-          )}
-          <Link className="bp-map-chip bp-map-chip--explore bp-act-form__explore" to={`/explore?trip=${encodeURIComponent(tripId)}&city=${encodeURIComponent(cityName)}&mode=day&day=${encodeURIComponent(day.id)}`}>
-            <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.pickFromExplore')}
-          </Link>
-          {title.trim() && (
-            <div className="bp-act-form__kindtag" aria-label={t('itinerary.activityKind')}>
-              <span className="material-symbols-outlined" aria-hidden="true">{ACTIVITY_ICON[kind]}</span>
-              <span>{t(`itinerary.kind.${kind}`)}</span>
-              {placeId && <span className="bp-act-form__kindsrc">· {t('itinerary.fromGoogle')}</span>}
-            </div>
-          )}
-          {photoUrl && (
-            <div className="bp-act-form__photo">
-              <PhotoGallery photos={photoUrls ?? [photoUrl]} placeId={placeId} alt={title || t('itinerary.addActivity')} size="sm" />
-              <button type="button" className="bp-icon-btn bp-icon-btn--xs bp-act-form__photo-rm" aria-label={t('itinerary.removePhoto')} onClick={() => { setPhotoUrl(undefined); setPhotoUrls(undefined); }}>
-                <span className="material-symbols-outlined" aria-hidden="true">close</span>
-              </button>
-            </div>
-          )}
-          <div className="bp-act-form__row">
-            <label className="bp-field bp-act-form__time">
-              <span className="bp-field__label">{t('itinerary.whenLabel')}</span>
-              <input className="bp-input" type="time" value={time} onChange={(e) => setTime(e.target.value)} aria-label={t('itinerary.whenLabel')} />
-            </label>
-            <label className="bp-field" style={{ flex: 1 }}>
-              <span className="bp-field__label">{t('itinerary.activityNote')}</span>
-              <input className="bp-input" value={note} placeholder={t('itinerary.activityNotePh')} aria-label={t('itinerary.activityNote')}
-                onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
-            </label>
-            <label className="bp-field bp-act-form__time">
-              <span className="bp-field__label">{t('itinerary.cost')}</span>
-              <input className="bp-input" type="number" inputMode="decimal" min="0" value={cost} placeholder="0" aria-label={t('itinerary.cost')}
-                onChange={(e) => setCost(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} />
-            </label>
-          </div>
-          {Number(cost) > 0 && (
-            <div className="bp-act-form__pot">
-              <span className="bp-field__label">{t('expenses.potType')}</span>
-              <div className="bp-kinds" role="group" aria-label={t('expenses.potType')}>
-                <button type="button" className={`bp-chip bp-chip--btn ${pot === 'SHARED' ? 'is-on' : ''}`} aria-pressed={pot === 'SHARED'} onClick={() => setPot('SHARED')}>{t('expenses.pot.SHARED')}</button>
-                <button type="button" className={`bp-chip bp-chip--btn ${pot === 'PERSONAL' ? 'is-on' : ''}`} aria-pressed={pot === 'PERSONAL'} onClick={() => setPot('PERSONAL')}>{t('expenses.pot.PERSONAL')}</button>
-              </div>
-            </div>
-          )}
-          {time && <p className="bp-act-form__hint">{formatTime12(time, locale)} · {t(`itinerary.period.${periodFromTime(time)}`)}</p>}
-          <div className="bp-row-between">
-            <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={addActivity}>{t('itinerary.add')}</button>
-            <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={reset}>{t('trips.close')}</button>
-          </div>
-        </div>
-      ) : (
-        <button className="bp-add-activity" onClick={() => setOpen(true)}>
-          <span className="material-symbols-outlined" aria-hidden="true">add</span>{t('itinerary.addActivity')}
-        </button>
-      ))}
+      {canEdit && (
+        <Link className="bp-add-activity" to={exploreTo}>
+          <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.pickFromExplore')}
+        </Link>
+      )}
     </li>
   );
 }
