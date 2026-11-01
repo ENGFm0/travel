@@ -5,6 +5,7 @@ import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { MembersPanel } from '@/features/members/MembersPanel';
+import { IbanGate } from '@/features/members/IbanGate';
 import { CURRENT_UID } from '@/features/members/membersService';
 import { membersActions, useMembers } from '@/features/members/membersStore';
 import { ItineraryTab } from '@/features/itinerary/ItineraryTab';
@@ -120,6 +121,8 @@ export function TripDetailPage() {
           </p>
         </div>
       </header>
+
+      <IbanGate tripId={trip.id} meUid={meUid} />
 
       <TabNav tab={tab} onSelect={selectTab} />
 

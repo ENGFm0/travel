@@ -576,6 +576,18 @@ select.bp-input {
 .bp-breakdown__adj { color: var(--bp-ink-muted); font-size: 12px; }
 .bp-seg--settle { margin: 4px 0 6px; } .bp-seg--settle + .bp-note { margin: 0 0 10px; font-size: 12.5px; }
 .bp-note--warn { color: var(--bp-red, #c0392b); font-weight: 700; }
+/* IBAN: on-join gate, copyable chips in settlements, the app's share box. */
+.bp-ibangate { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 14px; padding: 12px 14px; border-radius: var(--bp-r-lg); background: color-mix(in srgb, var(--bp-primary) 10%, var(--bp-surface)); border: 1px solid color-mix(in srgb, var(--bp-primary) 35%, transparent); }
+.bp-ibangate__icon { color: var(--bp-primary); font-size: 28px; }
+.bp-ibangate__body { flex: 1; min-width: 0; } .bp-ibangate__body p { margin: 2px 0 8px; font-size: 13px; color: var(--bp-ink-muted); }
+.bp-ibangate__row { display: flex; gap: 8px; } .bp-ibangate__row .bp-input { flex: 1; font-variant-numeric: tabular-nums; letter-spacing: .5px; }
+.bp-iban { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed var(--bp-border); background: var(--bp-surface-2); color: var(--bp-ink); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
+.bp-iban__num { font-variant-numeric: tabular-nums; letter-spacing: .3px; direction: ltr; unicode-bidi: isolate; }
+.bp-iban .material-symbols-outlined { font-size: 16px; color: var(--bp-primary); } .bp-iban__ok { color: var(--bp-green, #1f8a70); font-weight: 700; }
+.bp-iban-missing { font-size: 12px; color: var(--bp-red, #c0392b); }
+.bp-settle__iban { flex-basis: 100%; }
+.bp-fee { background: color-mix(in srgb, var(--bp-primary) 8%, var(--bp-surface)); border: 1px solid color-mix(in srgb, var(--bp-primary) 30%, transparent); border-radius: var(--bp-r-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.bp-fee__line { margin: 0; font-weight: 700; } .bp-fee__yours { margin: 0; color: var(--bp-primary); font-weight: 800; }
 .bp-exp__by--pot { color: var(--bp-primary); font-weight: 700; }
 .bp-exp__meta { flex-basis: 100%; font-size: 12px; color: var(--bp-ink-muted); }
 .bp-check--all { font-weight: 700; }

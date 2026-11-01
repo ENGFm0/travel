@@ -21,6 +21,8 @@ import {
 } from '@/features/itinerary/itineraryService';
 import { createExpensesService } from '@/features/expenses/expensesService';
 import type { Member } from '@/features/members/membersService';
+import { formatIban } from '@/features/profile/profileModel';
+import { APP_FEE_PCT, APP_IBAN, appFee } from '@/shared/appFee';
 import { CATEGORIES, distribution, settledLedger, type Category, type Finance } from '@/features/expenses/finance';
 import type { Media } from './memoriesModel';
 
@@ -209,9 +211,17 @@ export function buildTripReportHtml(d: ReportData): string {
       <div class="card wide"><h4>⚖️ ${esc(t('memories.rpt.balance'))}</h4><p class="hint">${esc(t('memories.rpt.balanceHint'))}</p>${balChart}</div>
     </div>`;
 
+    const ibanOf = (uid: string) => members.find((m) => m.uid === uid)?.iban;
     settleCards = transfers.length
-      ? `<div class="settles">${transfers.map((tr) => `<div class="settle"><span class="av" style="background:${memberColor(tr.from)}">${esc(initials(nameOf(tr.from)))}</span><span class="st-name">${esc(nameOf(tr.from))}</span><span class="st-arrow">${dir === 'rtl' ? '◀' : '▶'}<b>${esc(money(tr.amount))}</b>${dir === 'rtl' ? '◀' : '▶'}</span><span class="st-name">${esc(nameOf(tr.to))}</span><span class="av" style="background:${memberColor(tr.to)}">${esc(initials(nameOf(tr.to)))}</span></div>`).join('')}</div>`
+      ? `<div class="settles">${transfers.map((tr) => `<div class="settle"><span class="av" style="background:${memberColor(tr.from)}">${esc(initials(nameOf(tr.from)))}</span><span class="st-name">${esc(nameOf(tr.from))}</span><span class="st-arrow">${dir === 'rtl' ? '◀' : '▶'}<b>${esc(money(tr.amount))}</b>${dir === 'rtl' ? '◀' : '▶'}</span><span class="st-name">${esc(nameOf(tr.to))}</span><span class="av" style="background:${memberColor(tr.to)}">${esc(initials(nameOf(tr.to)))}</span><div class="st-iban">${ibanOf(tr.to) ? `🏦 <b>${esc(formatIban(ibanOf(tr.to)!))}</b>` : `<span class="muted">${esc(t('expenses.ibanMissing', { name: nameOf(tr.to) }))}</span>`}</div></div>`).join('')}</div>`
       : `<p class="allok">✅ ${esc(t('expenses.allSettled'))}</p>`;
+    if (APP_FEE_PCT > 0 && grand > 0) {
+      settleCards += `<div class="fee"><h4>${esc(t('expenses.appFeeTitle'))}</h4>
+        <p>${esc(t('expenses.appFeeLine', { pct: APP_FEE_PCT, total: money(grand), amount: money(appFee(grand)) }))}</p>
+        <p>${esc(t('expenses.appFeeYours', { amount: money(appFee(grand) / Math.max(1, uids.length)) }))}</p>
+        ${APP_IBAN ? `<p class="fee-iban">🏦 <b>${esc(formatIban(APP_IBAN))}</b></p>` : `<p class="muted">${esc(t('expenses.appIbanSoon'))}</p>`}
+        <p class="muted">${esc(t('expenses.appFeeHonor'))}</p></div>`;
+    }
   }
 
   // ---- Timeline strip ------------------------------------------------------------
@@ -344,6 +354,9 @@ export function buildTripReportHtml(d: ReportData): string {
   .settles { display: grid; gap: 8px; }
   .settle { display: grid; grid-template-columns: auto 1fr auto 1fr auto; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; break-inside: avoid; }
   .st-name { font-weight: 700; } .st-name:last-of-type { text-align: end; }
+  .st-iban { grid-column: 1 / -1; font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+  .fee { background: #fff8f3; border: 1px solid #ffd9c4; border-radius: 14px; padding: 12px 14px; margin-top: 10px; font-size: 13px; }
+  .fee h4 { margin: 0 0 6px; color: var(--accent); } .fee p { margin: 3px 0; } .fee-iban b { font-variant-numeric: tabular-nums; }
   .st-arrow { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; } .st-arrow b { background: #fff3ec; color: var(--accent); border: 1px solid #ffd9c4; border-radius: 999px; padding: 3px 12px; font-size: 14px; white-space: nowrap; }
   .allok { background: #e8f7e8; color: #0a5a0a; border-radius: 12px; padding: 12px 14px; font-weight: 700; }
   .av { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: #fff; font-weight: 800; font-size: 13px; flex: none; } .av.lg { width: 44px; height: 44px; font-size: 16px; }

@@ -51,6 +51,10 @@ jobs:
           # AeroDataBox (RapidAPI) key — public build key; powers real flight
           # lookup by number (schedule, route, times). Cap usage in RapidAPI.
           VITE_AERODATABOX_KEY: 9a96884d93msh090851587a6ad34p1144ddjsn5267546350f1
+          # The app's share (Haraj-style, voluntary): percentage of a trip's
+          # total spend, and the IBAN it is transferred to. Fill in the IBAN.
+          VITE_APP_FEE_PCT: "1"
+          VITE_APP_IBAN: ""
         run: npm --workspace apps/web run build
 
       - name: Write service account credentials

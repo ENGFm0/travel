@@ -15,6 +15,7 @@ export interface Member {
   handle?: string; // phone/username shown in the list
   role: MemberRole;
   status: MemberStatus;
+  iban?: string;   // where this member receives settlements (self-set on joining)
 }
 
 export interface InvitePayload {
@@ -41,6 +42,8 @@ export interface MembersService {
   list(tripId: string): Promise<Member[]>;
   invite(tripId: string, payload: InvitePayload): Promise<Member>;
   setRole(tripId: string, uid: string, role: MemberRole): Promise<void>;
+  /** A member records their own IBAN on this trip (readable by trip members). */
+  setIban(tripId: string, uid: string, iban: string): Promise<void>;
   remove(tripId: string, uid: string): Promise<void>;
   transferOwnership(tripId: string, uid: string): Promise<void>;
   /** Current user leaves; owner with other members is blocked (BR-009-002). */
@@ -98,6 +101,12 @@ export function createMockMembersService(seed?: Record<string, Member[]>, persis
       if (!m) throw new MembersError('NOT_FOUND');
       if (m.role === 'OWNER') throw new MembersError('GENERIC'); // change owner via transfer
       m.role = role;
+    },
+    async setIban(tripId, uid, iban) {
+      await tick();
+      const m = ensure(tripId).find((x) => x.uid === uid);
+      if (!m) throw new MembersError('NOT_FOUND');
+      m.iban = iban;
     },
     async remove(tripId, uid) {
       await tick();
@@ -163,6 +172,9 @@ export function createApiMembersService(getToken?: () => string | undefined): Me
     async setRole(tripId, uid, role) {
       await client.apiFetch<void>(`/trips/${tripId}/members/${uid}`, { method: 'PATCH', body: JSON.stringify({ role }) });
     },
+    async setIban(tripId, uid, iban) {
+      await client.apiFetch<void>(`/trips/${tripId}/members/${uid}`, { method: 'PATCH', body: JSON.stringify({ iban }) });
+    },
     async remove(tripId, uid) {
       await client.apiFetch<void>(`/trips/${tripId}/members/${uid}`, { method: 'DELETE' });
     },
@@ -221,6 +233,10 @@ export function createFirestoreMembersService(): MembersService {
       if (!s.exists()) throw new MembersError('NOT_FOUND');
       if (s.data().role === 'OWNER') throw new MembersError('GENERIC');
       await updateDoc(doc(col(tripId), uid), { role });
+    },
+    async setIban(tripId, uid, iban) {
+      // Members may update their own member doc (rules: uid() == memberId).
+      await updateDoc(doc(col(tripId), uid), { iban });
     },
     async remove(tripId, uid) {
       await deleteDoc(doc(col(tripId), uid));

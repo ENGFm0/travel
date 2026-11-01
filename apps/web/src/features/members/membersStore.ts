@@ -76,6 +76,7 @@ export const membersActions = {
   },
   invite: (tripId: string, p: InvitePayload) => run(tripId, () => svc().invite(tripId, p)),
   setRole: (tripId: string, uid: string, role: MemberRole) => run(tripId, () => svc().setRole(tripId, uid, role)),
+  setIban: (tripId: string, uid: string, iban: string) => run(tripId, () => svc().setIban(tripId, uid, iban)),
   remove: (tripId: string, uid: string) => run(tripId, () => svc().remove(tripId, uid)),
   transfer: (tripId: string, uid: string) => run(tripId, () => svc().transferOwnership(tripId, uid)),
   leave: (tripId: string, uid: string) => run(tripId, () => svc().leave(tripId, uid)),

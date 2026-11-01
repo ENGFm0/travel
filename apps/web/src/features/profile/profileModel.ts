@@ -22,8 +22,34 @@ export interface Profile {
   phone: string;
   username?: string; // optional public handle, used to be discoverable by friends
   country?: string; // ISO 3166-1 alpha-2 home country (drives default currency)
+  iban?: string;    // bank account for settlements (normalized: no spaces, uppercase)
   avatarUrl: string;
   notif: NotifPrefs;
+}
+
+/** Normalize an IBAN for storage: strip spaces, uppercase. */
+export function normalizeIban(s: string): string {
+  return (s ?? '').replace(/\s+/g, '').toUpperCase();
+}
+
+/** Display form: groups of four. */
+export function formatIban(s: string): string {
+  return normalizeIban(s).replace(/(.{4})/g, '$1 ').trim();
+}
+
+/** Validate an IBAN: structure, Saudi length (24), and the ISO 7064 mod-97
+ *  check digits. Returns an error code or null when valid. */
+export function validateIban(s: string): 'INVALID' | null {
+  const v = normalizeIban(s);
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(v)) return 'INVALID';
+  if (v.startsWith('SA') && v.length !== 24) return 'INVALID';
+  const rearranged = v.slice(4) + v.slice(0, 4);
+  let rem = 0;
+  for (const ch of rearranged) {
+    const piece = ch >= 'A' ? String(ch.charCodeAt(0) - 55) : ch; // A=10 … Z=35
+    for (const d of piece) rem = (rem * 10 + (d.charCodeAt(0) - 48)) % 97;
+  }
+  return rem === 1 ? null : 'INVALID';
 }
 
 /** Normalize a username for storage/lookup: trim, lowercase, drop a leading @. */

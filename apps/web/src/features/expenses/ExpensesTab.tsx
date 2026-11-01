@@ -13,6 +13,8 @@ import {
   type Category, type Finance, type GroupExpense, type KittyMode, type PersonalExpense, type SideKitty,
 } from './finance';
 import { expensesActions, useFinance } from './expensesStore';
+import { formatIban, normalizeIban } from '@/features/profile/profileModel';
+import { APP_FEE_PCT, APP_IBAN, appFee } from '@/shared/appFee';
 
 type Sub = 'kitty' | 'personal' | 'summary';
 const SUBS: { key: Sub; label: string }[] = [
@@ -39,6 +41,12 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
     const map: Record<string, string> = {};
     active.forEach((m) => { map[m.uid] = m.displayName; });
     return (uid: string) => map[uid] ?? uid;
+  }, [active]);
+  // Where each member receives transfers (set by them on joining the trip).
+  const ibanOf = useMemo(() => {
+    const map: Record<string, string> = {};
+    active.forEach((m) => { if (m.iban) map[m.uid] = m.iban; });
+    return (uid: string): string | undefined => map[uid];
   }, [active]);
 
   const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
@@ -88,7 +96,7 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
 
       {sub === 'kitty' && <KittyPanel tripId={tripId} finance={finance} memberUids={memberUids} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} isOwner={isOwner} baseCur={baseCur} destCur={destCur} rate={finance.rate} />}
       {sub === 'personal' && <PersonalPanel finance={finance} fmt={fmt} canEdit={canEdit} />}
-      {sub === 'summary' && <SummaryPanel finance={finance} memberUids={memberUids} nameOf={nameOf} fmt={fmt} meUid={meUid} holderUid={holderUid} />}
+      {sub === 'summary' && <SummaryPanel finance={finance} memberUids={memberUids} nameOf={nameOf} ibanOf={ibanOf} fmt={fmt} meUid={meUid} holderUid={holderUid} />}
     </div>
   );
 }
@@ -509,8 +517,27 @@ function Breakdown({ finance, memberUids, u, fmt, shown, holderUid }: { finance:
   );
 }
 
-function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid, holderUid }: {
-  finance: Finance; memberUids: string[]; nameOf: (u: string) => string; fmt: (n: number) => string; meUid: string; holderUid?: string;
+/** An IBAN with a one-tap copy. */
+function IbanChip({ iban }: { iban: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try { await navigator.clipboard?.writeText(normalizeIban(iban)); } catch { /* clipboard may be unavailable */ }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <button type="button" className="bp-iban" onClick={copy} title={t('expenses.copyIban')} aria-label={`${t('expenses.copyIban')} ${formatIban(iban)}`}>
+      <span className="bp-iban__num">{formatIban(iban)}</span>
+      <span className="material-symbols-outlined" aria-hidden="true">{copied ? 'check' : 'content_copy'}</span>
+      {copied && <span className="bp-iban__ok">{t('members.copied')}</span>}
+    </button>
+  );
+}
+
+function SummaryPanel({ finance, memberUids, nameOf, ibanOf, fmt, meUid, holderUid }: {
+  finance: Finance; memberUids: string[]; nameOf: (u: string) => string; ibanOf: (u: string) => string | undefined;
+  fmt: (n: number) => string; meUid: string; holderUid?: string;
 }) {
   const { t } = useTranslation();
   const myNet = myNetBalance(finance, memberUids, meUid, holderUid);
@@ -584,9 +611,25 @@ function SummaryPanel({ finance, memberUids, nameOf, fmt, meUid, holderUid }: {
               <span className="bp-settle__to">{t('expenses.paysTo')}</span>
               <span className="bp-pay__name bp-settle__payee">{nameOf(tr.to)}</span>
               <span className="bp-pay__due">{fmt(tr.amount)}</span>
+              <span className="bp-settle__iban">
+                {ibanOf(tr.to) ? <IbanChip iban={ibanOf(tr.to)!} /> : <span className="bp-iban-missing">{t('expenses.ibanMissing', { name: nameOf(tr.to) })}</span>}
+              </span>
             </li>
           ))}
         </ul>
+      )}
+
+      {/* The app's share — Haraj-style, on your honor. */}
+      {APP_FEE_PCT > 0 && grand > 0 && (
+        <>
+          <h4 className="bp-panel__h">{t('expenses.appFeeTitle')}</h4>
+          <div className="bp-fee">
+            <p className="bp-fee__line">{t('expenses.appFeeLine', { pct: APP_FEE_PCT, total: fmt(grand), amount: fmt(appFee(grand)) })}</p>
+            <p className="bp-fee__yours">{t('expenses.appFeeYours', { amount: fmt(appFee(grand) / Math.max(1, memberUids.length)) })}</p>
+            {APP_IBAN ? <IbanChip iban={APP_IBAN} /> : <p className="bp-note">{t('expenses.appIbanSoon')}</p>}
+            <p className="bp-note">{t('expenses.appFeeHonor')}</p>
+          </div>
+        </>
       )}
 
       {mySpent > 0 && <p className="bp-note">{t('expenses.personalSpend')}: {fmt(mySpent)}</p>}

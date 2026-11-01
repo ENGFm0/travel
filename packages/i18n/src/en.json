@@ -242,7 +242,11 @@
     "confirmDelete": "Yes, delete",
     "username": "Username",
     "usernamePh": "e.g. salem",
-    "usernameNote": "So friends can find you. Letters, digits, . and _ only."
+    "usernameNote": "So friends can find you. Letters, digits, . and _ only.",
+    "iban": "IBAN",
+    "ibanPh": "SA00 0000 0000 0000 0000 0000",
+    "ibanNote": "Used so others can transfer your settlements after the trip.",
+    "ibanInvalid": "Invalid IBAN — check the number (24 characters starting with SA)."
   },
   "trips": {
     "close": "Close",
@@ -379,7 +383,10 @@
     "addTravellerName": "Traveller's name",
     "addTravellerNote": "Add travellers by name — they join directly, no invite or app needed.",
     "owner": "Owner",
-    "member": "Member"
+    "member": "Member",
+    "ibanGateTitle": "Add your IBAN",
+    "ibanGateText": "You need an IBAN so trip members can transfer your settlements. Saved once; visible only to members of your trips.",
+    "ibanSave": "Save IBAN"
   },
   "tripDetail": {
     "notFoundTitle": "Trip not found",
@@ -723,7 +730,14 @@
     "everyone": "Everyone",
     "potDue": "Your share of the pot",
     "duesOutstanding": "{{count}} haven't paid their pot share yet",
-    "potOverdrawn": "The pot is over by {{amount}}"
+    "potOverdrawn": "The pot is over by {{amount}}",
+    "ibanMissing": "{{name}} hasn't added an IBAN yet",
+    "copyIban": "Copy IBAN",
+    "appFeeTitle": "App share",
+    "appFeeLine": "App share {{pct}}% of the trip total ({{total}}) = {{amount}}",
+    "appFeeYours": "Your part: {{amount}}",
+    "appIbanSoon": "The app's IBAN will be added soon.",
+    "appFeeHonor": "Transferring to the app's IBAN is on your honor — Haraj-style. Thank you 🙏"
   },
   "tasks": {
     "title": "Tasks",
