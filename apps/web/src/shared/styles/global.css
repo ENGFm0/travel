@@ -1456,3 +1456,19 @@ select.bp-input {
 .bp-fee-details > summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--bp-ink-muted); }
 .bp-input.is-invalid { border-color: var(--bp-danger); }
 .bp-pay__due .bp-amt2 { text-align: inherit; }
+
+/* ── Finance round 3: kitty vs expenses tabs, change log, pot balance, inline confirm ── */
+.bp-subtabs2--4 .bp-subtab2 { padding-inline: 8px; font-size: 13px; }
+.bp-inline-confirm { margin: 8px 0; padding: 10px 12px; border-radius: var(--bp-r-md); background: color-mix(in srgb, var(--bp-primary) 8%, var(--bp-surface)); border: 1px solid color-mix(in srgb, var(--bp-primary) 35%, transparent); font-size: 13.5px; }
+.bp-inline-confirm p { margin: 0 0 8px; } .bp-inline-confirm__row { display: flex; gap: 8px; }
+.bp-note--log { font-size: 12px; }
+.bp-potclose { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.bp-changelog { margin-top: 18px; border-top: 1px dashed var(--bp-border); padding-top: 10px; }
+.bp-changelog .bp-panel__h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; } .bp-changelog .bp-panel__h small { font-weight: 500; }
+.bp-changelog__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bp-changelog__item { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 8px 10px; border-radius: 8px; background: var(--bp-surface-2); font-size: 13px; }
+.bp-changelog__item.is-danger { border-inline-start: 3px solid var(--bp-danger); }
+.bp-changelog__text { flex: 1; min-inline-size: 0; } .bp-changelog__when { flex: none; font-size: 11px; color: var(--bp-ink-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bp-potbal { margin: 12px 0; padding: 10px 12px; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); background: var(--bp-surface); }
+.bp-potbal__list { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 6px; }
+.bp-potbal__row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; }

@@ -78,7 +78,8 @@ describe('US-007 Expenses UI', () => {
     seed([OWNER, U2, U3]);
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
-    await userEvent.type(screen.getByLabelText('Description'), 'Hotel');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
+    await userEvent.type(screen.getByLabelText('Description'),'Hotel');
     await userEvent.type(screen.getByLabelText('Amount'), '800');
     await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -92,8 +93,10 @@ describe('US-007 Expenses UI', () => {
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
     await expensesActions.setKittyMode('OPEN');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
     await screen.findByText('Who was with you?');
-    await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
+    await userEvent.type(screen.getByLabelText('Description'),'Taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '300'); // paid by me, everyone selected → split 3 → net +200
     await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -110,6 +113,7 @@ describe('US-007 Expenses UI', () => {
     await screen.findByRole('tab', { name: 'Kitty' });
     await userEvent.type(screen.getByLabelText('Kitty total'), '900');
     await userEvent.click(screen.getByRole('button', { name: 'Set total' }));
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
     // "Who paid?" defaults to the pot (held by the owner).
     expect((screen.getByLabelText('Who paid?') as HTMLSelectElement).value).toBe('__pot__');
     await userEvent.type(screen.getByLabelText('Description'), 'Dinner');
@@ -118,7 +122,8 @@ describe('US-007 Expenses UI', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(await screen.findByText('Dinner')).toBeInTheDocument();
     expect(screen.getByText('From the pot')).toBeInTheDocument();      // payer column
-    expect(screen.getByText('Spent from the pot')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('tab', { name: 'Kitty' }));  // pot figures live on the Kitty tab
+    expect(await screen.findByText('Spent from the pot')).toBeInTheDocument();
     await waitFor(() => {
       const f = useExpensesStore.getState().finance!;
       expect(f.group[0].payerUid).toBe('__pot__');
@@ -144,7 +149,8 @@ describe('US-007 Expenses UI', () => {
     expect(screen.getAllByText(/333\.33/).length).toBeGreaterThanOrEqual(2);
     for (let i = 0; i < 3; i++) await userEvent.click(screen.getAllByRole('button', { name: 'Confirm paid' })[0]);
     await waitFor(() => expect(screen.getAllByText('Paid').length).toBe(3));
-    await userEvent.type(screen.getByLabelText('Description'), 'Hotel');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
+    await userEvent.type(screen.getByLabelText('Description'),'Hotel');
     await userEvent.type(screen.getByLabelText('Amount'), '1100');
     await userEvent.selectOptions(screen.getByLabelText('Category'), 'HOUSING');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -155,12 +161,56 @@ describe('US-007 Expenses UI', () => {
     expect(screen.getAllByText(/33\.34/).length).toBeGreaterThanOrEqual(2); // the two transfers to me
   });
 
+  it('two members who both paid into an untouched pot are even — nobody owes anybody (user report)', async () => {
+    await signIn();
+    seed([OWNER, U2]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    await userEvent.type(screen.getByLabelText('Kitty total'), '1000');
+    await userEvent.click(screen.getByRole('button', { name: 'Set total' }));
+    await screen.findByText('Spent from the pot');
+    for (let i = 0; i < 2; i++) await userEvent.click(screen.getAllByRole('button', { name: 'Confirm paid' })[0]);
+    await waitFor(() => expect(screen.getAllByText('Paid').length).toBe(2));
+    await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
+    expect(await screen.findByText('All settled — no transfers needed')).toBeInTheDocument();
+    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/0\.00/);
+    // The pot balance section shows each has 500 in the pot — shared, not a debt.
+    expect(screen.getAllByText(/yours in the pot/).length).toBe(2);
+  }, 15000);
+
+  it('keeps a change log every member can see, and closing the pot refunds what is left', async () => {
+    await signIn();
+    seed([OWNER, U2]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    await userEvent.type(screen.getByLabelText('Kitty total'), '1000');
+    await userEvent.click(screen.getByRole('button', { name: 'Set total' }));
+    expect(await screen.findByText(/set the pot total/)).toBeInTheDocument();
+    // Editing the total is allowed and logged with the previous value.
+    const totalInput = screen.getByLabelText('Kitty total');
+    await userEvent.clear(totalInput);
+    await userEvent.type(totalInput, '800');
+    await userEvent.click(screen.getByRole('button', { name: 'Update total' }));
+    expect((await screen.findAllByText(/changed the pot total from .*1,000\.00.* to .*800\.00/)).length).toBeGreaterThanOrEqual(1);
+    for (let i = 0; i < 2; i++) await userEvent.click(screen.getAllByRole('button', { name: 'Confirm paid' })[0]);
+    await waitFor(() => expect(screen.getAllByText(/confirmed .* paid their pot share/).length).toBe(2));
+    // Close the pot (behind the ⋮ confirm) → the holder refunds the friend's 400.
+    await userEvent.click(screen.getByRole('button', { name: 'More options' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: /Close the pot/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    expect(await screen.findByText(/closed the pot/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
+    await screen.findByText('You owe');
+    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/400\.00/);
+  }, 15000);
+
   it('refuses to add an expense without a category (no silent "Food")', async () => {
     await signIn();
     seed([OWNER, U2, U3]);
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
-    await userEvent.type(screen.getByLabelText('Description'), 'Paris hotel');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
+    await userEvent.type(screen.getByLabelText('Description'),'Paris hotel');
     await userEvent.type(screen.getByLabelText('Amount'), '500');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/category/i);
@@ -172,7 +222,8 @@ describe('US-007 Expenses UI', () => {
     seed([OWNER, U2, U3]);
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
-    await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
+    await userEvent.type(screen.getByLabelText('Description'),'Taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '90');
     await userEvent.selectOptions(screen.getByLabelText('Category'), 'TRANSPORT');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -189,7 +240,8 @@ describe('US-007 Expenses UI', () => {
     seed([OWNER, U2, U3]);
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
-    await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
+    await userEvent.type(screen.getByLabelText('Description'),'Taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '300');
     await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
@@ -212,8 +264,10 @@ describe('US-007 Expenses UI', () => {
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
     await expensesActions.setKittyMode('OPEN');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
     await screen.findByText('Who was with you?');
-    await userEvent.type(screen.getByLabelText('Description'), 'Airport taxi');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
+    await userEvent.type(screen.getByLabelText('Description'),'Airport taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '600');
     await userEvent.click(screen.getByRole('checkbox', { name: 'Everyone' })); // → just the payer (me)
     await userEvent.click(screen.getByRole('checkbox', { name: 'سالم' }));    // + Salem
@@ -269,8 +323,10 @@ describe('Expenses first-run + settlement nudge (UX review items 12 and 1)', () 
     // No IBAN banner anywhere on the trip page up front.
     expect(screen.queryByText(/Add your IBAN/)).not.toBeInTheDocument();
     await expensesActions.setKittyMode('OPEN');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
     await screen.findByText('Who was with you?');
-    await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
+    await userEvent.click(screen.getByRole('tab', { name: 'Expense log' }));
+    await userEvent.type(screen.getByLabelText('Description'),'Taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '300');
     await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));

@@ -2,7 +2,19 @@ import { createApiClient } from '@boardingpass/core';
 import { loadJSON, persistAfter } from '@/shared/persist';
 import { currentUid, db, firebaseEnabled, requireUid } from '@/shared/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { POT_UID, type Category, type Finance, type GroupExpense, type KittyMode, type PersonalExpense, type SideKitty } from './finance';
+import { POT_UID, type Category, type Finance, type FinanceLogEntry, type FinanceLogKind, type GroupExpense, type KittyMode, type PersonalExpense, type SideKitty } from './finance';
+
+/** Append a change-log entry (newest first, capped) so every member can see
+ *  who changed what, when — totals, confirmations, expenses, currency. */
+const LOG_CAP = 300;
+function logChange(target: { log?: FinanceLogEntry[] }, by: string, kind: FinanceLogKind, extra: Partial<FinanceLogEntry> = {}): void {
+  const entry: FinanceLogEntry = { id: `l-${crypto.randomUUID()}`, at: new Date().toISOString(), by, kind };
+  if (extra.desc !== undefined) entry.desc = extra.desc;
+  if (extra.amount !== undefined) entry.amount = extra.amount;
+  if (extra.prev !== undefined) entry.prev = extra.prev;
+  if (extra.uid !== undefined) entry.uid = extra.uid;
+  target.log = [entry, ...(target.log ?? [])].slice(0, LOG_CAP);
+}
 
 export interface FinanceInit {
   memberUids: string[];
@@ -17,6 +29,8 @@ export interface ExpensesService {
   setKittyTotal(tripId: string, total: number): Promise<Finance>;
   /** Destination currency + base→dest rate (display + entry conversion). */
   setCurrency(tripId: string, dest: string, rate: number): Promise<Finance>;
+  /** Close (or reopen) the fixed pot: closing refunds what is left. */
+  setPotClosed(tripId: string, closed: boolean): Promise<Finance>;
   markPaid(tripId: string, uid: string, paid: boolean): Promise<Finance>;
   setContribution(tripId: string, uid: string, amount: number): Promise<Finance>;
   addGroup(tripId: string, e: { desc: string; category: Category; amount: number; payerUid: string; receiptUrl?: string; receiptUrls?: string[] }): Promise<Finance>;
@@ -39,10 +53,12 @@ interface Store {
   kittyTotal: number;
   paid: Record<string, boolean>;
   contrib?: Record<string, number>;
+  potClosed?: boolean;
   group: GroupExpense[];
   sides: SideKitty[];
   personalBudget: Record<string, number>;         // per user (self-scoped)
   personal: Record<string, PersonalExpense[]>;     // per user (self-scoped)
+  log?: FinanceLogEntry[];
 }
 
 /** In-memory expenses service for dev/tests. Personal spend is strictly
@@ -75,39 +91,86 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>,
     return {
       base: s.base, dest: s.dest, rate: s.rate,
       kittyMode: s.kittyMode ?? 'FIXED', kittyTotal: s.kittyTotal, paid: { ...s.paid }, contrib: { ...(s.contrib ?? {}) },
+      potClosed: s.potClosed ?? false,
       group: s.group.map((g) => ({ ...g })),
       sides: s.sides.map((x) => ({ ...x, participantUids: [...x.participantUids] })),
       personalBudget: s.personalBudget[me] ?? 0,
       personal: (s.personal[me] ?? []).map((p) => ({ ...p })),
+      log: (s.log ?? []).map((l) => ({ ...l })),
     };
   }
 
   const base: ExpensesService = {
     async getFinance(tripId, init, me) { await tick(); store(tripId, init); return view(tripId, me); },
-    async setKittyMode(tripId, mode) { await tick(); store(tripId).kittyMode = mode; return view(tripId, ME(tripId)); },
-    async setKittyTotal(tripId, total) { await tick(); store(tripId).kittyTotal = Math.max(0, total); return view(tripId, ME(tripId)); },
-    async setCurrency(tripId, dest, rate) { await tick(); const s = store(tripId); s.dest = dest; s.rate = rate > 0 ? rate : 1; return view(tripId, ME(tripId)); },
-    async markPaid(tripId, u, paid) { await tick(); store(tripId).paid[u] = paid; return view(tripId, ME(tripId)); },
+    async setKittyMode(tripId, mode) {
+      await tick(); const s = store(tripId);
+      if ((s.kittyMode ?? 'FIXED') !== mode) { s.kittyMode = mode; logChange(s, ME(tripId), 'kittyMode', { desc: mode }); }
+      return view(tripId, ME(tripId));
+    },
+    async setKittyTotal(tripId, total) {
+      await tick(); const s = store(tripId); const prev = s.kittyTotal;
+      s.kittyTotal = Math.max(0, total);
+      if (s.kittyTotal !== prev) logChange(s, ME(tripId), 'kittyTotal', { amount: s.kittyTotal, prev });
+      return view(tripId, ME(tripId));
+    },
+    async setCurrency(tripId, dest, rate) {
+      await tick(); const s = store(tripId); s.dest = dest; s.rate = rate > 0 ? rate : 1;
+      logChange(s, ME(tripId), 'currency', { desc: dest, amount: s.rate });
+      return view(tripId, ME(tripId));
+    },
+    async setPotClosed(tripId, closed) {
+      await tick(); const s = store(tripId);
+      if (Boolean(s.potClosed) !== closed) { s.potClosed = closed; logChange(s, ME(tripId), closed ? 'potClose' : 'potReopen'); }
+      return view(tripId, ME(tripId));
+    },
+    async markPaid(tripId, u, paid) {
+      await tick(); const s = store(tripId);
+      if (Boolean(s.paid[u]) !== paid) { s.paid[u] = paid; logChange(s, ME(tripId), paid ? 'paid' : 'unpaid', { uid: u }); }
+      return view(tripId, ME(tripId));
+    },
     async setContribution(tripId, u, amount) { await tick(); (store(tripId).contrib ??= {})[u] = Math.max(0, amount); return view(tripId, ME(tripId)); },
     async addGroup(tripId, e) {
-      await tick();
-      store(tripId).group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid, receiptUrl: e.receiptUrl, receiptUrls: e.receiptUrls });
+      await tick(); const s = store(tripId);
+      s.group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid, receiptUrl: e.receiptUrl, receiptUrls: e.receiptUrls });
+      logChange(s, ME(tripId), 'addGroup', { desc: e.desc.trim(), amount: e.amount, uid: e.payerUid });
       return view(tripId, ME(tripId));
     },
     async updateGroup(tripId, id, e) {
-      await tick();
-      const g = store(tripId).group.find((x) => x.id === id);
-      if (g) { g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid; }
+      await tick(); const s = store(tripId);
+      const g = s.group.find((x) => x.id === id);
+      if (g) {
+        const prev = g.amount;
+        g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid;
+        logChange(s, ME(tripId), 'editGroup', { desc: g.desc, amount: g.amount, prev, uid: g.payerUid });
+      }
       return view(tripId, ME(tripId));
     },
-    async deleteGroup(tripId, id) { await tick(); const s = store(tripId); s.group = s.group.filter((g) => g.id !== id); return view(tripId, ME(tripId)); },
+    async deleteGroup(tripId, id) {
+      await tick(); const s = store(tripId);
+      const g = s.group.find((x) => x.id === id);
+      s.group = s.group.filter((x) => x.id !== id);
+      if (g) logChange(s, ME(tripId), 'deleteGroup', { desc: g.desc, amount: g.amount });
+      return view(tripId, ME(tripId));
+    },
     async addSide(tripId, x) {
-      await tick();
-      store(tripId).sides.push({ id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false, category: x.category, receiptUrls: x.receiptUrls });
+      await tick(); const s = store(tripId);
+      s.sides.push({ id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false, category: x.category, receiptUrls: x.receiptUrls });
+      logChange(s, ME(tripId), 'addSide', { desc: x.title.trim(), amount: x.total, uid: x.payerUid });
       return view(tripId, ME(tripId));
     },
-    async deleteSide(tripId, id) { await tick(); const s = store(tripId); s.sides = s.sides.filter((x) => x.id !== id); return view(tripId, ME(tripId)); },
-    async settleSide(tripId, id) { await tick(); const x = store(tripId).sides.find((y) => y.id === id); if (x) x.settled = true; return view(tripId, ME(tripId)); },
+    async deleteSide(tripId, id) {
+      await tick(); const s = store(tripId);
+      const x = s.sides.find((y) => y.id === id);
+      s.sides = s.sides.filter((y) => y.id !== id);
+      if (x) logChange(s, ME(tripId), 'deleteSide', { desc: x.title, amount: x.total });
+      return view(tripId, ME(tripId));
+    },
+    async settleSide(tripId, id) {
+      await tick(); const s = store(tripId);
+      const x = s.sides.find((y) => y.id === id);
+      if (x && !x.settled) { x.settled = true; logChange(s, ME(tripId), 'settleSide', { desc: x.title, amount: x.total }); }
+      return view(tripId, ME(tripId));
+    },
     async setPersonalBudget(tripId, amount) { await tick(); store(tripId).personalBudget[ME(tripId)] = Math.max(0, amount); return view(tripId, ME(tripId)); },
     async addPersonal(tripId, e) {
       await tick();
@@ -150,6 +213,7 @@ export function createApiExpensesService(getToken?: () => string | undefined): E
     setKittyMode: (tripId, mode) => client.apiFetch<Finance>(`/trips/${tripId}/kitty`, { method: 'PUT', body: JSON.stringify({ mode }) }),
     setKittyTotal: (tripId, total) => client.apiFetch<Finance>(`/trips/${tripId}/kitty`, { method: 'PUT', body: JSON.stringify({ total }) }),
     setCurrency: (tripId, dest, rate) => client.apiFetch<Finance>(`/trips/${tripId}/kitty`, { method: 'PUT', body: JSON.stringify({ dest, rate }) }),
+    setPotClosed: (tripId, closed) => client.apiFetch<Finance>(`/trips/${tripId}/kitty`, { method: 'PUT', body: JSON.stringify({ closed }) }),
     markPaid: (tripId, u, paid) => client.apiFetch<Finance>(`/trips/${tripId}/kitty/mark-paid`, { method: 'POST', body: JSON.stringify({ memberUid: u, paid }) }),
     setContribution: (tripId, u, amount) => client.apiFetch<Finance>(`/trips/${tripId}/kitty/contribution`, { method: 'POST', body: JSON.stringify({ memberUid: u, amount }) }),
     addGroup: (tripId, e) => client.apiFetch<Finance>(`/trips/${tripId}/expenses`, { method: 'POST', body: JSON.stringify({ kind: 'GROUP', ...e }) }),
@@ -173,6 +237,8 @@ interface SharedFinance {
   kittyMode?: KittyMode;
   kittyTotal: number; paid: Record<string, boolean>;
   contrib?: Record<string, number>;
+  potClosed?: boolean;
+  log?: FinanceLogEntry[];
   group: GroupExpense[]; sides: SideKitty[];
 }
 interface PersonalDoc { budget: number; items: PersonalExpense[] }
@@ -198,14 +264,19 @@ export function createFirestoreExpensesService(): ExpensesService {
   const view = (sh: SharedFinance, p: PersonalDoc): Finance => ({
     base: sh.base, dest: sh.dest, rate: sh.rate,
     kittyMode: sh.kittyMode ?? 'FIXED', kittyTotal: sh.kittyTotal, paid: { ...sh.paid }, contrib: { ...(sh.contrib ?? {}) },
+    potClosed: sh.potClosed ?? false,
     group: sh.group.map((g) => ({ ...g })),
     sides: sh.sides.map((x) => ({ ...x, participantUids: [...x.participantUids] })),
     personalBudget: p.budget, personal: p.items.map((i) => ({ ...i })),
+    log: (sh.log ?? []).map((l) => ({ ...l })),
   });
-  async function withShared(tripId: string, mutate: (sh: SharedFinance) => void): Promise<Finance> {
+  /** Mutate the shared record as the signed-in user (who is also the log's
+   *  "by"). Firestore rejects undefined fields, so log entries are built with
+   *  only the fields that are set (see logChange). */
+  async function withShared(tripId: string, mutate: (sh: SharedFinance, by: string) => void): Promise<Finance> {
     const uid = requireUid();
     const sh = await readShared(tripId);
-    mutate(sh);
+    mutate(sh, uid);
     await setDoc(sharedRef(tripId), sh);
     return view(sh, await readPersonal(tripId, uid));
   }
@@ -223,23 +294,61 @@ export function createFirestoreExpensesService(): ExpensesService {
       const p = await readPersonal(tripId, me);
       return view(sh, p);
     },
-    setKittyMode: (tripId, mode) => withShared(tripId, (sh) => { sh.kittyMode = mode; }),
-    setKittyTotal: (tripId, total) => withShared(tripId, (sh) => { sh.kittyTotal = Math.max(0, total); }),
-    setCurrency: (tripId, dest, rate) => withShared(tripId, (sh) => { sh.dest = dest; sh.rate = rate > 0 ? rate : 1; }),
-    markPaid: (tripId, u, paid) => withShared(tripId, (sh) => { sh.paid[u] = paid; }),
+    setKittyMode: (tripId, mode) => withShared(tripId, (sh, by) => {
+      if ((sh.kittyMode ?? 'FIXED') !== mode) { sh.kittyMode = mode; logChange(sh, by, 'kittyMode', { desc: mode }); }
+    }),
+    setKittyTotal: (tripId, total) => withShared(tripId, (sh, by) => {
+      const prev = sh.kittyTotal; sh.kittyTotal = Math.max(0, total);
+      if (sh.kittyTotal !== prev) logChange(sh, by, 'kittyTotal', { amount: sh.kittyTotal, prev });
+    }),
+    setCurrency: (tripId, dest, rate) => withShared(tripId, (sh, by) => {
+      sh.dest = dest; sh.rate = rate > 0 ? rate : 1; logChange(sh, by, 'currency', { desc: dest, amount: sh.rate });
+    }),
+    setPotClosed: (tripId, closed) => withShared(tripId, (sh, by) => {
+      if (Boolean(sh.potClosed) !== closed) { sh.potClosed = closed; logChange(sh, by, closed ? 'potClose' : 'potReopen'); }
+    }),
+    markPaid: (tripId, u, paid) => withShared(tripId, (sh, by) => {
+      if (Boolean(sh.paid[u]) !== paid) { sh.paid[u] = paid; logChange(sh, by, paid ? 'paid' : 'unpaid', { uid: u }); }
+    }),
     setContribution: (tripId, u, amount) => withShared(tripId, (sh) => { (sh.contrib ??= {})[u] = Math.max(0, amount); }),
-    addGroup: (tripId, e) => withShared(tripId, (sh) => { sh.group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid, receiptUrl: e.receiptUrl, receiptUrls: e.receiptUrls }); }),
-    updateGroup: (tripId, id, e) => withShared(tripId, (sh) => { const g = sh.group.find((x) => x.id === id); if (g) { g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid; } }),
-    deleteGroup: (tripId, id) => withShared(tripId, (sh) => { sh.group = sh.group.filter((g) => g.id !== id); }),
-    addSide: (tripId, x) => withShared(tripId, (sh) => {
+    addGroup: (tripId, e) => withShared(tripId, (sh, by) => {
+      // Firestore rejects undefined fields — only include what's set.
+      const g: GroupExpense = { id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid };
+      if (e.receiptUrl) g.receiptUrl = e.receiptUrl;
+      if (e.receiptUrls?.length) g.receiptUrls = e.receiptUrls;
+      sh.group.push(g);
+      logChange(sh, by, 'addGroup', { desc: g.desc, amount: g.amount, uid: g.payerUid });
+    }),
+    updateGroup: (tripId, id, e) => withShared(tripId, (sh, by) => {
+      const g = sh.group.find((x) => x.id === id);
+      if (g) {
+        const prev = g.amount;
+        g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid;
+        logChange(sh, by, 'editGroup', { desc: g.desc, amount: g.amount, prev, uid: g.payerUid });
+      }
+    }),
+    deleteGroup: (tripId, id) => withShared(tripId, (sh, by) => {
+      const g = sh.group.find((x) => x.id === id);
+      sh.group = sh.group.filter((x) => x.id !== id);
+      if (g) logChange(sh, by, 'deleteGroup', { desc: g.desc, amount: g.amount });
+    }),
+    addSide: (tripId, x) => withShared(tripId, (sh, by) => {
       // Firestore rejects undefined fields — only include what's set.
       const s: SideKitty = { id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false };
       if (x.category) s.category = x.category;
       if (x.receiptUrls?.length) s.receiptUrls = x.receiptUrls;
       sh.sides.push(s);
+      logChange(sh, by, 'addSide', { desc: s.title, amount: s.total, uid: s.payerUid });
     }),
-    deleteSide: (tripId, id) => withShared(tripId, (sh) => { sh.sides = sh.sides.filter((x) => x.id !== id); }),
-    settleSide: (tripId, id) => withShared(tripId, (sh) => { const x = sh.sides.find((y) => y.id === id); if (x) x.settled = true; }),
+    deleteSide: (tripId, id) => withShared(tripId, (sh, by) => {
+      const x = sh.sides.find((y) => y.id === id);
+      sh.sides = sh.sides.filter((y) => y.id !== id);
+      if (x) logChange(sh, by, 'deleteSide', { desc: x.title, amount: x.total });
+    }),
+    settleSide: (tripId, id) => withShared(tripId, (sh, by) => {
+      const x = sh.sides.find((y) => y.id === id);
+      if (x && !x.settled) { x.settled = true; logChange(sh, by, 'settleSide', { desc: x.title, amount: x.total }); }
+    }),
     setPersonalBudget: (tripId, amount) => withPersonal(tripId, (p) => { p.budget = Math.max(0, amount); }),
     addPersonal: (tripId, e) => withPersonal(tripId, (p) => { p.items.push({ id: uid('p'), desc: e.desc.trim(), amount: e.amount }); }),
     updatePersonal: (tripId, id, e) => withPersonal(tripId, (p) => { const it = p.items.find((x) => x.id === id); if (it) { it.desc = e.desc.trim(); it.amount = e.amount; } }),

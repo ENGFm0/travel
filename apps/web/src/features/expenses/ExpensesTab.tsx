@@ -9,8 +9,8 @@ import { uploadTripImage } from '@/features/memories/memoriesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
   CATEGORIES, POT_UID, convert, distribution, memberBreakdown, myNetBalance,
-  personalRemaining, personalSpent, potStatus, settledLedger, settlements, fixedKitty,
-  type Category, type Finance, type GroupExpense, type KittyMode, type PersonalExpense, type SideKitty,
+  personalRemaining, personalSpent, potAccount, potStatus, settledLedger, settlements, fixedKitty,
+  type Category, type Finance, type FinanceLogEntry, type GroupExpense, type KittyMode, type PersonalExpense, type SideKitty,
 } from './finance';
 import { expensesActions, useFinance } from './expensesStore';
 import { formatIban, normalizeIban } from '@/features/profile/profileModel';
@@ -20,9 +20,10 @@ import { APP_FEE_PCT, APP_IBAN, appFee } from '@/shared/appFee';
 import { SAR_PER_UNIT, defaultRate, unitPrice } from '@/shared/fxDefaults';
 import { IbanNudge } from '@/features/members/IbanNudge';
 
-type Sub = 'kitty' | 'personal' | 'summary';
+type Sub = 'kitty' | 'expenses' | 'personal' | 'summary';
 const SUBS: { key: Sub; label: string }[] = [
   { key: 'kitty', label: 'expenses.kitty' },
+  { key: 'expenses', label: 'expenses.expensesTab' },
   { key: 'personal', label: 'expenses.personal' },
   { key: 'summary', label: 'expenses.summary' },
 ];
@@ -31,6 +32,7 @@ const SUBS: { key: Sub; label: string }[] = [
  *  currency) the same amount converted, shown next to it ("≈ €92"). */
 type Fmt = (n: number) => string;
 type Fmt2 = (n: number) => string | null;
+type NameOf = (u: string) => string;
 
 export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: string; canEdit: boolean; isOwner: boolean; base?: string; dest?: string }) {
   const { t } = useTranslation();
@@ -47,7 +49,7 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
 
   const active = useMemo(() => (members ?? []).filter((m) => m.status === 'ACTIVE'), [members]);
   const memberUids = useMemo(() => active.map((m) => m.uid), [active]);
-  const nameOf = useMemo(() => {
+  const nameOf = useMemo<NameOf>(() => {
     const map: Record<string, string> = {};
     active.forEach((m) => { map[m.uid] = m.displayName; });
     return (uid: string) => map[uid] ?? uid;
@@ -79,13 +81,14 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
   if (loading && finance === null) return <p className="bp-page__lead">…</p>;
   if (!finance) return <p className="bp-page__lead">{t('expenses.needMembers')}</p>;
 
+  const common = { tripId, finance, memberUids, nameOf, fmt, fmt2, canEdit, isOwner, holderUid, meUid };
   return (
     <div className="bp-expenses">
       <CurrencyBar baseCur={baseCur} destCur={destCur} rate={rate} isOwner={isOwner} />
 
       {error && <div className="bp-banner" role="alert">{t('expenses.saveFailed')}</div>}
 
-      <div className="bp-subtabs2" role="tablist" aria-label={t('tripDetail.tabExpenses')}>
+      <div className="bp-subtabs2 bp-subtabs2--4" role="tablist" aria-label={t('tripDetail.tabExpenses')}>
         {SUBS.map((s) => (
           <button key={s.key} role="tab" aria-selected={sub === s.key} className={`bp-subtab2 ${sub === s.key ? 'is-on' : ''}`} onClick={() => setSub(s.key)}>
             {t(s.label)}
@@ -93,9 +96,10 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
         ))}
       </div>
 
-      {sub === 'kitty' && <KittyPanel tripId={tripId} finance={finance} memberUids={memberUids} active={active} nameOf={nameOf} fmt={fmt} fmt2={fmt2} canEdit={canEdit} isOwner={isOwner} baseCur={baseCur} destCur={destCur} rate={rate} holderUid={holderUid} meUid={meUid} onShowSummary={() => setSub('summary')} />}
+      {sub === 'kitty' && <KittyPanel {...common} active={active} onShowSummary={() => setSub('summary')} onShowExpenses={() => setSub('expenses')} />}
+      {sub === 'expenses' && <ExpensesPanel {...common} active={active} baseCur={baseCur} destCur={destCur} rate={rate} />}
       {sub === 'personal' && <PersonalPanel finance={finance} fmt={fmt} fmt2={fmt2} canEdit={canEdit} />}
-      {sub === 'summary' && <SummaryPanel tripId={tripId} finance={finance} memberUids={memberUids} nameOf={nameOf} ibanOf={ibanOf} fmt={fmt} fmt2={fmt2} meUid={meUid} holderUid={holderUid} />}
+      {sub === 'summary' && <SummaryPanel {...common} ibanOf={ibanOf} />}
     </div>
   );
 }
@@ -170,40 +174,51 @@ function Bar({ pct }: { pct: number }) {
   return <div className="bp-progress"><div className="bp-progress__bar" style={{ inlineSize: `${Math.max(0, Math.min(100, pct))}%` }} /></div>;
 }
 
-/** The kitty, in one of two clear shapes:
+interface PanelProps {
+  tripId: string; finance: Finance; memberUids: string[]; nameOf: NameOf; fmt: Fmt; fmt2: Fmt2;
+  canEdit: boolean; isOwner: boolean; holderUid?: string; meUid: string;
+}
+
+/** The pot itself (not the expenses): its type, its total, who paid in, what
+ *  is left, closing it — and the change log every member can see.
  *  FIXED — a pot amount is set up front, every member pays an equal share into
- *          it (held by the trip owner), and shared expenses are DRAWN FROM THE
- *          POT or paid by a member directly. The final settlement is on what
- *          was actually spent: share of real spend − (paid into the pot + paid
- *          directly), so an overspent pot is split and an underspent one is
- *          refunded.
+ *          it (held by the trip owner). Shared expenses are drawn from the pot
+ *          or paid by a member directly. Money in the pot is shared, not a
+ *          debt; the settlement is on what was actually spent, and what is
+ *          left is refunded when the owner closes the pot.
  *  OPEN  — no pot. Whoever pays an expense says who it was for, and it is
  *          split among exactly those people (default: everyone). */
-function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2, canEdit, isOwner, baseCur, destCur, rate, holderUid, meUid, onShowSummary }: {
-  tripId: string; finance: Finance; memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: (u: string) => string;
-  fmt: Fmt; fmt2: Fmt2; canEdit: boolean; isOwner: boolean; baseCur: string; destCur?: string; rate: number; holderUid?: string; meUid: string;
-  onShowSummary: () => void;
+function KittyPanel({ finance, memberUids, active, nameOf, fmt, fmt2, canEdit, isOwner, holderUid, onShowSummary, onShowExpenses }: PanelProps & {
+  active: { uid: string; displayName: string }[]; onShowSummary: () => void; onShowExpenses: () => void;
 }) {
   const { t } = useTranslation();
   const mode: KittyMode = finance.kittyMode ?? 'FIXED';
   const [total, setTotal] = useState(String(finance.kittyTotal || ''));
+  const [pendingMode, setPendingMode] = useState<KittyMode | null>(null);
   const pot = potStatus(finance, memberUids);
-  const dist = distribution(finance.group, finance.sides);
-  const distTotal = CATEGORIES.reduce((a, c) => a + dist[c], 0);
   const entries = finance.group.length + finance.sides.length;
-  // Nothing set up yet (no pot amount, no expenses): show the 3-step starter
-  // instead of a wall of zero tiles and buttons that can't do anything yet.
   const potSet = pot.total > 0;
   const fresh = entries === 0 && !potSet;
   const uneven = Math.round(pot.total * 100) % Math.max(1, memberUids.length) !== 0;
+  const closed = Boolean(finance.potClosed);
   const focusEl = (id: string) => { const el = document.getElementById(id); el?.scrollIntoView({ block: 'center', behavior: 'smooth' }); el?.focus(); };
+  const lastTotalChange = (finance.log ?? []).find((l) => l.kind === 'kittyTotal');
 
   return (
     <div className="bp-panel">
       {isOwner && (
         <div className="bp-seg bp-seg--full" role="group" aria-label={t('expenses.kittyMode')}>
-          <button type="button" className={`bp-seg__btn ${mode === 'FIXED' ? 'is-on' : ''}`} aria-pressed={mode === 'FIXED'} onClick={() => expensesActions.setKittyMode('FIXED')}>{t('expenses.kittyFixed')}</button>
-          <button type="button" className={`bp-seg__btn ${mode === 'OPEN' ? 'is-on' : ''}`} aria-pressed={mode === 'OPEN'} onClick={() => expensesActions.setKittyMode('OPEN')}>{t('expenses.kittyOpen')}</button>
+          <button type="button" className={`bp-seg__btn ${mode === 'FIXED' ? 'is-on' : ''}`} aria-pressed={mode === 'FIXED'} onClick={() => mode !== 'FIXED' && setPendingMode('FIXED')}>{t('expenses.kittyFixed')}</button>
+          <button type="button" className={`bp-seg__btn ${mode === 'OPEN' ? 'is-on' : ''}`} aria-pressed={mode === 'OPEN'} onClick={() => mode !== 'OPEN' && setPendingMode('OPEN')}>{t('expenses.kittyOpen')}</button>
+        </div>
+      )}
+      {pendingMode && (
+        <div className="bp-inline-confirm" role="alertdialog" aria-label={t('expenses.kittyMode')}>
+          <p>{t('expenses.modeChangeConfirm', { mode: t(pendingMode === 'FIXED' ? 'expenses.kittyFixed' : 'expenses.kittyOpen') })}</p>
+          <div className="bp-inline-confirm__row">
+            <button type="button" className="bp-btn bp-btn--primary bp-btn--sm" onClick={async () => { await expensesActions.setKittyMode(pendingMode); setPendingMode(null); }}>{t('menu.confirm')}</button>
+            <button type="button" className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setPendingMode(null)}>{t('menu.cancel')}</button>
+          </div>
         </div>
       )}
       <p className="bp-note">{mode === 'OPEN' ? t('expenses.kittyOpenNote') : t('expenses.kittyFixedNote')}</p>
@@ -224,14 +239,14 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2, ca
           </li>
           <li className="bp-starter__step">
             <span className="bp-starter__n" aria-hidden="true">3</span>
-            {canEdit ? <button type="button" className="bp-link" onClick={() => focusEl('bp-exp-desc')}>{t('expenses.starterFirstExpense')}</button> : <span>{t('expenses.starterFirstExpense')}</span>}
+            {canEdit ? <button type="button" className="bp-link" onClick={onShowExpenses}>{t('expenses.starterFirstExpense')}</button> : <span>{t('expenses.starterFirstExpense')}</span>}
           </li>
         </ol>
       )}
 
       {mode === 'FIXED' && (
         <>
-          {isOwner && (
+          {isOwner && !closed && (
             <div className="bp-add-row">
               <div className="bp-field" style={{ flex: 1 }}>
                 <label htmlFor="bp-kitty-total">{t('expenses.kittyTotal')}</label>
@@ -239,9 +254,15 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2, ca
                   onChange={(e) => setTotal(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); expensesActions.setKittyTotal(Number(total) || 0); } }} />
               </div>
-              <button className="bp-btn bp-btn--primary bp-btn--sm" style={{ alignSelf: 'end' }} disabled={!(Number(total) > 0)} onClick={() => expensesActions.setKittyTotal(Number(total) || 0)}>{t('expenses.setTotal')}</button>
+              <button className="bp-btn bp-btn--primary bp-btn--sm" style={{ alignSelf: 'end' }} disabled={!(Number(total) > 0) || Number(total) === finance.kittyTotal} onClick={() => expensesActions.setKittyTotal(Number(total) || 0)}>
+                {potSet ? t('expenses.updateTotal') : t('expenses.setTotal')}
+              </button>
             </div>
           )}
+          {potSet && lastTotalChange && lastTotalChange.prev !== undefined && lastTotalChange.prev > 0 && (
+            <p className="bp-note bp-note--log">{t('expenses.log.kittyTotal', { by: nameOf(lastTotalChange.by), prev: fmt(lastTotalChange.prev), amount: fmt(lastTotalChange.amount ?? 0) })} · {when(lastTotalChange.at)}</p>
+          )}
+          {closed && <p className="bp-note bp-note--warn">{t('expenses.potClosedNote')}</p>}
           {/* Pot figures and dues only once there is a pot to talk about. */}
           {potSet && (
             <>
@@ -273,7 +294,7 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2, ca
                     {finance.paid[u]
                       ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.paid')}</span>
                       : <span className="bp-status-chip">{t('expenses.pending')}</span>}
-                    {isOwner && (
+                    {isOwner && !closed && (
                       <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={!(pot.dues[u] > 0)} onClick={() => expensesActions.markPaid(u, !finance.paid[u])}>
                         {finance.paid[u] ? t('expenses.markPending') : t('expenses.confirmPaid')}
                       </button>
@@ -281,6 +302,18 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2, ca
                   </li>
                 ))}
               </ul>
+
+              {/* Close the pot: refund what is left (owner, behind a confirm). */}
+              {isOwner && (
+                <div className="bp-potclose">
+                  {closed
+                    ? <button type="button" className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.setPotClosed(false)}>{t('expenses.potReopen')}</button>
+                    : <KebabMenu size="sm" label={t('menu.more')} items={[
+                        { key: 'close', label: t('expenses.potClose'), icon: 'lock', confirm: t('expenses.potCloseConfirm', { cash: fmt(Math.max(0, pot.remaining)) }), onSelect: () => expensesActions.setPotClosed(true) },
+                      ]} />}
+                  {!closed && <span className="bp-note">{t('expenses.potCloseHint')}</span>}
+                </div>
+              )}
             </>
           )}
         </>
@@ -288,6 +321,75 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2, ca
 
       {mode === 'OPEN' && entries === 0 && !fresh && <p className="bp-note">{t('expenses.openHint')}</p>}
 
+      <ChangeLog log={finance.log ?? []} nameOf={nameOf} fmt={fmt} active={active} />
+    </div>
+  );
+}
+
+/** When something happened — short, in the UI locale, Latin digits. */
+function when(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString(document.documentElement.lang?.startsWith('ar') ? 'ar-SA-u-nu-latn' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+/** Everything that changed in the shared finance, newest first — who, when,
+ *  what. Visible to every member so edits and deletions are never hidden. */
+function ChangeLog({ log, nameOf, fmt, active }: { log: FinanceLogEntry[]; nameOf: NameOf; fmt: Fmt; active: { uid: string; displayName: string }[] }) {
+  const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
+  const who = (u?: string) => (u === POT_UID ? t('expenses.potPaid') : u ? (active.find((m) => m.uid === u)?.displayName ?? nameOf(u)) : '');
+  const text = (l: FinanceLogEntry): string => {
+    const by = who(l.by);
+    switch (l.kind) {
+      case 'kittyTotal': return l.prev ? t('expenses.log.kittyTotal', { by, prev: fmt(l.prev), amount: fmt(l.amount ?? 0) }) : t('expenses.log.kittyTotalSet', { by, amount: fmt(l.amount ?? 0) });
+      case 'kittyMode': return t('expenses.log.kittyMode', { by, mode: t(l.desc === 'OPEN' ? 'expenses.kittyOpen' : 'expenses.kittyFixed') });
+      case 'paid': return t('expenses.log.paid', { by, name: who(l.uid) });
+      case 'unpaid': return t('expenses.log.unpaid', { by, name: who(l.uid) });
+      case 'currency': return t('expenses.log.currency', { by, currency: l.desc ?? '' });
+      case 'potClose': return t('expenses.log.potClose', { by });
+      case 'potReopen': return t('expenses.log.potReopen', { by });
+      case 'addGroup': return t('expenses.log.addGroup', { by, desc: l.desc ?? '', amount: fmt(l.amount ?? 0), payer: who(l.uid) });
+      case 'editGroup': return t('expenses.log.editGroup', { by, desc: l.desc ?? '', prev: fmt(l.prev ?? 0), amount: fmt(l.amount ?? 0) });
+      case 'deleteGroup': return t('expenses.log.deleteGroup', { by, desc: l.desc ?? '', amount: fmt(l.amount ?? 0) });
+      case 'addSide': return t('expenses.log.addSide', { by, desc: l.desc ?? '', amount: fmt(l.amount ?? 0), payer: who(l.uid) });
+      case 'deleteSide': return t('expenses.log.deleteGroup', { by, desc: l.desc ?? '', amount: fmt(l.amount ?? 0) });
+      case 'settleSide': return t('expenses.log.settleSide', { by, desc: l.desc ?? '' });
+      default: return '';
+    }
+  };
+  const shown = showAll ? log : log.slice(0, 8);
+  const danger = (k: FinanceLogEntry['kind']) => k === 'deleteGroup' || k === 'deleteSide' || k === 'editGroup' || k === 'unpaid';
+  return (
+    <section className="bp-changelog" aria-label={t('expenses.changeLog')}>
+      <h4 className="bp-panel__h">{t('expenses.changeLog')} <small className="bp-note">{t('expenses.changeLogNote')}</small></h4>
+      {log.length === 0 ? <p className="bp-note">{t('expenses.changeLogEmpty')}</p> : (
+        <ul className="bp-changelog__list" role="list">
+          {shown.map((l) => (
+            <li key={l.id} className={`bp-changelog__item ${danger(l.kind) ? 'is-danger' : ''}`}>
+              <span className="bp-changelog__text">{text(l)}</span>
+              <time className="bp-changelog__when" dateTime={l.at}>{when(l.at)}</time>
+            </li>
+          ))}
+        </ul>
+      )}
+      {log.length > 8 && <button type="button" className="bp-link" onClick={() => setShowAll((v) => !v)}>{showAll ? t('expenses.changeLogLess') : t('expenses.changeLogMore', { count: log.length })}</button>}
+    </section>
+  );
+}
+
+/** The shared expenses: the log of what was spent (from the pot or by a
+ *  member), by category, and the form to add one. */
+function ExpensesPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2, canEdit, holderUid, meUid, baseCur, destCur, rate }: PanelProps & {
+  active: { uid: string; displayName: string }[]; baseCur: string; destCur?: string; rate: number;
+}) {
+  const { t } = useTranslation();
+  const mode: KittyMode = finance.kittyMode ?? 'FIXED';
+  const dist = distribution(finance.group, finance.sides);
+  const distTotal = CATEGORIES.reduce((a, c) => a + dist[c], 0);
+  const entries = finance.group.length + finance.sides.length;
+  return (
+    <div className="bp-panel">
       {distTotal > 0 && (
         <>
           <h4 className="bp-panel__h">{t('expenses.distribution')}</h4>
@@ -301,17 +403,18 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2, ca
         </>
       )}
 
-      <h4 className="bp-panel__h">{mode === 'FIXED' ? t('expenses.potLog') : t('expenses.groupLog')}</h4>
+      <h4 className="bp-panel__h">{t('expenses.expenseLog')}</h4>
       <ul className="bp-exp-list" role="list">
         {finance.group.map((e) => (
-          <GroupRow key={e.id} e={e} memberUids={memberUids} nameOf={nameOf} fmt={fmt} fmt2={fmt2} canEdit={canEdit} mode={mode} holderUid={holderUid} />
+          <GroupRow key={e.id} e={e} memberUids={memberUids} nameOf={nameOf} fmt={fmt} fmt2={fmt2} canEdit={canEdit && !finance.potClosed} mode={mode} holderUid={holderUid} />
         ))}
         {finance.sides.map((s) => (
           <SideRow key={s.id} s={s} memberCount={memberUids.length} nameOf={nameOf} fmt={fmt} fmt2={fmt2} canEdit={canEdit} />
         ))}
         {entries === 0 && <li className="bp-members__empty">{t('expenses.noGroup')}</li>}
       </ul>
-      {canEdit && <AddShared tripId={tripId} mode={mode} memberUids={memberUids} active={active} nameOf={nameOf} baseCur={baseCur} destCur={destCur} rate={rate} holderUid={holderUid} meUid={meUid} />}
+      {finance.potClosed && <p className="bp-note bp-note--warn">{t('expenses.potClosedNote')}</p>}
+      {canEdit && !finance.potClosed && <AddShared tripId={tripId} mode={mode} memberUids={memberUids} active={active} nameOf={nameOf} baseCur={baseCur} destCur={destCur} rate={rate} holderUid={holderUid} meUid={meUid} />}
     </div>
   );
 }
@@ -329,7 +432,7 @@ function RowMenu({ onEdit, onDelete }: { onEdit?: () => void; onDelete: () => vo
 
 /** A shared expense among a subset of members (OPEN kitty), or a legacy side kitty. */
 function SideRow({ s, memberCount, nameOf, fmt, fmt2, canEdit }: {
-  s: SideKitty; memberCount: number; nameOf: (u: string) => string; fmt: Fmt; fmt2: Fmt2; canEdit: boolean;
+  s: SideKitty; memberCount: number; nameOf: NameOf; fmt: Fmt; fmt2: Fmt2; canEdit: boolean;
 }) {
   const { t } = useTranslation();
   const share = s.total / s.participantUids.length; // exact; display rounds
@@ -356,7 +459,7 @@ function SideRow({ s, memberCount, nameOf, fmt, fmt2, canEdit }: {
 }
 
 function GroupRow({ e, memberUids, nameOf, fmt, fmt2, canEdit, mode, holderUid }: {
-  e: GroupExpense; memberUids: string[]; nameOf: (u: string) => string; fmt: Fmt; fmt2: Fmt2; canEdit: boolean; mode: KittyMode; holderUid?: string;
+  e: GroupExpense; memberUids: string[]; nameOf: NameOf; fmt: Fmt; fmt2: Fmt2; canEdit: boolean; mode: KittyMode; holderUid?: string;
 }) {
   const { t } = useTranslation();
   const fromPot = e.payerUid === POT_UID;
@@ -414,7 +517,7 @@ function GroupRow({ e, memberUids, nameOf, fmt, fmt2, canEdit, mode, holderUid }
  *         member who paid out of pocket).
  *  OPEN:  + who paid and who it was for (default: everyone) → split among them. */
 function AddShared({ tripId, mode, memberUids, active, nameOf, baseCur, destCur, rate, holderUid, meUid }: {
-  tripId: string; mode: KittyMode; memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: (u: string) => string;
+  tripId: string; mode: KittyMode; memberUids: string[]; active: { uid: string; displayName: string }[]; nameOf: NameOf;
   baseCur: string; destCur?: string; rate: number; holderUid?: string; meUid: string;
 }) {
   const { t } = useTranslation();
@@ -423,13 +526,14 @@ function AddShared({ tripId, mode, memberUids, active, nameOf, baseCur, destCur,
   const [catErr, setCatErr] = useState(false);
   const [amount, setAmount] = useState('');
   const [cur, setCur] = useState(baseCur);
-  const [payer, setPayer] = useState<string>(mode === 'FIXED' ? POT_UID : (memberUids.includes(meUid) ? meUid : memberUids[0] ?? CURRENT_UID));
+  const defaultPayer = () => (mode === 'FIXED' ? POT_UID : (memberUids.includes(meUid) ? meUid : memberUids[0] ?? CURRENT_UID));
+  const [payer, setPayer] = useState<string>(defaultPayer);
   const [parts, setParts] = useState<string[]>(memberUids);
   const [receipts, setReceipts] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const uidsKey = memberUids.join(',');
   useEffect(() => { setParts(memberUids); }, [uidsKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setPayer(mode === 'FIXED' ? POT_UID : (memberUids.includes(meUid) ? meUid : memberUids[0] ?? CURRENT_UID)); }, [mode, uidsKey, meUid]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPayer(defaultPayer()); }, [mode, uidsKey, meUid]); // eslint-disable-line react-hooks/exhaustive-deps
   const everyone = parts.length === memberUids.length;
 
   function toggle(uid: string) {
@@ -594,8 +698,8 @@ function PersonalPanel({ finance, fmt, fmt2, canEdit }: { finance: Finance; fmt:
 }
 
 /** Line-by-line derivation of one member's balance, so it can be checked by
- *  hand: shared spend ÷ people = share, what they paid (directly or into the
- *  pot), what the holder received into the pot; then paid − shares = net. */
+ *  hand: spend ÷ people = share, what they paid (directly or into the pot),
+ *  their money still in the pot; then paid − shares = net. */
 function Breakdown({ finance, memberUids, u, fmt, shown, holderUid }: { finance: Finance; memberUids: string[]; u: string; fmt: Fmt; shown: number; holderUid?: string }) {
   const { t } = useTranslation();
   const locale = useUIStore((s) => s.locale);
@@ -606,12 +710,28 @@ function Breakdown({ finance, memberUids, u, fmt, shown, holderUid }: { finance:
   const exact3 = new Intl.NumberFormat(locale === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(Math.abs(b.net));
   const adj = Math.round((shown - b.net) * 1000) / 1000;
   const adjStr = Math.abs(adj) >= 0.005 ? `${adj > 0 ? '+' : '−'}${fmt(Math.abs(adj))}` : null;
-  const label = (l: typeof b.lines[number]) =>
-    l.kind === 'group' ? t('expenses.directLine')
-      : l.kind === 'potSpend' ? t('expenses.potSpendLine')
-        : l.kind === 'potIn' ? t('expenses.potInLine')
-          : l.kind === 'potHeld' ? t('expenses.potHeldLine', { count: l.count })
-            : l.label;
+  const label = (l: typeof b.lines[number]) => {
+    switch (l.kind) {
+      case 'group': return t('expenses.directLine');
+      case 'potIn': return t('expenses.potInLine');
+      case 'potSpend': return t('expenses.potSpendLine');
+      case 'potCredit': return t('expenses.potCreditLine');
+      case 'potOver': return t('expenses.potOverLine');
+      case 'potRecv': return t('expenses.potRecvLine');
+      case 'potCash': return t('expenses.potCashLine');
+      default: return l.label;
+    }
+  };
+  const calc = (l: typeof b.lines[number]) => {
+    switch (l.kind) {
+      case 'potIn': case 'potOver': case 'potRecv': return <>{t('expenses.paidAmt')} <b>{fmt(l.paid)}</b></>;
+      case 'potCredit': case 'potCash': return <><b>{fmt(l.share)}</b></>;
+      default: return <>
+        {l.share > 0 ? <>{t('expenses.formula', { total: fmt(l.total), count: l.count })} = <b>{fmt(l.share)}</b></> : <>{fmt(l.total)}</>}
+        {l.paid > 0 && <> · {l.kind === 'potSpend' ? t('expenses.coveredAmt') : t('expenses.paidAmt')} <b>{fmt(l.paid)}</b></>}
+      </>;
+    }
+  };
   return (
     <details className="bp-breakdown">
       <summary>{t('expenses.breakdown')}</summary>
@@ -619,16 +739,7 @@ function Breakdown({ finance, memberUids, u, fmt, shown, holderUid }: { finance:
         {b.lines.map((l, i) => (
           <li key={i}>
             <span className="bp-breakdown__label">{label(l)}</span>
-            <span className="bp-breakdown__calc">
-              {l.kind === 'potIn'
-                ? <>{t('expenses.paidAmt')} <b>{fmt(l.paid)}</b></>
-                : l.kind === 'potHeld'
-                  ? <><b>{fmt(l.share)}</b></>
-                  : <>
-                      {l.share > 0 ? <>{t('expenses.formula', { total: fmt(l.total), count: l.count })} = <b>{fmt(l.share)}</b></> : <>{fmt(l.total)}</>}
-                      {l.paid > 0 && <> · {t('expenses.paidAmt')} <b>{fmt(l.paid)}</b></>}
-                    </>}
-            </span>
+            <span className="bp-breakdown__calc">{calc(l)}</span>
           </li>
         ))}
         <li className="bp-breakdown__sum">
@@ -665,10 +776,7 @@ function IbanChip({ iban }: { iban: string }) {
   );
 }
 
-function SummaryPanel({ tripId, finance, memberUids, nameOf, ibanOf, fmt, fmt2, meUid, holderUid }: {
-  tripId: string; finance: Finance; memberUids: string[]; nameOf: (u: string) => string; ibanOf: (u: string) => string | undefined;
-  fmt: Fmt; fmt2: Fmt2; meUid: string; holderUid?: string;
-}) {
+function SummaryPanel({ tripId, finance, memberUids, nameOf, ibanOf, fmt, fmt2, meUid, holderUid }: PanelProps & { ibanOf: (u: string) => string | undefined }) {
   const { t } = useTranslation();
   const you = t('members.you');
   // "You" once: the dev seed already names the current user "أنت".
@@ -676,6 +784,7 @@ function SummaryPanel({ tripId, finance, memberUids, nameOf, ibanOf, fmt, fmt2, 
   const myNet = myNetBalance(finance, memberUids, meUid, holderUid);
   const owed = myNet >= 0;
   const pot = potStatus(finance, memberUids);
+  const acc = potAccount(finance, memberUids, holderUid);
   const fixed = fixedKitty(finance);
   // Direct (default): everyone pays whoever paid for them; rows are derived
   // from those rounded transfers so both views agree to the halala.
@@ -702,11 +811,32 @@ function SummaryPanel({ tripId, finance, memberUids, nameOf, ibanOf, fmt, fmt2, 
         <Stat label={t('expenses.sideSpend')} value={fmt(sideTotal)} sub={fmt2(sideTotal)} />
         <Stat label={t('expenses.grandTotal')} value={fmt(grand)} sub={fmt2(grand)} />
       </div>
-      {fixed && (
-        <p className="bp-note">
-          {t('expenses.kittyFixed')}: {t('expenses.collected')} {fmt(pot.collected)} · {t('expenses.spentFromPot')} {fmt(pot.spent)} · {t('expenses.remaining')} <b>{fmt(pot.remaining)}</b>
-          {pot.shortfall > 0 && <> · {t('expenses.potOverdrawn', { amount: fmt(pot.shortfall), holder: nameOf(holderUid ?? ''), each: fmt(pot.shortfall / Math.max(1, memberUids.length)) })}</>}
-        </p>
+
+      {/* The pot as an account: money in it is shared, not a debt, until closed. */}
+      {fixed && acc.active && (
+        <section className="bp-potbal" aria-label={t('expenses.potBalanceTitle')}>
+          <h4 className="bp-panel__h">{t('expenses.potBalanceTitle')}</h4>
+          <p className="bp-note">
+            {t('expenses.collected')} {fmt(pot.collected)} · {t('expenses.spentFromPot')} {fmt(pot.spent)} · {t('expenses.potCash')} <b>{fmt(acc.cash)}</b>
+            {pot.shortfall > 0 && <> · {t('expenses.potOverdrawn', { amount: fmt(pot.shortfall), holder: nameOf(holderUid ?? ''), each: fmt(pot.shortfall / Math.max(1, memberUids.length)) })}</>}
+          </p>
+          <ul className="bp-potbal__list" role="list">
+            {memberUids.map((u) => {
+              const b = Math.round((acc.balances[u] ?? 0) * 100) / 100;
+              return (
+                <li key={u} className="bp-potbal__row">
+                  <span className="bp-pay__name">{meLabel(u)}</span>
+                  {Math.abs(b) < 0.005
+                    ? <span className="bp-status-chip">{t('expenses.potBalanceEven')}</span>
+                    : b > 0
+                      ? <span className="bp-pay__net is-pos">{t('expenses.potBalanceYours')} {fmt(b)}</span>
+                      : <span className="bp-pay__net is-neg">{t('expenses.potBalanceOwe')} {fmt(-b)}</span>}
+                </li>
+              );
+            })}
+          </ul>
+          <p className="bp-note">{finance.potClosed ? t('expenses.potClosedNote') : t('expenses.potOpenNote')}</p>
+        </section>
       )}
 
       {/* Per-person: how much each is owed / owes */}
