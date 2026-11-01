@@ -66,7 +66,7 @@ jobs:
       - name: Deploy to Firebase Hosting (live)
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
-        run: npx --yes firebase-tools@latest deploy --only hosting --project bordingpass-ae272 --non-interactive
+        run: npx --yes firebase-tools@15.34.0 deploy --only hosting --project bordingpass-ae272 --non-interactive
 
       - name: Deploy Firestore security rules (best-effort)
         # Needs the service account to have the "Service Usage Consumer" role;
@@ -74,7 +74,7 @@ jobs:
         continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
-        run: npx --yes firebase-tools@latest deploy --only firestore:rules --project bordingpass-ae272 --non-interactive
+        run: npx --yes firebase-tools@15.34.0 deploy --only firestore:rules --project bordingpass-ae272 --non-interactive
 
       - name: Provision Firebase Storage default bucket (one-time, best-effort)
         # Cloud Storage for Firebase (since Oct 2024) needs the default bucket to
@@ -127,4 +127,4 @@ jobs:
         continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
-        run: npx --yes firebase-tools@latest deploy --only storage --project bordingpass-ae272 --non-interactive
+        run: npx --yes firebase-tools@15.34.0 deploy --only storage --project bordingpass-ae272 --non-interactive
