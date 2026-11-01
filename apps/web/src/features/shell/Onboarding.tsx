@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { PUBLIC_PREVIEW } from '@/shared/previewMode';
 
 /** First-run onboarding: a short, dismissible 3-step welcome that tells a new
  *  user what the app does and where to start. Shows once ever (localStorage),
@@ -21,7 +22,8 @@ export function Onboarding() {
   useEffect(() => {
     // Don't surface the first-run overlay during tests — it would cover the
     // screen and intercept interactions in integration specs.
-    if (import.meta.env.MODE === 'test') return;
+    // Same in public preview mode: a crawler would hit it on every page.
+    if (import.meta.env.MODE === 'test' || PUBLIC_PREVIEW) return;
     let seen = false;
     try { seen = localStorage.getItem(KEY) === '1'; } catch { /* private mode */ }
     if (!seen) {

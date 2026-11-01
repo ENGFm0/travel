@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_STORAGE_BUCKET?: string;
   readonly VITE_FIREBASE_MESSAGING_SENDER_ID?: string;
   readonly VITE_FIREBASE_APP_ID?: string;
+  /** "1" = temporary public preview: no login, local demo data, Firebase off. */
+  readonly VITE_PUBLIC_PREVIEW?: string;
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;

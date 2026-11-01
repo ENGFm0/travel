@@ -2,6 +2,7 @@ import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import { PUBLIC_PREVIEW } from './previewMode';
 
 /** Shared Firebase app/Firestore access for the data services. Config comes from
  *  the (public) VITE_FIREBASE_* build env; when it's absent the app runs on the
@@ -18,9 +19,10 @@ function firebaseConfig() {
   };
 }
 
-/** True when real Firebase is configured — the data services then use Firestore. */
+/** True when real Firebase is configured — the data services then use Firestore.
+ *  Public preview mode forces this off so the whole site runs on local demo data. */
 export function firebaseEnabled(): boolean {
-  return Boolean(import.meta.env.VITE_FIREBASE_API_KEY);
+  return !PUBLIC_PREVIEW && Boolean(import.meta.env.VITE_FIREBASE_API_KEY);
 }
 
 export function getFirebaseApp(): FirebaseApp {

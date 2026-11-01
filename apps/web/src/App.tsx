@@ -18,6 +18,15 @@ import { initPartners } from '@/features/partners/partnersStore';
 import { initFlights } from '@/features/flights/flightsStore';
 import { initNotifications } from '@/features/notifications/notificationsStore';
 import { initAdmin } from '@/features/admin/adminStore';
+import { PUBLIC_PREVIEW } from '@/shared/previewMode';
+import { useTranslation } from 'react-i18next';
+
+/** Slim notice shown only while the site is in public preview mode. */
+function PreviewBar() {
+  const { t } = useTranslation();
+  if (!PUBLIC_PREVIEW) return null;
+  return <div className="bp-preview-bar" role="status">{t('preview.banner')}</div>;
+}
 
 export function App() {
   useEffect(() => {
@@ -41,6 +50,7 @@ export function App() {
   return (
     <ThemeProvider>
       <LocaleProvider>
+        <PreviewBar />
         <RouterProvider router={router} />
       </LocaleProvider>
     </ThemeProvider>

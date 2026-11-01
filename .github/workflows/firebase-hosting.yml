@@ -55,6 +55,10 @@ jobs:
           # total spend, and the IBAN it is transferred to. Fill in the IBAN.
           VITE_APP_FEE_PCT: "1"
           VITE_APP_IBAN: ""
+          # TEMPORARY — public preview: no login required, local demo data,
+          # Firebase off (so an audit tool can crawl every page). Set back to
+          # "0" to restore the normal site (login + real data).
+          VITE_PUBLIC_PREVIEW: "1"
         run: npm --workspace apps/web run build
 
       - name: Write service account credentials

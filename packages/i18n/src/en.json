@@ -1,4 +1,7 @@
 {
+  "preview": {
+    "banner": "Temporary preview mode: login is off and all data is demo data stored only on this device."
+  },
   "app": {
     "name": "BoardingPass",
     "brandEn": "BoardingPass",

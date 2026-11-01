@@ -1,4 +1,5 @@
 import type { AuthUser } from '@boardingpass/types';
+import { PUBLIC_PREVIEW } from '@/shared/previewMode';
 
 /** Auth provider abstraction (US-001). A mock implementation powers dev/tests;
  *  the Firebase implementation (loaded only when configured) powers production.
@@ -31,10 +32,20 @@ export interface AuthProvider {
  *  Firebase is dynamically imported so it never enters the main bundle or tests
  *  unless real config is present. */
 export async function createAuthProvider(): Promise<AuthProvider> {
-  if (import.meta.env.VITE_FIREBASE_API_KEY) {
+  if (import.meta.env.VITE_FIREBASE_API_KEY && !PUBLIC_PREVIEW) {
     const { createFirebaseAuthProvider } = await import('./providers/firebaseAuthProvider');
     return createFirebaseAuthProvider();
   }
   const { createMockAuthProvider } = await import('./providers/mockAuthProvider');
-  return createMockAuthProvider('bp.auth.v1'); // persist the signed-in user across reloads (dev/demo)
+  const p = createMockAuthProvider('bp.auth.v1'); // persist the signed-in user across reloads (dev/demo)
+  if (PUBLIC_PREVIEW) await ensureDemoSignedIn(p);
+  return p;
+}
+
+/** Preview mode: nobody has to log in — sign the demo account in up front so
+ *  every guarded page opens for any visitor (crawlers included). */
+async function ensureDemoSignedIn(p: AuthProvider): Promise<void> {
+  let signedIn = false;
+  p.subscribe((u) => { signedIn = Boolean(u); })();
+  if (!signedIn) await p.signInWithPassword('user@example.com', 'password1').catch(() => {});
 }
