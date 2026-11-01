@@ -421,6 +421,19 @@ export function getItineraryBoard(tripId: string, seed: CitySeed[]): Promise<Boa
 /** Add a place (e.g. chosen in Explore) to a trip's itinerary: find/create the
  *  city, add it to the chosen day (or the first/created day), then append the
  *  activity. Best-effort, used from outside the itinerary page. */
+/** Add a stay (hotel) to a city from outside the itinerary tab — e.g. picked
+ *  on the Explore page. Creates the city if the trip doesn't have it yet. */
+export async function addStayToCity(tripId: string, seed: CitySeed[], cityName: string, stay: Stay): Promise<void> {
+  const svc = createItineraryService();
+  let board = await svc.getBoard(tripId, seed);
+  let city = board.cities.find((c) => c.name === cityName);
+  if (!city) { board = await svc.addCity(tripId, cityName); city = board.cities.find((c) => c.name === cityName); }
+  if (!city) return;
+  const stays: Stay[] = city.stays ?? (city.hotel ? [{ id: 'legacy', name: city.hotel, mapsUrl: city.hotelUrl }] : []);
+  const next = [...stays, { ...stay, checkIn: stay.checkIn ?? city.dateFrom, checkOut: stay.checkOut ?? city.dateTo }];
+  await svc.setCityInfo(tripId, city.id, { stays: next, hotel: next[0]?.name, hotelUrl: next[0]?.mapsUrl });
+}
+
 export async function addPlaceToItinerary(
   tripId: string, seed: CitySeed[], cityName: string, input: ActivityInput, dayId?: string,
 ): Promise<void> {

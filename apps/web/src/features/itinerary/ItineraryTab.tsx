@@ -944,7 +944,7 @@ function HotelSection({ tripId, city, canEdit }: { tripId: string; city: CitySto
             <span className="material-symbols-outlined" aria-hidden="true">add_location_alt</span>{t('itinerary.pickOnMap')}
           </button>
         )}
-        <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
+        <Link className="bp-map-chip bp-map-chip--explore" to={`/explore?trip=${encodeURIComponent(tripId)}&city=${encodeURIComponent(city.name)}&mode=stay&find=hotels`}>
           <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.browseHotels')}
         </Link>
       </div>
@@ -1446,6 +1446,9 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
             <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
               onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
           )}
+          <Link className="bp-map-chip bp-map-chip--explore bp-act-form__explore" to={`/explore?trip=${encodeURIComponent(tripId)}&city=${encodeURIComponent(cityName)}&mode=day&day=${encodeURIComponent(day.id)}`}>
+            <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.pickFromExplore')}
+          </Link>
           {title.trim() && (
             <div className="bp-act-form__kindtag" aria-label={t('itinerary.activityKind')}>
               <span className="material-symbols-outlined" aria-hidden="true">{ACTIVITY_ICON[kind]}</span>

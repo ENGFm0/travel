@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useSearchParams } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { useAuth } from '@/features/auth/authStore';
 import { useTripsList, tripsActions } from '@/features/trips/tripsStore';
 import { mapsEnabled, searchPlacesByText, type GmapsPlace } from '@/shared/googleMaps';
 import {
-  addPlaceToItinerary, getItineraryBoard, formatTime12, periodFromTime,
+  addPlaceToItinerary, addStayToCity, getItineraryBoard, formatTime12, periodFromTime,
   type ActivityKind, type Board,
 } from '@/features/itinerary/itineraryService';
 import {
@@ -33,6 +34,7 @@ const FIND_OPTIONS: { key: string; q: string; en: string; cat: PlaceCategory | '
   { key: 'parks', q: 'حدائق ومتنزهات', en: 'parks', cat: 'ACTIVITIES' },
   { key: 'activities', q: 'أنشطة ترفيهية', en: 'things to do', cat: 'ACTIVITIES' },
   { key: 'shopping', q: 'مولات وتسوق', en: 'shopping malls', cat: 'SHOPPING' },
+  { key: 'hotels', q: 'فنادق', en: 'hotels', cat: 'LANDMARKS' },
 ];
 const PAGE_SIZE = 12;
 const PER_QUERY = 20; // Google's maximum per text search
@@ -106,11 +108,17 @@ function PlacesTab() {
   const { isAuthenticated, openAuth } = useAuth();
   const { places, loading } = usePlaces();
   const { trips } = useTripsList();
+  // Opened from inside a trip ("pick a hotel" / "pick a place for day N"):
+  // ?trip=…&city=…&mode=stay|day&day=…&find=… — preselect and add directly.
+  const [params] = useSearchParams();
+  const ctxMode = (params.get('mode') === 'stay' || params.get('mode') === 'day') ? (params.get('mode') as 'stay' | 'day') : null;
+  const ctxTrip = params.get('trip') ?? '';
+  const ctxDay = params.get('day') ?? undefined;
   // '' = free search (no trip): any city in the world, not tied to a plan.
-  const [tripId, setTripId] = useState<string>('');
-  const [picked, setPicked] = useState(false); // user chose explicitly (don't auto-default again)
-  const [city, setCity] = useState('');
-  const [find, setFind] = useState('all');
+  const [tripId, setTripId] = useState<string>(ctxTrip);
+  const [picked, setPicked] = useState(Boolean(ctxTrip || params.get('city'))); // user chose explicitly (don't auto-default again)
+  const [city, setCity] = useState(params.get('city') ?? '');
+  const [find, setFind] = useState(params.get('find') ?? (ctxMode === 'stay' ? 'hotels' : 'all'));
   const [free, setFree] = useState(''); // free-text search ("برج إيفل", "سوق")
   const sel = FIND_OPTIONS.find((o) => o.key === find) ?? FIND_OPTIONS[0];
   const [addPlace, setAddPlace] = useState<Place | null>(null);
@@ -154,8 +162,38 @@ function PlacesTab() {
   }
   function flash(msg: string) { setToast(msg); window.setTimeout(() => setToast(null), 2500); }
 
+  // In trip context the card adds straight into the trip (no modal).
+  const ctx = ctxMode && trip ? { mode: ctxMode, trip } : null;
+  const backTo = ctx ? `/trips/${ctx.trip.id}#itinerary` : '';
+  async function addInContext(g: GmapsPlace) {
+    if (!ctx) return;
+    if (!isAuthenticated) { openAuth(); return; }
+    const targetCity = city.trim() || ctx.trip.cities[0]?.name || '';
+    const seed = ctx.trip.cities.map((c) => ({ name: c.name }));
+    try {
+      if (ctx.mode === 'stay') {
+        await addStayToCity(ctx.trip.id, seed, targetCity, { id: `stay-${crypto.randomUUID()}`, name: g.name, placeId: g.id, mapsUrl: g.mapsUrl, photoUrl: g.photoUrl, photoUrls: g.photoUrl ? [g.photoUrl] : undefined });
+        flash(t('explorePage.addedStay', { name: g.name, city: targetCity }));
+      } else {
+        const place = toPlace(g, targetCity);
+        await addPlaceToItinerary(ctx.trip.id, seed, targetCity, {
+          title: place.name, note: place.area || undefined, kind: KIND[place.category], photoUrl: place.photoUrl, mapsUrl: place.mapsUrl, placeId: place.id,
+        }, ctxDay);
+        await placesActions.record(place).catch(() => { /* best-effort */ });
+        flash(t('explorePage.addedDay', { name: g.name }));
+      }
+    } catch { flash(t('explorePage.mapsErr')); }
+  }
+
   return (
     <>
+      {ctx && (
+        <div className="bp-explore__ctx" role="status">
+          <span><span className="material-symbols-outlined" aria-hidden="true">{ctx.mode === 'stay' ? 'hotel' : 'event'}</span>
+            {t(ctx.mode === 'stay' ? 'explorePage.ctxStay' : 'explorePage.ctxDay', { trip: ctx.trip.title, city: city || ctx.trip.cities[0]?.name || '' })}</span>
+          <Link className="bp-btn bp-btn--outline bp-btn--sm" to={backTo}>{t('explorePage.backToTrip')}</Link>
+        </div>
+      )}
       {myTrips.length > 0 && (
         <label className="bp-field bp-explore__trip">
           <span className="bp-field__label">{t('explorePage.tripLabel')}</span>
@@ -227,7 +265,9 @@ function PlacesTab() {
       {/* Live Google Maps results (real places, photos, ratings) */}
       {mapsEnabled() && (
         <GoogleResults city={city} findKey={find} free={free}
-          canAdd={myTrips.length > 0} onAdd={(g) => openAdd(toPlace(g, city))} />
+          canAdd={myTrips.length > 0}
+          addLabel={ctx ? t(ctx.mode === 'stay' ? 'explorePage.setStay' : 'explorePage.addToDay') : undefined}
+          onAdd={(g) => (ctx ? void addInContext(g) : openAdd(toPlace(g, city)))} />
       )}
 
       {addPlace && (
@@ -240,9 +280,9 @@ function PlacesTab() {
 }
 
 /* ── Live Google Maps search results ────────────────────────────────────────── */
-function GoogleResults({ city, findKey, free, canAdd, onAdd }: {
+function GoogleResults({ city, findKey, free, canAdd, addLabel, onAdd }: {
   city: string; findKey: string; free: string;
-  canAdd: boolean; onAdd: (g: GmapsPlace) => void;
+  canAdd: boolean; addLabel?: string; onAdd: (g: GmapsPlace) => void;
 }) {
   const { t } = useTranslation();
   const [results, setResults] = useState<GmapsPlace[]>([]);
@@ -319,7 +359,7 @@ function GoogleResults({ city, findKey, free, canAdd, onAdd }: {
           <ul className="bp-place-grid" role="list">
             {shown.map((g) => (
               <li key={g.id}>
-                <GooglePlaceCard g={g} canAdd={canAdd} onAdd={() => onAdd(g)} />
+                <GooglePlaceCard g={g} canAdd={canAdd} addLabel={addLabel} onAdd={() => onAdd(g)} />
               </li>
             ))}
           </ul>
@@ -365,7 +405,7 @@ function CardPhoto({ src, alt, icon }: { src?: string; alt: string; icon: string
 }
 const CAT_ICON: Record<PlaceCategory, string> = { RESTAURANTS: 'restaurant', LANDMARKS: 'attractions', ACTIVITIES: 'hiking', SHOPPING: 'shopping_bag' };
 
-function GooglePlaceCard({ g, canAdd, onAdd }: { g: GmapsPlace; canAdd: boolean; onAdd: () => void }) {
+function GooglePlaceCard({ g, canAdd, addLabel, onAdd }: { g: GmapsPlace; canAdd: boolean; addLabel?: string; onAdd: () => void }) {
   const { t } = useTranslation();
   const cat = categoryFromTypes(g.types);
   return (
@@ -381,7 +421,7 @@ function GooglePlaceCard({ g, canAdd, onAdd }: { g: GmapsPlace; canAdd: boolean;
         <h3 className="bp-place-card__title">{g.name}</h3>
         {g.address && <p className="bp-place-card__area">{g.address}</p>}
         <div className="bp-place-card__actions">
-          {canAdd && <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={onAdd}>{t('explorePage.addToTrip')}</button>}
+          {canAdd && <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={onAdd}>{addLabel ?? t('explorePage.addToTrip')}</button>}
           {g.mapsUrl && (
             <a className="bp-btn bp-btn--outline bp-btn--sm" href={g.mapsUrl} target="_blank" rel="noopener noreferrer">
               <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('explorePage.onMaps')}

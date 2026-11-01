@@ -1500,3 +1500,8 @@ select.bp-input {
 .bp-place-card__photo img { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
 .bp-place-card__photo .bp-place-card__ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--bp-ink-muted); }
 .bp-place-card__photo .bp-place-card__ph .material-symbols-outlined { font-size: 44px; opacity: .55; }
+
+/* ── Explore: "adding to trip X" context banner ── */
+.bp-explore__ctx { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; padding: 10px 12px; border-radius: var(--bp-r-md); background: color-mix(in srgb, var(--bp-primary) 10%, var(--bp-surface)); border: 1px solid color-mix(in srgb, var(--bp-primary) 35%, transparent); font-size: 13.5px; font-weight: 600; }
+.bp-explore__ctx .material-symbols-outlined { font-size: 20px; color: var(--bp-primary); vertical-align: middle; margin-inline-end: 4px; }
+.bp-act-form__explore { align-self: flex-start; margin: 2px 0 6px; }
