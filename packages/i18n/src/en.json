@@ -418,7 +418,7 @@
     "deleteDay": "Delete day",
     "add": "Add",
     "addActivity": "Add activity",
-    "addActivityPh": "Activity…",
+    "addActivityPh": "Search a place on Google or type the activity…",
     "activityTime": "Time",
     "deleteActivity": "Delete activity",
     "flightNo": "Flight number",
@@ -615,7 +615,8 @@
       "OTHER": "Other"
     },
     "carExpLinked": "Car expenses are added to the Expenses tab (transport) and split with the group.",
-    "stays": "Stays"
+    "stays": "Stays",
+    "fromGoogle": "from Google"
   },
   "expenses": {
     "kitty": "Kitty",

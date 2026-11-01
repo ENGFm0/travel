@@ -5,7 +5,7 @@ import { formatDate } from '@boardingpass/core';
 import { useUIStore, type Locale } from '@/app/store/uiStore';
 import { FlightLookup } from '@/features/flights/FlightLookup';
 import {
-  ACTIVITY_KINDS, TRIP_KINDS, CAR_KINDS, CAR_EXPENSE_KINDS, formatTime12, periodFromTime,
+  TRIP_KINDS, CAR_KINDS, CAR_EXPENSE_KINDS, formatTime12, periodFromTime,
   type Activity, type ActivityKind, type CarKind, type CarExpense, type CarExpenseKind, type CarMedia, type CitySeed, type CityStop, type Day, type FlightLeg, type Stay, type TravelMode, type TripKind,
 } from './itineraryService';
 import { uploadFile, mediaTypeOf } from '@/shared/uploads';
@@ -1412,18 +1412,23 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
 
       {canEdit && (open ? (
         <div className="bp-act-form">
-          {mapsEnabled() && (
-            <PlaceSearch city={cityName} regionCode={guessCountry(cityName)?.code} onPick={prefillFromPlace} />
+          {/* One plain search box: it IS the activity name. Typing searches Google
+              Places; picking a result fills name/address/photo/map link and sets
+              the category from Google's place types (no manual category). */}
+          {mapsEnabled() ? (
+            <PlaceSearch city={cityName} regionCode={guessCountry(cityName)?.code} value={title} onValueChange={setTitle} onPick={prefillFromPlace}
+              placeholder={t('itinerary.addActivityPh')} ariaLabel={t('itinerary.addActivity')} />
+          ) : (
+            <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
+              onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
           )}
-          <div className="bp-act-form__browse">
-            <span className="bp-add-zone__label">{t('itinerary.browseShort')}</span>
-            <a className="bp-map-chip" href={mapsSearch(`اماكن سياحية ${cityName}`)} target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined" aria-hidden="true">map</span>{t('itinerary.openMaps')}
-            </a>
-            <Link className="bp-map-chip bp-map-chip--explore" to="/explore">
-              <span className="material-symbols-outlined" aria-hidden="true">travel_explore</span>{t('itinerary.openExplore')}
-            </Link>
-          </div>
+          {title.trim() && (
+            <div className="bp-act-form__kindtag" aria-label={t('itinerary.activityKind')}>
+              <span className="material-symbols-outlined" aria-hidden="true">{ACTIVITY_ICON[kind]}</span>
+              <span>{t(`itinerary.kind.${kind}`)}</span>
+              {placeId && <span className="bp-act-form__kindsrc">· {t('itinerary.fromGoogle')}</span>}
+            </div>
+          )}
           {photoUrl && (
             <div className="bp-act-form__photo">
               <PhotoGallery photos={photoUrls ?? [photoUrl]} placeId={placeId} alt={title || t('itinerary.addActivity')} size="sm" />
@@ -1432,16 +1437,6 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
               </button>
             </div>
           )}
-          <div className="bp-act-form__kinds" role="group" aria-label={t('itinerary.activityKind')}>
-            {ACTIVITY_KINDS.map((k) => (
-              <button key={k} type="button" className={`bp-kind ${kind === k ? 'is-on' : ''}`} aria-pressed={kind === k} onClick={() => setKind(k)} title={t(`itinerary.kind.${k}`)}>
-                <span className="material-symbols-outlined" aria-hidden="true">{ACTIVITY_ICON[k]}</span>
-                <span className="bp-kind__label">{t(`itinerary.kind.${k}`)}</span>
-              </button>
-            ))}
-          </div>
-          <input className="bp-input" value={title} placeholder={t('itinerary.addActivityPh')} aria-label={t('itinerary.addActivity')}
-            onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void addActivity())} autoFocus />
           <div className="bp-act-form__row">
             <label className="bp-field bp-act-form__time">
               <span className="bp-field__label">{t('itinerary.whenLabel')}</span>

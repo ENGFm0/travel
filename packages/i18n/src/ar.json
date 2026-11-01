@@ -418,7 +418,7 @@
     "deleteDay": "حذف اليوم",
     "add": "إضافة",
     "addActivity": "أضف نشاطًا",
-    "addActivityPh": "نشاط…",
+    "addActivityPh": "ابحث عن مكان في قوقل أو اكتب اسم النشاط…",
     "activityTime": "الوقت",
     "deleteActivity": "حذف النشاط",
     "flightNo": "رقم الرحلة",
@@ -615,7 +615,8 @@
       "OTHER": "أخرى"
     },
     "carExpLinked": "تُضاف مصاريف السيارة تلقائيًا إلى تبويب المصاريف (تنقّل) وتُقسَّم على المجموعة.",
-    "stays": "السكن"
+    "stays": "السكن",
+    "fromGoogle": "من قوقل"
   },
   "expenses": {
     "kitty": "القطة",
