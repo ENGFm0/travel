@@ -13,7 +13,7 @@ import { useTripsStore } from '@/features/trips/tripsStore';
 import { createMockTripsService, type Trip } from '@/features/trips/tripsService';
 import { useMembersStore } from '@/features/members/membersStore';
 import { createMockMembersService, type Member } from '@/features/members/membersService';
-import { useExpensesStore } from '@/features/expenses/expensesStore';
+import { useExpensesStore, expensesActions } from '@/features/expenses/expensesStore';
 import { createMockExpensesService, setMockCurrentUser } from '@/features/expenses/expensesService';
 
 const TRIP: Trip = {
@@ -85,19 +85,44 @@ describe('US-007 Expenses UI', () => {
     expect(screen.getAllByText(/800\.00/).length).toBeGreaterThan(0);
   });
 
-  it('computes my net balance in the summary (AC6)', async () => {
+  it('OPEN kitty: an expense I paid for everyone → my net is +200 in the summary (AC6)', async () => {
     await signIn();
     seed([OWNER, U2, U3]);
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
+    await expensesActions.setKittyMode('OPEN');
+    await screen.findByText('Who was with you?');
     await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
-    await userEvent.type(screen.getByLabelText('Amount'), '300'); // paid by me, split 3 → net +200
+    await userEvent.type(screen.getByLabelText('Amount'), '300'); // paid by me, everyone selected → split 3 → net +200
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     await screen.findByText('Taxi');
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
     expect(await screen.findByText('Owed to you')).toBeInTheDocument();
-    // The headline net shows my +200 balance.
     expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/200\.00/);
+  });
+
+  it('FIXED kitty: expenses are drawn from the pot — no debts between members, pot shows what is left', async () => {
+    await signIn();
+    seed([OWNER, U2, U3]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    await userEvent.type(screen.getByLabelText('Kitty total'), '900');
+    await userEvent.click(screen.getByRole('button', { name: 'Set total' }));
+    await userEvent.type(screen.getByLabelText('Description'), 'Dinner');
+    await userEvent.type(screen.getByLabelText('Amount'), '300');
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+    expect(await screen.findByText('Dinner')).toBeInTheDocument();
+    expect(screen.getByText('From the pot')).toBeInTheDocument();      // payer column
+    expect(screen.getByText('Spent from the pot')).toBeInTheDocument();
+    await waitFor(() => {
+      const f = useExpensesStore.getState().finance!;
+      expect(f.group[0].payerUid).toBe('__pot__');
+    });
+    expect(screen.getAllByText(/600\.00/).length).toBeGreaterThan(0); // remaining 900 − 300
+    // Nobody owes anybody for the dinner; only unpaid pot shares (300 each) are owed to the owner.
+    await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
+    await screen.findByText('Owed to you');
+    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/600\.00/); // 2 × 300 still due to me
   });
 
   it('edits a group expense in place (BR-007-008)', async () => {
@@ -121,20 +146,25 @@ describe('US-007 Expenses UI', () => {
     });
   });
 
-  it('creates a side kitty among two participants (AC3)', async () => {
+  it('OPEN kitty: an expense for a subset is split among exactly those people (AC3)', async () => {
     await signIn();
     seed([OWNER, U2, U3]);
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
-    await userEvent.click(screen.getByRole('tab', { name: 'Side kitties' }));
-    await userEvent.type(screen.getByLabelText('Title'), 'Airport taxi');
+    await expensesActions.setKittyMode('OPEN');
+    await screen.findByText('Who was with you?');
+    await userEvent.type(screen.getByLabelText('Description'), 'Airport taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '600');
-    const checks = screen.getAllByRole('checkbox');
-    await userEvent.click(checks[0]);
-    await userEvent.click(checks[1]);
-    await userEvent.click(screen.getByRole('button', { name: 'Create side kitty' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Everyone' })); // → just the payer (me)
+    await userEvent.click(screen.getByRole('checkbox', { name: 'سالم' }));    // + Salem
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(await screen.findByText('Airport taxi')).toBeInTheDocument();
     expect(screen.getByText(/300\.00/)).toBeInTheDocument(); // 600 / 2
+    await waitFor(() => {
+      const s = useExpensesStore.getState().finance!.sides[0];
+      expect(s.participantUids.sort()).toEqual(['me', 'u2']);
+      expect(s.category).toBe('FOOD');
+    });
   });
 });
 

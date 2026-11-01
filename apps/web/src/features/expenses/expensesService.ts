@@ -2,7 +2,7 @@ import { createApiClient } from '@boardingpass/core';
 import { loadJSON, persistAfter } from '@/shared/persist';
 import { currentUid, db, firebaseEnabled, requireUid } from '@/shared/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { Category, Finance, GroupExpense, KittyMode, PersonalExpense, SideKitty } from './finance';
+import { POT_UID, type Category, type Finance, type GroupExpense, type KittyMode, type PersonalExpense, type SideKitty } from './finance';
 
 export interface FinanceInit {
   memberUids: string[];
@@ -20,7 +20,7 @@ export interface ExpensesService {
   addGroup(tripId: string, e: { desc: string; category: Category; amount: number; payerUid: string; receiptUrl?: string; receiptUrls?: string[] }): Promise<Finance>;
   updateGroup(tripId: string, id: string, e: { desc: string; category: Category; amount: number; payerUid: string }): Promise<Finance>;
   deleteGroup(tripId: string, id: string): Promise<Finance>;
-  addSide(tripId: string, s: { title: string; participantUids: string[]; total: number; payerUid: string }): Promise<Finance>;
+  addSide(tripId: string, s: { title: string; participantUids: string[]; total: number; payerUid: string; category?: Category; receiptUrls?: string[] }): Promise<Finance>;
   deleteSide(tripId: string, id: string): Promise<Finance>;
   settleSide(tripId: string, id: string): Promise<Finance>;
   setPersonalBudget(tripId: string, amount: number): Promise<Finance>;
@@ -100,7 +100,7 @@ export function createMockExpensesService(seed?: Record<string, Partial<Store>>,
     async deleteGroup(tripId, id) { await tick(); const s = store(tripId); s.group = s.group.filter((g) => g.id !== id); return view(tripId, ME(tripId)); },
     async addSide(tripId, x) {
       await tick();
-      store(tripId).sides.push({ id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false });
+      store(tripId).sides.push({ id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false, category: x.category, receiptUrls: x.receiptUrls });
       return view(tripId, ME(tripId));
     },
     async deleteSide(tripId, id) { await tick(); const s = store(tripId); s.sides = s.sides.filter((x) => x.id !== id); return view(tripId, ME(tripId)); },
@@ -226,7 +226,13 @@ export function createFirestoreExpensesService(): ExpensesService {
     addGroup: (tripId, e) => withShared(tripId, (sh) => { sh.group.push({ id: uid('g'), desc: e.desc.trim(), category: e.category, amount: e.amount, payerUid: e.payerUid, receiptUrl: e.receiptUrl, receiptUrls: e.receiptUrls }); }),
     updateGroup: (tripId, id, e) => withShared(tripId, (sh) => { const g = sh.group.find((x) => x.id === id); if (g) { g.desc = e.desc.trim(); g.category = e.category; g.amount = e.amount; g.payerUid = e.payerUid; } }),
     deleteGroup: (tripId, id) => withShared(tripId, (sh) => { sh.group = sh.group.filter((g) => g.id !== id); }),
-    addSide: (tripId, x) => withShared(tripId, (sh) => { sh.sides.push({ id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false }); }),
+    addSide: (tripId, x) => withShared(tripId, (sh) => {
+      // Firestore rejects undefined fields — only include what's set.
+      const s: SideKitty = { id: uid('s'), title: x.title.trim(), participantUids: [...x.participantUids], total: x.total, payerUid: x.payerUid, settled: false };
+      if (x.category) s.category = x.category;
+      if (x.receiptUrls?.length) s.receiptUrls = x.receiptUrls;
+      sh.sides.push(s);
+    }),
     deleteSide: (tripId, id) => withShared(tripId, (sh) => { sh.sides = sh.sides.filter((x) => x.id !== id); }),
     settleSide: (tripId, id) => withShared(tripId, (sh) => { const x = sh.sides.find((y) => y.id === id); if (x) x.settled = true; }),
     setPersonalBudget: (tripId, amount) => withPersonal(tripId, (p) => { p.budget = Math.max(0, amount); }),
@@ -247,8 +253,16 @@ export async function recordTripExpense(
   tripId: string, e: { desc: string; category: Category; amount: number },
 ): Promise<void> {
   if (!e.amount || e.amount <= 0) return;
-  const payerUid = currentUid() ?? 'me';
-  await createExpensesService().addGroup(tripId, { desc: e.desc.trim() || '—', category: e.category, amount: e.amount, payerUid });
+  const svc = createExpensesService();
+  // In a FIXED kitty every shared cost is drawn from the pot; otherwise the
+  // current user paid it for everyone.
+  const me = currentUid() ?? 'me';
+  let payerUid = me;
+  try {
+    const f = await svc.getFinance(tripId, { memberUids: [me], base: 'SAR', dest: 'SAR', rate: 1 }, me);
+    if ((f.kittyMode ?? 'FIXED') === 'FIXED') payerUid = POT_UID;
+  } catch { /* fall back to the current user */ }
+  await svc.addGroup(tripId, { desc: e.desc.trim() || '—', category: e.category, amount: e.amount, payerUid });
 }
 
 /** Record a personal (self-scoped) expense from outside the Expenses tab. */

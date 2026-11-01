@@ -23,7 +23,13 @@ export interface SideKitty {
   total: number; // base currency
   payerUid: string;
   settled: boolean;
+  category?: Category;     // OPEN kitty: a shared expense among a subset
+  receiptUrls?: string[];
 }
+
+/** Payer sentinel: the expense was paid FROM the fixed pot. Nobody is
+ *  credited and nobody owes a share — it only draws the pot down. */
+export const POT_UID = '__pot__';
 
 export interface PersonalExpense {
   id: string;
@@ -95,11 +101,24 @@ export function kittyCollected(total: number, memberUids: string[], paid: Record
   return round2(memberUids.reduce((acc, u) => acc + (paid[u] ? share : 0), 0));
 }
 
-/** Group-spend distribution by category (FR-007-003). */
-export function distribution(group: GroupExpense[]): Record<Category, number> {
+/** Pot status for a FIXED kitty: what was set, what each owes into it, what
+ *  came in, what was spent from it, and what is left. */
+export interface PotStatus { total: number; due: number; collected: number; spent: number; remaining: number }
+export function potStatus(f: Finance, memberUids: string[]): PotStatus {
+  const total = f.kittyTotal || 0;
+  const due = exactShare(total, memberUids.length);
+  const collected = kittyCollected(total, memberUids, f.paid);
+  const spent = round2(f.group.filter((e) => e.payerUid === POT_UID).reduce((a, e) => a + e.amount, 0));
+  return { total, due, collected, spent, remaining: round2(total - spent) };
+}
+
+/** Spend distribution by category (FR-007-003) — shared expenses of everyone
+ *  (group) and of subsets (sides with a category). */
+export function distribution(group: GroupExpense[], sides: SideKitty[] = []): Record<Category, number> {
   const out: Record<Category, number> = { HOUSING: 0, FOOD: 0, TRANSPORT: 0, OTHER: 0 };
   let cents: Record<Category, number> = { HOUSING: 0, FOOD: 0, TRANSPORT: 0, OTHER: 0 };
   for (const e of group) cents[e.category] += toCents(e.amount);
+  for (const s of sides) if (s.category) cents[s.category] += toCents(s.total);
   (Object.keys(out) as Category[]).forEach((c) => { out[c] = fromCents(cents[c]); });
   return out;
 }
@@ -111,6 +130,7 @@ function groupNetExact(group: GroupExpense[], memberUids: string[], me: string):
   const inGroup = memberUids.includes(me);
   let net = 0;
   for (const e of group) {
+    if (e.payerUid === POT_UID) continue; // paid from the pot: no credit, no shares
     if (e.payerUid === me) net += e.amount;
     if (inGroup) net -= exactShare(e.amount, n);
   }
@@ -153,7 +173,7 @@ export interface Ledger { transfers: Settlement[]; net: Record<string, number> }
 /** Exact pairwise debts: debts[a][b] = what a owes b, after netting each pair
  *  (if a owes b 10 and b owes a 4, a owes b 6). Built from who actually paid:
  *  every participant of a pot owes the pot's payer their share. */
-export function pairwiseDebts(f: Finance, memberUids: string[]): Record<string, Record<string, number>> {
+export function pairwiseDebts(f: Finance, memberUids: string[], holderUid?: string): Record<string, Record<string, number>> {
   const owe = new Map<string, number>(); // `${from}|${to}` → amount
   const add = (from: string, to: string, amt: number) => {
     if (from === to || amt === 0) return;
@@ -162,8 +182,15 @@ export function pairwiseDebts(f: Finance, memberUids: string[]): Record<string, 
   };
   const n = memberUids.length;
   for (const e of f.group) {
+    if (e.payerUid === POT_UID) continue; // from the pot: nobody owes anybody
     const share = exactShare(e.amount, n);
     for (const u of memberUids) add(u, e.payerUid, share);
+  }
+  // FIXED kitty: members who haven't paid their share into the pot owe it to
+  // whoever holds the pot (the trip owner).
+  if ((f.kittyMode ?? 'FIXED') === 'FIXED' && holderUid && f.kittyTotal > 0) {
+    const due = exactShare(f.kittyTotal, n);
+    for (const u of memberUids) if (!f.paid[u]) add(u, holderUid, due);
   }
   for (const s of f.sides) {
     if (s.settled) continue;
@@ -191,8 +218,8 @@ export function pairwiseDebts(f: Finance, memberUids: string[]): Record<string, 
  *  agree to the halala and sum to exactly zero by construction; identical
  *  participation yields identical transfers and rows. Transfers are listed
  *  grouped by payee (largest payee first), largest amount first. */
-export function settledLedger(f: Finance, memberUids: string[]): Ledger {
-  const debts = pairwiseDebts(f, memberUids);
+export function settledLedger(f: Finance, memberUids: string[], holderUid?: string): Ledger {
+  const debts = pairwiseDebts(f, memberUids, holderUid);
   const transfers: Settlement[] = [];
   const netC: Record<string, number> = {};
   for (const u of memberUids) netC[u] = 0;
@@ -215,15 +242,15 @@ export function settledLedger(f: Finance, memberUids: string[]): Ledger {
 
 /** Settled balance per member (whole halalas, zero-sum — see settledLedger).
  *  Positive → owed to them (له), negative → they owe (عليه). */
-export function netByMember(f: Finance, memberUids: string[]): Record<string, number> {
-  return settledLedger(f, memberUids).net;
+export function netByMember(f: Finance, memberUids: string[], holderUid?: string): Record<string, number> {
+  return settledLedger(f, memberUids, holderUid).net;
 }
 
 /** My overall net balance — the same settled figure as my row. Sign per
  *  BR-007-005: positive = owed to me (لك), negative = I owe (عليك). */
-export function myNetBalance(f: Finance, memberUids: string[], me: string): number {
+export function myNetBalance(f: Finance, memberUids: string[], me: string, holderUid?: string): number {
   if (!memberUids.includes(me)) return round2(groupNetExact(f.group, memberUids, me) + sideNetExact(f.sides, me));
-  return netByMember(f, memberUids)[me] ?? 0;
+  return netByMember(f, memberUids, holderUid)[me] ?? 0;
 }
 
 /** MINIMAL settlement (optional view): fewest transfers that reproduce the
@@ -252,7 +279,7 @@ export function settlements(net: Record<string, number>): Settlement[] {
 }
 
 export interface BreakdownLine {
-  kind: 'group' | 'side';
+  kind: 'group' | 'side' | 'pot' | 'potIn'; // potIn: dues still owed TO this (pot-holding) member
   label: string;   // side title ('' for the group pot)
   total: number;   // what was spent
   count: number;   // people it is split across
@@ -263,13 +290,24 @@ export interface MemberBreakdown { lines: BreakdownLine[]; paid: number; share: 
 
 /** Line-by-line derivation of one member's balance (so every number can be
  *  checked by hand): group pot, then each unsettled side kitty they're in. */
-export function memberBreakdown(f: Finance, memberUids: string[], u: string): MemberBreakdown {
+export function memberBreakdown(f: Finance, memberUids: string[], u: string, holderUid?: string): MemberBreakdown {
   const lines: BreakdownLine[] = [];
   const n = memberUids.length;
-  const groupTotal = f.group.reduce((a, e) => a + e.amount, 0);
-  const groupPaid = f.group.filter((e) => e.payerUid === u).reduce((a, e) => a + e.amount, 0);
+  const shared = f.group.filter((e) => e.payerUid !== POT_UID); // pot-paid expenses create no debts
+  const groupTotal = shared.reduce((a, e) => a + e.amount, 0);
+  const groupPaid = shared.filter((e) => e.payerUid === u).reduce((a, e) => a + e.amount, 0);
   if (groupTotal > 0 || groupPaid > 0) {
     lines.push({ kind: 'group', label: '', total: groupTotal, count: n, share: memberUids.includes(u) ? exactShare(groupTotal, n) : 0, paid: groupPaid });
+  }
+  if ((f.kittyMode ?? 'FIXED') === 'FIXED' && holderUid && f.kittyTotal > 0) {
+    const due = exactShare(f.kittyTotal, n);
+    if (u !== holderUid && memberUids.includes(u) && !f.paid[u]) {
+      lines.push({ kind: 'pot', label: '', total: f.kittyTotal, count: n, share: due, paid: 0 });
+    }
+    if (u === holderUid) {
+      const unpaid = memberUids.filter((m) => m !== u && !f.paid[m]);
+      if (unpaid.length) lines.push({ kind: 'potIn', label: '', total: unpaid.length * due, count: unpaid.length, share: 0, paid: unpaid.length * due });
+    }
   }
   for (const s of f.sides) {
     if (s.settled) continue;

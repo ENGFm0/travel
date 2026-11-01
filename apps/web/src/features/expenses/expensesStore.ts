@@ -81,7 +81,7 @@ export const expensesActions = {
   addGroup: (e: { desc: string; category: Category; amount: number; payerUid: string; receiptUrl?: string; receiptUrls?: string[] }) => apply((t) => svc().addGroup(t, e)),
   updateGroup: (id: string, e: { desc: string; category: Category; amount: number; payerUid: string }) => apply((t) => svc().updateGroup(t, id, e)),
   deleteGroup: (id: string) => apply((t) => svc().deleteGroup(t, id)),
-  addSide: (s: { title: string; participantUids: string[]; total: number; payerUid: string }) => apply((t) => svc().addSide(t, s)),
+  addSide: (s: { title: string; participantUids: string[]; total: number; payerUid: string; category?: Category; receiptUrls?: string[] }) => apply((t) => svc().addSide(t, s)),
   deleteSide: (id: string) => apply((t) => svc().deleteSide(t, id)),
   settleSide: (id: string) => apply((t) => svc().settleSide(t, id)),
   setPersonalBudget: (amount: number) => apply((t) => svc().setPersonalBudget(t, amount)),

@@ -177,14 +177,15 @@ export function buildTripReportHtml(d: ReportData): string {
   let settleCards = '';
   if (finance && active.length) {
     const uids = active.map((m) => m.uid);
-    const dist = distribution(finance.group);
+    const holder = active.find((m) => m.role === 'OWNER')?.uid ?? uids[0];
+    const dist = distribution(finance.group, finance.sides);
     const catParts: DonutPart[] = CATEGORIES.map((k) => ({ label: t(`expenses.cat.${k}`), value: dist[k], color: CAT_COLOR[k], sub: money(dist[k]) }));
     // Keep group-pot and side-kitty payments apart (they split differently).
     const paidG: Record<string, number> = {};
     const paidS: Record<string, number> = {};
     for (const e of finance.group) paidG[e.payerUid] = (paidG[e.payerUid] ?? 0) + e.amount;
     for (const s of finance.sides) paidS[s.payerUid] = (paidS[s.payerUid] ?? 0) + s.total;
-    const { net: nets, transfers } = settledLedger(finance, uids); // direct: pay whoever paid for you
+    const { net: nets, transfers } = settledLedger(finance, uids, holder); // direct: pay whoever paid for you
 
     const catChart = groupTotal > 0
       ? donut(catParts, groupTotal, short(groupTotal), cur)
