@@ -60,6 +60,18 @@ describe('pot money is shared, not a debt (user: "كلنا متساويين")', 
     expect(r(memberBreakdown(closed, M, 'amir', 'amir').net)).toBe(-300);
   });
 
+  it('an expense recorded as paid by the pot HOLDER counts as pot money (user: "دفعت 50")', () => {
+    const f = base({ paid: { me: true, friend: true }, group: [{ id: 'g', desc: 'مطعم', category: 'FOOD', amount: 50, payerUid: 'me' }] });
+    const M = ['me', 'friend'];
+    expect(potAccount(f, M, 'me').spent).toBe(50);
+    expect(potAccount(f, M, 'me').cash).toBe(950);
+    expect(potAccount(f, M, 'me').balances).toEqual({ me: 475, friend: 475 });
+    expect(settledLedger(f, M, 'me').transfers).toEqual([]);        // even — nobody owes anybody
+    // Without a fixed pot the same record is an ordinary out-of-pocket expense.
+    const open = { ...f, kittyMode: 'OPEN' as const, kittyTotal: 0 };
+    expect(settledLedger(open, M, 'me').transfers).toEqual([{ from: 'friend', to: 'me', amount: 25 }]);
+  });
+
   it('direct out-of-pocket expenses still settle pairwise alongside the pot', () => {
     const f = base({ paid: { me: true, friend: true }, group: [{ id: 'g', desc: 'taxi', category: 'TRANSPORT', amount: 90, payerUid: 'friend' }] });
     const M = ['me', 'friend'];

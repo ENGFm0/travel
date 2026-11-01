@@ -9,7 +9,7 @@ import { uploadTripImage } from '@/features/memories/memoriesService';
 import { useMembers } from '@/features/members/membersStore';
 import {
   CATEGORIES, POT_UID, convert, distribution, memberBreakdown, myNetBalance,
-  personalRemaining, personalSpent, potAccount, potStatus, settledLedger, settlements, fixedKitty,
+  personalRemaining, personalSpent, potAccount, potStatus, settledLedger, settlements, fixedKitty, isPotPaid,
   type Category, type Finance, type FinanceLogEntry, type GroupExpense, type KittyMode, type PersonalExpense, type SideKitty,
 } from './finance';
 import { expensesActions, useFinance } from './expensesStore';
@@ -195,13 +195,13 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, fmt2, canEdit, i
   const mode: KittyMode = finance.kittyMode ?? 'FIXED';
   const [total, setTotal] = useState(String(finance.kittyTotal || ''));
   const [pendingMode, setPendingMode] = useState<KittyMode | null>(null);
-  const pot = potStatus(finance, memberUids);
+  const pot = potStatus(finance, memberUids, holderUid);
   const entries = finance.group.length + finance.sides.length;
   const potSet = pot.total > 0;
   const fresh = entries === 0 && !potSet;
   const uneven = Math.round(pot.total * 100) % Math.max(1, memberUids.length) !== 0;
   const closed = Boolean(finance.potClosed);
-  const directTotal = finance.group.filter((e) => e.payerUid !== POT_UID).reduce((a, e) => a + e.amount, 0);
+  const directTotal = finance.group.filter((e) => !isPotPaid(e, finance, holderUid)).reduce((a, e) => a + e.amount, 0);
   const focusEl = (id: string) => { const el = document.getElementById(id); el?.scrollIntoView({ block: 'center', behavior: 'smooth' }); el?.focus(); };
   const lastTotalChange = (finance.log ?? []).find((l) => l.kind === 'kittyTotal');
 
@@ -412,7 +412,7 @@ function ExpensesPanel({ tripId, finance, memberUids, active, nameOf, fmt, fmt2,
       <h4 className="bp-panel__h">{t('expenses.expenseLog')}</h4>
       <ul className="bp-exp-list" role="list">
         {finance.group.map((e) => (
-          <GroupRow key={e.id} e={e} memberUids={memberUids} nameOf={nameOf} fmt={fmt} fmt2={fmt2} canEdit={canEdit && !finance.potClosed} mode={mode} holderUid={holderUid} />
+          <GroupRow key={e.id} e={e} potPaid={isPotPaid(e, finance, holderUid)} memberUids={memberUids} nameOf={nameOf} fmt={fmt} fmt2={fmt2} canEdit={canEdit && !finance.potClosed} mode={mode} holderUid={holderUid} />
         ))}
         {finance.sides.map((s) => (
           <SideRow key={s.id} s={s} memberCount={memberUids.length} nameOf={nameOf} fmt={fmt} fmt2={fmt2} canEdit={canEdit} />
@@ -464,12 +464,13 @@ function SideRow({ s, memberCount, nameOf, fmt, fmt2, canEdit }: {
   );
 }
 
-function GroupRow({ e, memberUids, nameOf, fmt, fmt2, canEdit, mode, holderUid }: {
-  e: GroupExpense; memberUids: string[]; nameOf: NameOf; fmt: Fmt; fmt2: Fmt2; canEdit: boolean; mode: KittyMode; holderUid?: string;
+function GroupRow({ e, potPaid, memberUids, nameOf, fmt, fmt2, canEdit, mode, holderUid }: {
+  e: GroupExpense; potPaid: boolean; memberUids: string[]; nameOf: NameOf; fmt: Fmt; fmt2: Fmt2; canEdit: boolean; mode: KittyMode; holderUid?: string;
 }) {
   const { t } = useTranslation();
-  const fromPot = e.payerUid === POT_UID;
-  const who = (u: string) => (u === POT_UID ? t('expenses.potPaid') : nameOf(u));
+  const fromPot = potPaid;
+  // The holder's own payments are pot money (they keep the pot cash).
+  const who = (u: string) => (fromPot ? t('expenses.potPaid') : nameOf(u));
   const [editing, setEditing] = useState(false);
   const [desc, setDesc] = useState(e.desc);
   const [cat, setCat] = useState<Category>(e.category);
@@ -494,7 +495,7 @@ function GroupRow({ e, memberUids, nameOf, fmt, fmt2, canEdit, mode, holderUid }
         <input className="bp-input" type="number" min="0" step="0.01" value={amount} aria-label={t('expenses.amount')} onChange={(ev) => setAmount(ev.target.value)} style={{ maxInlineSize: 120 }} />
         <select className="bp-input" value={payer} aria-label={t('expenses.payerLabel')} onChange={(ev) => setPayer(ev.target.value)}>
           {(mode === 'FIXED' || fromPot) && <option value={POT_UID}>{holderUid ? t('expenses.potPaidBy', { holder: nameOf(holderUid) }) : t('expenses.potPaid')}</option>}
-          {memberUids.map((u) => <option key={u} value={u}>{mode === 'FIXED' ? t('expenses.payerOutOfPocket', { name: nameOf(u) }) : nameOf(u)}</option>)}
+          {memberUids.filter((u) => mode !== 'FIXED' || u !== holderUid).map((u) => <option key={u} value={u}>{mode === 'FIXED' ? t('expenses.payerOutOfPocket', { name: nameOf(u) }) : nameOf(u)}</option>)}
         </select>
         <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={save}>{t('expenses.saveEdit')}</button>
         <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setEditing(false)}>{t('trips.close')}</button>
@@ -592,7 +593,7 @@ function AddShared({ tripId, mode, memberUids, active, nameOf, baseCur, destCur,
         )}
         <select className="bp-input" value={payer} aria-label={t('expenses.payerLabel')} onChange={(e) => setPayer(e.target.value)}>
           {mode === 'FIXED' && <option value={POT_UID}>{holderUid ? t('expenses.potPaidBy', { holder: nameOf(holderUid) }) : t('expenses.potPaid')}</option>}
-          {memberUids.map((u) => (
+          {memberUids.filter((u) => mode !== 'FIXED' || u !== holderUid).map((u) => (
             <option key={u} value={u}>
               {mode === 'FIXED' ? (u === meUid ? t('expenses.payerOutOfPocketSelf') : t('expenses.payerOutOfPocket', { name: nameOf(u) })) : nameOf(u)}
             </option>
@@ -793,7 +794,7 @@ function SummaryPanel({ tripId, finance, memberUids, nameOf, ibanOf, fmt, fmt2, 
   const meLabel = (u: string) => (u === meUid ? (nameOf(u).trim() === you || nameOf(u).trim() === 'أنت' ? you : `${nameOf(u)} (${you})`) : nameOf(u));
   const myNet = myNetBalance(finance, memberUids, meUid, holderUid);
   const owed = myNet >= 0;
-  const pot = potStatus(finance, memberUids);
+  const pot = potStatus(finance, memberUids, holderUid);
   const acc = potAccount(finance, memberUids, holderUid);
   const fixed = fixedKitty(finance);
   // Direct (default): everyone pays whoever paid for them; rows are derived

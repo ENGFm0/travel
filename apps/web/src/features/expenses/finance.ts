@@ -136,6 +136,13 @@ export function kittyCollected(total: number, memberUids: string[], paid: Record
 /** A FIXED kitty with an amount set. */
 export const fixedKitty = (f: Finance) => (f.kittyMode ?? 'FIXED') === 'FIXED' && (f.kittyTotal || 0) > 0;
 
+/** Was this expense paid with pot money? Either explicitly ("من القطة"), or
+ *  paid by the pot's HOLDER while a fixed pot is active — the holder keeps the
+ *  pot cash, so whatever they pay is pot money by definition (anything beyond
+ *  the pot is the shortfall, which the settlement splits). */
+export const isPotPaid = (e: GroupExpense, f: Finance, holderUid?: string): boolean =>
+  e.payerUid === POT_UID || (fixedKitty(f) && Boolean(holderUid) && e.payerUid === holderUid);
+
 /** Pot status for a FIXED kitty.
  *  - due: the typical share; dues: each member's exact due (sum = total)
  *  - collected: what actually came in (confirmed dues)
@@ -148,12 +155,12 @@ export interface PotStatus {
   total: number; due: number; dues: Record<string, number>; collected: number; spent: number;
   remaining: number; uncollected: number; shortfall: number;
 }
-export function potStatus(f: Finance, memberUids: string[]): PotStatus {
+export function potStatus(f: Finance, memberUids: string[], holderUid?: string): PotStatus {
   const total = f.kittyTotal || 0;
   const dues = perMemberDue(total, memberUids);
   const due = memberUids.length ? Math.min(...memberUids.map((u) => dues[u])) : 0;
   const collected = kittyCollected(total, memberUids, f.paid);
-  const spent = fromCents(f.group.filter((e) => e.payerUid === POT_UID).reduce((a, e) => a + toCents(e.amount), 0));
+  const spent = fromCents(f.group.filter((e) => isPotPaid(e, f, holderUid)).reduce((a, e) => a + toCents(e.amount), 0));
   return {
     total, due, dues, collected, spent,
     remaining: round2(collected - spent),
@@ -182,7 +189,7 @@ export interface PotAccount {
 }
 export function potAccount(f: Finance, memberUids: string[], holderUid?: string): PotAccount {
   const n = memberUids.length;
-  const p = potStatus(f, memberUids);
+  const p = potStatus(f, memberUids, holderUid);
   const active = Boolean(holderUid) && (fixedKitty(f) || p.spent > 0);
   const balances: Record<string, number> = {};
   if (!active) {
@@ -224,12 +231,12 @@ export function distribution(group: GroupExpense[], sides: SideKitty[] = []): Re
 /** Exact net from group expenses members paid DIRECTLY (out of pocket) for
  *  everyone: (what I paid) − (my share of each). Pot-paid expenses are
  *  handled by the pot account, not here. */
-function directNetExact(group: GroupExpense[], memberUids: string[], me: string): number {
+function directNetExact(f: Finance, memberUids: string[], me: string, holderUid?: string): number {
   const n = memberUids.length;
   const inGroup = memberUids.includes(me);
   let net = 0;
-  for (const e of group) {
-    if (e.payerUid === POT_UID) continue;
+  for (const e of f.group) {
+    if (isPotPaid(e, f, holderUid)) continue;
     if (e.payerUid === me) net += e.amount;
     if (inGroup) net -= exactShare(e.amount, n);
   }
@@ -251,7 +258,8 @@ function sideNetExact(sides: SideKitty[], me: string): number {
 
 /** My net from directly-paid group expenses (rounded for display). */
 export function groupNet(group: GroupExpense[], memberUids: string[], me: string): number {
-  return round2(directNetExact(group, memberUids, me));
+  const f: Finance = { base: '', dest: '', rate: 1, kittyTotal: 0, paid: {}, group, sides: [], personalBudget: 0, personal: [] };
+  return round2(directNetExact(f, memberUids, me));
 }
 
 /** My net from side kitties (rounded for display). */
@@ -264,7 +272,7 @@ export function sideNet(sides: SideKitty[], me: string): number {
 export function netByMemberExact(f: Finance, memberUids: string[], holderUid?: string): Record<string, number> {
   const out: Record<string, number> = {};
   for (const u of memberUids) {
-    out[u] = directNetExact(f.group, memberUids, u) + potPartExact(f, memberUids, u, holderUid) + sideNetExact(f.sides, u);
+    out[u] = directNetExact(f, memberUids, u, holderUid) + potPartExact(f, memberUids, u, holderUid) + sideNetExact(f.sides, u);
   }
   return out;
 }
@@ -285,7 +293,7 @@ export function pairwiseDebts(f: Finance, memberUids: string[], holderUid?: stri
   };
   const n = memberUids.length;
   for (const e of f.group) {
-    if (e.payerUid === POT_UID) continue; // through the pot account below
+    if (isPotPaid(e, f, holderUid)) continue; // through the pot account below
     const share = exactShare(e.amount, n);
     for (const u of memberUids) add(u, e.payerUid, share);
   }
@@ -355,7 +363,7 @@ export function netByMember(f: Finance, memberUids: string[], holderUid?: string
 /** My overall net balance — the same settled figure as my row. Sign per
  *  BR-007-005: positive = owed to me (لك), negative = I owe (عليك). */
 export function myNetBalance(f: Finance, memberUids: string[], me: string, holderUid?: string): number {
-  if (!memberUids.includes(me)) return round2(directNetExact(f.group, memberUids, me) + sideNetExact(f.sides, me));
+  if (!memberUids.includes(me)) return round2(directNetExact(f, memberUids, me, holderUid) + sideNetExact(f.sides, me));
   return netByMember(f, memberUids, holderUid)[me] ?? 0;
 }
 
@@ -410,7 +418,7 @@ export function memberBreakdown(f: Finance, memberUids: string[], u: string, hol
   const lines: BreakdownLine[] = [];
   const n = memberUids.length;
   const inGroup = memberUids.includes(u);
-  const direct = f.group.filter((e) => e.payerUid !== POT_UID);
+  const direct = f.group.filter((e) => !isPotPaid(e, f, holderUid));
   const directTotal = direct.reduce((a, e) => a + e.amount, 0);
   const directPaid = direct.filter((e) => e.payerUid === u).reduce((a, e) => a + e.amount, 0);
   if (directTotal > 0 || directPaid > 0) {
@@ -418,7 +426,7 @@ export function memberBreakdown(f: Finance, memberUids: string[], u: string, hol
   }
   const acc = potAccount(f, memberUids, holderUid);
   if (acc.active && holderUid && inGroup) {
-    const p = potStatus(f, memberUids);
+    const p = potStatus(f, memberUids, holderUid);
     const isHolder = u === holderUid;
     if (f.paid[u]) lines.push({ kind: 'potIn', label: '', total: p.dues[u], count: n, share: 0, paid: p.dues[u] });
     if (p.spent > 0 || (isHolder && p.shortfall > 0)) {
