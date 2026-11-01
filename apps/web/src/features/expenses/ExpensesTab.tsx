@@ -201,6 +201,7 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, fmt2, canEdit, i
   const fresh = entries === 0 && !potSet;
   const uneven = Math.round(pot.total * 100) % Math.max(1, memberUids.length) !== 0;
   const closed = Boolean(finance.potClosed);
+  const directTotal = finance.group.filter((e) => e.payerUid !== POT_UID).reduce((a, e) => a + e.amount, 0);
   const focusEl = (id: string) => { const el = document.getElementById(id); el?.scrollIntoView({ block: 'center', behavior: 'smooth' }); el?.focus(); };
   const lastTotalChange = (finance.log ?? []).find((l) => l.kind === 'kittyTotal');
 
@@ -272,10 +273,15 @@ function KittyPanel({ finance, memberUids, active, nameOf, fmt, fmt2, canEdit, i
                 <Stat label={t('expenses.collected')} value={fmt(pot.collected)} sub={pot.uncollected > 0 ? t('expenses.potUncollected', { amount: fmt(pot.uncollected) }) : fmt2(pot.collected)} />
               </div>
               <div className="bp-stat-row">
-                <Stat label={t('expenses.spentFromPot')} value={fmt(pot.spent)} sub={fmt2(pot.spent)} />
-                <Stat label={t('expenses.remaining')} value={fmt(pot.remaining)} sub={t('expenses.remainingHint')} tone={pot.remaining < 0 ? 'neg' : undefined} />
+                <Stat label={t('expenses.spentFromPot')} value={fmt(pot.spent)} sub={fmt2(pot.spent)} tone={pot.spent > 0 ? 'spent' : undefined} />
+                <Stat label={t('expenses.remaining')} value={fmt(pot.remaining)} sub={t('expenses.remainingHint')} tone={pot.remaining < 0 ? 'neg' : 'pos'} />
               </div>
               <Bar pct={pot.collected > 0 ? (pot.spent / pot.collected) * 100 : 0} />
+              {directTotal > 0 && (
+                <div className="bp-stat-row">
+                  <Stat label={t('expenses.directSpendTile')} value={fmt(directTotal)} sub={t('expenses.directSpendNote')} />
+                </div>
+              )}
               {pot.shortfall > 0 && (
                 <div className="bp-note bp-note--warn bp-shortfall" role="status">
                   <p>{t('expenses.potOverdrawn', { amount: fmt(pot.shortfall), holder: nameOf(holderUid ?? ''), each: fmt(pot.shortfall / Math.max(1, memberUids.length)) })}</p>
@@ -488,7 +494,7 @@ function GroupRow({ e, memberUids, nameOf, fmt, fmt2, canEdit, mode, holderUid }
         <input className="bp-input" type="number" min="0" step="0.01" value={amount} aria-label={t('expenses.amount')} onChange={(ev) => setAmount(ev.target.value)} style={{ maxInlineSize: 120 }} />
         <select className="bp-input" value={payer} aria-label={t('expenses.payerLabel')} onChange={(ev) => setPayer(ev.target.value)}>
           {(mode === 'FIXED' || fromPot) && <option value={POT_UID}>{holderUid ? t('expenses.potPaidBy', { holder: nameOf(holderUid) }) : t('expenses.potPaid')}</option>}
-          {memberUids.map((u) => <option key={u} value={u}>{nameOf(u)}</option>)}
+          {memberUids.map((u) => <option key={u} value={u}>{mode === 'FIXED' ? t('expenses.payerOutOfPocket', { name: nameOf(u) }) : nameOf(u)}</option>)}
         </select>
         <button className="bp-btn bp-btn--primary bp-btn--sm" onClick={save}>{t('expenses.saveEdit')}</button>
         <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => setEditing(false)}>{t('trips.close')}</button>
@@ -586,7 +592,11 @@ function AddShared({ tripId, mode, memberUids, active, nameOf, baseCur, destCur,
         )}
         <select className="bp-input" value={payer} aria-label={t('expenses.payerLabel')} onChange={(e) => setPayer(e.target.value)}>
           {mode === 'FIXED' && <option value={POT_UID}>{holderUid ? t('expenses.potPaidBy', { holder: nameOf(holderUid) }) : t('expenses.potPaid')}</option>}
-          {memberUids.map((u) => <option key={u} value={u}>{nameOf(u)}</option>)}
+          {memberUids.map((u) => (
+            <option key={u} value={u}>
+              {mode === 'FIXED' ? (u === meUid ? t('expenses.payerOutOfPocketSelf') : t('expenses.payerOutOfPocket', { name: nameOf(u) })) : nameOf(u)}
+            </option>
+          ))}
         </select>
         <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={busy} onClick={submit}>{busy ? t('expenses.saving') : t('expenses.add')}</button>
       </div>
@@ -799,8 +809,24 @@ function SummaryPanel({ tripId, finance, memberUids, nameOf, ibanOf, fmt, fmt2, 
 
   return (
     <div className="bp-panel">
+      {/* The pot first: what is left (green) and what was spent (red). */}
+      {fixed && acc.active && (
+        <div className="bp-pothero">
+          <div className={`bp-net ${pot.remaining >= 0 ? 'bp-net--pos' : 'bp-net--neg'}`}>
+            <span className="bp-net__label">{t('expenses.potLeftTitle')}</span>
+            <span className="bp-net__val">{fmt(pot.remaining)}</span>
+            {fmt2(pot.remaining) && <span className="bp-net__val2">{fmt2(pot.remaining)}</span>}
+          </div>
+          <div className="bp-net bp-net--spent">
+            <span className="bp-net__label">{t('expenses.spentTitle')}</span>
+            <span className="bp-net__val">{fmt(grand)}</span>
+            {fmt2(grand) && <span className="bp-net__val2">{fmt2(grand)}</span>}
+          </div>
+        </div>
+      )}
+
       {/* My overall balance */}
-      <div className={`bp-net ${owed ? 'bp-net--pos' : 'bp-net--neg'}`}>
+      <div className={`bp-net ${owed ? 'bp-net--pos' : 'bp-net--neg'} ${fixed && acc.active ? 'bp-net--compact' : ''}`} data-testid="my-net">
         <span className="bp-net__label">{owed ? t('expenses.owedToYou') : t('expenses.youOwe')}</span>
         <span className="bp-net__val">{fmt(Math.abs(myNet))}</span>
         {fmt2(Math.abs(myNet)) && <span className="bp-net__val2">{fmt2(Math.abs(myNet))}</span>}
@@ -906,9 +932,9 @@ function SummaryPanel({ tripId, finance, memberUids, nameOf, ibanOf, fmt, fmt2, 
   );
 }
 
-function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string | null; tone?: 'neg' }) {
+function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string | null; tone?: 'neg' | 'pos' | 'spent' }) {
   return (
-    <div className={`bp-stat ${tone === 'neg' ? 'bp-stat--neg' : ''}`}>
+    <div className={`bp-stat ${tone ? `bp-stat--${tone}` : ''}`}>
       <span className="bp-stat__label">{label}</span>
       <span className="bp-stat__val">{value}</span>
       {sub && <span className="bp-stat__sub">{sub}</span>}

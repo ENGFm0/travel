@@ -103,7 +103,7 @@ describe('US-007 Expenses UI', () => {
     await screen.findByText('Taxi');
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
     expect(await screen.findByText('Owed to you')).toBeInTheDocument();
-    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/200\.00/);
+    expect(document.querySelector('[data-testid="my-net"] .bp-net__val')?.textContent).toMatch(/200\.00/);
   });
 
   it('FIXED kitty: pot-paid expenses are paid by the holder; the settlement is on actual spend', async () => {
@@ -134,7 +134,7 @@ describe('US-007 Expenses UI', () => {
     // Settlement: 300 ÷ 3 = 100 each; the two others owe me 100 each → +200.
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
     await screen.findByText('Owed to you');
-    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/200\.00/);
+    expect(document.querySelector('[data-testid="my-net"] .bp-net__val')?.textContent).toMatch(/200\.00/);
   });
 
   it('FIXED kitty, reviewer scenario in the UI: 1,000 pot, all 3 paid in, 1,100 spent → 33.34 each to the holder', async () => {
@@ -157,7 +157,7 @@ describe('US-007 Expenses UI', () => {
     await screen.findByText('Hotel');
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
     await screen.findByText('Owed to you');
-    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/66\.68/);
+    expect(document.querySelector('[data-testid="my-net"] .bp-net__val')?.textContent).toMatch(/66\.68/);
     expect(screen.getAllByText(/33\.34/).length).toBeGreaterThanOrEqual(2); // the two transfers to me
   });
 
@@ -173,7 +173,7 @@ describe('US-007 Expenses UI', () => {
     await waitFor(() => expect(screen.getAllByText('Paid').length).toBe(2));
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
     expect(await screen.findByText('All settled — no transfers needed')).toBeInTheDocument();
-    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/0\.00/);
+    expect(document.querySelector('[data-testid="my-net"] .bp-net__val')?.textContent).toMatch(/0\.00/);
     // The pot balance section shows each has 500 in the pot — shared, not a debt.
     expect(screen.getAllByText(/yours in the pot/).length).toBe(2);
   }, 15000);
@@ -201,7 +201,7 @@ describe('US-007 Expenses UI', () => {
     expect(await screen.findByText(/closed the pot/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
     await screen.findByText('You owe');
-    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/400\.00/);
+    expect(document.querySelector('[data-testid="my-net"] .bp-net__val')?.textContent).toMatch(/400\.00/);
   }, 15000);
 
   it('refuses to add an expense without a category (no silent "Food")', async () => {

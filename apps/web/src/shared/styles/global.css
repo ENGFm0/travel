@@ -1472,3 +1472,12 @@ select.bp-input {
 .bp-potbal { margin: 12px 0; padding: 10px 12px; border-radius: var(--bp-r-md); border: 1px solid var(--bp-border); background: var(--bp-surface); }
 .bp-potbal__list { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 6px; }
 .bp-potbal__row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; }
+
+/* ── Finance round 3b: pot hero (left = green, spent = red), stat tones ── */
+.bp-pothero { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.bp-net--spent { background: color-mix(in srgb, var(--bp-danger) 12%, var(--bp-surface)); color: var(--bp-danger); }
+.bp-net--spent .bp-net__label { color: inherit; }
+.bp-net--compact { padding: 8px 12px; } .bp-net--compact .bp-net__val { font-size: 1.1rem; } .bp-net--compact .bp-net__val2 { font-size: 11.5px; }
+.bp-stat--pos .bp-stat__val { color: var(--bp-success); }
+.bp-stat--spent .bp-stat__val { color: var(--bp-danger); }
+@media (max-width: 360px) { .bp-pothero { grid-template-columns: 1fr; } }
