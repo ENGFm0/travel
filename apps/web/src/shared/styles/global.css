@@ -1439,3 +1439,20 @@ select.bp-input {
 .bp-cpick__opt { width: 100%; display: flex; justify-content: space-between; gap: 8px; padding: 9px 10px; border: 0; background: none; font: inherit; color: var(--bp-ink); border-radius: 8px; cursor: pointer; text-align: start; }
 .bp-cpick__opt:hover, .bp-cpick__opt:focus-visible { background: color-mix(in srgb, var(--bp-ink) 8%, transparent); }
 .bp-cpick__cur { color: var(--bp-ink-muted); font-size: 12.5px; }
+
+/* ── Finance round 2: dual currency, honest pot figures, deletes behind ⋮ ── */
+.bp-amt2 { display: block; font-size: 11px; font-weight: 600; color: var(--bp-ink-muted); font-variant-numeric: tabular-nums; }
+.bp-stat__sub { display: block; font-size: 11px; font-weight: 600; color: var(--bp-ink-muted); margin-top: 2px; }
+.bp-stat--neg .bp-stat__val { color: var(--bp-danger); }
+.bp-net__val2 { display: block; font-size: 13px; font-weight: 600; opacity: .85; }
+.bp-fxbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+.bp-fxbar__chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--bp-surface-2); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bp-fxbar__edit { font-size: 13px; font-weight: 700; }
+.bp-fxbar--edit { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); background: var(--bp-surface); }
+.bp-fxbar__actions { display: flex; gap: 8px; }
+.bp-shortfall { display: grid; gap: 8px; padding: 10px 12px; border-radius: var(--bp-r-md); background: color-mix(in srgb, var(--bp-danger) 8%, var(--bp-surface)); border: 1px solid color-mix(in srgb, var(--bp-danger) 35%, transparent); color: var(--bp-ink); }
+.bp-shortfall p { margin: 0; line-height: 1.5; } .bp-shortfall .bp-btn { justify-self: start; }
+.bp-fee-details { margin-top: 16px; border-top: 1px dashed var(--bp-border); padding-top: 10px; }
+.bp-fee-details > summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--bp-ink-muted); }
+.bp-input.is-invalid { border-color: var(--bp-danger); }
+.bp-pay__due .bp-amt2 { text-align: inherit; }

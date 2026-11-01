@@ -179,6 +179,8 @@ export function demoTrips(): Trip[] {
         { name: 'باريس' },
         { name: 'روما' },
       ],
+      currency: 'SAR',
+      destCurrency: 'EUR',
       ownerUid: CURRENT_UID,
       status: 'ACTIVE',
       progress: 45,

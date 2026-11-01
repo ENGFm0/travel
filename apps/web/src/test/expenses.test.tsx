@@ -80,6 +80,7 @@ describe('US-007 Expenses UI', () => {
     await screen.findByRole('tab', { name: 'Kitty' });
     await userEvent.type(screen.getByLabelText('Description'), 'Hotel');
     await userEvent.type(screen.getByLabelText('Amount'), '800');
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(await screen.findByText('Hotel')).toBeInTheDocument();
     expect(screen.getAllByText(/800\.00/).length).toBeGreaterThan(0);
@@ -94,6 +95,7 @@ describe('US-007 Expenses UI', () => {
     await screen.findByText('Who was with you?');
     await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '300'); // paid by me, everyone selected → split 3 → net +200
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     await screen.findByText('Taxi');
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
@@ -101,15 +103,18 @@ describe('US-007 Expenses UI', () => {
     expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/200\.00/);
   });
 
-  it('FIXED kitty: expenses are drawn from the pot — no debts between members, pot shows what is left', async () => {
+  it('FIXED kitty: pot-paid expenses are paid by the holder; the settlement is on actual spend', async () => {
     await signIn();
     seed([OWNER, U2, U3]);
     renderAt('/trips/trip-x#expenses');
     await screen.findByRole('tab', { name: 'Kitty' });
     await userEvent.type(screen.getByLabelText('Kitty total'), '900');
     await userEvent.click(screen.getByRole('button', { name: 'Set total' }));
+    // "Who paid?" defaults to the pot (held by the owner).
+    expect((screen.getByLabelText('Who paid?') as HTMLSelectElement).value).toBe('__pot__');
     await userEvent.type(screen.getByLabelText('Description'), 'Dinner');
     await userEvent.type(screen.getByLabelText('Amount'), '300');
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(await screen.findByText('Dinner')).toBeInTheDocument();
     expect(screen.getByText('From the pot')).toBeInTheDocument();      // payer column
@@ -118,11 +123,65 @@ describe('US-007 Expenses UI', () => {
       const f = useExpensesStore.getState().finance!;
       expect(f.group[0].payerUid).toBe('__pot__');
     });
-    expect(screen.getAllByText(/600\.00/).length).toBeGreaterThan(0); // remaining 900 − 300
-    // Nobody owes anybody for the dinner; only unpaid pot shares (300 each) are owed to the owner.
+    // Remaining is cash in hand (collected − spent): nothing collected yet → −300, flagged as a shortfall.
+    expect(document.querySelector('.bp-stat--neg .bp-stat__val')?.textContent).toMatch(/300\.00/);
+    expect(screen.getByText(/covered it out of pocket/)).toBeInTheDocument();
+    // Settlement: 300 ÷ 3 = 100 each; the two others owe me 100 each → +200.
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
     await screen.findByText('Owed to you');
-    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/600\.00/); // 2 × 300 still due to me
+    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/200\.00/);
+  });
+
+  it('FIXED kitty, reviewer scenario in the UI: 1,000 pot, all 3 paid in, 1,100 spent → 33.34 each to the holder', async () => {
+    await signIn();
+    seed([OWNER, U2, U3]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    await userEvent.type(screen.getByLabelText('Kitty total'), '1000');
+    await userEvent.click(screen.getByRole('button', { name: 'Set total' }));
+    // Dues are halala-exact and add up to exactly 1,000.
+    expect(await screen.findByText(/333\.34/)).toBeInTheDocument();
+    expect(screen.getAllByText(/333\.33/).length).toBeGreaterThanOrEqual(2);
+    for (let i = 0; i < 3; i++) await userEvent.click(screen.getAllByRole('button', { name: 'Confirm paid' })[0]);
+    await waitFor(() => expect(screen.getAllByText('Paid').length).toBe(3));
+    await userEvent.type(screen.getByLabelText('Description'), 'Hotel');
+    await userEvent.type(screen.getByLabelText('Amount'), '1100');
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'HOUSING');
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await screen.findByText('Hotel');
+    await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
+    await screen.findByText('Owed to you');
+    expect(document.querySelector('.bp-net__val')?.textContent).toMatch(/66\.68/);
+    expect(screen.getAllByText(/33\.34/).length).toBeGreaterThanOrEqual(2); // the two transfers to me
+  });
+
+  it('refuses to add an expense without a category (no silent "Food")', async () => {
+    await signIn();
+    seed([OWNER, U2, U3]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    await userEvent.type(screen.getByLabelText('Description'), 'Paris hotel');
+    await userEvent.type(screen.getByLabelText('Amount'), '500');
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/category/i);
+    expect(useExpensesStore.getState().finance?.group.length ?? 0).toBe(0);
+  });
+
+  it('deletes an expense only through the ⋮ menu after confirming', async () => {
+    await signIn();
+    seed([OWNER, U2, U3]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
+    await userEvent.type(screen.getByLabelText('Amount'), '90');
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'TRANSPORT');
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await screen.findByText('Taxi');
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument(); // not exposed inline
+    await userEvent.click(screen.getByRole('button', { name: 'More options' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    await waitFor(() => expect(screen.queryByText('Taxi')).not.toBeInTheDocument());
   });
 
   it('edits a group expense in place (BR-007-008)', async () => {
@@ -132,6 +191,7 @@ describe('US-007 Expenses UI', () => {
     await screen.findByRole('tab', { name: 'Kitty' });
     await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '300');
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     await screen.findByText('Taxi');
 
@@ -157,6 +217,7 @@ describe('US-007 Expenses UI', () => {
     await userEvent.type(screen.getByLabelText('Amount'), '600');
     await userEvent.click(screen.getByRole('checkbox', { name: 'Everyone' })); // → just the payer (me)
     await userEvent.click(screen.getByRole('checkbox', { name: 'سالم' }));    // + Salem
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(await screen.findByText('Airport taxi')).toBeInTheDocument();
     expect(screen.getByText(/300\.00/)).toBeInTheDocument(); // 600 / 2
@@ -211,6 +272,7 @@ describe('Expenses first-run + settlement nudge (UX review items 12 and 1)', () 
     await screen.findByText('Who was with you?');
     await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
     await userEvent.type(screen.getByLabelText('Amount'), '300');
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'FOOD');
     await userEvent.click(screen.getByRole('button', { name: 'Add' }));
     await screen.findByText('Taxi');
     await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));

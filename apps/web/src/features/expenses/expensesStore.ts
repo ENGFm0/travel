@@ -76,6 +76,7 @@ export const expensesActions = {
   },
   setKittyMode: (mode: 'FIXED' | 'OPEN') => apply((t) => svc().setKittyMode(t, mode)),
   setKittyTotal: (total: number) => apply((t) => svc().setKittyTotal(t, total)),
+  setCurrency: (dest: string, rate: number) => apply((t) => svc().setCurrency(t, dest, rate)),
   markPaid: (uid: string, paid: boolean) => apply((t) => svc().markPaid(t, uid, paid)),
   setContribution: (uid: string, amount: number) => apply((t) => svc().setContribution(t, uid, amount)),
   addGroup: (e: { desc: string; category: Category; amount: number; payerUid: string; receiptUrl?: string; receiptUrls?: string[] }) => apply((t) => svc().addGroup(t, e)),
