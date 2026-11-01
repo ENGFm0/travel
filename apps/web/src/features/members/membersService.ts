@@ -209,6 +209,7 @@ export function createFirestoreMembersService(): MembersService {
     handle: d.handle,
     role: d.role ?? 'MEMBER',
     status: d.status ?? 'ACTIVE',
+    iban: typeof d.iban === 'string' && d.iban ? d.iban : undefined,
   });
 
   return {

@@ -75,7 +75,8 @@ function ProfileForm() {
     const ok = await profileActions.update({
       firstName: first, middleName: middle, lastName: last, phone,
       username: normalizeUsername(username), country: country || undefined,
-      iban: iban.trim() ? normalizeIban(iban) : undefined,
+      // '' (not undefined): Firestore rejects undefined field values.
+      iban: iban.trim() ? normalizeIban(iban) : '',
     });
     if (ok) { setSaved(true); window.setTimeout(() => setSaved(false), 2000); }
   }

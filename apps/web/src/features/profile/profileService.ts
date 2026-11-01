@@ -61,6 +61,7 @@ export function createMockProfileService(opts?: { blockedUids?: string[]; seedPr
       await tick();
       const p = profiles.get(uid); if (!p) throw new ProfileError('GENERIC');
       Object.assign(p, patch, { uid: p.uid, email: p.email }); // uid/email immutable
+      if (!p.iban) delete p.iban;
       return { ...p };
     },
     async updateNotif(uid, notif) {
@@ -107,6 +108,7 @@ export function createFirestoreProfileService(): ProfileService {
       uid, firstName: d.firstName ?? '', middleName: d.middleName ?? '', lastName: d.lastName ?? '',
       email: d.email ?? '', phone: d.phone ?? '', username: d.username ?? '', country: d.country ?? undefined,
       avatarUrl: d.avatarUrl ?? '', notif: d.notif ?? defaultPrefs(),
+      iban: d.iban || undefined,
     };
   };
   // Maintain public lookup docs so friends can be found by username or phone

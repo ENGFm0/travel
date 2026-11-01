@@ -216,8 +216,10 @@ export function buildTripReportHtml(d: ReportData): string {
     // IBAN line with the detected bank as a brand-coloured tag (emoji + name).
     const ibanLine = (iban: string) => {
       const b = bankFromIban(iban);
-      const tag = b ? `<span class="bank" style="color:${b.color};background:${b.color}1a;border-color:${b.color}55">${b.emoji} ${esc(locale === 'ar' ? b.ar : b.en)}</span>` : '🏦';
-      return `${tag} <b>${esc(formatIban(iban))}</b>`;
+      const tag = b
+        ? `<span class="bank" style="background:${b.color};${b.accent ? `box-shadow:inset 0 -3px 0 ${b.accent}` : ''}">${esc(b.short)}</span> <span class="bank-name">${esc(locale === 'ar' ? b.ar : b.en)}</span>`
+        : '🏦';
+      return `${tag} <b dir="ltr">${esc(formatIban(iban))}</b>`;
     };
     settleCards = transfers.length
       ? `<div class="settles">${transfers.map((tr) => `<div class="settle"><span class="av" style="background:${memberColor(tr.from)}">${esc(initials(nameOf(tr.from)))}</span><span class="st-name">${esc(nameOf(tr.from))}</span><span class="st-arrow">${dir === 'rtl' ? '◀' : '▶'}<b>${esc(money(tr.amount))}</b>${dir === 'rtl' ? '◀' : '▶'}</span><span class="st-name">${esc(nameOf(tr.to))}</span><span class="av" style="background:${memberColor(tr.to)}">${esc(initials(nameOf(tr.to)))}</span><div class="st-iban">${ibanOf(tr.to) ? ibanLine(ibanOf(tr.to)!) : `<span class="muted">${esc(t('expenses.ibanMissing', { name: nameOf(tr.to) }))}</span>`}</div></div>`).join('')}</div>`
@@ -362,7 +364,8 @@ export function buildTripReportHtml(d: ReportData): string {
   .settle { display: grid; grid-template-columns: auto 1fr auto 1fr auto; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; break-inside: avoid; }
   .st-name { font-weight: 700; } .st-name:last-of-type { text-align: end; }
   .st-iban { grid-column: 1 / -1; font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; letter-spacing: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-  .bank { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid; font-size: 11.5px; font-weight: 700; }
+  .bank { display: inline-block; padding: 3px 9px; border-radius: 6px; color: #fff; font-size: 11.5px; font-weight: 900; direction: ltr; unicode-bidi: isolate; }
+  .bank-name { font-weight: 700; color: var(--ink); }
   .fee { background: #fff8f3; border: 1px solid #ffd9c4; border-radius: 14px; padding: 12px 14px; margin-top: 10px; font-size: 13px; }
   .fee h4 { margin: 0 0 6px; color: var(--accent); } .fee p { margin: 3px 0; } .fee-iban b { font-variant-numeric: tabular-nums; }
   .st-arrow { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; } .st-arrow b { background: #fff3ec; color: var(--accent); border: 1px solid #ffd9c4; border-radius: 999px; padding: 3px 12px; font-size: 14px; white-space: nowrap; }

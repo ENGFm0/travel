@@ -386,7 +386,10 @@
     "member": "Member",
     "ibanGateTitle": "Add your IBAN",
     "ibanGateText": "You need an IBAN so trip members can transfer your settlements. Saved once; visible only to members of your trips.",
-    "ibanSave": "Save IBAN"
+    "ibanSave": "Save IBAN",
+    "ibanSaved": "IBAN saved ✅",
+    "ibanSavedText": "Trip members can now see it to transfer your settlements. You can edit it from your account page.",
+    "ibanSaveFailed": "Couldn't save the IBAN — check your connection and try again."
   },
   "tripDetail": {
     "notFoundTitle": "Trip not found",

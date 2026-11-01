@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { bankFromIban, bankLabel, countryFlag } from '@/shared/saudiBanks';
+import { bankFromIban, bankName, countryFlag } from '@/shared/saudiBanks';
 
 describe('bank detection from IBAN', () => {
   it('reads the SAMA bank code at positions 5–6 of a Saudi IBAN', () => {
     expect(bankFromIban('SA03 8000 0000 6080 1016 7519')?.en).toBe('Al Rajhi Bank');  // 80
     expect(bankFromIban('sa4410000000000000000000')?.ar).toBe('البنك الأهلي السعودي'); // 10
     expect(bankFromIban('SA0005')?.en).toBe('Alinma Bank');                         // partial while typing
-    expect(bankFromIban('SA0078')?.en).toBe('stc bank');
+    expect(bankFromIban('SA0078')?.short).toBe('stc bank');
     expect(bankFromIban('SA0036')?.en).toBe('D360 Bank');
+    expect(bankFromIban('SA0380')?.color).toBe('#1b4a9c');
   });
 
   it('is silent until the bank code has been typed', () => {
@@ -22,13 +23,13 @@ describe('bank detection from IBAN', () => {
     expect(unknown?.ar).toContain('99');
     const gb = bankFromIban('GB82 WEST 1234 5698 7654 32');
     expect(gb?.known).toBe(false);
-    expect(gb?.emoji).toBe('🇬🇧');
+    expect(gb?.short).toContain('🇬🇧');
     expect(countryFlag('AE')).toBe('🇦🇪');
   });
 
-  it('builds a localised label with the emoji', () => {
-    expect(bankLabel('SA0380000000608010167519', 'ar')).toBe('🟦 مصرف الراجحي');
-    expect(bankLabel('SA0380000000608010167519', 'en')).toBe('🟦 Al Rajhi Bank');
-    expect(bankLabel('SA', 'ar')).toBe('');
+  it('gives a localised name', () => {
+    expect(bankName('SA0380000000608010167519', 'ar')).toBe('مصرف الراجحي');
+    expect(bankName('SA0380000000608010167519', 'en')).toBe('Al Rajhi Bank');
+    expect(bankName('SA', 'ar')).toBe('');
   });
 });
