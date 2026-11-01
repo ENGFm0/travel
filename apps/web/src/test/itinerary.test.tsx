@@ -89,6 +89,37 @@ describe('US-006 Itinerary dashboard', () => {
     expect(await screen.findByText('زيارة متحف اللوفر')).toBeInTheDocument();
   });
 
+  it('splits the trip days across undated stops and keeps empty days compact', async () => {
+    await signIn();
+    seed([OWNER]);
+    renderAt('/trips/trip-x');
+    await screen.findByRole('heading', { name: 'باريس', level: 3 });
+    // 20 trip days over 3 undated stops → 7 / 7 / 6, not 20 under each city
+    await waitFor(() => expect(document.querySelectorAll('.bp-day-card')).toHaveLength(7));
+    expect(screen.getByRole('tab', { name: /^1\s*باريس/ })).toHaveTextContent(/[7٧] أيام/);
+    expect(screen.getByRole('tab', { name: /^3\s*برلين/ })).toHaveTextContent(/[6٦] أيام/);
+    expect(screen.queryByText('بدون تواريخ')).not.toBeInTheDocument();
+    expect(screen.getByText('تقديري')).toBeInTheDocument();
+
+    // empty days are compact rows; the guidance shows once above the list
+    expect(document.querySelectorAll('.bp-day-card--compact')).toHaveLength(7);
+    expect(screen.getAllByText(/ابدأ بإضافة أول نشاط/)).toHaveLength(1);
+    expect(screen.queryByText('لا أنشطة بعد — أضف أول نشاط.')).not.toBeInTheDocument();
+
+    // tapping a row expands it; collapsing brings the compact row back
+    await userEvent.click(screen.getByRole('button', { name: /اليوم 2.*عرض اليوم/ }));
+    expect(document.querySelectorAll('.bp-day-card--compact')).toHaveLength(6);
+    await userEvent.click(screen.getByRole('button', { name: 'طيّ اليوم' }));
+    expect(document.querySelectorAll('.bp-day-card--compact')).toHaveLength(7);
+
+    // the day delete is in a ⋮ menu behind a confirm
+    expect(screen.queryByRole('button', { name: 'حذف اليوم' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getAllByRole('button', { name: 'خيارات اليوم' })[0]);
+    await userEvent.click(screen.getByRole('menuitem', { name: 'حذف اليوم' }));
+    await userEvent.click(screen.getByRole('button', { name: 'تأكيد' }));
+    await waitFor(() => expect(document.querySelectorAll('.bp-day-card')).toHaveLength(6));
+  });
+
   it('hides edit controls for a viewer (read-only)', async () => {
     await signIn();
     seed([VIEWER]);
@@ -98,13 +129,17 @@ describe('US-006 Itinerary dashboard', () => {
     expect(screen.queryByLabelText('أضف مدينة')).not.toBeInTheDocument();
   });
 
-  it('deletes a city (cascade), removing it from the timeline', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('deletes a city (cascade) from the ⋮ menu after an inline confirm', async () => {
     await signIn();
     seed([OWNER]);
     renderAt('/trips/trip-x');
     await screen.findByRole('heading', { name: 'باريس', level: 3 });
-    await userEvent.click(screen.getByRole('button', { name: 'حذف المدينة' }));
+    // no bare delete button anymore — it lives in the city menu behind a confirm
+    expect(screen.queryByRole('button', { name: 'حذف المدينة' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'خيارات المدينة' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'حذف المدينة' }));
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('باريس');
+    await userEvent.click(screen.getByRole('button', { name: 'تأكيد' }));
     // active resets to the first remaining city
     await waitFor(() => expect(screen.queryByRole('tab', { name: /^1\s*باريس/ })).not.toBeInTheDocument());
     expect(screen.getByRole('heading', { name: 'روما', level: 3 })).toBeInTheDocument();

@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import type { Locale, ThemeChoice } from '@boardingpass/types';
 import { useUIStore } from '@/app/store/uiStore';
 import { useAuth, authActions } from '@/features/auth/authStore';
-import { NOTIF_KEYS, validateAvatar, validateName, validateUsername, normalizeUsername, validateIban, normalizeIban, type NotifPrefs } from './profileModel';
+import { NOTIF_KEYS, validateAvatar, validateName, validateUsername, normalizeUsername, validateIban, normalizeIban, avatarInitial, type NotifPrefs } from './profileModel';
 import { profileActions, useProfile } from './profileStore';
-import { COUNTRIES } from '@/shared/countries';
 import { BankBadge } from '@/shared/BankBadge';
+import { CountryPicker } from './CountryPicker';
 
 export function ProfilePage() {
   const { t } = useTranslation();
@@ -93,7 +93,7 @@ function ProfileForm() {
     await profileActions.uploadAvatar(url);
   }
 
-  const initial = (first || profile.email || '?').trim().charAt(0).toUpperCase();
+  const initial = avatarInitial({ firstName: first, email: profile.email });
 
   return (
     <Card title={t('account.profileTitle')}>
@@ -129,10 +129,7 @@ function ProfileForm() {
         </div>
         <div className="bp-field">
           <label htmlFor="bp-p-country">{t('account.country')}</label>
-          <select id="bp-p-country" className="bp-input" value={country} onChange={(e) => setCountry(e.target.value)}>
-            <option value="">{t('account.countryNone')}</option>
-            {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{locale.startsWith('ar') ? c.ar : c.en} ({c.currency})</option>)}
-          </select>
+          <CountryPicker value={country} onChange={setCountry} locale={locale} label={t('account.country')} />
         </div>
       </div>
       <div className="bp-field">

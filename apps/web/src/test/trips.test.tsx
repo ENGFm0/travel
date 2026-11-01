@@ -43,7 +43,7 @@ async function signIn() {
 async function fillBasics() {
   await userEvent.type(screen.getByLabelText('عنوان الرحلة'), 'رحلة أوروبا');
   await userEvent.click(screen.getByRole('button', { name: 'داخلية' }));
-  await userEvent.type(screen.getByLabelText('من'), '2026-09-01');
+  await userEvent.type(screen.getByLabelText('تاريخ البداية'), '2026-09-01');
 }
 
 describe('US-003 create-trip gating', () => {
@@ -84,22 +84,38 @@ describe('US-003 wizard flow', () => {
     expect(screen.getByRole('button', { name: 'افتح الرحلة' })).toBeInTheDocument();
   });
 
-  it('blocks creation with a missing title', async () => {
-    await signIn();
-    renderAt('/planner?new=1');
-    await screen.findByTestId('trip-wizard');
-    await userEvent.click(screen.getByRole('button', { name: 'إنشاء الرحلة' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('اكتب عنوان الرحلة');
-  });
-
-  it('rejects an end date before the start date', async () => {
+  it('creates the first destination from the same step when one is typed', async () => {
     await signIn();
     renderAt('/planner?new=1');
     await screen.findByTestId('trip-wizard');
     await fillBasics();
-    await userEvent.type(screen.getByLabelText('إلى'), '2026-08-01');
+    await userEvent.type(screen.getByLabelText(/الوجهة الأولى/), 'باريس');
     await userEvent.click(screen.getByRole('button', { name: 'إنشاء الرحلة' }));
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    await screen.findByRole('heading', { name: /تم إنشاء رحلتك/ });
+    await waitFor(() => expect(useTripsStore.getState().lastCreated?.cities.map((c) => c.name)).toEqual(['باريس']));
+  });
+
+  it('blocks creation with a missing title — error sits next to the title field', async () => {
+    await signIn();
+    renderAt('/planner?new=1');
+    await screen.findByTestId('trip-wizard');
+    await userEvent.click(screen.getByRole('button', { name: 'إنشاء الرحلة' }));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('اكتب عنوان الرحلة');
+    // inside the title's field wrapper, not a banner above the form
+    expect(alert.closest('.bp-field')).toContainElement(screen.getByLabelText('عنوان الرحلة'));
+    expect(screen.getByLabelText('عنوان الرحلة')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('rejects an end date before the start date, next to the end-date field', async () => {
+    await signIn();
+    renderAt('/planner?new=1');
+    await screen.findByTestId('trip-wizard');
+    await fillBasics();
+    await userEvent.type(screen.getByLabelText('تاريخ النهاية'), '2026-08-01');
+    await userEvent.click(screen.getByRole('button', { name: 'إنشاء الرحلة' }));
+    const alert = await screen.findByRole('alert');
+    expect(alert.closest('.bp-field')).toContainElement(screen.getByLabelText('تاريخ النهاية'));
     expect(useTripsStore.getState().lastCreated).toBeNull();
   });
 });
@@ -146,12 +162,31 @@ describe('US-005 My Trips', () => {
     expect(await screen.findByText('لا توجد رحلات بعد. أنشئ أول رحلة لك للبدء.')).toBeInTheDocument();
   });
 
-  it('owner can archive a trip, removing it from the active list', async () => {
+  it('owner can archive a trip from the ⋮ menu, removing it from the active list', async () => {
     await signIn();
     seededService([UPCOMING]);
     renderAt('/mytrips');
     await screen.findByText('رحلة قادمة');
-    await userEvent.click(screen.getByRole('button', { name: 'أرشفة' }));
+    // No bare delete/archive buttons on the card any more.
+    expect(screen.queryByRole('button', { name: 'حذف' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'المزيد من الخيارات' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'أرشفة' }));
+    await waitFor(() => expect(screen.queryByText('رحلة قادمة')).not.toBeInTheDocument());
+  });
+
+  it('delete asks for confirmation inside the menu; cancel keeps the trip', async () => {
+    await signIn();
+    seededService([UPCOMING]);
+    renderAt('/mytrips');
+    await screen.findByText('رحلة قادمة');
+    await userEvent.click(screen.getByRole('button', { name: 'المزيد من الخيارات' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'حذف' }));
+    expect(await screen.findByText('حذف هذه الرحلة؟ سيفقد الأعضاء الوصول إليها.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'إلغاء' }));
+    expect(screen.getByText('رحلة قادمة')).toBeInTheDocument();
+    // cancel returns to the (still open) item list; confirm path
+    await userEvent.click(screen.getByRole('menuitem', { name: 'حذف' }));
+    await userEvent.click(screen.getByRole('button', { name: 'تأكيد' }));
     await waitFor(() => expect(screen.queryByText('رحلة قادمة')).not.toBeInTheDocument());
   });
 

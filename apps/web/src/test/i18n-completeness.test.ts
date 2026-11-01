@@ -9,11 +9,15 @@ function flatKeys(obj: unknown, prefix = ''): string[] {
     flatKeys(v, prefix ? `${prefix}.${k}` : k),
   );
 }
+/** i18next plural forms differ per language (Arabic has six, English two), so
+ *  `key_one` … `key_other` all count as the one logical key. */
+const PLURAL = /_(zero|one|two|few|many|other)$/;
+const logical = (keys: string[]) => new Set(keys.map((k) => k.replace(PLURAL, '')));
 
 describe('i18n completeness', () => {
   it('AR and EN have identical key sets', () => {
-    const arKeys = new Set(flatKeys(ar));
-    const enKeys = new Set(flatKeys(en));
+    const arKeys = logical(flatKeys(ar));
+    const enKeys = logical(flatKeys(en));
     const missingInEn = [...arKeys].filter((k) => !enKeys.has(k));
     const missingInAr = [...enKeys].filter((k) => !arKeys.has(k));
     expect({ missingInEn, missingInAr }).toEqual({ missingInEn: [], missingInAr: [] });

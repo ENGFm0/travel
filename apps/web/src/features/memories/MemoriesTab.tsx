@@ -10,6 +10,7 @@ import { memoriesActions, useMemories } from './memoriesStore';
 import { loadTripReportHtml, openTripReport, type ReportTrip } from './tripReport';
 import { useUIStore } from '@/app/store/uiStore';
 import { useMembers } from '@/features/members/membersStore';
+import { dayCount } from '@/features/itinerary/cityRanges';
 
 interface Props {
   tripId: string;
@@ -55,6 +56,11 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
 
   const groups = useMemo(() => groupMedia(media ?? [], group), [media, group]);
   const flat = media ?? [];
+  // Day choices cover the trip's real length (from its dates), not a fixed week.
+  const dayOptions = useMemo(() => {
+    const n = reportTrip?.dateFrom ? dayCount(reportTrip.dateFrom, reportTrip.dateTo) : 0;
+    return Array.from({ length: Math.max(1, n || 7) }, (_, i) => i + 1);
+  }, [reportTrip?.dateFrom, reportTrip?.dateTo]);
 
   // Deep link from the report (PDF / HTML): /trips/:id?photo=<mediaId>#memories
   // opens that photo full-size once the media list is loaded.
@@ -245,7 +251,7 @@ export function MemoriesTab({ tripId, canEdit, isOwner, places, reportTrip }: Pr
           <div className="bp-inline-field">
             <label className="bp-vh" htmlFor="bp-mem-day">{t('memories.day')}</label>
             <select id="bp-mem-day" className="bp-input bp-input--sm" value={day} onChange={(e) => setDay(e.target.value)} aria-label={t('memories.day')}>
-              {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{t('memories.dayN', { n })}</option>)}
+              {dayOptions.map((n) => <option key={n} value={n}>{t('memories.dayN', { n })}</option>)}
             </select>
           </div>
           <div className="bp-inline-field">

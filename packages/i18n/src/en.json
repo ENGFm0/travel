@@ -8,6 +8,50 @@
     "confirm": "Confirm",
     "cancel": "Cancel"
   },
+  "legal": {
+    "updated": "Last updated: November 2026",
+    "contact": "Questions? Contact us at",
+    "email": "support@boardingpass.app",
+    "privacy": {
+      "title": "Privacy Policy",
+      "lead": "What we store, why, and who can see it.",
+      "sections": [
+        { "h": "What we store", "p": "When you create an account we keep your name, email, phone (optional), username and avatar. When you plan a trip we keep its title, dates, cities, day-by-day schedule, expenses, tasks and the photos you upload." },
+        { "h": "IBAN", "p": "Your IBAN is saved on your profile and copied into your membership record of each trip you join. Only members of that trip can see it, solely so they can transfer settlements to you. It is never shown outside your trips or used for anything else." },
+        { "h": "Where data lives", "p": "The app runs on Google's Firebase platform: Authentication, the Firestore database and Hosting. Data travels encrypted over HTTPS and is stored in Google data centres under their security terms." },
+        { "h": "Who sees your data", "p": "Trip data (schedule, expenses, photos) is visible to that trip's members only. Your profile is private, except your name and username, which let friends find you. We do not sell your data or share it with advertisers." },
+        { "h": "Third-party services", "p": "Places, photos and maps come from Google Maps; flight data from AeroDataBox. These services receive your search queries only, never your personal data." },
+        { "h": "Reports and PDFs", "p": "The trip report and PDF are generated on your device; whatever you share from them is your decision and responsibility." },
+        { "h": "Deleting your data", "p": "You can delete your account and data at any time from the Account page. If you are the sole owner of an active trip with members, transfer ownership first. Data is permanently deleted after a short retention period." }
+      ]
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "lead": "By using BoardingPass you agree to these short terms.",
+      "sections": [
+        { "h": "The service", "p": "BoardingPass is a tool for organising group trips: schedule, expenses, tasks and memories. It is provided as is, and we keep improving it." },
+        { "h": "Acceptable use", "p": "Use the app for lawful purposes only. Do not upload content that harms others or violates their rights, and do not try to access trips you are not a member of." },
+        { "h": "Bookings and payments", "p": "The app does not sell tickets, book hotels or move money. Any booking you make on external sites is governed by those sites' terms, and we accept no liability for it." },
+        { "h": "Settlements between members", "p": "Expense calculations are an aid; transfers between members happen outside the app and remain the members' own responsibility. Check the IBAN before transferring." },
+        { "h": "App share", "p": "The suggested share to support the app is entirely voluntary and on your honour; it creates no obligation." },
+        { "h": "Partners and offers", "p": "Partner offers shown in Explore come from independent parties; we do not guarantee their content or prices." },
+        { "h": "Changes", "p": "We may update these terms from time to time; the last-updated date appears at the top of this page." }
+      ]
+    },
+    "help": {
+      "title": "Help Center",
+      "lead": "Quick answers to the most common questions.",
+      "sections": [
+        { "h": "How do I create a trip?", "p": "On the home page tap \"Start a new trip\", enter the title, type, dates and first destination. After creating it you add cities, stays and transport inside the trip." },
+        { "h": "How do I invite members?", "p": "From the Members tab inside the trip: invite by name, phone or username, or share the invite link. Invitees need to sign in to accept." },
+        { "h": "What are the kitty modes?", "p": "A fixed kitty is an amount collected up front from every member equally, and expenses are deducted from it. An open kitty has no upfront amount: whoever pays picks who is with them and the amount is split among them. Personal expenses stay out of the group maths and are visible to you only." },
+        { "h": "How is settlement calculated?", "p": "\"My summary\" shows who pays whom, to the halala. \"Direct\" makes everyone pay the people who actually paid for them; \"Minimal\" reduces the number of transfers. The totals at the top always equal the transfers below." },
+        { "h": "Why am I asked for an IBAN?", "p": "So trip members can transfer what they owe you. It is saved once on the Account page, shown only to members of your trips, and the app recognises your bank from the number." },
+        { "h": "How do I export the report or PDF?", "p": "From the Memories tab: \"View report\" opens the full trip dashboard, and \"Download PDF\" builds a phone-sized file with the schedule, expenses and high-quality photos, with a preview before saving or sharing." },
+        { "h": "Something went wrong", "p": "Check your connection and refresh the page. If it persists, email us at the address below with a short description." }
+      ]
+    }
+  },
   "app": {
     "name": "BoardingPass",
     "brandEn": "BoardingPass",
@@ -17,7 +61,7 @@
     "home": "Home",
     "planner": "Planner",
     "explore": "Explore",
-    "buddies": "Buddies",
+    "buddies": "Travel buddies",
     "memories": "Memories",
     "mytrips": "My Trips",
     "newTrip": "New Trip",
@@ -58,7 +102,7 @@
       "lead": "Discover the best places, restaurants, and activities for your destination."
     },
     "buddies": {
-      "title": "Travel Buddies",
+      "title": "Travel buddies",
       "lead": "Find companions for a full trip or a specific activity."
     },
     "memories": {
@@ -66,8 +110,8 @@
       "lead": "Capture moments by day or place and share them."
     },
     "mytrips": {
-      "title": "My Trips & Group",
-      "lead": "Track upcoming and past trips and manage your group."
+      "title": "My Trips",
+      "lead": "Track upcoming and past trips and manage your travel buddies."
     },
     "profile": {
       "title": "Account",
@@ -144,6 +188,14 @@
       "dubai": {
         "name": "Dubai",
         "tag": "Shopping & modern adventures"
+      },
+      "cairo": {
+        "name": "Cairo",
+        "tag": "Pyramids, the Nile & history"
+      },
+      "london": {
+        "name": "London",
+        "tag": "Museums, parks & markets"
       }
     },
     "featTitle": "Everything in one place",
@@ -227,6 +279,10 @@
     "emailImmutable": "Email can't be changed here.",
     "country": "Country",
     "countryNone": "Choose your country…",
+    "countrySearchPh": "Search for your country…",
+    "countryCommon": "Common countries",
+    "countryNoMatch": "No matching country",
+    "countryClear": "Clear country",
     "nameErrors": {
       "REQUIRED": "First and last name are required",
       "TOO_LONG": "Name is too long (max 50)",
@@ -306,6 +362,11 @@
     "international": "International",
     "fromLabel": "From",
     "toLabel": "To",
+    "startDateLabel": "Start date",
+    "endDateLabel": "End date",
+    "firstCityLabel": "First destination (optional)",
+    "firstCityPh": "e.g. Paris",
+    "firstCityNote": "More cities, stays and transport can be added from inside the trip.",
     "multiCity": "Multi-city trip",
     "cityName": "City",
     "cityNamePlaceholder": "e.g. London",
@@ -316,6 +377,8 @@
     "inviteePlaceholder": "Name or phone…",
     "addInvitee": "Add",
     "invitedCount": "{{count}} invited",
+    "invitedCount_one": "{{count}} invited",
+    "invitedCount_other": "{{count}} invited",
     "back": "Back",
     "next": "Next",
     "create": "Create trip",
@@ -324,13 +387,15 @@
     "myTrips": "My Trips",
     "signInFirst": "Sign in first to create a trip.",
     "tabMine": "My Trips",
-    "tabFriends": "Friends & Group",
-    "friendsSoon": "Manage your travel group and friends here — coming with the friends story.",
+    "tabFriends": "Travel buddies",
+    "friendsSoon": "Manage your travel buddies and friends here.",
     "filterLabel": "Filter trips",
     "upcoming": "Upcoming",
     "past": "Past",
     "startsToday": "Starts today",
     "inDays": "in {{count}} days",
+    "inDays_one": "in {{count}} day",
+    "inDays_other": "in {{count}} days",
     "progress": "Planning progress",
     "progressPct": "{{pct}}% planned",
     "open": "Open",
@@ -345,6 +410,7 @@
       "TYPE_REQUIRED": "Choose a trip type",
       "DATE_REQUIRED": "Set a start date",
       "END_BEFORE_START": "End date must be after the start date",
+      "CITY_SHORT": "Enter the destination name (at least 2 characters)",
       "CITY_REQUIRED": "Add at least one destination",
       "LIST_FAILED": "Could not load your trips, try again",
       "GENERIC": "Could not create the trip, try again"
@@ -364,7 +430,7 @@
     "invite": "Invite",
     "pendingTitle": "Pending invitations",
     "activeTitle": "Members",
-    "onlyYou": "It's just you so far — invite your travel group.",
+    "onlyYou": "It's just you so far — invite your travel buddies.",
     "pending": "Pending",
     "you": "you",
     "role": {
@@ -393,11 +459,11 @@
     "addTravellerNote": "Add travellers by name — they join directly, no invite or app needed.",
     "owner": "Owner",
     "member": "Member",
-    "ibanGateTitle": "Add your IBAN",
-    "ibanGateText": "You need an IBAN so trip members can transfer your settlements. Saved once; visible only to members of your trips.",
+    "ibanNudge": "Add your IBAN so others can transfer to you.",
+    "ibanNudgeProfile": "or add it from your account page",
+    "ibanNudgeDismiss": "Hide this notice",
     "ibanSave": "Save IBAN",
     "ibanSaved": "IBAN saved ✅",
-    "ibanSavedText": "Trip members can now see it to transfer your settlements. You can edit it from your account page.",
     "ibanSaveFailed": "Couldn't save the IBAN — check your connection and try again."
   },
   "tripDetail": {
@@ -409,10 +475,13 @@
     "tabTravel": "Travel",
     "tabExpenses": "Expenses",
     "tabTasks": "Tasks & Packing",
+    "tabTasksShort": "Tasks",
     "tabMembers": "Members",
     "tabMemories": "Memories",
     "tabSoon": "The {{tab}} tab arrives in its own story.",
-    "memberCount": "{{count}} members"
+    "memberCount": "{{count}} members",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members"
   },
   "itinerary": {
     "timeline": "Cities timeline",
@@ -538,10 +607,18 @@
     "cost": "Cost",
     "costHint": "The cost is added to the trip's shared expenses (kitty) automatically.",
     "noDatesYet": "No dates",
+    "estDates": "estimated",
+    "startHint": "Start by adding the first activity: tap + next to a day.",
+    "expandDay": "Show day",
+    "collapseDay": "Collapse day",
+    "cityActions": "City options",
+    "dayActions": "Day options",
     "editDates": "Edit city dates",
     "saveToSchedule": "Save to schedule",
     "saveToScheduleHint": "Adds your flights to the day schedule by each flight's date.",
-    "savedToSchedule": "Added {{count}} flight(s) to the schedule ✓",
+    "savedToSchedule": "Added {{count}} flights to the schedule ✓",
+    "savedToSchedule_one": "Added {{count}} flight to the schedule ✓",
+    "savedToSchedule_other": "Added {{count}} flights to the schedule ✓",
     "nothingToSave": "No flights to add yet.",
     "flightActivity": "Flight",
     "flightPending": "Add the date and time to show the countdown",
@@ -711,6 +788,12 @@
     "perHead": "Per person",
     "addAmount": "Add amount",
     "openHint": "No expenses yet — add one and pick who was with you.",
+    "starterTitle": "Getting started",
+    "starterSetTotal": "Set the kitty total",
+    "starterWaitOwner": "Waiting for the trip owner to set the kitty total",
+    "starterOpenDone": "Open kitty — no upfront amount",
+    "starterInvite": "Invite the members",
+    "starterFirstExpense": "Record the first expense",
     "attachReceipt": "Attach a receipt photo",
     "viewReceipt": "View receipt",
     "saving": "Saving…",
@@ -724,6 +807,8 @@
     "allSettled": "All settled — no transfers needed",
     "paysTo": "pays",
     "receiptsCount": "{{count}} attached",
+    "receiptsCount_one": "{{count}} photo attached",
+    "receiptsCount_other": "{{count}} photos attached",
     "breakdown": "Breakdown",
     "groupPot": "Group pot",
     "paidAmt": "paid",
@@ -742,6 +827,8 @@
     "everyone": "Everyone",
     "potDue": "Your share of the pot",
     "duesOutstanding": "{{count}} haven't paid their pot share yet",
+    "duesOutstanding_one": "{{count}} person hasn't paid their pot share yet",
+    "duesOutstanding_other": "{{count}} people haven't paid their pot share yet",
     "potOverdrawn": "The pot is over by {{amount}}",
     "ibanMissing": "{{name}} hasn't added an IBAN yet",
     "copyIban": "Copy IBAN",
@@ -841,7 +928,9 @@
     "reportPreparing": "Preparing the report…",
     "reportFailed": "Could not generate the report",
     "reportGenerated": "Generated on {{date}}",
-    "videosNotIncluded": "{{count}} video(s) not included in the printed report",
+    "videosNotIncluded": "{{count}} videos not included in the printed report",
+    "videosNotIncluded_one": "{{count}} video not included in the printed report",
+    "videosNotIncluded_other": "{{count}} videos not included in the printed report",
     "exporting": "Exporting…",
     "rpt": {
       "dashboard": "Trip dashboard",
@@ -854,11 +943,15 @@
       "balance": "Balance: owed / owes",
       "balanceHint": "Blue = the group owes them, red = they owe the group",
       "timeline": "Trip timeline",
-      "nights": "{{count}} night(s)",
+      "nights": "{{count}} nights",
+      "nights_one": "{{count}} night",
+      "nights_other": "{{count}} nights",
       "groupNote": "Split equally across all members",
       "perHeadGroup": "Per head (group pot)",
       "perHeadNote": "Group pot ÷ number of members",
-      "sideNote": "{{count}} kitty(ies) · split among their participants only",
+      "sideNote": "{{count}} kitties · split among their participants only",
+      "sideNote_one": "{{count}} kitty · split among its participants only",
+      "sideNote_other": "{{count}} kitties · split among their participants only",
       "grandAll": "Grand total",
       "grandNote": "Group pot + side kitties",
       "paidSplit": "{{group}} group + {{side}} side",
@@ -869,7 +962,9 @@
     "pdfPreparing": "Building PDF… {{pct}}%",
     "pdfFailed": "Could not build the PDF",
     "pdfPreviewTitle": "PDF preview",
-    "pdfPages": "{{count}} page(s)",
+    "pdfPages": "{{count}} pages",
+    "pdfPages_one": "{{count}} page",
+    "pdfPages_other": "{{count}} pages",
     "pdfSave": "💾 Save / Share",
     "saving": "Saving…",
     "viewPhoto": "View photo",
@@ -905,7 +1000,7 @@
     }
   },
   "buddiesPage": {
-    "title": "Travel Buddies",
+    "title": "Travel buddies",
     "lead": "Find companions for a full trip or a single activity.",
     "create": "Post a request",
     "mode": "Buddy mode",
@@ -988,7 +1083,7 @@
     "confirmAdd": "Add",
     "tabs": {
       "places": "Places",
-      "partners": "Success Partners"
+      "partners": "Partner offers"
     },
     "cityLabel": "City",
     "allCities": "All cities",

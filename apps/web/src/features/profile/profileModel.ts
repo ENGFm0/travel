@@ -28,6 +28,15 @@ export interface Profile {
 }
 
 /** Normalize an IBAN for storage: strip spaces, uppercase. */
+/** Avatar initial: the first letter of the first name (so an Arabic name gives
+ *  an Arabic letter), else of the display name / email. Latin letters are
+ *  upper-cased; Arabic has no case. */
+export function avatarInitial(p: { firstName?: string; displayName?: string | null; email?: string }): string {
+  const src = [p.firstName, p.displayName, p.email].map((s) => (s ?? '').trim()).find(Boolean) ?? '';
+  const ch = Array.from(src)[0] ?? '?';
+  return ch.toUpperCase();
+}
+
 export function normalizeIban(s: string): string {
   return (s ?? '').replace(/\s+/g, '').toUpperCase();
 }

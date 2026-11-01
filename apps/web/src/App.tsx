@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { ThemeProvider } from '@/app/providers/ThemeProvider';
 import { LocaleProvider } from '@/app/providers/LocaleProvider';
@@ -21,11 +21,28 @@ import { initAdmin } from '@/features/admin/adminStore';
 import { PUBLIC_PREVIEW } from '@/shared/previewMode';
 import { useTranslation } from 'react-i18next';
 
-/** Slim notice shown only while the site is in public preview mode. */
+const PREVIEW_DISMISSED = 'bp.previewbar.dismissed';
+
+/** One-line notice shown only while the site is in public preview mode;
+ *  dismissible for the session so it never takes more than a single line. */
 function PreviewBar() {
   const { t } = useTranslation();
-  if (!PUBLIC_PREVIEW) return null;
-  return <div className="bp-preview-bar" role="status">{t('preview.banner')}</div>;
+  const [hidden, setHidden] = useState(() => {
+    try { return sessionStorage.getItem(PREVIEW_DISMISSED) === '1'; } catch { return false; }
+  });
+  if (!PUBLIC_PREVIEW || hidden) return null;
+  function dismiss() {
+    try { sessionStorage.setItem(PREVIEW_DISMISSED, '1'); } catch { /* private mode */ }
+    setHidden(true);
+  }
+  return (
+    <div className="bp-preview-bar" role="status">
+      <span className="bp-preview-bar__text">{t('preview.banner')}</span>
+      <button type="button" className="bp-preview-bar__close" onClick={dismiss} aria-label={t('preview.close')}>
+        <span className="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </div>
+  );
 }
 
 export function App() {

@@ -91,27 +91,43 @@ describe('US-009 Members', () => {
     expect(await screen.findByText('مشاهد')).toBeInTheDocument();
   });
 
-  it('transfers ownership, keeping exactly one Amir', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('transfers ownership from the ⋮ menu after an inline confirm, keeping exactly one Amir', async () => {
     await signIn();
     seed([OWNER, SALEM]);
     renderAt('/trips/trip-x#members');
-    await screen.findByText('سالم');
-    await userEvent.click(screen.getByRole('button', { name: 'نقل الإمارة' }));
+    const salemRow = (await screen.findByText('سالم')).closest('li') as HTMLElement;
+    // Irreversible actions are not bare buttons on the row any more.
+    expect(within(salemRow).queryByRole('button', { name: 'نقل الإمارة' })).not.toBeInTheDocument();
+    expect(within(salemRow).queryByRole('button', { name: 'إزالة' })).not.toBeInTheDocument();
+    await userEvent.click(within(salemRow).getByRole('button', { name: 'المزيد من الخيارات' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'نقل الإمارة' }));
+    expect(await screen.findByText('نقل الملكية إلى سالم؟ ستصبح عضوًا.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'تأكيد' }));
     await waitFor(() => expect(screen.getAllByText('الأمير')).toHaveLength(1));
     // Salem is now the owner; former owner is a member
     expect(screen.getByText('عضو')).toBeInTheDocument();
   });
 
-  it('blocks the owner from leaving while other members exist', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('blocks the owner from leaving while other members exist (leave lives in ⋮ with confirm)', async () => {
     await signIn();
     seed([OWNER, SALEM]);
     renderAt('/trips/trip-x#members');
     const ownerName = await screen.findByText(/خالد/);
     const ownerRow = ownerName.closest('li') as HTMLElement;
-    await userEvent.click(within(ownerRow).getByRole('button', { name: 'مغادرة الرحلة' }));
+    expect(within(ownerRow).queryByRole('button', { name: 'مغادرة الرحلة' })).not.toBeInTheDocument();
+    await userEvent.click(within(ownerRow).getByRole('button', { name: 'المزيد من الخيارات' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'مغادرة الرحلة' }));
+    await userEvent.click(screen.getByRole('button', { name: 'تأكيد' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('انقل الملكية قبل مغادرة الرحلة');
+  });
+
+  it('shows "you" exactly once for the current user', async () => {
+    await signIn();
+    seed([{ ...OWNER, displayName: 'أنت' }, SALEM]);
+    renderAt('/trips/trip-x#members');
+    await screen.findByText('سالم');
+    expect(screen.getByText('أنت')).toBeInTheDocument();
+    expect(screen.queryByText(/أنت \(أنت\)/)).not.toBeInTheDocument();
   });
 
   it('copies the invite link and shows feedback', async () => {

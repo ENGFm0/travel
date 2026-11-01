@@ -181,3 +181,41 @@ describe('US-007 personal privacy (BR-007-003)', () => {
     expect(others.personal).toHaveLength(0);
   });
 });
+
+describe('Expenses first-run + settlement nudge (UX review items 12 and 1)', () => {
+  it('starts with a 3-step starter instead of zero tiles, and no "Confirm paid" until a pot exists', async () => {
+    await signIn();
+    seed([OWNER, U2, U3]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    expect(screen.getByRole('list', { name: 'Getting started' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Set the kitty total' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Confirm paid' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Spent from the pot')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Set total' })).toBeDisabled();
+    await userEvent.type(screen.getByLabelText('Kitty total'), '900');
+    await userEvent.click(screen.getByRole('button', { name: 'Set total' }));
+    await screen.findByText('Spent from the pot');
+    expect(screen.queryByRole('list', { name: 'Getting started' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Confirm paid' }).length).toBe(3);
+  });
+
+  it('asks me for an IBAN only in the summary, and only when someone owes me', async () => {
+    await signIn();
+    seed([OWNER, U2, U3]);
+    renderAt('/trips/trip-x#expenses');
+    await screen.findByRole('tab', { name: 'Kitty' });
+    // No IBAN banner anywhere on the trip page up front.
+    expect(screen.queryByText(/Add your IBAN/)).not.toBeInTheDocument();
+    await expensesActions.setKittyMode('OPEN');
+    await screen.findByText('Who was with you?');
+    await userEvent.type(screen.getByLabelText('Description'), 'Taxi');
+    await userEvent.type(screen.getByLabelText('Amount'), '300');
+    await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await screen.findByText('Taxi');
+    await userEvent.click(screen.getByRole('tab', { name: 'Summary' }));
+    expect(await screen.findByText(/Add your IBAN so others can transfer to you/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Hide this notice' }));
+    expect(screen.queryByText(/Add your IBAN so others can transfer to you/)).not.toBeInTheDocument();
+  });
+});

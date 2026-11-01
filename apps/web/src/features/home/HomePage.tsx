@@ -17,7 +17,9 @@ const ACTIONS = [
   { key: 'explore', to: '/explore', icon: 'explore' },
 ] as const;
 
-const DESTINATIONS = ['alula', 'riyadh', 'jeddah', 'taif', 'abha', 'istanbul', 'dubai'] as const;
+// Nine cards: with the featured card spanning 2×2, nine fills every row on
+// both the 2-column (mobile) and 4-column (desktop) grids — no gaps.
+const DESTINATIONS = ['alula', 'riyadh', 'jeddah', 'taif', 'abha', 'istanbul', 'dubai', 'cairo', 'london'] as const;
 
 const FEATURES = [
   { key: 'itinerary', icon: 'calendar_month' },

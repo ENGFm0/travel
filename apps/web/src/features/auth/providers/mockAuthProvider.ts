@@ -14,7 +14,7 @@ export function createMockAuthProvider(persistKey?: string): AuthProvider {
     user: {
       uid: 'seed-user',
       email: 'user@example.com',
-      displayName: 'Demo User',
+      displayName: 'مستخدم تجريبي', // Arabic so the avatar initial reads in the Arabic UI
       isAnonymous: false,
       role: 'USER',
     },

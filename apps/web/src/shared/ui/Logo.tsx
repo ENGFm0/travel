@@ -50,12 +50,17 @@ export function LogoMark({ size = 38 }: { size?: number }) {
  *  the link keeps an accessible name. The footer uses the full lockup. */
 export function Logo({ markOnly = false, size }: { markOnly?: boolean; size?: number } = {}) {
   const { t } = useTranslation();
+  const name = t('app.name');
+  const latin = t('app.brandEn');
   return (
-    <Link className="bp-logo" to="/" aria-label={t('app.name')}>
+    <Link className="bp-logo" to="/" aria-label={name}>
       <LogoMark size={size} />
       <span className={markOnly ? 'bp-vh' : 'bp-logo__text'}>
-        <span className="bp-logo__ar">{t('app.name')}</span>
-        <span className="bp-logo__en">{t('app.brandEn')}</span>
+        <span className="bp-logo__ar">{name}</span>
+        {/* The Latin line only when it adds something (Arabic UI); in English
+            the name already is "BoardingPass", so it is not printed twice.
+            On narrow screens CSS hides it too (one line next to the mark). */}
+        {latin !== name && <span className="bp-logo__en">{latin}</span>}
       </span>
     </Link>
   );

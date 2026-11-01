@@ -56,7 +56,7 @@ describe('places city helpers', () => {
 });
 
 describe('Explore tabs UI', () => {
-  it('switches to the Success Partners tab and lists partners', async () => {
+  it('switches to the Partner offers tab and lists partners', async () => {
     usePlacesStore.getState().setService(createMockPlacesService([place({ id: 'p1', name: 'Najd' })]));
     usePartnersStore.getState().setService(createMockPartnersService([
       partner({ id: 'a1', name: 'Wings Air', category: 'FLIGHTS' }),
@@ -64,7 +64,7 @@ describe('Explore tabs UI', () => {
     ]));
     renderExplore();
 
-    await userEvent.click(await screen.findByRole('tab', { name: 'Success Partners' }));
+    await userEvent.click(await screen.findByRole('tab', { name: 'Partner offers' }));
     expect(await screen.findByText('Wings Air')).toBeInTheDocument();
     expect(screen.getByText('Oasis Hotels')).toBeInTheDocument();
   });

@@ -16,6 +16,7 @@ import { expensesActions, useFinance } from './expensesStore';
 import { formatIban, normalizeIban } from '@/features/profile/profileModel';
 import { BankBadge } from '@/shared/BankBadge';
 import { APP_FEE_PCT, APP_IBAN, appFee } from '@/shared/appFee';
+import { IbanNudge } from '@/features/members/IbanNudge';
 
 type Sub = 'kitty' | 'personal' | 'summary';
 const SUBS: { key: Sub; label: string }[] = [
@@ -97,7 +98,7 @@ export function ExpensesTab({ tripId, canEdit, isOwner, base, dest }: { tripId: 
 
       {sub === 'kitty' && <KittyPanel tripId={tripId} finance={finance} memberUids={memberUids} active={active} nameOf={nameOf} fmt={fmt} canEdit={canEdit} isOwner={isOwner} baseCur={baseCur} destCur={destCur} rate={finance.rate} />}
       {sub === 'personal' && <PersonalPanel finance={finance} fmt={fmt} canEdit={canEdit} />}
-      {sub === 'summary' && <SummaryPanel finance={finance} memberUids={memberUids} nameOf={nameOf} ibanOf={ibanOf} fmt={fmt} meUid={meUid} holderUid={holderUid} />}
+      {sub === 'summary' && <SummaryPanel tripId={tripId} finance={finance} memberUids={memberUids} nameOf={nameOf} ibanOf={ibanOf} fmt={fmt} meUid={meUid} holderUid={holderUid} />}
     </div>
   );
 }
@@ -124,6 +125,11 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, canEdit,
   const dist = distribution(finance.group, finance.sides);
   const distTotal = CATEGORIES.reduce((a, c) => a + dist[c], 0);
   const entries = finance.group.length + finance.sides.length;
+  // Nothing set up yet (no pot amount, no expenses): show the 3-step starter
+  // instead of a wall of zero tiles and buttons that can't do anything yet.
+  const potSet = pot.total > 0;
+  const fresh = entries === 0 && !potSet;
+  const focusEl = (id: string) => { const el = document.getElementById(id); el?.scrollIntoView({ block: 'center', behavior: 'smooth' }); el?.focus(); };
 
   return (
     <div className="bp-panel">
@@ -135,6 +141,27 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, canEdit,
       )}
       <p className="bp-note">{mode === 'OPEN' ? t('expenses.kittyOpenNote') : t('expenses.kittyFixedNote')}</p>
 
+      {fresh && (
+        <ol className="bp-starter" aria-label={t('expenses.starterTitle')}>
+          <li className={`bp-starter__step ${mode === 'OPEN' ? 'is-done' : ''}`}>
+            <span className="bp-starter__n" aria-hidden="true">{mode === 'OPEN' ? '✓' : '1'}</span>
+            {mode === 'OPEN'
+              ? <span>{t('expenses.starterOpenDone')}</span>
+              : isOwner
+                ? <button type="button" className="bp-link" onClick={() => focusEl('bp-kitty-total')}>{t('expenses.starterSetTotal')}</button>
+                : <span>{t('expenses.starterWaitOwner')}</span>}
+          </li>
+          <li className={`bp-starter__step ${memberUids.length > 1 ? 'is-done' : ''}`}>
+            <span className="bp-starter__n" aria-hidden="true">{memberUids.length > 1 ? '✓' : '2'}</span>
+            <a className="bp-link" href="#members">{t('expenses.starterInvite')}</a>
+          </li>
+          <li className="bp-starter__step">
+            <span className="bp-starter__n" aria-hidden="true">3</span>
+            {canEdit ? <button type="button" className="bp-link" onClick={() => focusEl('bp-exp-desc')}>{t('expenses.starterFirstExpense')}</button> : <span>{t('expenses.starterFirstExpense')}</span>}
+          </li>
+        </ol>
+      )}
+
       {mode === 'FIXED' && (
         <>
           {isOwner && (
@@ -145,43 +172,48 @@ function KittyPanel({ tripId, finance, memberUids, active, nameOf, fmt, canEdit,
                   onChange={(e) => setTotal(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); expensesActions.setKittyTotal(Number(total) || 0); } }} />
               </div>
-              <button className="bp-btn bp-btn--primary bp-btn--sm" style={{ alignSelf: 'end' }} onClick={() => expensesActions.setKittyTotal(Number(total) || 0)}>{t('expenses.setTotal')}</button>
+              <button className="bp-btn bp-btn--primary bp-btn--sm" style={{ alignSelf: 'end' }} disabled={!(Number(total) > 0)} onClick={() => expensesActions.setKittyTotal(Number(total) || 0)}>{t('expenses.setTotal')}</button>
             </div>
           )}
-          <div className="bp-stat-row">
-            <Stat label={t('expenses.total')} value={fmt(pot.total)} />
-            <Stat label={t('expenses.perHead')} value={fmt(pot.due)} />
-            <Stat label={t('expenses.collected')} value={fmt(pot.collected)} />
-          </div>
-          <div className="bp-stat-row">
-            <Stat label={t('expenses.spentFromPot')} value={fmt(pot.spent)} />
-            <Stat label={t('expenses.remaining')} value={fmt(pot.remaining)} />
-          </div>
-          <Bar pct={pot.total > 0 ? (pot.spent / pot.total) * 100 : 0} />
-          {pot.remaining < 0 && <p className="bp-note bp-note--warn">{t('expenses.potOverdrawn', { amount: fmt(-pot.remaining) })}</p>}
+          {/* Pot figures and dues only once there is a pot to talk about. */}
+          {potSet && (
+            <>
+              <div className="bp-stat-row">
+                <Stat label={t('expenses.total')} value={fmt(pot.total)} />
+                <Stat label={t('expenses.perHead')} value={fmt(pot.due)} />
+                <Stat label={t('expenses.collected')} value={fmt(pot.collected)} />
+              </div>
+              <div className="bp-stat-row">
+                <Stat label={t('expenses.spentFromPot')} value={fmt(pot.spent)} />
+                <Stat label={t('expenses.remaining')} value={fmt(pot.remaining)} />
+              </div>
+              <Bar pct={pot.total > 0 ? (pot.spent / pot.total) * 100 : 0} />
+              {pot.remaining < 0 && <p className="bp-note bp-note--warn">{t('expenses.potOverdrawn', { amount: fmt(-pot.remaining) })}</p>}
 
-          {/* Everyone's equal share into the pot, confirmed by the owner. */}
-          <h4 className="bp-panel__h">{t('expenses.dues')}</h4>
-          <ul className="bp-pay-list" role="list">
-            {memberUids.map((u) => (
-              <li key={u} className="bp-pay">
-                <span className="bp-pay__name">{nameOf(u)}</span>
-                <span className="bp-pay__due">{fmt(dues[u] ?? 0)}</span>
-                {finance.paid[u]
-                  ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.paid')}</span>
-                  : <span className="bp-status-chip">{t('expenses.pending')}</span>}
-                {isOwner && (
-                  <button className="bp-btn bp-btn--outline bp-btn--sm" onClick={() => expensesActions.markPaid(u, !finance.paid[u])}>
-                    {finance.paid[u] ? t('expenses.markPending') : t('expenses.confirmPaid')}
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
+              {/* Everyone's equal share into the pot, confirmed by the owner. */}
+              <h4 className="bp-panel__h">{t('expenses.dues')}</h4>
+              <ul className="bp-pay-list" role="list">
+                {memberUids.map((u) => (
+                  <li key={u} className="bp-pay">
+                    <span className="bp-pay__name">{nameOf(u)}</span>
+                    <span className="bp-pay__due">{fmt(dues[u] ?? 0)}</span>
+                    {finance.paid[u]
+                      ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.paid')}</span>
+                      : <span className="bp-status-chip">{t('expenses.pending')}</span>}
+                    {isOwner && (
+                      <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={!(dues[u] > 0)} onClick={() => expensesActions.markPaid(u, !finance.paid[u])}>
+                        {finance.paid[u] ? t('expenses.markPending') : t('expenses.confirmPaid')}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </>
       )}
 
-      {mode === 'OPEN' && entries === 0 && <p className="bp-note">{t('expenses.openHint')}</p>}
+      {mode === 'OPEN' && entries === 0 && !fresh && <p className="bp-note">{t('expenses.openHint')}</p>}
 
       {distTotal > 0 && (
         <>
@@ -348,7 +380,7 @@ function AddShared({ tripId, mode, memberUids, active, nameOf, baseCur, destCur,
     <div className="bp-addexp">
       <p className="bp-field__label">{mode === 'FIXED' ? t('expenses.addFromPot') : t('expenses.addShared')}</p>
       <div className="bp-exp-form">
-        <input className="bp-input" value={desc} placeholder={t('expenses.descPh')} aria-label={t('expenses.desc')} onChange={(e) => setDesc(e.target.value)} />
+        <input id="bp-exp-desc" className="bp-input" value={desc} placeholder={t('expenses.descPh')} aria-label={t('expenses.desc')} onChange={(e) => setDesc(e.target.value)} />
         <select className="bp-input" value={cat} aria-label={t('expenses.category')} onChange={(e) => setCat(e.target.value as Category)}>
           {CATEGORIES.map((c) => <option key={c} value={c}>{t(`expenses.cat.${c}`)}</option>)}
         </select>
@@ -481,7 +513,7 @@ function Breakdown({ finance, memberUids, u, fmt, shown, holderUid }: { finance:
   if (b.lines.length === 0) return null;
   // Exact net to 3 decimals when it isn't whole halalas; and the halala
   // rounding applied so the table sums to zero (shown − exact), if any.
-  const exact3 = new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(Math.abs(b.net));
+  const exact3 = new Intl.NumberFormat(locale === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(Math.abs(b.net));
   const adj = Math.round((shown - b.net) * 1000) / 1000;
   const adjStr = Math.abs(adj) >= 0.005 ? `${adj > 0 ? '+' : '−'}${fmt(Math.abs(adj))}` : null;
   return (
@@ -537,11 +569,14 @@ function IbanChip({ iban }: { iban: string }) {
   );
 }
 
-function SummaryPanel({ finance, memberUids, nameOf, ibanOf, fmt, meUid, holderUid }: {
-  finance: Finance; memberUids: string[]; nameOf: (u: string) => string; ibanOf: (u: string) => string | undefined;
+function SummaryPanel({ tripId, finance, memberUids, nameOf, ibanOf, fmt, meUid, holderUid }: {
+  tripId: string; finance: Finance; memberUids: string[]; nameOf: (u: string) => string; ibanOf: (u: string) => string | undefined;
   fmt: (n: number) => string; meUid: string; holderUid?: string;
 }) {
   const { t } = useTranslation();
+  const you = t('members.you');
+  // "You" once: the dev seed already names the current user "أنت".
+  const meLabel = (u: string) => (u === meUid ? (nameOf(u).trim() === you || nameOf(u).trim() === 'أنت' ? you : `${nameOf(u)} (${you})`) : nameOf(u));
   const myNet = myNetBalance(finance, memberUids, meUid, holderUid);
   const owed = myNet >= 0;
   const pot = potStatus(finance, memberUids);
@@ -584,7 +619,7 @@ function SummaryPanel({ finance, memberUids, nameOf, ibanOf, fmt, meUid, holderU
           const settled = Math.abs(v) < 0.005;
           return (
             <li key={u} className="bp-pay">
-              <span className="bp-pay__name">{nameOf(u)}{u === meUid && ` (${t('members.you')})`}</span>
+              <span className="bp-pay__name">{meLabel(u)}</span>
               {settled
                 ? <span className="bp-status-chip bp-status-chip--ok">{t('expenses.settledUp')}</span>
                 : <span className={`bp-pay__net ${v > 0 ? 'is-pos' : 'is-neg'}`}>
@@ -603,6 +638,8 @@ function SummaryPanel({ finance, memberUids, nameOf, ibanOf, fmt, meUid, holderU
         <button className={`bp-seg__btn ${settleMode === 'min' ? 'is-on' : ''}`} aria-pressed={settleMode === 'min'} onClick={() => setSettleMode('min')}>{t('expenses.settleMin')}</button>
       </div>
       <p className="bp-note">{settleMode === 'direct' ? t('expenses.settleDirectHint') : t('expenses.settleMinHint')}</p>
+      {/* Asked for an IBAN only now — when someone actually owes me a transfer. */}
+      {transfers.some((tr) => tr.to === meUid) && !ibanOf(meUid) && <IbanNudge tripId={tripId} meUid={meUid} />}
       {transfers.length === 0 ? (
         <p className="bp-note">{t('expenses.allSettled')}</p>
       ) : (

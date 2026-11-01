@@ -5,7 +5,7 @@ import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { MembersPanel } from '@/features/members/MembersPanel';
-import { IbanGate } from '@/features/members/IbanGate';
+import { useSyncProfileIban } from '@/features/members/IbanNudge';
 import { CURRENT_UID } from '@/features/members/membersService';
 import { membersActions, useMembers } from '@/features/members/membersStore';
 import { ItineraryTab } from '@/features/itinerary/ItineraryTab';
@@ -17,13 +17,15 @@ import type { Trip } from './tripsService';
 
 type LoadState = 'loading' | 'ready' | 'missing';
 
+// `short` is the label used on narrow screens so all six tabs fit side by side
+// without truncation (the full label stays the accessible name).
 const TABS = [
-  { key: 'itinerary', icon: 'map', label: 'tripDetail.tabItinerary' },
-  { key: 'travel', icon: 'flight', label: 'tripDetail.tabTravel' },
-  { key: 'expenses', icon: 'payments', label: 'tripDetail.tabExpenses', story: 'US-007' },
-  { key: 'tasks', icon: 'checklist', label: 'tripDetail.tabTasks', story: 'US-008' },
-  { key: 'members', icon: 'group', label: 'tripDetail.tabMembers' },
-  { key: 'memories', icon: 'photo_library', label: 'tripDetail.tabMemories', story: 'US-013' },
+  { key: 'itinerary', icon: 'map', label: 'tripDetail.tabItinerary', short: 'tripDetail.tabItinerary' },
+  { key: 'travel', icon: 'flight', label: 'tripDetail.tabTravel', short: 'tripDetail.tabTravel' },
+  { key: 'expenses', icon: 'payments', label: 'tripDetail.tabExpenses', short: 'tripDetail.tabExpenses', story: 'US-007' },
+  { key: 'tasks', icon: 'checklist', label: 'tripDetail.tabTasks', short: 'tripDetail.tabTasksShort', story: 'US-008' },
+  { key: 'members', icon: 'group', label: 'tripDetail.tabMembers', short: 'tripDetail.tabMembers' },
+  { key: 'memories', icon: 'photo_library', label: 'tripDetail.tabMemories', short: 'tripDetail.tabMemories', story: 'US-013' },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
@@ -44,6 +46,11 @@ export function TripDetailPage() {
 
   const initialTab = (hash.replace('#', '') as TabKey) || 'itinerary';
   const [tab, setTab] = useState<TabKey>(TABS.some((x) => x.key === initialTab) ? initialTab : 'itinerary');
+  // The current user's uid: real Firebase uid when configured, else the mock's.
+  const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
+  // An IBAN saved on the profile is copied to this trip's member record silently;
+  // the user is only asked for one at settlement time (Expenses → summary).
+  useSyncProfileIban(id, meUid);
 
   useEffect(() => {
     let live = true;
@@ -89,8 +96,6 @@ export function TripDetailPage() {
   const range = trip.dateTo
     ? `${formatDate(trip.dateFrom, locale)} – ${formatDate(trip.dateTo, locale)}`
     : formatDate(trip.dateFrom, locale);
-  // The current user's uid: real Firebase uid when configured, else the mock's.
-  const meUid = firebaseEnabled() ? (currentUid() ?? CURRENT_UID) : CURRENT_UID;
   const myRole = members?.find((m) => m.uid === meUid)?.role;
   const isOwner = myRole === 'OWNER';
   const canEdit = myRole !== 'VIEWER'; // UX gate; server enforces (BR-006-003)
@@ -121,8 +126,6 @@ export function TripDetailPage() {
           </p>
         </div>
       </header>
-
-      <IbanGate tripId={trip.id} meUid={meUid} />
 
       <TabNav tab={tab} onSelect={selectTab} />
 
@@ -170,10 +173,11 @@ function TabNav({ tab, onSelect }: { tab: TabKey; onSelect: (k: TabKey) => void 
   return (
     <div className="bp-tabs" role="tablist" aria-label={t('tripDetail.tabsLabel')} ref={ref} onKeyDown={onKeyDown}>
       {TABS.map((x) => (
-        <button key={x.key} role="tab" aria-selected={tab === x.key} tabIndex={tab === x.key ? 0 : -1}
+        <button key={x.key} role="tab" aria-selected={tab === x.key} tabIndex={tab === x.key ? 0 : -1} aria-label={t(x.label)}
           className={`bp-tabbtn ${tab === x.key ? 'is-on' : ''}`} onClick={() => onSelect(x.key)}>
           <span className="material-symbols-outlined" aria-hidden="true">{x.icon}</span>
-          <span>{t(x.label)}</span>
+          <span className="bp-tabbtn__label bp-tabbtn__label--full" aria-hidden="true">{t(x.label)}</span>
+          <span className="bp-tabbtn__label bp-tabbtn__label--short" aria-hidden="true">{t(x.short)}</span>
         </button>
       ))}
     </div>

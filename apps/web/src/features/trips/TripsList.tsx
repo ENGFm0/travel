@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { formatDate } from '@boardingpass/core';
 import { useUIStore } from '@/app/store/uiStore';
 import { FriendsPanel } from '@/features/friends/FriendsPanel';
+import { KebabMenu } from '@/shared/KebabMenu';
 import { tripsActions, useTripsList, useTripsStore } from './tripsStore';
 import { tripIsUpcoming, type Trip } from './tripsService';
 
@@ -125,7 +126,6 @@ function TripCard({ trip, today, locale, isPast }: { trip: Trip; today: string; 
     try { await tripsActions.setStatus(trip.id, 'ARCHIVED'); } finally { setBusy(false); }
   }
   async function remove() {
-    if (!window.confirm(t('trips.confirmDelete'))) return;
     setBusy(true);
     try { await tripsActions.remove(trip.id); } finally { setBusy(false); }
   }
@@ -169,12 +169,11 @@ function TripCard({ trip, today, locale, isPast }: { trip: Trip; today: string; 
         <Link className="bp-btn bp-btn--outline" to={`/trips/${trip.id}`}>
           {t('trips.open')}
         </Link>
-        <button className="bp-icon-btn" aria-label={t('trips.archive')} disabled={busy} onClick={archive}>
-          <span className="material-symbols-outlined" aria-hidden="true">archive</span>
-        </button>
-        <button className="bp-icon-btn" aria-label={t('trips.delete')} disabled={busy} onClick={remove}>
-          <span className="material-symbols-outlined" aria-hidden="true">delete</span>
-        </button>
+        {/* Secondary + destructive actions live behind ⋮ (delete needs a confirm). */}
+        <KebabMenu label={t('menu.more')} size="md" items={[
+          { key: 'archive', label: t('trips.archive'), icon: 'archive', disabled: busy, onSelect: archive },
+          { key: 'delete', label: t('trips.delete'), icon: 'delete', danger: true, disabled: busy, confirm: t('trips.confirmDelete'), onSelect: remove },
+        ]} />
       </div>
     </article>
   );

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { currentUid, firebaseEnabled } from '@/shared/firebase';
 import { CURRENT_UID, type Member } from './membersService';
 import { membersActions, useMembers } from './membersStore';
+import { KebabMenu, type KebabItem } from '@/shared/KebabMenu';
 
 /** The signed-in user's member uid — the real Firebase uid in production, or
  *  the mock constant in dev/tests. */
@@ -142,14 +143,26 @@ function MemberRow({ tripId, m, isOwner, meUid }: { tripId: string; m: Member; i
   }
 
   const roleLabel = t(`members.role.${m.role}`);
+  // "You" once: the dev seed names the current user "أنت" already.
+  const you = t('members.you');
+  const nameLabel = isMe ? (m.displayName.trim() === you || m.displayName.trim() === 'أنت' ? you : `${m.displayName} (${you})`) : m.displayName;
+
+  // Destructive / irreversible actions go behind ⋮ with an inline confirm, away
+  // from the row's primary controls (mis-taps were too easy).
+  const menu: KebabItem[] = [];
+  if (isOwner && !owner && m.status === 'ACTIVE') {
+    menu.push({ key: 'transfer', label: t('members.transfer'), icon: 'swap_horiz', confirm: t('members.confirmTransfer', { name: m.displayName }), disabled: busy, onSelect: () => guard(() => membersActions.transfer(tripId, m.uid)) });
+    menu.push({ key: 'remove', label: t('members.remove'), icon: 'person_remove', danger: true, confirm: t('members.confirmRemove', { name: m.displayName }), disabled: busy, onSelect: () => guard(() => membersActions.remove(tripId, m.uid)) });
+  }
+  if (isMe) {
+    menu.push({ key: 'leave', label: t('members.leave'), icon: 'logout', danger: true, confirm: t('members.confirmLeave'), disabled: busy, onSelect: () => guard(() => membersActions.leave(tripId, m.uid)) });
+  }
 
   return (
     <li className="bp-member">
       <span className="bp-avatar" aria-hidden="true">{initialOf(m.displayName)}</span>
       <div className="bp-member__info">
-        <span className="bp-member__name">
-          {m.displayName}{isMe && ` (${t('members.you')})`}
-        </span>
+        <span className="bp-member__name">{nameLabel}</span>
         {m.handle && <span className="bp-member__handle">{m.handle}</span>}
       </div>
       <span className={`bp-role-chip ${owner ? 'is-owner' : ''}`}>{roleLabel}</span>
@@ -168,22 +181,14 @@ function MemberRow({ tripId, m, isOwner, meUid }: { tripId: string; m: Member; i
         )}
 
         {isOwner && !owner && m.status === 'ACTIVE' && (
-          <>
-            {m.role === 'MEMBER' ? (
-              <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={busy} onClick={() => guard(() => membersActions.setRole(tripId, m.uid, 'VIEWER'))}>{t('members.makeViewer')}</button>
-            ) : (
-              <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={busy} onClick={() => guard(() => membersActions.setRole(tripId, m.uid, 'MEMBER'))}>{t('members.makeMember')}</button>
-            )}
-            <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={busy} onClick={() => { if (window.confirm(t('members.confirmTransfer', { name: m.displayName }))) void guard(() => membersActions.transfer(tripId, m.uid)); }}>{t('members.transfer')}</button>
-            <button className="bp-icon-btn" aria-label={t('members.remove')} disabled={busy} onClick={() => { if (window.confirm(t('members.confirmRemove', { name: m.displayName }))) void guard(() => membersActions.remove(tripId, m.uid)); }}>
-              <span className="material-symbols-outlined" aria-hidden="true">person_remove</span>
-            </button>
-          </>
+          m.role === 'MEMBER' ? (
+            <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={busy} onClick={() => guard(() => membersActions.setRole(tripId, m.uid, 'VIEWER'))}>{t('members.makeViewer')}</button>
+          ) : (
+            <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={busy} onClick={() => guard(() => membersActions.setRole(tripId, m.uid, 'MEMBER'))}>{t('members.makeMember')}</button>
+          )
         )}
 
-        {isMe && (
-          <button className="bp-btn bp-btn--outline bp-btn--sm" disabled={busy} onClick={() => { if (window.confirm(t('members.confirmLeave'))) void guard(() => membersActions.leave(tripId, m.uid)); }}>{t('members.leave')}</button>
-        )}
+        {menu.length > 0 && <KebabMenu label={t('menu.more')} items={menu} />}
       </div>
     </li>
   );

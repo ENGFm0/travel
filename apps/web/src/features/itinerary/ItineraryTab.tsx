@@ -19,6 +19,8 @@ import type { Place, PlaceCategory } from '@/features/places/placesModel';
 import { recordTripExpense, recordTripPersonalExpense } from '@/features/expenses/expensesService';
 import type { Category } from '@/features/expenses/finance';
 import { guessCountry } from '@/shared/countries';
+import { KebabMenu } from '@/shared/KebabMenu';
+import { allocateCityRanges, addDaysIso, datesBetween, dayCount, type CityRange } from './cityRanges';
 
 /** Google Maps search deep-link (no API key; opens the Maps web app). */
 function mapsSearch(query: string): string {
@@ -29,15 +31,6 @@ type CitySub = 'days' | 'flight' | 'stay' | 'weather';
 
 /** Icon per travel mode (also used for the "flight" sub-tab). */
 const MODE_ICON: Record<TravelMode, string> = { PLANE: 'flight', CAR: 'directions_car', CRUISE: 'directions_boat' };
-
-/** Inclusive day count for a date range (no dates → 0, single date → 1). */
-function dayCount(from?: string, to?: string): number {
-  if (!from) return 0;
-  if (!to || to === from) return 1;
-  const a = new Date(from), b = new Date(to);
-  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime()) || b < a) return 1;
-  return Math.round((b.getTime() - a.getTime()) / 86_400_000) + 1;
-}
 
 /** True once an ISO date is strictly before today (date-only). Used to reveal
  *  rating only after the experience is over — you rate at the end, not the start. */
@@ -52,7 +45,7 @@ function isPast(iso?: string): boolean {
 /** Localised "N days" label (Arabic dual/plural aware). */
 function daysLabel(n: number, locale: string): string {
   const ar = locale.startsWith('ar');
-  const nn = n.toLocaleString(ar ? 'ar-EG' : 'en-US');
+  const nn = n.toLocaleString(ar ? 'ar-SA-u-nu-latn' : 'en-US');
   if (ar) {
     if (n === 1) return 'يوم';
     if (n === 2) return 'يومان';
@@ -60,18 +53,6 @@ function daysLabel(n: number, locale: string): string {
     return `${nn} يومًا`;
   }
   return `${nn} ${n === 1 ? 'day' : 'days'}`;
-}
-
-/** Inclusive list of ISO dates between from..to (capped for safety). */
-function datesBetween(from?: string, to?: string): string[] {
-  if (!from) return [];
-  const start = new Date(from);
-  const end = to ? new Date(to) : start;
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return [from];
-  const out: string[] = [];
-  const d = new Date(start);
-  while (d <= end && out.length < 60) { out.push(d.toISOString().slice(0, 10)); d.setDate(d.getDate() + 1); }
-  return out;
 }
 
 export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = 'plan' }: { tripId: string; seed: CitySeed[]; canEdit: boolean; tripFrom?: string; tripTo?: string; view?: 'plan' | 'travel' }) {
@@ -94,6 +75,9 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
   const activeIdx = Math.min(active, Math.max(0, cities.length - 1));
   const city = cities[activeIdx];
   const tripStart = useMemo(() => seed.find((s) => s.dateFrom)?.dateFrom, [seed]);
+  // Every stop gets a date range: its own, or a share of the trip's days
+  // (undated stops split the remaining days in order — never the whole trip each).
+  const ranges = useMemo(() => allocateCityRanges(cities, tripFrom ?? tripStart, tripTo), [cities, tripFrom, tripStart, tripTo]);
 
   // The new city continues the sequence: it starts the day after the latest
   // dated city ends, else at the trip start.
@@ -130,8 +114,8 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
           >
             <span className="bp-stop__n">{i + 1}</span>
             <span className="bp-stop__name">{c.name}</span>
-            {dayCount(c.dateFrom, c.dateTo) > 0 && (
-              <span className="bp-stop__date">{daysLabel(dayCount(c.dateFrom, c.dateTo), locale)}</span>
+            {dayCount(ranges[i]?.from, ranges[i]?.to) > 0 && (
+              <span className="bp-stop__date">{daysLabel(dayCount(ranges[i].from, ranges[i].to), locale)}</span>
             )}
           </button>
         ))}
@@ -182,16 +166,16 @@ export function ItineraryTab({ tripId, seed, canEdit, tripFrom, tripTo, view = '
         </div>
       ) : city ? (
         <CityPanel key={city.id} tripId={tripId} city={city} idx={activeIdx} count={cities.length} canEdit={canEdit}
-          tripStart={tripStart} tripFrom={tripFrom} tripTo={tripTo} view={view}
+          tripStart={tripStart} tripFrom={tripFrom} tripTo={tripTo} view={view} range={ranges[activeIdx] ?? { derived: true }}
           onMoved={(dir) => setActive(activeIdx + dir)} onDeleted={() => setActive(0)} />
       ) : null}
     </div>
   );
 }
 
-function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tripTo, view = 'plan', onMoved, onDeleted }: {
+function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tripTo, view = 'plan', range, onMoved, onDeleted }: {
   tripId: string; city: CityStop; idx: number; count: number; canEdit: boolean;
-  tripStart?: string; tripFrom?: string; tripTo?: string; view?: 'plan' | 'travel';
+  tripStart?: string; tripFrom?: string; tripTo?: string; view?: 'plan' | 'travel'; range: CityRange;
   onMoved: (dir: -1 | 1) => void; onDeleted: () => void;
 }) {
   const { t } = useTranslation();
@@ -209,7 +193,6 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tri
 
   async function move(dir: -1 | 1) { await itineraryActions.moveCity(tripId, city.id, dir); onMoved(dir); }
   async function del() {
-    if (!window.confirm(t('itinerary.confirmDeleteCity', { name: city.name }))) return;
     await itineraryActions.deleteCity(tripId, city.id);
     onDeleted();
   }
@@ -218,19 +201,25 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tri
     <div className="bp-city-panel">
       <div className="bp-city-panel__head">
         <div className="bp-city-panel__titles">
-          <h3>{city.name}</h3>
-          <CityDateRange tripId={tripId} city={city} canEdit={canEdit} tripFrom={tripFrom} tripTo={tripTo} />
+          {/* Destructive actions live in a ⋮ menu beside the title — away from
+              the ordering arrows — and always behind an inline confirm. */}
+          <div className="bp-city-panel__titlerow">
+            <h3>{city.name}</h3>
+            {canEdit && (
+              <KebabMenu label={t('itinerary.cityActions')} size="xs" items={[
+                { key: 'delete', label: t('itinerary.deleteCity'), icon: 'delete', danger: true, confirm: t('itinerary.confirmDeleteCity', { name: city.name }), onSelect: del },
+              ]} />
+            )}
+          </div>
+          <CityDateRange tripId={tripId} city={city} canEdit={canEdit} tripFrom={tripFrom} tripTo={tripTo} range={range} />
         </div>
-        {canEdit && (
+        {canEdit && count > 1 && (
           <div className="bp-city-panel__ord">
             <button className="bp-icon-btn" aria-label={t('itinerary.moveEarlier')} disabled={idx === 0} onClick={() => move(-1)}>
               <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
             </button>
             <button className="bp-icon-btn" aria-label={t('itinerary.moveLater')} disabled={idx === count - 1} onClick={() => move(1)}>
               <span className="material-symbols-outlined" aria-hidden="true">chevron_left</span>
-            </button>
-            <button className="bp-icon-btn" aria-label={t('itinerary.deleteCity')} onClick={del}>
-              <span className="material-symbols-outlined" aria-hidden="true">delete</span>
             </button>
           </div>
         )}
@@ -249,15 +238,12 @@ function CityPanel({ tripId, city, idx, count, canEdit, tripStart, tripFrom, tri
         </div>
       )}
 
-      {/* A city with its own dates always uses them. Only the first stop may
-          borrow the trip's overall range, so multi-city stops don't each
-          duplicate the whole trip — later stops follow the dates you entered. */}
-      {sub === 'days' && <DaysSection tripId={tripId} city={city} canEdit={canEdit}
-        rangeFrom={city.dateFrom ?? (idx === 0 ? tripFrom : undefined)}
-        rangeTo={city.dateTo ?? (idx === 0 ? tripTo : undefined)} />}
+      {/* A stop with its own dates uses them; an undated stop gets its share of
+          the trip's days (see allocateCityRanges) — never the whole trip. */}
+      {sub === 'days' && <DaysSection tripId={tripId} city={city} canEdit={canEdit} rangeFrom={range.from} rangeTo={range.to} />}
       {sub === 'flight' && <FlightSection tripId={tripId} city={city} canEdit={canEdit} />}
       {sub === 'stay' && <HotelSection tripId={tripId} city={city} canEdit={canEdit} />}
-      {sub === 'weather' && <WeatherSection city={city} date={city.dateFrom ?? tripStart} />}
+      {sub === 'weather' && <WeatherSection city={city} date={range.from ?? tripStart} />}
     </div>
   );
 }
@@ -738,7 +724,7 @@ function CarExpensesEditor({ expenses, onChange }: { expenses: CarExpense[]; onC
 /** Read-only car summary — rental (company, pickup→return dates, cost) or own (fuel). */
 function CarSummary({ car, kind, locale }: { car: FlightLeg; kind: CarKind; locale: Locale }) {
   const { t } = useTranslation();
-  const money = (n?: number) => (typeof n === 'number' ? n.toLocaleString(locale.startsWith('ar') ? 'ar-EG' : 'en-US') : '');
+  const money = (n?: number) => (typeof n === 'number' ? n.toLocaleString(locale.startsWith('ar') ? 'ar-SA-u-nu-latn' : 'en-US') : '');
   if (kind === 'OWN') {
     const exp = car.expenses ?? [];
     const total = exp.reduce((a, e) => a + (e.amount || 0), 0);
@@ -872,7 +858,7 @@ function nightsCount(inD?: string, outD?: string): number {
 }
 function nightsLabel(n: number, locale: string): string {
   const ar = locale.startsWith('ar');
-  const nn = n.toLocaleString(ar ? 'ar-EG' : 'en-US');
+  const nn = n.toLocaleString(ar ? 'ar-SA-u-nu-latn' : 'en-US');
   if (ar) { if (n === 1) return 'ليلة'; if (n === 2) return 'ليلتان'; if (n >= 3 && n <= 10) return `${nn} ليالٍ`; return `${nn} ليلة`; }
   return `${nn} ${n === 1 ? 'night' : 'nights'}`;
 }
@@ -1221,13 +1207,6 @@ function placeSlug(name: string, city: string): string {
   return `${name} ${city}`.trim().replace(/[/\s]+/g, '-').slice(0, 200);
 }
 
-/** Add N days to an ISO date. */
-function addDaysIso(iso: string, n: number): string {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-}
-
 function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
   tripId: string; city: CityStop; canEdit: boolean; rangeFrom?: string; rangeTo?: string;
 }) {
@@ -1236,16 +1215,19 @@ function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
   const syncedOnce = useRef(false);
 
   // Once per city: make the day list match the date range — add any missing
-  // dates and clear leftover empty dateless days (data from earlier edits).
+  // dates and clear empty placeholder days that are dateless or outside the
+  // range (data from earlier edits / a range that shrank).
   useEffect(() => {
     if (!canEdit || syncedOnce.current || dates.length === 0) return;
     syncedOnce.current = true;
     const have = new Set(city.days.filter((d) => d.date).map((d) => d.date));
+    const want = new Set(dates);
     const missing = dates.some((dt) => !have.has(dt));
-    const emptyDateless = city.days.some((d) => !d.date && d.activities.length === 0);
-    if (missing || emptyDateless) void itineraryActions.generateDays(tripId, city.id, dates);
+    const stray = city.days.some((d) => d.activities.length === 0 && (!d.date || !want.has(d.date)));
+    if (missing || stray) void itineraryActions.generateDays(tripId, city.id, dates);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city.id]);
+  const noActivitiesYet = city.days.length > 0 && city.days.every((d) => d.activities.length === 0);
 
   function addDay() {
     const lastDated = [...city.days].reverse().find((d) => d.date)?.date;
@@ -1262,6 +1244,9 @@ function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
           {t('itinerary.daysTitle')}
         </h4>
       </div>
+
+      {/* Guidance once, above the list — not repeated inside every empty day. */}
+      {canEdit && noActivitiesYet && <p className="bp-days__hint">{t('itinerary.startHint')}</p>}
 
       {city.days.length === 0 ? (
         <div className="bp-empty bp-empty--sm"><p>{t('itinerary.noDays')}</p></div>
@@ -1284,7 +1269,7 @@ function DaysSection({ tripId, city, canEdit, rangeFrom, rangeTo }: {
 
 /** City date range shown right under the city name. Editing it sets the city's
  *  dates (so they appear on the stop chip) and regenerates its day list. */
-function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo }: { tripId: string; city: CityStop; canEdit: boolean; tripFrom?: string; tripTo?: string }) {
+function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo, range }: { tripId: string; city: CityStop; canEdit: boolean; tripFrom?: string; tripTo?: string; range: CityRange }) {
   const { t } = useTranslation();
   const locale = useUIStore((s) => s.locale);
   const [from, setFrom] = useState(city.dateFrom ?? '');
@@ -1299,14 +1284,24 @@ function CityDateRange({ tripId, city, canEdit, tripFrom, tripTo }: { tripId: st
   }
 
   const count = dayCount(city.dateFrom, city.dateTo);
+  const estCount = dayCount(range.from, range.to);
+  const short = (iso: string) => formatDate(iso, locale, { day: 'numeric', month: 'short' });
 
-  // Compact summary: a "N days" pill only (no dates shown here), with a small
-  // edit button that reveals the date pickers when needed.
+  // Compact summary: a "N days" pill, with a small edit button that reveals the
+  // date pickers. A stop without its own dates shows the range it was given
+  // from the trip (marked estimated) rather than "no dates".
   if (!editing) {
     return (
       <div className="bp-city-dur">
         {count > 0 ? (
           <span className="bp-city-dur__pill"><span className="material-symbols-outlined" aria-hidden="true">event</span>{daysLabel(count, locale)}</span>
+        ) : estCount > 0 && range.from ? (
+          <span className="bp-city-dur__pill bp-city-dur__pill--est" title={t('itinerary.estDates')}>
+            <span className="material-symbols-outlined" aria-hidden="true">event</span>
+            {daysLabel(estCount, locale)}
+            <span className="bp-city-dur__range">{short(range.from)}{range.to && range.to !== range.from ? ` – ${short(range.to)}` : ''}</span>
+            <span className="bp-city-dur__est">{t('itinerary.estDates')}</span>
+          </span>
         ) : <span className="bp-city-dur__none">{t('itinerary.noDatesYet')}</span>}
         {canEdit && (
           <button className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.editDates')} onClick={() => setEditing(true)}>
@@ -1347,6 +1342,9 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const [mapsUrl, setMapsUrl] = useState<string | undefined>();
   const [placeId, setPlaceId] = useState<string | undefined>();
   const [open, setOpen] = useState(false);
+  // An empty day is a compact one-line row until it is expanded (or gets activities).
+  const [expanded, setExpanded] = useState(false);
+  const empty = day.activities.length === 0;
 
   function reset() {
     setTitle(''); setTime(''); setNote(''); setKind('ACTIVITY'); setCost(''); setPot('SHARED');
@@ -1387,27 +1385,53 @@ function DayCard({ tripId, cityId, cityName, day, n, canEdit }: { tripId: string
   const heading = day.title?.trim()
     || (day.date ? `${t('itinerary.dayN', { n })} · ${formatDate(day.date, locale, { weekday: 'short', day: 'numeric', month: 'short' })}` : t('itinerary.dayN', { n }));
 
+  const menu = canEdit ? (
+    <KebabMenu label={t('itinerary.dayActions')} size="xs" items={[
+      { key: 'delete', label: t('itinerary.deleteDay'), icon: 'delete', danger: true, confirm: t('itinerary.confirmDeleteDay'), onSelect: () => itineraryActions.deleteDay(tripId, cityId, day.id).then(() => undefined) },
+    ]} />
+  ) : null;
+
+  // Compact row for an empty day: number + date + "+" (expands with the form open).
+  if (empty && !expanded && !open) {
+    return (
+      <li className="bp-day-card bp-day-card--compact">
+        <button type="button" className="bp-day-card__row" aria-label={`${heading} — ${t('itinerary.expandDay')}`} aria-expanded={false} onClick={() => setExpanded(true)}>
+          <span className="bp-day-card__n">{n}</span>
+          <span className="bp-day-card__rowtitle">{heading}</span>
+        </button>
+        {canEdit && (
+          <button type="button" className="bp-icon-btn bp-icon-btn--sm bp-day-card__plus" aria-label={t('itinerary.addActivity')} title={t('itinerary.addActivity')}
+            onClick={() => { setExpanded(true); setOpen(true); }}>
+            <span className="material-symbols-outlined" aria-hidden="true">add</span>
+          </button>
+        )}
+        {menu}
+      </li>
+    );
+  }
+
   return (
     <li className="bp-day-card">
       <div className="bp-day-card__head">
         <h4 className="bp-day-card__title">
           <span className="bp-day-card__n">{n}</span>{heading}
         </h4>
-        {canEdit && (
-          <button className="bp-icon-btn" aria-label={t('itinerary.deleteDay')} onClick={() => { if (window.confirm(t('itinerary.confirmDeleteDay'))) void itineraryActions.deleteDay(tripId, cityId, day.id); }}>
-            <span className="material-symbols-outlined" aria-hidden="true">delete</span>
-          </button>
-        )}
+        <div className="bp-day-card__actions">
+          {empty && (
+            <button type="button" className="bp-icon-btn bp-icon-btn--xs" aria-label={t('itinerary.collapseDay')} onClick={() => { setExpanded(false); reset(); }}>
+              <span className="material-symbols-outlined" aria-hidden="true">expand_less</span>
+            </button>
+          )}
+          {menu}
+        </div>
       </div>
 
-      {day.activities.length > 0 ? (
+      {day.activities.length > 0 && (
         <ul className="bp-timeline-list" role="list">
           {day.activities.map((a) => (
             <TlItem key={a.id} tripId={tripId} cityId={cityId} cityName={cityName} dayId={day.id} dayDate={day.date} a={a} canEdit={canEdit} />
           ))}
         </ul>
-      ) : (
-        <p className="bp-day-card__empty">{t('itinerary.noActivities')}</p>
       )}
 
       {canEdit && (open ? (

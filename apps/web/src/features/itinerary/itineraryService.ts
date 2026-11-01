@@ -310,8 +310,10 @@ export function createMockItineraryService(seedBoards?: Record<string, Board>, p
       const b = board(tripId);
       const c = city(b, cityId);
       if (c) {
-        // Drop leftover empty dateless days (keep any day that has activities).
-        c.days = c.days.filter((d) => d.date || d.activities.length > 0);
+        // Keep every day that has activities; drop empty placeholders that are
+        // dateless or fall outside the range (e.g. after the range shrank).
+        const want = new Set(dates);
+        c.days = c.days.filter((d) => d.activities.length > 0 || (d.date && want.has(d.date)));
         const have = new Set(c.days.map((d) => d.date).filter(Boolean));
         for (const date of dates) {
           if (have.has(date)) continue;

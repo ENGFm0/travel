@@ -140,7 +140,7 @@ export function buildTripReportHtml(d: ReportData): string {
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const cur = trip.currency || 'SAR';
   const money = (n: number) => formatCurrency(n, cur, locale);
-  const short = (n: number) => new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : 'en-US', { maximumFractionDigits: 0 }).format(n);
+  const short = (n: number) => new Intl.NumberFormat(locale === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { maximumFractionDigits: 0 }).format(n);
   const active = members.filter((m) => m.status === 'ACTIVE');
   const nameOf = (uid: string) => members.find((m) => m.uid === uid)?.displayName ?? uid;
   const range = trip.dateTo ? `${formatDate(trip.dateFrom, locale)} – ${formatDate(trip.dateTo, locale)}` : formatDate(trip.dateFrom, locale);

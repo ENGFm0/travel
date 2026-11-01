@@ -27,6 +27,9 @@ const ExplorePage = lazy(() =>
 const AdminPage = lazy(() =>
   import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage })),
 );
+const PrivacyPage = lazy(() => import('@/features/legal/LegalPages').then((m) => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import('@/features/legal/LegalPages').then((m) => ({ default: m.TermsPage })));
+const HelpPage = lazy(() => import('@/features/legal/LegalPages').then((m) => ({ default: m.HelpPage })));
 
 /** Route registry. Section pages are placeholders until their stories land.
  *  Heavy pages (the trip dashboard) are code-split via React.lazy. Exported as
@@ -41,6 +44,10 @@ export const routes: RouteObject[] = [
       { path: 'explore', element: <ExplorePage /> },
       { path: 'buddies', element: <BuddiesPage /> },
       { path: 'memories', element: <MemoriesPage /> },
+      // Public content pages (no login): linked from the footer.
+      { path: 'privacy', element: <PrivacyPage /> },
+      { path: 'terms', element: <TermsPage /> },
+      { path: 'help', element: <HelpPage /> },
       {
         path: 'mytrips',
         element: (

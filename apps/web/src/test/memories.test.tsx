@@ -97,6 +97,16 @@ describe('US-013 Memories UI', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Unsupported file type');
   });
 
+  it('offers one day per trip day in the upload day picker (not a fixed week)', async () => {
+    await signIn();
+    seed([OWNER]); // TRIP runs 2099-05-01 → 2099-05-10 = 10 days
+    renderAt('/trips/trip-x#memories');
+    const sel = await screen.findByLabelText('Day');
+    const opts = within(sel).getAllByRole('option').map((o) => o.textContent);
+    expect(opts).toHaveLength(10);
+    expect(opts[9]).toBe('Day 10');
+  });
+
   it('toggles grouping between day and place (AC2)', async () => {
     await signIn();
     seed([OWNER], [{ id: '1', type: 'image', src: '', name: 'a', uploaderUid: 'me', day: 'Day 1', place: 'London' }]);

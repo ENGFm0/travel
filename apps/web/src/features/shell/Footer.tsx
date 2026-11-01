@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Logo } from '@/shared/ui/Logo';
 
 export function Footer() {
@@ -8,9 +9,9 @@ export function Footer() {
       <div className="bp-footer__inner">
         <Logo />
         <nav className="bp-footer__links" aria-label={t('footer.help')}>
-          <a href="#privacy">{t('footer.privacy')}</a>
-          <a href="#terms">{t('footer.terms')}</a>
-          <a href="#help">{t('footer.help')}</a>
+          <Link to="/privacy">{t('footer.privacy')}</Link>
+          <Link to="/terms">{t('footer.terms')}</Link>
+          <Link to="/help">{t('footer.help')}</Link>
         </nav>
         <div className="bp-footer__cp">{t('footer.copyright')}</div>
       </div>
