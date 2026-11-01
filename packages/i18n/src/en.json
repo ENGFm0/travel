@@ -335,7 +335,8 @@
       "CITY_REQUIRED": "Add at least one destination",
       "LIST_FAILED": "Could not load your trips, try again",
       "GENERIC": "Could not create the trip, try again"
-    }
+    },
+    "createdNextHint": "After creating, add cities, stays, transport, expenses and members from inside the trip."
   },
   "members": {
     "title": "Members",

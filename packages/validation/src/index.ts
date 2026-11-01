@@ -52,8 +52,7 @@ export const createTripSchema = z
           hotel: z.string().trim().max(120).optional(),
           travelMode: travelModeSchema.optional(),
         }),
-      )
-      .min(1, 'AT_LEAST_ONE_CITY'),
+      ), // may be empty at creation — cities are added from inside the trip
     travelMode: travelModeSchema.optional(),
     state: tripStateSchema.optional(),
     budget: z.number().nonnegative().optional(),

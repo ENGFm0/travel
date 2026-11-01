@@ -40,11 +40,10 @@ async function signIn() {
   await waitFor(() => expect(useAuthStore.getState().status).toBe('authenticated'));
 }
 
-async function fillStep1() {
+async function fillBasics() {
   await userEvent.type(screen.getByLabelText('عنوان الرحلة'), 'رحلة أوروبا');
   await userEvent.click(screen.getByRole('button', { name: 'داخلية' }));
   await userEvent.type(screen.getByLabelText('من'), '2026-09-01');
-  await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
 }
 
 describe('US-003 create-trip gating', () => {
@@ -62,56 +61,46 @@ describe('US-003 create-trip gating', () => {
 });
 
 describe('US-003 wizard flow', () => {
-  it('walks all steps and creates a trip', async () => {
+  it('creates a trip from the single basics step (cities etc. are added inside the trip)', async () => {
     await signIn();
     renderAt('/planner?new=1');
     await screen.findByTestId('trip-wizard');
 
-    await fillStep1();
-    // Step 2: cities
-    await userEvent.type(await screen.findByLabelText('المدينة'), 'باريس');
-    await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
-    // Step 3: travel (flight) → next
-    await screen.findByRole('button', { name: /ذهاب وعودة/ });
-    await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
-    // Step 4: hotels → next
-    await userEvent.type(await screen.findByLabelText('فندق باريس'), 'فندق لطيف');
-    await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
-    // Step 5: budget → next
-    await userEvent.type(await screen.findByLabelText('الميزانية'), '5000');
-    await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
-    // Step 6: people + status → create
-    await userEvent.click(await screen.findByRole('button', { name: 'إنشاء الرحلة' }));
+    await fillBasics();
+    // No further steps: the wizard has no "next", only create.
+    expect(screen.queryByRole('button', { name: 'التالي' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'إنشاء الرحلة' }));
 
     expect(await screen.findByRole('heading', { name: /تم إنشاء رحلتك/ })).toBeInTheDocument();
     await waitFor(() => {
       const t = useTripsStore.getState().lastCreated;
       expect(t?.title).toBe('رحلة أوروبا');
       expect(t?.type).toBe('DOMESTIC');
-      expect(t?.cities[0]?.name).toBe('باريس');
-      expect(t?.cities[0]?.hotel).toBe('فندق لطيف');
+      expect(t?.dateFrom).toBe('2026-09-01');
+      expect(t?.cities).toEqual([]);
       expect(t?.travelMode).toBe('PLANE');
     });
+    // "Open trip" leads straight into the new trip.
+    expect(screen.getByRole('button', { name: 'افتح الرحلة' })).toBeInTheDocument();
   });
 
-  it('blocks step 1 with a missing title', async () => {
+  it('blocks creation with a missing title', async () => {
     await signIn();
     renderAt('/planner?new=1');
     await screen.findByTestId('trip-wizard');
-    await userEvent.click(screen.getByRole('button', { name: 'التالي' }));
+    await userEvent.click(screen.getByRole('button', { name: 'إنشاء الرحلة' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('اكتب عنوان الرحلة');
   });
 
-  it('shows a per-city days field and lets you add another city', async () => {
+  it('rejects an end date before the start date', async () => {
     await signIn();
     renderAt('/planner?new=1');
     await screen.findByTestId('trip-wizard');
-    await fillStep1();
-    await screen.findByLabelText('المدينة');
-    // cities are scheduled by number of days, not manual dates
-    expect(screen.getByLabelText('عدد الأيام')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /أضف مدينة/ }));
-    expect((await screen.findAllByLabelText('المدينة')).length).toBe(2);
+    await fillBasics();
+    await userEvent.type(screen.getByLabelText('إلى'), '2026-08-01');
+    await userEvent.click(screen.getByRole('button', { name: 'إنشاء الرحلة' }));
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(useTripsStore.getState().lastCreated).toBeNull();
   });
 });
 
