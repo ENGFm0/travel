@@ -1351,3 +1351,15 @@ select.bp-input {
 .bp-placesearch__opt-txt { display: flex; flex-direction: column; min-inline-size: 0; }
 .bp-placesearch__main { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bp-placesearch__sub { font-size: 12px; color: var(--bp-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Kebab (⋮) overflow menu — secondary + destructive actions behind a confirm ── */
+.bp-kebab { position: relative; display: inline-flex; flex: none; }
+.bp-kebab__pop { position: absolute; top: calc(100% + 4px); inset-inline-end: 0; z-index: 40; min-width: 200px; max-width: min(300px, 90vw); background: var(--bp-surface); color: var(--bp-ink); border: 1px solid var(--bp-border); border-radius: var(--bp-r-md); box-shadow: var(--bp-shadow-pop); padding: 6px; }
+.bp-kebab__item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; color: var(--bp-ink); border-radius: 8px; cursor: pointer; text-align: start; }
+.bp-kebab__item:hover, .bp-kebab__item:focus-visible { background: color-mix(in srgb, var(--bp-ink) 8%, transparent); }
+.bp-kebab__item:disabled { opacity: .5; cursor: default; }
+.bp-kebab__item .material-symbols-outlined { font-size: 20px; }
+.bp-kebab__item--danger { color: var(--bp-danger); }
+.bp-kebab__confirm { padding: 8px 10px 6px; font-size: 13.5px; } .bp-kebab__confirm p { margin: 0 0 10px; }
+.bp-kebab__confirm-row { display: flex; gap: 8px; } .bp-kebab__confirm-row .bp-btn { flex: 1; }
+.bp-icon-btn--sm { width: 34px; height: 34px; } .bp-icon-btn--sm .material-symbols-outlined { font-size: 20px; }

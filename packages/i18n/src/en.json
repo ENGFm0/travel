@@ -1,6 +1,12 @@
 {
   "preview": {
-    "banner": "Temporary preview mode: login is off and all data is demo data stored only on this device."
+    "banner": "Preview mode: login is off and the data is demo data on this device only.",
+    "close": "Dismiss notice"
+  },
+  "menu": {
+    "more": "More options",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   },
   "app": {
     "name": "BoardingPass",
