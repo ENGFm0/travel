@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/authStore';
 import { profileActions, useProfile } from '@/features/profile/profileStore';
 import { normalizeIban, validateIban } from '@/features/profile/profileModel';
 import { membersActions, useMembers } from './membersStore';
+import { BankBadge } from '@/shared/BankBadge';
 
 /** On entering a trip, every active member must have an IBAN on record so the
  *  others can transfer their settlements. The IBAN is saved once on the
@@ -59,6 +60,7 @@ export function IbanGate({ tripId, meUid }: { tripId: string; meUid: string }) {
             onChange={(e) => setVal(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), void save())} />
           <button className="bp-btn bp-btn--primary bp-btn--sm" disabled={busy || !val.trim()} onClick={save}>{busy ? t('expenses.saving') : t('members.ibanSave')}</button>
         </div>
+        <BankBadge iban={val} />
         {err && <p className="bp-field__error" role="alert">{err}</p>}
       </div>
     </div>

@@ -22,6 +22,7 @@ import {
 import { createExpensesService } from '@/features/expenses/expensesService';
 import type { Member } from '@/features/members/membersService';
 import { formatIban } from '@/features/profile/profileModel';
+import { bankFromIban } from '@/shared/saudiBanks';
 import { APP_FEE_PCT, APP_IBAN, appFee } from '@/shared/appFee';
 import { CATEGORIES, distribution, settledLedger, type Category, type Finance } from '@/features/expenses/finance';
 import type { Media } from './memoriesModel';
@@ -212,14 +213,20 @@ export function buildTripReportHtml(d: ReportData): string {
     </div>`;
 
     const ibanOf = (uid: string) => members.find((m) => m.uid === uid)?.iban;
+    // IBAN line with the detected bank as a brand-coloured tag (emoji + name).
+    const ibanLine = (iban: string) => {
+      const b = bankFromIban(iban);
+      const tag = b ? `<span class="bank" style="color:${b.color};background:${b.color}1a;border-color:${b.color}55">${b.emoji} ${esc(locale === 'ar' ? b.ar : b.en)}</span>` : '🏦';
+      return `${tag} <b>${esc(formatIban(iban))}</b>`;
+    };
     settleCards = transfers.length
-      ? `<div class="settles">${transfers.map((tr) => `<div class="settle"><span class="av" style="background:${memberColor(tr.from)}">${esc(initials(nameOf(tr.from)))}</span><span class="st-name">${esc(nameOf(tr.from))}</span><span class="st-arrow">${dir === 'rtl' ? '◀' : '▶'}<b>${esc(money(tr.amount))}</b>${dir === 'rtl' ? '◀' : '▶'}</span><span class="st-name">${esc(nameOf(tr.to))}</span><span class="av" style="background:${memberColor(tr.to)}">${esc(initials(nameOf(tr.to)))}</span><div class="st-iban">${ibanOf(tr.to) ? `🏦 <b>${esc(formatIban(ibanOf(tr.to)!))}</b>` : `<span class="muted">${esc(t('expenses.ibanMissing', { name: nameOf(tr.to) }))}</span>`}</div></div>`).join('')}</div>`
+      ? `<div class="settles">${transfers.map((tr) => `<div class="settle"><span class="av" style="background:${memberColor(tr.from)}">${esc(initials(nameOf(tr.from)))}</span><span class="st-name">${esc(nameOf(tr.from))}</span><span class="st-arrow">${dir === 'rtl' ? '◀' : '▶'}<b>${esc(money(tr.amount))}</b>${dir === 'rtl' ? '◀' : '▶'}</span><span class="st-name">${esc(nameOf(tr.to))}</span><span class="av" style="background:${memberColor(tr.to)}">${esc(initials(nameOf(tr.to)))}</span><div class="st-iban">${ibanOf(tr.to) ? ibanLine(ibanOf(tr.to)!) : `<span class="muted">${esc(t('expenses.ibanMissing', { name: nameOf(tr.to) }))}</span>`}</div></div>`).join('')}</div>`
       : `<p class="allok">✅ ${esc(t('expenses.allSettled'))}</p>`;
     if (APP_FEE_PCT > 0 && grand > 0) {
       settleCards += `<div class="fee"><h4>${esc(t('expenses.appFeeTitle'))}</h4>
         <p>${esc(t('expenses.appFeeLine', { pct: APP_FEE_PCT, total: money(grand), amount: money(appFee(grand)) }))}</p>
         <p>${esc(t('expenses.appFeeYours', { amount: money(appFee(grand) / Math.max(1, uids.length)) }))}</p>
-        ${APP_IBAN ? `<p class="fee-iban">🏦 <b>${esc(formatIban(APP_IBAN))}</b></p>` : `<p class="muted">${esc(t('expenses.appIbanSoon'))}</p>`}
+        ${APP_IBAN ? `<p class="fee-iban">${ibanLine(APP_IBAN)}</p>` : `<p class="muted">${esc(t('expenses.appIbanSoon'))}</p>`}
         <p class="muted">${esc(t('expenses.appFeeHonor'))}</p></div>`;
     }
   }
@@ -354,7 +361,8 @@ export function buildTripReportHtml(d: ReportData): string {
   .settles { display: grid; gap: 8px; }
   .settle { display: grid; grid-template-columns: auto 1fr auto 1fr auto; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; break-inside: avoid; }
   .st-name { font-weight: 700; } .st-name:last-of-type { text-align: end; }
-  .st-iban { grid-column: 1 / -1; font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+  .st-iban { grid-column: 1 / -1; font-size: 12px; color: var(--ink2); font-variant-numeric: tabular-nums; letter-spacing: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .bank { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid; font-size: 11.5px; font-weight: 700; }
   .fee { background: #fff8f3; border: 1px solid #ffd9c4; border-radius: 14px; padding: 12px 14px; margin-top: 10px; font-size: 13px; }
   .fee h4 { margin: 0 0 6px; color: var(--accent); } .fee p { margin: 3px 0; } .fee-iban b { font-variant-numeric: tabular-nums; }
   .st-arrow { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 11px; } .st-arrow b { background: #fff3ec; color: var(--accent); border: 1px solid #ffd9c4; border-radius: 999px; padding: 3px 12px; font-size: 14px; white-space: nowrap; }

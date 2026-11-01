@@ -14,6 +14,7 @@ import {
 } from './finance';
 import { expensesActions, useFinance } from './expensesStore';
 import { formatIban, normalizeIban } from '@/features/profile/profileModel';
+import { BankBadge } from '@/shared/BankBadge';
 import { APP_FEE_PCT, APP_IBAN, appFee } from '@/shared/appFee';
 
 type Sub = 'kitty' | 'personal' | 'summary';
@@ -528,6 +529,7 @@ function IbanChip({ iban }: { iban: string }) {
   }
   return (
     <button type="button" className="bp-iban" onClick={copy} title={t('expenses.copyIban')} aria-label={`${t('expenses.copyIban')} ${formatIban(iban)}`}>
+      <BankBadge iban={iban} compact />
       <span className="bp-iban__num">{formatIban(iban)}</span>
       <span className="material-symbols-outlined" aria-hidden="true">{copied ? 'check' : 'content_copy'}</span>
       {copied && <span className="bp-iban__ok">{t('members.copied')}</span>}

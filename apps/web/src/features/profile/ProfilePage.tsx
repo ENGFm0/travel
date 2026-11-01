@@ -7,6 +7,7 @@ import { useAuth, authActions } from '@/features/auth/authStore';
 import { NOTIF_KEYS, validateAvatar, validateName, validateUsername, normalizeUsername, validateIban, normalizeIban, type NotifPrefs } from './profileModel';
 import { profileActions, useProfile } from './profileStore';
 import { COUNTRIES } from '@/shared/countries';
+import { BankBadge } from '@/shared/BankBadge';
 
 export function ProfilePage() {
   const { t } = useTranslation();
@@ -115,8 +116,9 @@ function ProfileForm() {
           <label htmlFor="bp-p-iban">{t('account.iban')}</label>
           <input id="bp-p-iban" className="bp-input" value={iban} placeholder={t('account.ibanPh')} autoComplete="off" aria-describedby="bp-iban-note"
             onChange={(e) => { setIban(e.target.value); setIbanErr(null); }} />
+          <BankBadge iban={iban} />
           <span id="bp-iban-note" className="bp-note">{t('account.ibanNote')}</span>
-          {ibanErr && <span className="bp-field__error" role="alert">{ibanErr}</span>}
+          {ibanErr &&<span className="bp-field__error" role="alert">{ibanErr}</span>}
         </div>
         <div className="bp-field">
           <label htmlFor="bp-p-username">{t('account.username')}</label>
