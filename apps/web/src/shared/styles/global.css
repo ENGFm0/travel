@@ -1494,3 +1494,9 @@ select.bp-input {
 .bp-pager__n { min-width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--bp-border); background: var(--bp-surface); color: var(--bp-ink); font: inherit; font-weight: 700; cursor: pointer; }
 .bp-pager__n.is-on { background: var(--bp-primary); color: var(--bp-on-primary); border-color: var(--bp-primary); }
 .bp-pager__gap { color: var(--bp-ink-muted); padding: 0 2px; }
+
+/* ── Explore cards: photos always fill a 16:10 box; a real placeholder when there is none ── */
+.bp-place-card__photo { position: relative; block-size: auto; aspect-ratio: 16 / 10; display: block; overflow: hidden; background: linear-gradient(135deg, color-mix(in srgb, var(--bp-primary) 18%, var(--bp-surface-2)), var(--bp-surface-2)); }
+.bp-place-card__photo img { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.bp-place-card__photo .bp-place-card__ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--bp-ink-muted); }
+.bp-place-card__photo .bp-place-card__ph .material-symbols-outlined { font-size: 44px; opacity: .55; }

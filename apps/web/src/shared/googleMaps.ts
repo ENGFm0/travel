@@ -108,7 +108,7 @@ export async function searchPlacesByText(textQuery: string, opts?: { maxResults?
   });
   return (places ?? []).map((p: any) => {
     let photoUrl: string | undefined;
-    try { photoUrl = p.photos?.[0]?.getURI?.({ maxWidth: 480, maxHeight: 360 }); } catch { /* optional */ }
+    try { photoUrl = p.photos?.[0]?.getURI?.({ maxWidth: 800, maxHeight: 500 }); } catch { /* optional */ }
     return {
       id: p.id,
       name: p.displayName ?? '',

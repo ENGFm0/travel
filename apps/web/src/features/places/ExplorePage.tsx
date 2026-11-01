@@ -350,14 +350,27 @@ function Pager({ page, pages, onGoto }: { page: number; pages: number; onGoto: (
   );
 }
 
+/** Card photo that always fills its box; a placeholder when there is no photo
+ *  or it fails to load (expired/blocked Google photo URLs happen). */
+function CardPhoto({ src, alt, icon }: { src?: string; alt: string; icon: string }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [src]);
+  return (
+    <div className="bp-place-card__photo">
+      {src && !failed
+        ? <img src={src} alt={alt} loading="lazy" onError={() => setFailed(true)} />
+        : <span className="bp-place-card__ph" aria-hidden="true"><span className="material-symbols-outlined">{icon}</span></span>}
+    </div>
+  );
+}
+const CAT_ICON: Record<PlaceCategory, string> = { RESTAURANTS: 'restaurant', LANDMARKS: 'attractions', ACTIVITIES: 'hiking', SHOPPING: 'shopping_bag' };
+
 function GooglePlaceCard({ g, canAdd, onAdd }: { g: GmapsPlace; canAdd: boolean; onAdd: () => void }) {
   const { t } = useTranslation();
   const cat = categoryFromTypes(g.types);
   return (
     <article className="bp-place-card">
-      <div className="bp-place-card__photo">
-        {g.photoUrl ? <img src={g.photoUrl} alt={g.name} loading="lazy" /> : <span className="material-symbols-outlined" aria-hidden="true">image</span>}
-      </div>
+      <CardPhoto src={g.photoUrl} alt={g.name} icon={CAT_ICON[cat]} />
       <div className="bp-place-card__body">
         <div className="bp-place-card__top">
           <span className="bp-chip bp-chip--cat">{t(`explorePage.cat.${cat}`)}</span>
@@ -461,9 +474,7 @@ function PlaceCard({ place, canAdd, onRate, onAdd }: { place: Place; canAdd: boo
   const { t } = useTranslation();
   return (
     <article className="bp-place-card">
-      <div className="bp-place-card__photo">
-        {place.photoUrl ? <img src={place.photoUrl} alt={place.name} loading="lazy" /> : <span className="material-symbols-outlined" aria-hidden="true">image</span>}
-      </div>
+      <CardPhoto src={place.photoUrl} alt={place.name} icon={CAT_ICON[place.category]} />
       <div className="bp-place-card__body">
         <div className="bp-place-card__top">
           <span className="bp-chip bp-chip--cat">{t(`explorePage.cat.${place.category}`)}</span>
